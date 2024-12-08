@@ -1,0 +1,4 @@
+[submodule "lib/raceup_board"]
+	path = lib/raceup_board
+	url = https://github.com/mrmonopoly-cyber/raceup_board.git
+	branch = only_src
