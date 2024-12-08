@@ -27,6 +27,7 @@
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
+#include "ControlUnitLogicOperator.h"
 
 extern IfxCpu_syncEvent g_cpuSyncEvent;
 
@@ -42,8 +43,6 @@ void core2_main(void)
     /* Wait for CPU sync event */
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
-    
-    while(1)
-    {
-    }
+
+    main_cpu_x(2);
 }
