@@ -30,6 +30,7 @@ Configurations \
 Libraries/ControlUnitLogicOperator \
 Libraries/Infra/Platform/Tricore/Compilers \
 Libraries/Infra/Ssw/TC37A/Tricore \
+Libraries/Service/CpuGeneric/SysSe/Bsp \
 Libraries/iLLD/TC37A/Tricore/Cpu/Irq \
 Libraries/iLLD/TC37A/Tricore/Cpu/Std \
 Libraries/iLLD/TC37A/Tricore/Cpu/Trap \
@@ -39,8 +40,10 @@ Libraries/iLLD/TC37A/Tricore/Pms/Std \
 Libraries/iLLD/TC37A/Tricore/Port/Std \
 Libraries/iLLD/TC37A/Tricore/Scu/Std \
 Libraries/iLLD/TC37A/Tricore/Src/Std \
+Libraries/iLLD/TC37A/Tricore/Stm/Std \
 Libraries/iLLD/TC37A/Tricore/_Impl \
 Libraries/iLLD/TC37A/Tricore/_PinMap \
 src/gpio \
 src/serial \
+src/timers \
 

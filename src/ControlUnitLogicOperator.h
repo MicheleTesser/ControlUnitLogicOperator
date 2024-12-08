@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-int8_t main_cpu_x(uint8_t cpu_num);
+void main_cpu_x(uint8_t cpu_num);
 
 #endif // !__CONTROL_UNIT_LOGIC_OPERATOR__
 

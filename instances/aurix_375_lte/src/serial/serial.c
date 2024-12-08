@@ -1,4 +1,9 @@
 #include "serial.h"
+#include "IfxPort.h"
+#include "Bsp.h"
+#include "../../Libraries/ControlUnitLogicOperator/lib/raceup_board/components/serial/serial.h"
+#include <stdint.h>
+
 
 int8_t hardware_init_serial(const uint16_t id)
 {

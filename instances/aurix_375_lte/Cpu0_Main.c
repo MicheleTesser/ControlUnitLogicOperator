@@ -28,8 +28,10 @@
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 #include "ControlUnitLogicOperator.h"
-#include "serial.h"
-#include "gpio.h"
+#include "Bsp.h"
+
+#define LED         &MODULE_P00,5                                           /* LED: Port, Pin definition            */
+#define WAIT_TIME   500                                                     /* Wait time constant in milliseconds   */
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
@@ -47,6 +49,19 @@ void core0_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
+    /* Initialization of the LED used in this example */
+   //    IfxPort_setPinModeOutput(LED, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
+
+       /* Switch OFF the LED (low-level active) */
+     //  IfxPort_setPinHigh(LED);
+
+     //  while(1){
+       //    IfxPort_togglePin(LED);                                                     /* Toggle the state of the LED      */
+         //     waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, WAIT_TIME));    /* Wait 500 milliseconds            */
+       //}
+
+
+
     main_cpu_x(0);
 }
 

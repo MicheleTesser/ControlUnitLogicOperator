@@ -8,10 +8,12 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include src/timers/subdir.mk
 -include src/serial/subdir.mk
 -include src/gpio/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/_PinMap/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/_Impl/subdir.mk
+-include Libraries/iLLD/TC37A/Tricore/Stm/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Src/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Scu/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Port/Std/subdir.mk
@@ -21,6 +23,7 @@ RM := rm -rf
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Trap/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Irq/subdir.mk
+-include Libraries/Service/CpuGeneric/SysSe/Bsp/subdir.mk
 -include Libraries/Infra/Ssw/TC37A/Tricore/subdir.mk
 -include Libraries/Infra/Platform/Tricore/Compilers/subdir.mk
 -include Libraries/ControlUnitLogicOperator/subdir.mk
