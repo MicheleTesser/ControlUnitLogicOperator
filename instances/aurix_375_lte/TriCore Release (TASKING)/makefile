@@ -11,6 +11,7 @@ RM := rm -rf
 -include src/timers/subdir.mk
 -include src/serial/subdir.mk
 -include src/gpio/subdir.mk
+-include src/can/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/_PinMap/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/_Impl/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Stm/Std/subdir.mk
@@ -23,6 +24,8 @@ RM := rm -rf
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Trap/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Irq/subdir.mk
+-include Libraries/iLLD/TC37A/Tricore/Can/Std/subdir.mk
+-include Libraries/iLLD/TC37A/Tricore/Can/Can/subdir.mk
 -include Libraries/Service/CpuGeneric/SysSe/Bsp/subdir.mk
 -include Libraries/Infra/Ssw/TC37A/Tricore/subdir.mk
 -include Libraries/Infra/Platform/Tricore/Compilers/subdir.mk
