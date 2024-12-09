@@ -10,23 +10,11 @@ void main_0(void){
     hardware_init_gpio(0);
     hardware_init_can(0, 500000);
     while(1){
-        uint64_t buffer;
-        uint8_t data_read;
-        uint32_t msg_id;
-        hardware_read_can(0, &msg_id, &buffer, &data_read);
-        recv = buffer;
         if (!recv) {
             gpio_set_high(0);
         }else{
             gpio_set_low(1);
         }
-        buffer = 12;
-        CanMessage mex ={
-            .buffer = &buffer,
-            .message_size = sizeof(buffer),
-            .id = 12,
-        };
-        hardware_write_can(0, &mex);
         wait_milliseconds(0, 500);
         gpio_toggle(0);
     }

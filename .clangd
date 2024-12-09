@@ -1,6 +1,5 @@
 CompileFlags:
   Add: [
-    -std=c99,
     -xc,
     -pedantic,
     -Wall,
@@ -8,5 +7,6 @@ CompileFlags:
     -Wno-gnu-folding-constant,
     -Wno-c23-extensions,
     -Wno-empty-translation-unit
+    -ansi
   ]
 

@@ -188,20 +188,18 @@ int8_t hardware_init_can(const BoardComponentId id,uint32_t baud_rate)
     return 0;
 }
 
-extern int8_t hardware_read_can(const BoardComponentId id, uint32_t* msg_id,
-        void* buffer, uint8_t* buffer_size)
+int8_t hardware_read_can(const BoardComponentId id, CanMessage* mex)
 {
     struct CanNode* can_node= extract_can_node_from_id(id);
     IfxCan_Can_readMessage(&can_node->g_mcmcan.canNode , &can_node->g_mcmcan.rxMsg , can_node->g_mcmcan.rxData );
-    *msg_id = can_node->g_mcmcan.rxMsg.messageId;
-    buffer =  &(can_node->g_mcmcan.rxData);
-    *buffer_size = 8;
-
+    memcpy(mex->buffer, &(can_node->g_mcmcan.rxData), 8);
+    mex->id = can_node->g_mcmcan.rxMsg.messageId;
+    mex->message_size = 8;
 
     return 0;
 }
 
-extern int8_t hardware_write_can(const BoardComponentId id, const CanMessage* restrict const mex)
+int8_t hardware_write_can(const BoardComponentId id, const CanMessage* restrict const mex)
 {
     IfxCan_Can_initMessage(&g_mcmcan.rxMsg);
 
