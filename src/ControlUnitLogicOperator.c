@@ -6,7 +6,6 @@
 uint8_t recv = 0;
 
 void main_0(void){
-    hardware_init_timer(0);
     hardware_init_gpio(0);
     hardware_init_can(0, 500000);
     while(1){
@@ -15,7 +14,7 @@ void main_0(void){
         }else{
             gpio_set_low(1);
         }
-        wait_milliseconds(0, 500);
+        wait_milliseconds(500);
         gpio_toggle(0);
     }
 }
