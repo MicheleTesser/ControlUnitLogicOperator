@@ -2,20 +2,21 @@
 #include <stdint.h>
 
 #include "./lib/raceup_board/raceup_board.h"
+#include "./board_conf/id_conf.h"
 
 uint8_t recv = 0;
 
 void main_0(void){
-    hardware_init_gpio(0);
-    hardware_init_can(0, 500000);
+    hardware_init_gpio(LED_1);
+    hardware_init_can(CAN_MODULE_0, 500000);
     while(1){
         if (!recv) {
-            gpio_set_high(0);
+            gpio_set_high(LED_1);
         }else{
-            gpio_set_low(0);
+            gpio_set_low(LED_1);
         }
         wait_milliseconds(500);
-        gpio_toggle(0);
+        gpio_toggle(LED_1);
     }
 }
 
