@@ -6,6 +6,11 @@ C_EXFLAGS =
 control_unit_logic_operator_src_path := $(or $(CONTROL_UNIT_LOGIC_OPERATOR_ROOT), .)
 ControlUnitLogicOperator.c := $(control_unit_logic_operator_src_path)/ControlUnitLogicOperator.c
 
+ifndef $(CORES_ROOT)
+CORES_ROOT = $(control_unit_logic_operator_src_path)/cores
+include $(CORES_ROOT)/Makefile
+endif
+
 all: release
 
 DEBUG_FLAGS = -O0 -fsanitize=address -g
