@@ -33,8 +33,10 @@ int8_t hardware_init_gpio(const BoardComponentId id)
 {
     static uint8_t nex_free_gpio = 0;
     char path[1024] = {0};
-    char* cursor = strcat("./virtual_gpios/", path);
-    sprintf(cursor, "%u", id);
+    char gpios_name[] = "gpio_";
+    strcat(path, gpios_name);
+    sprintf(path + sizeof(gpios_name) -1, "%d", id);
+    *(path + sizeof(gpios_name)) = '\0';
     int new_pin_fd = open(path, O_CREAT | O_RDWR, S_IWUSR );
     if (new_pin_fd < 0) {
         return -1;

@@ -11,8 +11,8 @@ void main_1(void)
     hardware_init_can(CAN_MODULE_GENERAL, 500000);
     hardware_init_can(CAN_MODULE_DV, 500000);
     for(;;){
-        hardware_read_can(CAN_MODULE_INVERTER, NULL);
-        hardware_read_can(CAN_MODULE_GENERAL, NULL);
-        hardware_read_can(CAN_MODULE_DV, NULL);
+        // hardware_read_can(CAN_MODULE_INVERTER, NULL);
+        // hardware_read_can(CAN_MODULE_GENERAL, NULL);
+        // hardware_read_can(CAN_MODULE_DV, NULL);
     }
 }
