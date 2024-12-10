@@ -12,7 +12,7 @@ void main_0(void){
         if (!recv) {
             gpio_set_high(0);
         }else{
-            gpio_set_low(1);
+            gpio_set_low(0);
         }
         wait_milliseconds(500);
         gpio_toggle(0);
