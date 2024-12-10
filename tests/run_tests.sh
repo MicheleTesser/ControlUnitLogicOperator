@@ -33,6 +33,8 @@ fi
 
 ./setup_test_env.sh "init"
 
+sudo modprobe gpio-mockup gpio_mockup_ranges=-1,10
+
 cd ./tests/
 if [ $# -eq 1 ]; then
     if [ -d ./$1 ]; then
@@ -51,5 +53,6 @@ done
 cd ..
 
 ./setup_test_env.sh "close"
+sudo modprobe -r gpio-mockup
 
 exit 0

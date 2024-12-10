@@ -33,14 +33,21 @@ int main(void)
     thrd_create(&core_2, init_core_2, NULL);
 
 
-    wait_milliseconds(1000);
     PASSED("basic initialization worked");
-    if (!access("./gpio_0", F_OK)) {
+    wait_milliseconds(1000);
+    int pin= open("./gpio_0", O_RDONLY, 666);
+    if (pin>= 0) {
         PASSED("gpios created succesfully");
     }else{
         FAILED("gpios not created");
     }
 
+    int v='1';
+    while (v == '0') read(pin, &v, sizeof(v));
+    PASSED("toggle one ok");
+    while (v == '1') read(pin, &v, sizeof(v));
+    PASSED("toggle two ok");
+    
     print_SCORE();
     return 0;
 }
