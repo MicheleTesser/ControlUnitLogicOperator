@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra -std=c11
-C_EXFLAGS = 
+C_EXFLAGS += 
 
 score_lib_src_path := $(or $(SCORE_LIB_ROOT), .)
 test_lib.c := $(score_lib_src_path)/test_lib.c

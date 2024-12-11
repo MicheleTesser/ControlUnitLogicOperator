@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
-C_EXFLAGS = 
+C_EXFLAGS += 
 
 can_src_path := $(or $(CAN_ROOT), .)
 can.c := $(can_src_path)/can.c

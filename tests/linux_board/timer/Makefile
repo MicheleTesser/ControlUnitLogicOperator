@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
-C_EXFLAGS = 
+C_EXFLAGS += 
 
 timer_src_path := $(or $(TIMER_ROOT), .)
 timer.c := $(timer_src_path)/timer.c

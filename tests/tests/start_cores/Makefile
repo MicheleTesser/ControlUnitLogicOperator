@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
-C_EXFLAGS = 
+C_EXFLAGS +=
 
 MAIN_ROOT := .
 
@@ -13,14 +13,14 @@ include $(CONTROL_UNIT_LOGIC_OPERATOR_ROOT)/Makefile
 TIMER_ROOT = $(MAIN_ROOT)/linux_board/timer
 include  $(TIMER_ROOT)/Makefile
 
-GPIO_ROOT = $(MAIN_ROOT)/linux_board/gpio
-include  $(GPIO_ROOT)/Makefile
-
 CAN_ROOT = $(MAIN_ROOT)/linux_board/can
 include  $(CAN_ROOT)/Makefile
 
 SERIAL_ROOT = $(MAIN_ROOT)/linux_board/serial
 include  $(SERIAL_ROOT)/Makefile
+
+GPIO_ROOT = $(MAIN_ROOT)/linux_board/gpio
+include  $(GPIO_ROOT)/Makefile
 
 OBJ_FILE = $(wildcard *.o)
 
@@ -38,13 +38,9 @@ release: clean compile
 compile: main
 
 main: main.c
-	gcc $(C_FLAGS) main.c $(OBJ_FILE) -o main
+	gcc $(C_FLAGS) main.c $(OBJ_FILE) $(C_EXFLAGS) -o main
 
 clean:
 ifeq ($(wildcard main),main)
 	rm main
 endif
-ifneq ($(wildcard gpio_*), )
-	rm gpio_*
-endif
-

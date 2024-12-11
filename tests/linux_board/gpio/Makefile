@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
-C_EXFLAGS = 
+C_EXFLAGS += -lgpiod
 
 gpio_src_path := $(or $(GPIO_ROOT), .)
 gpio.c := $(gpio_src_path)/gpio.c

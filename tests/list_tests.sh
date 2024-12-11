@@ -10,4 +10,7 @@ if [ ! -d ./linux_board -o ! -d ./.dummy -o ! -d ./tests ]; then
     exit 2
 fi
 
-ls -A ./tests
+
+for TEST in $(ls -A ./tests);do
+    echo "- $TEST"
+done

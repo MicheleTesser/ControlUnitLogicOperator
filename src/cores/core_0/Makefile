@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
-C_EXFLAGS = 
+C_EXFLAGS += 
 
 core0_src_path := $(or $(CORE_0_ROOT), .)
 core0.c := $(core0_src_path)/core0.c

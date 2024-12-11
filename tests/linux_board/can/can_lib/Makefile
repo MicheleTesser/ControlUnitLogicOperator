@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
-C_EXFLAGS = 
+C_EXFLAGS += 
 
 canlib_src_path := $(or $(CANLIB_ROOT), .)
 canlib.c := $(canlib_src_path)/canlib.c

@@ -1,6 +1,6 @@
 CC = gcc
 C_FLAGS = -Wall -Wextra
-C_EXFLAGS = 
+C_EXFLAGS += 
 
 
 control_unit_logic_operator_src_path := $(or $(CONTROL_UNIT_LOGIC_OPERATOR_ROOT), .)
