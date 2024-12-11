@@ -6,17 +6,31 @@ RED="\e[31m"
 MAGENTA="\e[35m"
 ENDCOLOR="\e[0m"
 
+test_root=$(pwd)
+
+end_tests() {
+    cd $test_root
+    ./setup_test_env.sh "close"
+    sudo modprobe -r gpio-mockup
+}
+
 run_test() {
     echo -e ${MAGENTA}testing $(echo $1 | cut -d'/' -f1) $ENDCOLOR
     cd $1
     echo -e ${YELLOW}building in DEBUG mode $ENDCOLOR
-    make debug 1>/dev/null
+    mkdir build 2>/dev/null
+    cd build
+    cmake .. 1>/dev/null
+    make build_debug 1>/dev/null
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
+    cd debug
     ./main
+    cd ..
     make clean 1>/dev/null
     echo -e ${YELLOW}building in RELEASE mode $ENDCOLOR
-    make 1>/dev/null
+    make build_release 1>/dev/null
     echo -e ${GREEN}running in RELEASE mode $ENDCOLOR
+    cd release
     ./main
     cd ..
 }
@@ -42,17 +56,15 @@ if [ $# -eq 1 ]; then
     else
         echo test not found
     fi
-    cd ..
+    end_tests
     exit 0
 fi
 
 for TEST_DIR in $(/bin/ls -d */ 2>/dev/null ); do
     run_test $TEST_DIR
+    cd $test_root/tests
 done
 
-cd ..
-
-./setup_test_env.sh "close"
-sudo modprobe -r gpio-mockup
+end_tests
 
 exit 0
