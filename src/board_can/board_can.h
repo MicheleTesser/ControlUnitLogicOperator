@@ -6,14 +6,14 @@
 #include "../lib/raceup_board/raceup_board.h"
 
 enum CAN_FREQUENCY{
-    _1_MBYTE_S_ = 1000000,
-    _500_KBYTE_S_ = 500000,
-    _250_KBYTE_S_ = 250000,
-    _125_KBYTE_S_ = 125000,
-    _50_KBYTE_S_ = 50000,
-    _20_KBYTE_S_ = 20000,
-    _10_KBYTE_S_ = 10000,
-    _5_KBYTE_S_ = 5000,
+    _1_MBYTE_S_ = 1000000L,
+    _500_KBYTE_S_ = 500000L,
+    _250_KBYTE_S_ = 250000L,
+    _125_KBYTE_S_ = 125000L,
+    _50_KBYTE_S_ = 50000L,
+    _20_KBYTE_S_ = 20000L,
+    _10_KBYTE_S_ = 10000L,
+    _5_KBYTE_S_ = 5000L,
 };
 
 int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq);
