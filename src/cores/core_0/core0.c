@@ -1,7 +1,7 @@
 #include "./core0.h"
-#include "../board_conf/id_conf.h"
-#include "../lib/raceup_board/raceup_board.h"
-#include "../alive_blink/alive_blink.h"
+#include "../../board_conf/id_conf.h"
+#include "../../lib/raceup_board/raceup_board.h"
+#include "../../alive_blink/alive_blink.h"
 #include <stdint.h>
 
 //private
