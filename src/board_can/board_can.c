@@ -73,7 +73,13 @@ int8_t board_can_read(uint8_t can_id, CanMessage* o_mex)
         return -2;
     }
 
-    return hardware_read_can(can_id, o_mex);
+    if(hardware_read_can(mex_to_read_t, o_mex) <0){
+        return -1;
+    }
+
+    mex_to_read[mex_to_read_t] = 0;
+
+    return 0;
 }
 int8_t board_can_write(uint8_t can_id, CanMessage* o_mex)
 {
