@@ -23,7 +23,7 @@ static void dv_can_interrupt(void)
 }
 
 //public
-int8_t board_can_init(uint8_t can_id, uint32_t freq)
+int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
 {
     if(hardware_init_can(can_id, freq) < 0){
         return -1;

@@ -11,9 +11,9 @@ static alive_blink_fd alive_fd;
 
 static void setup(void)
 {
-    board_can_init(CAN_MODULE_INVERTER, 500000);
-    board_can_init(CAN_MODULE_GENERAL, 500000);
-    board_can_init(CAN_MODULE_DV, 500000);
+    board_can_init(CAN_MODULE_INVERTER, _500_KBYTE_S_);
+    board_can_init(CAN_MODULE_GENERAL, _500_KBYTE_S_);
+    board_can_init(CAN_MODULE_DV, _500_KBYTE_S_);
     alive_fd = i_m_alive_init(100 MILLIS, LED_2);
 }
 
