@@ -1,7 +1,7 @@
 #include "score_lib/test_lib.h"
 #include "ControlUnitLogicOperator.h"
-#include "./linux_board/gpio/gpio.h"
 #include "./src/board_conf/id_conf.h"
+#include "linux_board/linux_board.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/cdefs.h>

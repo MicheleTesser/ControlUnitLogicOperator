@@ -13,6 +13,7 @@ static alive_blink_fd alive_fd =0;
 
 static void setup(void)
 {
+    hardware_init_interrupt();
     hardware_init_gpio(LED_1);
     hardware_init_gpio(SCS);
     hardware_init_serial(SERIAL);

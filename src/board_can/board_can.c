@@ -19,7 +19,7 @@ static void general_can_interrupt(void)
 
 static void dv_can_interrupt(void)
 {
-    mex_to_read[1] = 1;
+    mex_to_read[2] = 1;
 }
 
 //public
@@ -36,12 +36,12 @@ int8_t board_can_init(uint8_t can_id, uint32_t freq)
             }
             break;
         case CAN_MODULE_GENERAL:
-            if(hardware_interrupt_attach_fun(0, general_can_interrupt)){
+            if(hardware_interrupt_attach_fun(1, general_can_interrupt)){
                 return -2;
             }
             break;
         case CAN_MODULE_DV:
-            if(hardware_interrupt_attach_fun(0, dv_can_interrupt)){
+            if(hardware_interrupt_attach_fun(2, dv_can_interrupt)){
                 return -2;
             }
             break;
@@ -61,10 +61,10 @@ int8_t board_can_read(uint8_t can_id, CanMessage* o_mex)
             if (mex_to_read[0]) mex_to_read_t = 0;
             break;
         case CAN_MODULE_GENERAL:
-            if (mex_to_read[1]) mex_to_read_t = 0;
+            if (mex_to_read[1]) mex_to_read_t = 1;
             break;
         case CAN_MODULE_DV:
-            if (mex_to_read[2]) mex_to_read_t = 0;
+            if (mex_to_read[2]) mex_to_read_t = 2;
             break;
         default:
             return -1;

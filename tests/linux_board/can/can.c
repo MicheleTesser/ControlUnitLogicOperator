@@ -1,4 +1,4 @@
-#include "./raceup_board/raceup_board.h"
+#include "can.h"
 #include "can_lib/canlib.h"
 #include <linux/can.h>
 #include <string.h>
@@ -25,6 +25,7 @@ static int extract_can_node(const BoardComponentId id){
     }
 }
 
+//public
 int8_t hardware_init_can(const BoardComponentId id,uint32_t baud_rate __attribute_maybe_unused__)
 {
     switch (id) {
