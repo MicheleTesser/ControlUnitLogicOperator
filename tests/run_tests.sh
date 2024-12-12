@@ -20,6 +20,7 @@ run_test() {
     echo -e ${YELLOW}building in DEBUG mode $ENDCOLOR
     mkdir build 2>/dev/null
     cd build
+    rm -rf ./*
     cmake .. 1>/dev/null
     make build_debug 1>/dev/null
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
