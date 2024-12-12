@@ -7,7 +7,6 @@
 typedef uint8_t alive_blink_fd;
 
 alive_blink_fd i_m_alive_init(
-        const time_var_microseconds curr_time, 
         const time_var_microseconds frequency,
         const uint8_t pin_blink);
 

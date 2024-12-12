@@ -12,7 +12,7 @@ static void setup(void)
     hardware_init_can(CAN_MODULE_INVERTER, 500000);
     hardware_init_can(CAN_MODULE_GENERAL, 500000);
     hardware_init_can(CAN_MODULE_DV, 500000);
-    i_m_alive_init(timer_time_now(), 100, LED_2);
+    i_m_alive_init(100, LED_2);
 }
 
 static void loop(void)

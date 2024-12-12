@@ -16,12 +16,11 @@ static uint8_t next =0;
 
 
 alive_blink_fd i_m_alive_init(
-        const time_var_microseconds curr_time, 
         const time_var_microseconds frequency,
         const uint8_t pin_blink)
 {
     
-    timers[next].time_last_led_1 = curr_time;
+    timers[next].time_last_led_1 = timer_time_now();
     timers[next].frequency_led = frequency;
     timers[next].pin_blink = pin_blink;
 
