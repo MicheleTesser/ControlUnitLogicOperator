@@ -6,7 +6,7 @@ int8_t hardware_init_timer(const BoardComponentId id)
 {
     return 0;
 }
-extern int8_t wait_milliseconds(const BoardComponentId id, uint32_t time)
+int8_t wait_milliseconds(const BoardComponentId id, uint32_t time)
 {
     switch (id) {
         case 0:
@@ -16,4 +16,9 @@ extern int8_t wait_milliseconds(const BoardComponentId id, uint32_t time)
             return -1;
     }
      return 0;
+}
+
+uint64_t timer_time_now(void)
+{
+    now();
 }

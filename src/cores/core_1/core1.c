@@ -3,16 +3,28 @@
 
 #include "../../board_conf/id_conf.h"
 #include "../../lib/raceup_board/raceup_board.h"
+#include "../../alive_blink/alive_blink.h"
 
-//INFO: Service core
-void main_1(void)
+static alive_blink_fd alive_fd;
+
+static void setup(void)
 {
     hardware_init_can(CAN_MODULE_INVERTER, 500000);
     hardware_init_can(CAN_MODULE_GENERAL, 500000);
     hardware_init_can(CAN_MODULE_DV, 500000);
+    i_m_alive_init(timer_time_now(), 100, LED_2);
+}
+
+static void loop(void)
+{
+    i_m_alive(alive_fd);
+}
+
+//INFO: Service core
+void main_1(void)
+{
+    setup();
     for(;;){
-        // hardware_read_can(CAN_MODULE_INVERTER, NULL);
-        // hardware_read_can(CAN_MODULE_GENERAL, NULL);
-        // hardware_read_can(CAN_MODULE_DV, NULL);
+        loop();
     }
 }
