@@ -5,13 +5,10 @@
 
 static alive_blink_fd alive_fd =0;
 
-#define MILLIS
-#define MICROS
-
 static void setup(void)
 {
     hardware_init_gpio(LED_3);
-    alive_fd = i_m_alive_init(300 MILLIS * 1000 MICROS, LED_3);
+    alive_fd = i_m_alive_init(300 MILLIS, LED_3);
 }
 
 static void loop(void)

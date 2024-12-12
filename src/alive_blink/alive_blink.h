@@ -4,6 +4,8 @@
 #include "../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 
+#define MILLIS * 1000
+
 typedef uint8_t alive_blink_fd;
 
 alive_blink_fd i_m_alive_init(

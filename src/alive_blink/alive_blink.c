@@ -3,10 +3,6 @@
 #include "../board_conf/id_conf.h"
 #include <stdint.h>
 
-#define SEC
-#define MILLIS
-#define MICROS
-
 static struct{
     time_var_microseconds time_last_led_1;
     time_var_microseconds frequency_led;
