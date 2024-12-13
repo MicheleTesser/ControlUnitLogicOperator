@@ -24,4 +24,6 @@ int8_t GIEI_get_all_data(const uint32_t data_type, const struct GIEI_status* res
 
 int8_t GIEI_send_data(const struct GIEI_status* const restrict data);
 
+uint8_t GIEI_check_running_condition(void);
+
 #endif // !__CAR_GIEI__

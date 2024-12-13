@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-
+#include "../../missions/missons.h"
 #include "../../board_conf/id_conf.h"
 #include "../../lib/raceup_board/raceup_board.h"
 #include "../../alive_blink/alive_blink.h"
@@ -28,7 +28,7 @@ static void loop(void)
     if(board_can_read(CAN_MODULE_GENERAL, &mex) >= 0){
         board_can_manage_message(CAN_MODULE_GENERAL, &mex);
     }
-    if(board_can_read(CAN_MODULE_DV, &mex) >= 0){
+    if(get_current_mission() != MANUALY && board_can_read(CAN_MODULE_DV, &mex) >= 0){
         board_can_manage_message(CAN_MODULE_DV, &mex);
     }
 }
