@@ -17,7 +17,18 @@ cd ../..
 
 rm -f ./can*
 
-echo "creating can1.h/c"
-./dbc/dbcc/dbcc ./dbc/can1.dbc
-echo "creating can2.h/c"
-./dbc/dbcc/dbcc ./dbc/can2.dbc
+create_lib_can_dbc() {
+    echo "creating can${1}.h/c"
+    ./dbc/dbcc/dbcc ./dbc/can${1}.dbc
+    sed -i "s/unpack_message/unpack_message_can${1}/" ./can${1}.h
+    sed -i "s/unpack_message/unpack_message_can${1}/" ./can${1}.c
+
+    sed -i "s/pack_message/pack_message_can${1}/" ./can${1}.h
+    sed -i "s/pack_message/pack_message_can${1}/" ./can${1}.c
+
+    sed -i "s/print_message/print_message_can${1}/" ./can${1}.h
+    sed -i "s/print_message/print_message_can${1}/" ./can${1}.c
+}
+
+create_lib_can_dbc 1
+create_lib_can_dbc 2

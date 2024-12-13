@@ -23,21 +23,21 @@ static void loop(void)
     {
         CanMessage mex;
         if(board_can_read(CAN_MODULE_INVERTER, &mex) >= 0){
-            //TODO: manage inverter messages
+            board_can_manage_message(CAN_MODULE_INVERTER, &mex);
         }
     }
 
     {
         CanMessage mex;
         if(board_can_read(CAN_MODULE_GENERAL, &mex) >= 0){
-            //TODO: manage general messages
+            board_can_manage_message(CAN_MODULE_GENERAL, &mex);
         }
     }
 
     {
         CanMessage mex;
         if(board_can_read(CAN_MODULE_DV, &mex) >= 0){
-            //TODO: manage dv messages
+            board_can_manage_message(CAN_MODULE_DV, &mex);
         }
     }
 }

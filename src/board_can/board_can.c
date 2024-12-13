@@ -1,5 +1,7 @@
 #include "./board_can.h"
 #include "../board_conf/id_conf.h"
+#include "../lib/board_dbc/can1.h"
+#include "../lib/board_dbc/can2.h"
 #include <stdint.h>
 
 //private
@@ -54,7 +56,7 @@ int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
     return 0;
 }
 
-int8_t board_can_read(uint8_t can_id, CanMessage* o_mex)
+int8_t board_can_read(const uint8_t can_id,CanMessage* const restrict o_mex)
 {
     int8_t mex_to_read_t = -1;
     switch (can_id) {
@@ -82,7 +84,26 @@ int8_t board_can_read(uint8_t can_id, CanMessage* o_mex)
 
     return 0;
 }
-int8_t board_can_write(uint8_t can_id, CanMessage* o_mex)
+
+int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict o_mex)
 {
     return hardware_write_can(can_id, o_mex);
+}
+
+int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const restrict mex)
+{
+    switch (can_id) {
+        case CAN_MODULE_INVERTER:
+            //TODO: implement manager for can inverter messages
+            break;
+        case CAN_MODULE_GENERAL:
+            //TODO: implement manager for can general messages
+            break;
+        case CAN_MODULE_DV:
+            //TODO: implement manager for can dv messages
+            break;
+        default:
+            return -1;
+    
+    }
 }

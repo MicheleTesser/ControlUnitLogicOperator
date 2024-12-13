@@ -74,6 +74,8 @@ int main(void)
     can_send_frame(socket_2, &frame);
     raise_interrupt(2);
 
+    sleep(1);
+
     print_SCORE();
     return 0;
 }

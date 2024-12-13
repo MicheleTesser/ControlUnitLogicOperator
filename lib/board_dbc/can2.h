@@ -453,9 +453,9 @@ typedef PREPACK struct {
 	can_0x3c2_Lem_t can_0x3c2_Lem;
 } POSTPACK can_obj_can2_h_t;
 
-int unpack_message(can_obj_can2_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp);
-int pack_message(can_obj_can2_h_t *o, const unsigned long id, uint64_t *data);
-int print_message(const can_obj_can2_h_t *o, const unsigned long id, FILE *output);
+int unpack_message_can2_can2(can_obj_can2_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp);
+int pack_message_can2(can_obj_can2_h_t *o, const unsigned long id, uint64_t *data);
+int print_message_can2(const can_obj_can2_h_t *o, const unsigned long id, FILE *output);
 
 int decode_can_0x052_regen(const can_obj_can2_h_t *o, uint8_t *out);
 int encode_can_0x052_regen(can_obj_can2_h_t *o, uint8_t in);

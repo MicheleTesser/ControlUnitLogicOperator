@@ -2549,7 +2549,7 @@ int print_can_0x3c2_Lem(const can_obj_can2_h_t *o, FILE *output) {
 	return r;
 }
 
-int unpack_message(can_obj_can2_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp) {
+int unpack_message_can2_can2(can_obj_can2_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp) {
 	assert(o);
 	assert(id < (1ul << 29)); /* 29-bit CAN ID is largest possible */
 	assert(dlc <= 8);         /* Maximum of 8 bytes in a CAN packet */
@@ -2584,7 +2584,7 @@ int unpack_message(can_obj_can2_h_t *o, const unsigned long id, uint64_t data, u
 	return -1; 
 }
 
-int pack_message(can_obj_can2_h_t *o, const unsigned long id, uint64_t *data) {
+int pack_message_can2(can_obj_can2_h_t *o, const unsigned long id, uint64_t *data) {
 	assert(o);
 	assert(id < (1ul << 29)); /* 29-bit CAN ID is largest possible */
 	switch (id) {
@@ -2618,7 +2618,7 @@ int pack_message(can_obj_can2_h_t *o, const unsigned long id, uint64_t *data) {
 	return -1; 
 }
 
-int print_message(const can_obj_can2_h_t *o, const unsigned long id, FILE *output) {
+int print_message_can2(const can_obj_can2_h_t *o, const unsigned long id, FILE *output) {
 	assert(o);
 	assert(id < (1ul << 29)); /* 29-bit CAN ID is largest possible */
 	assert(output);

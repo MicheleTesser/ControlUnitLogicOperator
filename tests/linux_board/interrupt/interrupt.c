@@ -3,7 +3,6 @@
 #include <signal.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/cdefs.h>
 #include <unistd.h>
@@ -31,7 +30,7 @@ int8_t hardware_init_interrupt(void)
     sigemptyset(&act.sa_mask);
 
     sigaction(SIGUSR1, &act, NULL);
-    interrupt_info.interrupt_enabled = 1;
+    hardware_interrupt_enable();
 
     return 0;
 }
