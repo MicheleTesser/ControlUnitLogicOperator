@@ -4,6 +4,7 @@
 
 //private
 
+//FIX: add an abstract atomic operation
 static uint8_t mex_to_read[3];
 
 

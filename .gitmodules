@@ -2,3 +2,9 @@
 	path = lib/raceup_board
 	url = https://github.com/mrmonopoly-cyber/raceup_board.git
 	branch = only_src
+[submodule "lib/dbc"]
+	path = lib/dbc
+	url = https://github.com/raceup-electric/dbc.git
+[submodule "lib/board_dbc/dbc"]
+	path = lib/board_dbc/dbc
+	url = https://github.com/raceup-electric/dbc.git
