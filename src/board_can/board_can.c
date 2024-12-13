@@ -26,6 +26,73 @@ static void dv_can_interrupt(void)
     mex_to_read[2] = 1;
 }
 
+static int8_t manage_can_1_message(const CanMessage* const restrict mex){
+    //TODO: implement manager for can inverter messages
+    switch (mex->id) {
+        case CAN_ID_VCUINVFL:
+        case CAN_ID_VCUINVFR:    
+        case CAN_ID_VCUINVRL: 
+        case CAN_ID_VCUINVRR: 
+        case CAN_ID_INVERTERFL1:
+        case CAN_ID_INVERTERFR1:
+        case CAN_ID_INVERTERFL2:
+        case CAN_ID_INVERTERFR2:
+        case CAN_ID_INVERTERRL1:
+        case CAN_ID_INVERTERRR1:
+        case CAN_ID_INVERTERRL2:
+        case CAN_ID_INVERTERRR2:
+        case CAN_ID_VECTOR__INDEPENDENT_SIG_MSG:
+        default:
+            return -1;
+    }
+    return 0;
+}
+
+static int8_t manage_can_2_message(const CanMessage* const restrict mex){
+    //TODO: implement manager for can general messages
+    
+    switch (mex->id) {
+        case CAN_ID_PADDLE:
+        case CAN_ID_DRIVER:
+        case CAN_ID_BMSLV1:
+        case CAN_ID_BMSLV2:
+        case CAN_ID_BMSHV1:
+        case CAN_ID_BMSHV2:
+        case CAN_ID_IMU1:
+        case CAN_ID_IMU2:
+        case CAN_ID_IMU3:
+        case CAN_ID_IMUCALIB:
+        case CAN_ID_MAP:
+        case CAN_ID_CARSTATUS:
+        case CAN_ID_CARSETTINGS:
+        case CAN_ID_LAPSTART:
+        case CAN_ID_TEMP1:
+        case CAN_ID_TEMP2:
+        case CAN_ID_SUSPREAR:
+        case CAN_ID_SUSPFRONT:
+        case CAN_ID_TEMPFRONTR:
+        case CAN_ID_INVVOLT:
+        case CAN_ID_PCU:
+        case CAN_ID_LEM:
+        default:
+            return -1;
+    
+    }
+    
+
+    return 0;
+}
+
+static int8_t manage_can_3_message(const CanMessage* const restrict mex){
+    //TODO: implement manager for can dv messages
+    
+    switch (mex->id) {
+        default:
+            return -1;
+    }
+    return 0;
+}
+
 //public
 int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
 {
@@ -96,13 +163,12 @@ int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const re
 {
     switch (can_id) {
         case CAN_MODULE_INVERTER:
-            //TODO: implement manager for can inverter messages
-            break;
+            return manage_can_1_message(mex);
         case CAN_MODULE_GENERAL:
-            //TODO: implement manager for can general messages
+            return manage_can_2_message(mex);
             break;
         case CAN_MODULE_DV:
-            //TODO: implement manager for can dv messages
+            return manage_can_3_message(mex);
             break;
         default:
             return -1;
