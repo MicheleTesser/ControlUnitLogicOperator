@@ -3,6 +3,7 @@
 #include "../lib/board_dbc/can1.h"
 #include "../lib/board_dbc/can2.h"
 #include <stdint.h>
+#include <string.h>
 
 //private
 
@@ -58,6 +59,7 @@ int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
 
 int8_t board_can_read(const uint8_t can_id,CanMessage* const restrict o_mex)
 {
+    memset(o_mex, 0, sizeof(*o_mex));
     int8_t mex_to_read_t = -1;
     switch (can_id) {
         case CAN_MODULE_INVERTER:
