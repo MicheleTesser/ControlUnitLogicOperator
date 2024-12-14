@@ -2549,7 +2549,7 @@ int print_can_0x3c2_Lem(const can_obj_can2_h_t *o, FILE *output) {
 	return r;
 }
 
-int unpack_message_can2_can2(can_obj_can2_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp) {
+int unpack_message_can2(can_obj_can2_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp) {
 	assert(o);
 	assert(id < (1ul << 29)); /* 29-bit CAN ID is largest possible */
 	assert(dlc <= 8);         /* Maximum of 8 bytes in a CAN packet */

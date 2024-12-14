@@ -48,7 +48,7 @@ fi
 
 ./setup_test_env.sh "init"
 
-sudo modprobe gpio-mockup gpio_mockup_ranges=-1,10
+sudo modprobe gpio-mockup gpio_mockup_ranges=0,50
 
 cd ./tests/
 if [ $# -eq 1 ]; then

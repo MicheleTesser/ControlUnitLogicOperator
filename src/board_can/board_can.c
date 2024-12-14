@@ -124,7 +124,7 @@ int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
     return 0;
 }
 
-int8_t board_can_read(const uint8_t can_id,CanMessage* const restrict o_mex)
+int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
 {
     memset(o_mex, 0, sizeof(*o_mex));
     int8_t mex_to_read_t = -1;
@@ -166,10 +166,8 @@ int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const re
             return manage_can_1_message(mex);
         case CAN_MODULE_GENERAL:
             return manage_can_2_message(mex);
-            break;
         case CAN_MODULE_DV:
             return manage_can_3_message(mex);
-            break;
         default:
             return -1;
     

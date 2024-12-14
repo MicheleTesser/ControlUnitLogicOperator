@@ -62,3 +62,13 @@ uint8_t check_imp(const enum IMPL impl)
 
     return 0;
 }
+
+float driver_get_amount(const enum INPUT_TYPES driver_input)
+{
+    return driver_info.percentages[driver_input];
+}
+
+float driver_set_amount(const enum INPUT_TYPES driver_input, const float percentage)
+{
+    return driver_info.percentages[driver_input] = percentage;
+}

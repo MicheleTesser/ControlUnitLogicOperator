@@ -119,7 +119,7 @@ void update_status(const CanMessage* const restrict mex)
     struct AMK_Actual_Values_2* values_2 = NULL;
     struct AMK_Actual_Values_1* values_1 = NULL;
     can_obj_can1_h_t o;
-    unpack_message_can1_can1(&o, mex->id, mex->full_word, mex->message_size, 0);
+    unpack_message_can1(&o, mex->id, mex->full_word, mex->message_size, 0);
     switch (mex->id) {
         case CAN_ID_INVERTERFL1:
             STATUS_WORD_1(FRONT_LEFT, o.can_0x283_InverterFL1);

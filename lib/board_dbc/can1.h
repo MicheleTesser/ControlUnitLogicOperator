@@ -239,7 +239,7 @@ typedef PREPACK struct {
 	can_0x40000000_VECTOR__INDEPENDENT_SIG_MSG_t can_0x40000000_VECTOR__INDEPENDENT_SIG_MSG;
 } POSTPACK can_obj_can1_h_t;
 
-int unpack_message_can1_can1(can_obj_can1_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp);
+int unpack_message_can1(can_obj_can1_h_t *o, const unsigned long id, uint64_t data, uint8_t dlc, dbcc_time_stamp_t time_stamp);
 int pack_message_can1(can_obj_can1_h_t *o, const unsigned long id, uint64_t *data);
 int print_message_can1(const can_obj_can1_h_t *o, const unsigned long id, FILE *output);
 

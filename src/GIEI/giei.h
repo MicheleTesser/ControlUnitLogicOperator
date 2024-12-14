@@ -16,9 +16,6 @@ struct init_args;
 struct GIEI_status;
 
 int8_t GIEI_initialize(const struct init_args* const restrict init_args);
-int8_t GIEI_disable(void);
-int8_t GIEI_enable(void);
-
 int8_t GIEI_get_all_data(const uint32_t data_type, const struct GIEI_status* restrict o_buffer, 
         const uint32_t buffer_size);
 

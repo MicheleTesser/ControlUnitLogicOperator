@@ -23,8 +23,8 @@ static uint8_t GIEI_get_hv_status(void)
 uint8_t GIEI_check_running_condition(void)
 {
     const uint8_t brake_treshold_percentage = 10;
-
     const time_var_microseconds sound_duration = 3 * 1000 * 1000;
+
     if ((timer_time_now() - GIEI.sound_start_at) > sound_duration) {
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
     }

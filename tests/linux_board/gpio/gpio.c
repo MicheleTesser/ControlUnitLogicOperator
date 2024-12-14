@@ -10,7 +10,7 @@
 #define CHIP_PATH "/dev/gpiochip1"
 #endif /* ifndef CHIP_PATH */
 
-#define gpio_pin_cnt 5
+#define gpio_pin_cnt 50
 static struct {
     struct gpiod_line_request* line_request;
     enum gpiod_line_value init_values[gpio_pin_cnt];
