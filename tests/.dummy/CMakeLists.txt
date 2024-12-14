@@ -12,6 +12,7 @@ pkg_check_modules(GPIOD REQUIRED libgpiod)
 file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_SOURCE_DIR}/src/*.c"
     "${CMAKE_SOURCE_DIR}/linux_board/*.c"
+    "${CMAKE_SOURCE_DIR}/score_lib/*.c"
     "${CMAKE_SOURCE_DIR}/lib/board_dbc/can1.c"
     "${CMAKE_SOURCE_DIR}/lib/board_dbc/can2.c"
 )
