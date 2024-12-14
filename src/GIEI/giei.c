@@ -3,6 +3,7 @@
 #include "../driver_input/driver_input.h"
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
+#include <stdio.h>
 
 static struct{
     time_var_microseconds sound_start_at;
@@ -28,7 +29,7 @@ uint8_t GIEI_check_running_condition(void)
     if ((timer_time_now() - GIEI.sound_start_at) > sound_duration) {
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
     }
-    if (!GIEI.running) 
+    if (!GIEI.running && GIEI_get_hv_status()) 
     {
         //starting
         if (driver_get_amount(BRAKE) > brake_treshold_percentage && 
@@ -46,7 +47,7 @@ uint8_t GIEI_check_running_condition(void)
                 gpio_set_low(SCS);
             }
         //reset scs. can start again the precharge
-        }else if(!gpio_read_state(AIR_PRECHARGE_INIT) && !gpio_read_state(AIR_PRECHARGE_DONE)){
+        }else if(!GIEI_get_hv_status()){
             gpio_set_high(SCS);
         }
     //exiting from R2D
@@ -55,6 +56,9 @@ uint8_t GIEI_check_running_condition(void)
         GIEI.running =0;
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
         stop_engines();
+    }
+    if (GIEI.running) {
+        printf("running\n");
     }
     //continue with what you were doing
     return GIEI.running;

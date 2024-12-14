@@ -1,4 +1,5 @@
 #include "canlib.h"
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -50,10 +51,12 @@ int can_send_frame(int socket, struct can_frame *frame) {
 int can_recv_frame(int socket, struct can_frame *frame) {
     int nbytes;
 
+again:
     nbytes = read(socket, frame, sizeof(*frame));
-    if (nbytes != sizeof(struct can_frame)) {
-        perror("Read");
-        return -1;
+    if (nbytes < 0) {
+        if (errno == EINTR) {
+            goto again;
+        }     
     }
 
     return 0;
