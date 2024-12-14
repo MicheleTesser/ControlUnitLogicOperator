@@ -59,3 +59,9 @@ uint8_t GIEI_check_running_condition(void)
     //continue with what you were doing
     return GIEI.running;
 }
+
+int8_t GIEI_recv_data(const CanMessage* const restrict mex)
+{
+    update_status(mex);
+    return 0;
+}

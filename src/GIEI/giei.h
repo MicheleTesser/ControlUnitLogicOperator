@@ -10,6 +10,7 @@
  *  It does not depend on the type of engine used and has to stay in this way.
  */
 
+#include "../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 
 struct init_args;
@@ -19,7 +20,7 @@ int8_t GIEI_initialize(const struct init_args* const restrict init_args);
 int8_t GIEI_get_all_data(const uint32_t data_type, const struct GIEI_status* restrict o_buffer, 
         const uint32_t buffer_size);
 
-int8_t GIEI_send_data(const struct GIEI_status* const restrict data);
+int8_t GIEI_recv_data(const CanMessage* const restrict mex);
 
 uint8_t GIEI_check_running_condition(void);
 

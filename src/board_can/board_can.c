@@ -2,6 +2,8 @@
 #include "../board_conf/id_conf.h"
 #include "../lib/board_dbc/can1.h"
 #include "../lib/board_dbc/can2.h"
+#include "../GIEI/giei.h"
+#include "../driver_input/driver_input.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -29,19 +31,15 @@ static void dv_can_interrupt(void)
 static int8_t manage_can_1_message(const CanMessage* const restrict mex){
     //TODO: implement manager for can inverter messages
     switch (mex->id) {
-        case CAN_ID_VCUINVFL:
-        case CAN_ID_VCUINVFR:    
-        case CAN_ID_VCUINVRL: 
-        case CAN_ID_VCUINVRR: 
         case CAN_ID_INVERTERFL1:
-        case CAN_ID_INVERTERFR1:
         case CAN_ID_INVERTERFL2:
+        case CAN_ID_INVERTERFR1:
         case CAN_ID_INVERTERFR2:
         case CAN_ID_INVERTERRL1:
-        case CAN_ID_INVERTERRR1:
         case CAN_ID_INVERTERRL2:
+        case CAN_ID_INVERTERRR1:
         case CAN_ID_INVERTERRR2:
-        case CAN_ID_VECTOR__INDEPENDENT_SIG_MSG:
+            return GIEI_recv_data(mex);
         default:
             return -1;
     }
@@ -51,9 +49,24 @@ static int8_t manage_can_1_message(const CanMessage* const restrict mex){
 static int8_t manage_can_2_message(const CanMessage* const restrict mex){
     //TODO: implement manager for can general messages
     
+    can_obj_can2_h_t m;
+    unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, 0);
     switch (mex->id) {
         case CAN_ID_PADDLE:
+            driver_set_amount(REGEN, m.can_0x052_Paddle.regen);
+            break;
         case CAN_ID_DRIVER:
+            driver_set_amount(THROTTLE, m.can_0x053_Driver.throttle);
+            driver_set_amount(BRAKE, m.can_0x053_Driver.brake);
+            driver_set_amount(STEERING_ANGLE, m.can_0x053_Driver.steering);
+            if (!m.can_0x053_Driver.no_implausibility) {
+                set_implausibility(THROTTLE_BRAKE,m.can_0x053_Driver.bre_implausibility);
+                set_implausibility(THROTTLE_PADEL,m.can_0x053_Driver.pad_implausibility);
+                set_implausibility(THROTTLE_POT,m.can_0x053_Driver.pot_implausibility);
+            }else{
+                clear_implausibility();
+            }
+            break;
         case CAN_ID_BMSLV1:
         case CAN_ID_BMSLV2:
         case CAN_ID_BMSHV1:
