@@ -6,7 +6,11 @@
 
 typedef struct{
     uint32_t id;
-    uint8_t buffer[8];
+    union{
+        uint8_t buffer[8];
+        uint32_t words[2];
+        uint64_t full_word;
+    };
     uint8_t message_size;
 }CanMessage;
 
