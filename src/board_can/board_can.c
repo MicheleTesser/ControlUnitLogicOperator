@@ -5,6 +5,7 @@
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 //private
@@ -51,6 +52,7 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex){
     
     can_obj_can2_h_t m;
     unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, 0);
+    printf("reading mex of can 2 with id: %d\n",mex->id);
     switch (mex->id) {
         case CAN_ID_PADDLE:
             driver_set_amount(REGEN, m.can_0x052_Paddle.regen);
@@ -115,17 +117,17 @@ int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
 
     switch (can_id) {
         case CAN_MODULE_INVERTER:
-            if(hardware_interrupt_attach_fun(0, inverter_can_interrupt)){
+            if(hardware_interrupt_attach_fun(INTERRUPT_CAN_1, inverter_can_interrupt)){
                 return -2;
             }
             break;
         case CAN_MODULE_GENERAL:
-            if(hardware_interrupt_attach_fun(1, general_can_interrupt)){
+            if(hardware_interrupt_attach_fun(INTERRUPT_CAN_2, general_can_interrupt)){
                 return -2;
             }
             break;
         case CAN_MODULE_DV:
-            if(hardware_interrupt_attach_fun(2, dv_can_interrupt)){
+            if(hardware_interrupt_attach_fun(INTERRUPT_CAN_2, dv_can_interrupt)){
                 return -2;
             }
             break;
@@ -174,6 +176,7 @@ int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict o_
 
 int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const restrict mex)
 {
+    printf("managing messages of can: %d\n",can_id);
     switch (can_id) {
         case CAN_MODULE_INVERTER:
             return manage_can_1_message(mex);

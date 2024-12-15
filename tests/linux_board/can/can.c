@@ -1,6 +1,7 @@
 #include "can.h"
 #include "can_lib/canlib.h"
 #include <linux/can.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/cdefs.h>
 
@@ -48,7 +49,9 @@ int8_t hardware_read_can(const BoardComponentId id, CanMessage* mex)
 {
     struct can_frame frame;
     int can_node = extract_can_node(id);
+    printf("board read can frame: %d\n",id);
     can_recv_frame(can_node, &frame);
+    printf("board read can frame 1: %d\n",id);
     mex->message_size = frame.len;
     mex->id = frame.can_id;
     memcpy(mex->buffer, frame.data, frame.len);

@@ -30,15 +30,15 @@ static void loop(void)
 {
     i_m_alive(alive_fd);
     if (GIEI_check_running_condition()) {
-        // pump_enable();
-        // fan_enable();
-        //
-        // if (!pump_init_done()){
-        //     pump_init();
-        // }
-        // if (!fan_init_done()){
-        //     fan_init();
-        // }
+        pump_enable();
+        fan_enable();
+
+        if (!pump_init_done()){
+            pump_init();
+        }
+        if (!fan_init_done()){
+            fan_init();
+        }
     }
 }
 

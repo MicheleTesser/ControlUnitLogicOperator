@@ -51,14 +51,9 @@ int can_send_frame(int socket, struct can_frame *frame) {
 int can_recv_frame(int socket, struct can_frame *frame) {
     int nbytes;
 
-again:
+    printf("trying reading\n");
     nbytes = read(socket, frame, sizeof(*frame));
-    if (nbytes < 0) {
-        if (errno == EINTR) {
-            goto again;
-        }     
-    }
 
-    return 0;
+    return nbytes;
 }
 

@@ -32,6 +32,7 @@ uint8_t GIEI_check_running_condition(void)
     if (!GIEI.running && GIEI_get_hv_status()) 
     {
         //starting
+        // printf("try starting brake amount: %f\n",driver_get_amount(BRAKE));
         if (driver_get_amount(BRAKE) > brake_treshold_percentage && 
                 gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON))
         {

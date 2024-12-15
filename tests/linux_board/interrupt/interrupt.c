@@ -1,37 +1,60 @@
 #include "interrupt.h"
 
-#include <signal.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <sys/eventfd.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 #include <sys/cdefs.h>
 #include <unistd.h>
 
+#define MAX_INTERRUPTS 1024
+
 static struct{
-    interrupt_fun interrupt_table[1024];
+    interrupt_fun interrupt_table[MAX_INTERRUPTS];
     uint8_t interrupt_enabled;
+    uint64_t ev_fd;
 }interrupt_info;
 
 //private
-static void interrupt_fun_handler(int signal __attribute_maybe_unused__,siginfo_t* info, 
-        void* args __attribute_maybe_unused__){
-    interrupt_fun fun = interrupt_info.interrupt_table[info->si_value.sival_int];
-    if (fun && interrupt_info.interrupt_enabled) {
-        fun();
+
+static void default_interr_fun(void){
+}
+
+static void* interrupt_dispatcher(void* args __attribute_maybe_unused__){
+    for(;;){
+        uint64_t int_counter = 0;
+        if (interrupt_info.interrupt_enabled &&
+                read(interrupt_info.ev_fd, &int_counter, sizeof(int_counter)) > 0) 
+        {
+            if (int_counter < MAX_INTERRUPTS) {
+                interrupt_info.interrupt_table[int_counter]();       
+            }else{
+                fprintf(stderr, "invalid interrupt %ld\n", int_counter);
+            }
+        }
     }
+
+    return NULL;
 }
 
 //public
 int8_t hardware_init_interrupt(void)
 {
-    struct sigaction act;
-    act.sa_sigaction = interrupt_fun_handler;
-    act.sa_flags = SA_SIGINFO;
-    sigemptyset(&act.sa_mask);
+    pthread_t interrupt_dispatch;
+    interrupt_info.ev_fd= eventfd(0, 0);
+    if (interrupt_info.ev_fd < 0) {
+        fprintf(stderr, "failed init event_fd\n");
+        return -1;
+    }
+    for (int i =0; i<MAX_INTERRUPTS; i++) {
+        interrupt_info.interrupt_table[i] = default_interr_fun;
+    }
+    pthread_create(&interrupt_dispatch, NULL, interrupt_dispatcher, NULL);
+    sleep(1);
 
-    sigaction(SIGUSR1, &act, NULL);
     hardware_interrupt_enable();
-
     return 0;
 }
 
@@ -42,13 +65,9 @@ int8_t hardware_interrupt_attach_fun(const BoardComponentId fun_id,
     return 0;
 }
 
-void raise_interrupt(uint8_t interrupt_number)
+void raise_interrupt(uint64_t interrupt_number)
 {
-    union sigval value;
-
-    value.sival_int = interrupt_number;
-    sigqueue(getpid(), SIGUSR1, value);
-
+    write(interrupt_info.ev_fd, &interrupt_number, sizeof(interrupt_number));
 }
 
 int8_t hardware_interrupt_enable(void)
