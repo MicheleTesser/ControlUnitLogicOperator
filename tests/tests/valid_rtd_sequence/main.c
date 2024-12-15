@@ -62,11 +62,9 @@ static void* pilot_breaking(void* args __attribute_maybe_unused__){
     mex_c.id = CAN_ID_DRIVER;
     printf("sending mex driver. ID: %d, data: %ld\n",mex_c.id,mex_c.full_word);
     for(;;){
-        raise_interrupt(INTERRUPT_CAN_2);
+    raise_interrupt(INTERRUPT_CAN_2);
         hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     }
-    // for(;;){
-    // }
     return NULL;
 }
 
@@ -101,42 +99,9 @@ static void* inverter_on(void* args __attribute_maybe_unused__){
     can_m.message_size = pack_message_can1(&m, CAN_ID_INVERTERFL1, &can_m.full_word);
     printf("sending mex inverter. ID: %d, data: %ld\n",can_m.id,can_m.full_word);
     for(;;){
-        raise_interrupt(INTERRUPT_CAN_1);
+    raise_interrupt(INTERRUPT_CAN_1);
         hardware_write_can(CAN_MODULE_INVERTER, &can_m);
     }
-    // for(;;){
-    // }
-
-    return NULL;
-}
-
-static void* interrupt_manager__can_0(void* args __attribute_maybe_unused__){
-    block_signal_usr1_usr2();
-    sigset_t set_2;
-    sigemptyset(&set_2);
-    sigaddset(&set_2, SIGUSR1);
-
-    int signal;
-    for(;;){
-        sigwait(&set_2, &signal);
-    
-    }
-
-
-    return NULL;
-}
-
-static void* interrupt_manager__can_1(void* args __attribute_maybe_unused__){
-    block_signal_usr1_usr2();
-    sigset_t set_2;
-    sigemptyset(&set_2);
-    sigaddset(&set_2, SIGUSR2);
-
-    int signal;
-    for(;;){
-        sigwait(&set_2, &signal);
-    }
-
 
     return NULL;
 }
@@ -157,13 +122,11 @@ int main(void)
     pthread_t core_2;
     pthread_t pilot;
     pthread_t inverter;
-    pthread_t interrupt_manager_1;
-    pthread_t interrupt_manager_2;
-    pthread_create(&interrupt_manager_1, NULL, interrupt_manager__can_0, NULL);
-    pthread_create(&interrupt_manager_2, NULL, interrupt_manager__can_1, NULL);
     pthread_create(&core_0, NULL, init_core_0, NULL);
     pthread_create(&core_1, NULL, init_core_1, NULL);
     pthread_create(&core_2, NULL, init_core_2, NULL);
+    sleep(3);
+    printf("created cores\n");
     pthread_create(&pilot, NULL, pilot_breaking, NULL);
     pthread_create(&inverter, NULL, inverter_on, NULL);
     wait_milliseconds(10000);
@@ -174,8 +137,6 @@ int main(void)
     pthread_join(inverter, NULL);
     pthread_join(pilot, NULL);
 
-    pthread_join(interrupt_manager_1, NULL);
-    pthread_join(interrupt_manager_2, NULL);
     pthread_join(core_0, NULL);
     pthread_join(core_1, NULL);
     pthread_join(core_2, NULL);

@@ -15,6 +15,7 @@ close() {
 }
 
 if [ $1 = "init" ]; then
+    sudo modprobe gpio-mockup gpio_mockup_ranges=0,50
     create "culo_can_0"
     create "culo_can_1"
     create "culo_can_2"
@@ -24,4 +25,5 @@ if [ $1 = "close" ]; then
     close "culo_can_0"
     close "culo_can_1"
     close "culo_can_2"
+    sudo modprobe -r gpio-mockup
 fi

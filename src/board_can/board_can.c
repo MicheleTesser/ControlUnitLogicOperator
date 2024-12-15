@@ -5,7 +5,6 @@
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 //private
@@ -127,7 +126,7 @@ int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
             }
             break;
         case CAN_MODULE_DV:
-            if(hardware_interrupt_attach_fun(INTERRUPT_CAN_2, dv_can_interrupt)){
+            if(hardware_interrupt_attach_fun(INTERRUPT_CAN_3, dv_can_interrupt)){
                 return -2;
             }
             break;
@@ -145,10 +144,16 @@ int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
     int8_t mex_to_read_t = -1;
     switch (can_id) {
         case CAN_MODULE_INVERTER:
-            if (mex_to_read[0]) mex_to_read_t = 0;
+            if (mex_to_read[0]){
+                printf("read 0\n");
+                mex_to_read_t = 0;
+            }
             break;
         case CAN_MODULE_GENERAL:
-            if (mex_to_read[1]) mex_to_read_t = 1;
+            if (mex_to_read[1]){
+                printf("read 1\n");
+                mex_to_read_t = 1;
+            }
             break;
         case CAN_MODULE_DV:
             if (mex_to_read[2]) mex_to_read_t = 2;
@@ -164,7 +169,13 @@ int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
         return -1;
     }
 
+
     mex_to_read[mex_to_read_t] = 0;
+
+    printf("can mex id: %d\n",o_mex->id);
+    // if (o_mex->id > (1ul << 29)) {
+    //     return -3;
+    // }
 
     return 0;
 }

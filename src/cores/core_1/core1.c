@@ -1,7 +1,6 @@
 #include "./core1.h"
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include "../../missions/missons.h"
 #include "../../board_conf/id_conf.h"
@@ -15,7 +14,7 @@ static void setup(void)
 {
     board_can_init(CAN_MODULE_INVERTER, _500_KBYTE_S_);
     board_can_init(CAN_MODULE_GENERAL, _500_KBYTE_S_);
-    board_can_init(CAN_MODULE_DV, _500_KBYTE_S_);
+    board_can_init(CAN_MODULE_DV, _500_KBYTE_S_) < 0);
     alive_fd = i_m_alive_init(100 MILLIS, LED_2);
 }
 
@@ -24,11 +23,9 @@ static void loop(void)
     i_m_alive(alive_fd);
     CanMessage mex;
     if(board_can_read(CAN_MODULE_INVERTER, &mex) >= 0){
-        printf("Manage inverter\n");
         board_can_manage_message(CAN_MODULE_INVERTER, &mex);
     }
     if(board_can_read(CAN_MODULE_GENERAL, &mex) >= 0){
-        printf("Manage general\n");
         board_can_manage_message(CAN_MODULE_GENERAL, &mex);
     }
     if(get_current_mission() != MANUALY && board_can_read(CAN_MODULE_DV, &mex) >= 0){

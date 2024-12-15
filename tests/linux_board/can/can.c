@@ -35,10 +35,10 @@ int8_t hardware_init_can(const BoardComponentId id,uint32_t baud_rate __attribut
             return can0;
         case 1:
             can1 = can_init(CAN_INTERFACE_1);
-            return can0;
+            return can1;
         case 2:
             can2 = can_init(CAN_INTERFACE_2);
-            return can0;
+            return can2;
 
         default:
             return -1;
@@ -48,6 +48,7 @@ int8_t hardware_init_can(const BoardComponentId id,uint32_t baud_rate __attribut
 int8_t hardware_read_can(const BoardComponentId id, CanMessage* mex)
 {
     struct can_frame frame;
+    memset(&frame, 0, sizeof(frame));
     int can_node = extract_can_node(id);
     printf("board read can frame: %d\n",id);
     can_recv_frame(can_node, &frame);

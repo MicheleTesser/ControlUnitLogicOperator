@@ -3,7 +3,6 @@
 #include "../driver_input/driver_input.h"
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
-#include <stdio.h>
 
 static struct{
     time_var_microseconds sound_start_at;
@@ -58,9 +57,7 @@ uint8_t GIEI_check_running_condition(void)
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
         stop_engines();
     }
-    if (GIEI.running) {
-        printf("running\n");
-    }
+
     //continue with what you were doing
     return GIEI.running;
 }

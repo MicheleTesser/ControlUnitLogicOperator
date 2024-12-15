@@ -11,7 +11,6 @@ test_root=$(pwd)
 end_tests() {
     cd $test_root
     ./setup_test_env.sh "close"
-    sudo modprobe -r gpio-mockup
 }
 
 run_test() {
@@ -48,7 +47,6 @@ fi
 
 ./setup_test_env.sh "init"
 
-sudo modprobe gpio-mockup gpio_mockup_ranges=0,50
 
 cd ./tests/
 if [ $# -eq 1 ]; then

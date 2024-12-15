@@ -1,8 +1,7 @@
 #include "interrupt.h"
-
+#include <stdatomic.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <sys/eventfd.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -14,24 +13,24 @@
 static struct{
     interrupt_fun interrupt_table[MAX_INTERRUPTS];
     uint8_t interrupt_enabled;
-    uint64_t ev_fd;
+    _Atomic int8_t interr;
 }interrupt_info;
 
 //private
 
 static void default_interr_fun(void){
+    printf("empty interrupt\n");
 }
 
 static void* interrupt_dispatcher(void* args __attribute_maybe_unused__){
     for(;;){
-        uint64_t int_counter = 0;
-        if (interrupt_info.interrupt_enabled &&
-                read(interrupt_info.ev_fd, &int_counter, sizeof(int_counter)) > 0) 
+        if (interrupt_info.interrupt_enabled && interrupt_info.interr >=0)
         {
-            if (int_counter < MAX_INTERRUPTS) {
-                interrupt_info.interrupt_table[int_counter]();       
+            if (interrupt_info.interr < MAX_INTERRUPTS) {
+                interrupt_info.interrupt_table[interrupt_info.interr]();
+                interrupt_info.interr = -1;
             }else{
-                fprintf(stderr, "invalid interrupt %ld\n", int_counter);
+                fprintf(stderr, "invalid interrupt %ld\n", interrupt_info.interr);
             }
         }
     }
@@ -43,11 +42,7 @@ static void* interrupt_dispatcher(void* args __attribute_maybe_unused__){
 int8_t hardware_init_interrupt(void)
 {
     pthread_t interrupt_dispatch;
-    interrupt_info.ev_fd= eventfd(0, 0);
-    if (interrupt_info.ev_fd < 0) {
-        fprintf(stderr, "failed init event_fd\n");
-        return -1;
-    }
+    interrupt_info.interr =-1;
     for (int i =0; i<MAX_INTERRUPTS; i++) {
         interrupt_info.interrupt_table[i] = default_interr_fun;
     }
@@ -65,9 +60,9 @@ int8_t hardware_interrupt_attach_fun(const BoardComponentId fun_id,
     return 0;
 }
 
-void raise_interrupt(uint64_t interrupt_number)
+void raise_interrupt(uint8_t interrupt_number)
 {
-    write(interrupt_info.ev_fd, &interrupt_number, sizeof(interrupt_number));
+    interrupt_info.interr = interrupt_number;
 }
 
 int8_t hardware_interrupt_enable(void)
