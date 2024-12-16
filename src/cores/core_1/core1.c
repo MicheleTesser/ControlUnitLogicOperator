@@ -12,6 +12,7 @@ static alive_blink_fd alive_fd;
 
 static void setup(void)
 {
+    hardware_init_interrupt();
     board_can_init(CAN_MODULE_INVERTER, _500_KBYTE_S_);
     board_can_init(CAN_MODULE_GENERAL, _500_KBYTE_S_);
     board_can_init(CAN_MODULE_DV, _500_KBYTE_S_);

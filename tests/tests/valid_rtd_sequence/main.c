@@ -80,13 +80,13 @@ static void init_can(void){
 
 static void rtd_sequence(void){
     block_signal_usr1_usr2();
-    wait_milliseconds(1000);
+    sleep(1);
     printf("rtd closing air 1\n");
     gpio_set_low(AIR_PRECHARGE_INIT);
-    wait_milliseconds(5000);
+    sleep(1);
     printf("rtd closing air 2\n");
     gpio_set_low(AIR_PRECHARGE_DONE);
-    wait_milliseconds(5000);
+    sleep(1);
     printf("drive button start\n");
     gpio_set_low(READY_TO_DRIVE_INPUT_BUTTON);
 }
@@ -130,7 +130,7 @@ int main(void)
     pthread_create(&core_0, NULL, init_core_0, NULL);
     pthread_create(&core_1, NULL, init_core_1, NULL);
     pthread_create(&core_2, NULL, init_core_2, NULL);
-    sleep(3);
+    sleep(1);
     printf("created cores\n");
     pthread_create(&pilot, NULL, pilot_breaking, NULL);
     pthread_create(&inverter, NULL, inverter_on, NULL);
