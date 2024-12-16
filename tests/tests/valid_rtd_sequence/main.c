@@ -14,7 +14,6 @@
 #include <sys/cdefs.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <signal.h>
 
 #define CAN_INTERFACE_0 "culo_can_0"
 #define CAN_INTERFACE_1 "culo_can_1"
@@ -24,38 +23,22 @@ int can_0_fd = -1;
 int can_1_fd = -1;
 int can_2_fd = -1;
 
-static void block_signal_usr1_usr2(void)
-{
-    sigset_t main_set;
-
-    sigemptyset(&main_set);
-    sigaddset(&main_set, SIGUSR1);
-    sigaddset(&main_set, SIGUSR2);
-
-    pthread_sigmask(SIG_BLOCK, &main_set, NULL);
-
-}
-
 static void* init_core_0(void* args __attribute_maybe_unused__){
-    block_signal_usr1_usr2();
     main_cpu_x(0);
     return NULL;
 }
 
 static void* init_core_1(void* args __attribute_maybe_unused__){
-    block_signal_usr1_usr2();
     main_cpu_x(1);
     return NULL;
 }
 
 static void* init_core_2(void* args __attribute_maybe_unused__){
-    block_signal_usr1_usr2();
     main_cpu_x(2);
     return NULL;
 }
 
 static void* pilot_breaking(void* args __attribute_maybe_unused__){
-    block_signal_usr1_usr2();
     can_obj_can2_h_t mex;
     CanMessage mex_c;
     memset(&mex, 0, sizeof(mex));
@@ -79,7 +62,6 @@ static void init_can(void){
 }
 
 static void rtd_sequence(void){
-    block_signal_usr1_usr2();
     sleep(1);
     printf("rtd closing air 1\n");
     gpio_set_low(AIR_PRECHARGE_INIT);
@@ -92,7 +74,6 @@ static void rtd_sequence(void){
 }
 
 static void* inverter_on(void* args __attribute_maybe_unused__){
-    block_signal_usr1_usr2();
     can_obj_can1_h_t m;
     CanMessage can_m;
     memset(&m, 0, sizeof(m));
