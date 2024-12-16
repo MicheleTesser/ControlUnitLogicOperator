@@ -11,6 +11,7 @@
  */
 
 #include "../lib/raceup_board/raceup_board.h"
+#include "./power_maps/power_maps.h"
 #include <stdint.h>
 
 struct init_args;

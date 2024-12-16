@@ -1,0 +1,10 @@
+#ifndef __ID_TRAP__
+#define __ID_TRAP__
+
+#define TRAP_CHANGE_MAP_POWER 0
+#define TRAP_CHANGE_MAP_POS_TORQUE 1
+#define TRAP_CHANGE_MAP_NEG_TORQUE 2
+#define TRAP_CHANGE_MAP_REGEN 3
+#define TRAP_CHANGE_MAP_POWER_REPARTITION 4
+
+#endif // !__ID_TRAP__
