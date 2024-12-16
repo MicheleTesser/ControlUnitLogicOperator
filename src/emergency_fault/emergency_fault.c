@@ -14,7 +14,9 @@ int8_t one_emergency_raised(void)
 }
 int8_t one_emergency_solved(void)
 {
-    num_of_emergency--;
+    if (num_of_emergency > 0) {
+        num_of_emergency--;
+    }
     if (!num_of_emergency) {
         gpio_set_high(SCS);
     }
