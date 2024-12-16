@@ -1,9 +1,10 @@
 #include "score_lib/test_lib.h"
 #include "linux_board/linux_board.h"
 #include "ControlUnitLogicOperator.h"
+#include <stdint.h>
 #include <sys/cdefs.h>
 #include <threads.h>
-#include <stdint.h>
+#include <unistd.h>
 
 
 static int init_core_0(void* args __attribute_maybe_unused__){
@@ -36,6 +37,7 @@ int main(void)
     thrd_create(&core_0, init_core_0, NULL);
     thrd_create(&core_1, init_core_1, NULL);
     thrd_create(&core_2, init_core_2, NULL);
+    sleep(1);
 
 end:
     print_SCORE();

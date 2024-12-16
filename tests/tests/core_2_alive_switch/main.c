@@ -24,8 +24,10 @@ static int init_core_2(void* args __attribute_maybe_unused__){
 
 int main(void)
 {
+    int8_t err=0;
     if(create_virtual_chip() <0){
-        return -1;
+        err--;
+        goto end;
     }
 
     thrd_t core_0;
@@ -50,6 +52,7 @@ int main(void)
     }
     PASSED("core2 alive gpio switched 2");
 
+end:
     print_SCORE();
-    return 0;
+    return err;
 }
