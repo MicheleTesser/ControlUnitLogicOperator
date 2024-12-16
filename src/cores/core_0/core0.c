@@ -23,7 +23,10 @@ static void setup(void)
     alive_fd = i_m_alive_init(300 MILLIS, LED_1);
 
 
-    gpio_set_high(SCS); //INFO: open air for HV when the board start
+    //INFO: open the SCS to power off the HV if it is on. May happen when the lv restarts.
+    gpio_set_low(SCS); 
+    wait_milliseconds(100);
+    gpio_set_high(SCS);
 }
 
 static void loop(void)

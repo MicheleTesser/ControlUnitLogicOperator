@@ -3,6 +3,7 @@
 #include "../driver_input/driver_input.h"
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
+#include "../emergency_fault/emergency_fault.h"
 
 static struct{
     time_var_microseconds sound_start_at;
@@ -44,11 +45,11 @@ uint8_t GIEI_check_running_condition(void)
                 GIEI.running =1;
             //starting failed. Precharge not finished. opening scs to stop precharge
             }else if(!gpio_read_state(AIR_PRECHARGE_INIT) || !gpio_read_state(AIR_PRECHARGE_DONE)){
-                gpio_set_low(SCS);
+                one_emergency_raised();
             }
         //reset scs. can start again the precharge
         }else if(!GIEI_get_hv_status()){
-            gpio_set_high(SCS);
+            one_emergency_solved();
         }
     //exiting from R2D
     }else if (GIEI.running && (!GIEI_get_hv_status() || !gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON))) 
