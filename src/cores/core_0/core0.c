@@ -1,11 +1,10 @@
 #include "./core0.h"
-#include "../../pumps/pumps.h"
-#include "../../fans/fans.h"
+#include "../../cooling/cooling.h"
 #include "../../driver_input/driver_input.h"
 #include "../../GIEI/giei.h"
 #include "../../board_conf/id_conf.h"
 #include "../../lib/raceup_board/raceup_board.h"
-#include "../../alive_blink/alive_blink.h"
+#include "../alive_blink/alive_blink.h"
 #include <stdint.h>
 
 //private

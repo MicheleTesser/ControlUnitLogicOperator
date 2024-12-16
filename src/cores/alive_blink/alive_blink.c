@@ -1,6 +1,6 @@
 #include "alive_blink.h"
-#include "../lib/raceup_board/raceup_board.h"
-#include "../board_conf/id_conf.h"
+#include "../../lib/raceup_board/raceup_board.h"
+#include "../../board_conf/id_conf.h"
 #include <stdint.h>
 
 static struct{

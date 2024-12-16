@@ -5,7 +5,7 @@
 #include "../../missions/missons.h"
 #include "../../board_conf/id_conf.h"
 #include "../../lib/raceup_board/raceup_board.h"
-#include "../../alive_blink/alive_blink.h"
+#include "../alive_blink/alive_blink.h"
 #include "../../board_can/board_can.h"
 
 static alive_blink_fd alive_fd;

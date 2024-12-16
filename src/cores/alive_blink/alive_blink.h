@@ -1,7 +1,7 @@
 #ifndef __ALIVE_BLINK_CORE_0__
 #define __ALIVE_BLINK_CORE_0__
 
-#include "../lib/raceup_board/raceup_board.h"
+#include "../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 
 #define MILLIS * 1000
