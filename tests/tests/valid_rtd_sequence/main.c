@@ -1,10 +1,14 @@
 #include "score_lib/test_lib.h"
 #include "linux_board/can/can_lib/canlib.h"
+#include "src/driver_input/driver_input.h"
+#include "src/GIEI/giei.h"
 #include "linux_board/linux_board.h"
 #include "ControlUnitLogicOperator.h"
 #include "lib/board_dbc/can1.h"
 #include "lib/board_dbc/can2.h"
 #include "./src/board_conf/id_conf.h"
+#include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/cdefs.h>
@@ -129,17 +133,26 @@ int main(void)
     printf("created cores\n");
     pthread_create(&pilot, NULL, pilot_breaking, NULL);
     pthread_create(&inverter, NULL, inverter_on, NULL);
-    wait_milliseconds(10000);
-    printf("rtd sequence start\n");
-    // rtd_sequence();
-    
-    printf("rtd sequence done\n");
-    pthread_join(inverter, NULL);
-    pthread_join(pilot, NULL);
 
-    pthread_join(core_0, NULL);
-    pthread_join(core_1, NULL);
-    pthread_join(core_2, NULL);
+    uint8_t brake_tries = 0;
+    while (!driver_get_amount(BRAKE) && brake_tries < 10) {
+        sleep(1);
+        printf("waiting brake input is saved, current: %f\n",driver_get_amount(BRAKE));
+        brake_tries++;
+    }
+    assert(brake_tries < 10);
+    PASSED("brake message received and stored");
+
+    printf("rtd sequence start\n");
+    rtd_sequence();
+
+    printf("rtd sequence done\n");
+    sleep(1);
+    if (GIEI_check_running_condition()) {
+        PASSED("rtd ok");
+    }else{
+        FAILED("rtd failed");
+    }
 
     print_SCORE();
     return 0;

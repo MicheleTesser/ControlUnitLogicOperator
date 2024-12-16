@@ -14,7 +14,7 @@ static void setup(void)
 {
     board_can_init(CAN_MODULE_INVERTER, _500_KBYTE_S_);
     board_can_init(CAN_MODULE_GENERAL, _500_KBYTE_S_);
-    board_can_init(CAN_MODULE_DV, _500_KBYTE_S_) < 0);
+    board_can_init(CAN_MODULE_DV, _500_KBYTE_S_);
     alive_fd = i_m_alive_init(100 MILLIS, LED_2);
 }
 

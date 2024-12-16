@@ -53,21 +53,12 @@ int can_recv_frame(int socket, struct can_frame *frame) {
     int nbytes;
 
 again:
-    printf("trying reading\n");
-    //BUG: fix read block here and do not read the vcan buffer properly.
     nbytes = read(socket, frame, sizeof(*frame));
     if (nbytes < 0) {
         if (errno == EINTR) {
             goto again;
         }     
     }
-    printf("0x%03X [%d] ",frame->can_id, frame->can_dlc);
-
-	for (int i = 0; i < frame->can_dlc; i++)
-		printf("%02X ",frame->data[i]);
-
-	printf("\r\n");
-
     return nbytes;
 }
 

@@ -8,7 +8,7 @@
 #include <sys/cdefs.h>
 #include <unistd.h>
 
-#define MAX_INTERRUPTS 1024
+#define MAX_INTERRUPTS 32
 
 static struct{
     interrupt_fun interrupt_table[MAX_INTERRUPTS];
@@ -30,7 +30,7 @@ static void* interrupt_dispatcher(void* args __attribute_maybe_unused__){
                 interrupt_info.interrupt_table[interrupt_info.interr]();
                 interrupt_info.interr = -1;
             }else{
-                fprintf(stderr, "invalid interrupt %ld\n", interrupt_info.interr);
+                fprintf(stderr, "invalid interrupt %d\n", interrupt_info.interr);
             }
         }
     }
