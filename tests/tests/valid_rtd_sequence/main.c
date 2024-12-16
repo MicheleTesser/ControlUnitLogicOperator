@@ -112,6 +112,7 @@ static void* inverter_on(void* args __attribute_maybe_unused__){
 
 int main(void)
 {
+    int err =0;
     if(create_virtual_chip() <0){
         return -1;
     }
@@ -140,8 +141,14 @@ int main(void)
         printf("waiting brake input is saved, current: %f\n",driver_get_amount(BRAKE));
         brake_tries++;
     }
-    assert(brake_tries < 10);
-    PASSED("brake message received and stored");
+    if (brake_tries < 10) {
+        PASSED("brake message received and stored");
+        printf("brake level: %f\n",driver_get_amount(BRAKE));
+    }else{
+        FAILED("brake level not updated");
+        err--;
+        goto end;
+    }
 
     printf("rtd sequence start\n");
     rtd_sequence();
@@ -154,6 +161,7 @@ int main(void)
         FAILED("rtd failed");
     }
 
+end:
     print_SCORE();
-    return 0;
+    return err;
 }

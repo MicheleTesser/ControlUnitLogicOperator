@@ -10,19 +10,8 @@
 #define CAN_INTERFACE_2 "culo_can_2"
 
 static int extract_can_node(const BoardComponentId id){
-    // switch (id) {
-    //     case 0:
-    //         return can0;
-    //     case 1:
-    //         return can1;
-    //     case 2:
-    //         return can2;
-    //     default:
-    //         return 0;
-    // }
     switch (id) {
         case 0:
-             
             return can_init(CAN_INTERFACE_0);
         case 1:
             return can_init(CAN_INTERFACE_1);
@@ -34,22 +23,9 @@ static int extract_can_node(const BoardComponentId id){
 }
 
 //public
-int8_t hardware_init_can(const BoardComponentId id,uint32_t baud_rate __attribute_maybe_unused__)
+int8_t hardware_init_can(const BoardComponentId id __attribute_maybe_unused__,
+        uint32_t baud_rate __attribute_maybe_unused__)
 {
-    // switch (id) {
-    //     case 0:
-    //         can0 = can_init(CAN_INTERFACE_0);
-    //         return can0;
-    //     case 1:
-    //         can1 = can_init(CAN_INTERFACE_1);
-    //         return can1;
-    //     case 2:
-    //         can2 = can_init(CAN_INTERFACE_2);
-    //         return can2;
-    //
-    //     default:
-    //         return -1;
-    // }
     return 0;
 }
 
