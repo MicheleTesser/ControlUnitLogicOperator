@@ -5,6 +5,7 @@
 #include <gpiod.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
+#include "../../../src/board_conf/id_conf.h"
 
 #ifndef CHIP_PATH
 #define CHIP_PATH "/dev/gpiochip1"
@@ -144,12 +145,19 @@ int8_t gpio_set_high(const BoardComponentId id __attribute_maybe_unused__)
         fprintf(stderr, "gpio %d, set high error\n",id); 
         return -1;
     }
+    if (id == SCS) {
+        gpio_set_high(AIR_PRECHARGE_INIT);
+        gpio_set_high(AIR_PRECHARGE_DONE);
+    }
     return 0;
 }
 
 int8_t gpio_set_low(const BoardComponentId id __attribute_maybe_unused__)
 {
     lines.init_values[id] =GPIOD_LINE_VALUE_ACTIVE;
+    if (gpio_read_state(SCS) && (id == AIR_PRECHARGE_INIT || id == AIR_PRECHARGE_DONE)){
+        return -2;
+    }
     if(gpiod_line_request_set_values(lines.line_request,lines.init_values) <0){
         fprintf(stderr, "gpio %d, set low error\n",id); 
         return -1;
