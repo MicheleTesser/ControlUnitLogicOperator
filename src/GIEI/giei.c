@@ -5,6 +5,7 @@
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
 #include "engine_common.h"
+#include "power_maps/power_maps.h"
 #include <stdint.h>
 
 #define SPEED_LIMIT                 18000   // Typical value: 15000
@@ -48,6 +49,8 @@ int8_t GIEI_initialize(void)
     GIEI.settings_power_repartition = DEFAULT_REPARTITION;
     GIEI.activate_torque_vectoring = 0;
     GIEI.running =0;
+
+    giei_power_map_init();
 
     return 0;
 }

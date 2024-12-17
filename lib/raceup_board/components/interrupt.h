@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "./common_idx/common_idx.h"
 
+#ifndef INTERRUP_ATTRIBUTE
+#define INTERRUP_ATTRIBUTE
+#endif // !INTERRUP_ATTRIBUTE
 typedef void (*interrupt_fun) (void);
 
 extern int8_t hardware_init_interrupt(void);

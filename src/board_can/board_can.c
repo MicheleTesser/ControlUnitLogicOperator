@@ -11,20 +11,20 @@
 //private
 
 //FIX: add an abstract atomic operation
-static uint8_t mex_to_read[3];
+ static uint8_t mex_to_read[3];
 
 
-static void inverter_can_interrupt(void)
+static void inverter_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
     mex_to_read[0] = 1;
 }
 
-static void general_can_interrupt(void)
+static void general_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
     mex_to_read[1] = 1;
 }
 
-static void dv_can_interrupt(void)
+static void dv_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
     mex_to_read[2] = 1;
 }
@@ -231,6 +231,7 @@ int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const re
             return manage_can_3_message(mex);
         default:
             goto invalid_can_module_id;
+            return -1;
     }
 
 invalid_can_module_id:

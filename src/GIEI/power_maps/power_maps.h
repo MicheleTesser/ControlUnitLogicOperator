@@ -24,7 +24,7 @@ struct tv_repartition_map{
     uint8_t torque_vectoring_on;
 };
 
-union car_map{
+struct car_map{
     struct power_map_settings *power;
     struct regen_map_settings *regen;
     struct tv_repartition_map *repartition;
@@ -32,6 +32,6 @@ union car_map{
 
 int8_t giei_power_map_init(void);
 int8_t giei_set_run_map(const enum MAP_CATEGORY category, const uint8_t map_index);
-const union car_map* giei_get_active_maps(void);
+const struct car_map* giei_get_active_maps(void);
 
 #endif // !__GIEI_POWER_MAPS__

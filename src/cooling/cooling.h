@@ -3,5 +3,6 @@
 
 #include "./pumps/pumps.h"
 #include "./fans/fans.h"
+#include "./temperatures/temperatures.h"
 
 #endif // !__CAR_COOLING__

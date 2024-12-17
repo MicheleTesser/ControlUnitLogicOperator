@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "./common_idx/common_idx.h"
 
+#ifndef TRAP_ATTRIBUTE
+#define TRAP_ATTRIBUTE
+#endif // !TRAP_ATTRIBUTE
 typedef void (*trap_fun) (void);
 
 extern int8_t hardware_init_trap(void);
