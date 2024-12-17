@@ -2,6 +2,7 @@
 #include "../board_conf/id_conf.h"
 #include "../lib/board_dbc/can1.h"
 #include "../lib/board_dbc/can2.h"
+#include "../lib/board_dbc/can3.h"
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
 #include <stdint.h>
@@ -29,7 +30,7 @@ static void dv_can_interrupt(void)
 }
 
 static int8_t manage_can_1_message(const CanMessage* const restrict mex){
-    //TODO: implement manager for can inverter messages
+    int8_t err=0;
     switch (mex->id) {
         case CAN_ID_INVERTERFL1:
         case CAN_ID_INVERTERFL2:
@@ -41,14 +42,19 @@ static int8_t manage_can_1_message(const CanMessage* const restrict mex){
         case CAN_ID_INVERTERRR2:
             return GIEI_recv_data(mex);
         default:
-            return -1;
+            goto invalid_inverter_message;
     }
     return 0;
+
+invalid_inverter_message:
+    err--;
+
+    return err;
 }
 
-static int8_t manage_can_2_message(const CanMessage* const restrict mex){
-    //TODO: implement manager for can general messages
-    
+static int8_t manage_can_2_message(const CanMessage* const restrict mex)
+{
+    int8_t err=0;
     can_obj_can2_h_t m;
     unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, 0);
     switch (mex->id) {
@@ -93,59 +99,85 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex){
         case CAN_ID_PCU:
         case CAN_ID_LEM:
         default:
-            return -1;
-    
+            goto invalid_general_message;
     }
     
 
     return 0;
+
+invalid_general_message:
+    err--;
+
+    return err;
 }
 
 static int8_t manage_can_3_message(const CanMessage* const restrict mex){
-    //TODO: implement manager for can dv messages
-    
+    int8_t err=0;
     switch (mex->id) {
+        case CAN_ID_DV_DRIVING_DYNAMICS_1:
+            break;
+        case CAN_ID_DV_DRIVING_DYNAMICS_2:
+            break;
+        case CAN_ID_DV_SYSTEM_STATUS:
+            break;
         default:
-            return -1;
+            goto invalid_dv_message;
     }
     return 0;
+
+invalid_dv_message:
+    err--;
+
+    return err;
 }
 
 //public
 int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
 {
+    int8_t err=0;
+
     if(hardware_init_can(can_id, freq) < 0){
-        return -1;
+        goto hardware_init_failed;
     }
 
     switch (can_id) {
         case CAN_MODULE_INVERTER:
             if(hardware_interrupt_attach_fun(INTERRUPT_CAN_1, inverter_can_interrupt)){
-                return -2;
+                goto hardware_interrupt_attach_fail;
             }
             break;
         case CAN_MODULE_GENERAL:
             if(hardware_interrupt_attach_fun(INTERRUPT_CAN_2, general_can_interrupt)){
-                return -2;
+                goto hardware_interrupt_attach_fail;
             }
             break;
         case CAN_MODULE_DV:
             if(hardware_interrupt_attach_fun(INTERRUPT_CAN_3, dv_can_interrupt)){
-                return -2;
+                goto hardware_interrupt_attach_fail;
             }
             break;
         default:
-            return -1;
+            goto invalid_can_module;
     }
 
 
     return 0;
+
+hardware_interrupt_attach_fail:
+    err--;
+invalid_can_module:
+    err--;
+hardware_init_failed:
+    err--;
+
+    return err;
 }
 
 int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
 {
-    memset(o_mex, 0, sizeof(*o_mex));
+    int8_t err=0;
     int8_t mex_to_read_t = -1;
+    memset(o_mex, 0, sizeof(*o_mex));
     switch (can_id) {
         case CAN_MODULE_INVERTER:
             if (mex_to_read[0]){
@@ -164,17 +196,22 @@ int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
             return -1;
     }
     if (mex_to_read_t == -1) {
-        return -2;
+        return 0;
     }
 
     if(hardware_read_can(mex_to_read_t, o_mex) <0){
-        return -1;
+        goto hardware_failed_read_can;
     }
 
 
     mex_to_read[mex_to_read_t] = 0;
 
     return 0;
+
+hardware_failed_read_can:
+    err--;
+
+    return err;
 }
 
 int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict mex)
@@ -184,6 +221,7 @@ int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict me
 
 int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const restrict mex)
 {
+    int8_t err=0;
     switch (can_id) {
         case CAN_MODULE_INVERTER:
             return manage_can_1_message(mex);
@@ -192,7 +230,11 @@ int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const re
         case CAN_MODULE_DV:
             return manage_can_3_message(mex);
         default:
-            return -1;
-    
+            goto invalid_can_module_id;
     }
+
+invalid_can_module_id:
+    err--;
+
+    return err;
 }
