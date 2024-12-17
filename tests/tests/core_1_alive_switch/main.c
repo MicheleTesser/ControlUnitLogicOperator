@@ -37,17 +37,17 @@ int main(void)
     thrd_create(&core_1, init_core_1, NULL);
     thrd_create(&core_2, init_core_2, NULL);
 
-    uint8_t gpio_val = gpio_read_state(LED_2);
+    uint8_t gpio_val = gpio_read_state(CORE_ALIVE_LED_2);
     uint8_t new_val = gpio_val;
 
     while (new_val == gpio_val) {
-        new_val = gpio_read_state(LED_2);
+        new_val = gpio_read_state(CORE_ALIVE_LED_2);
     }
-    gpio_val = new_val =gpio_read_state(LED_2);
+    gpio_val = new_val =gpio_read_state(CORE_ALIVE_LED_2);
     PASSED("core1 alive gpio switched 1");
 
     while (new_val == gpio_val) {
-        new_val = gpio_read_state(LED_2);
+        new_val = gpio_read_state(CORE_ALIVE_LED_2);
     }
     PASSED("core1 alive gpio switched 2");
 

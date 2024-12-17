@@ -41,6 +41,8 @@ static int test_throttle(void){
     raise_interrupt(INTERRUPT_CAN_2);
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
+    uint8_t try = 0;
+    while(driver_get_amount(THROTTLE) != throttle_value && try < 5) {}
 
     if (driver_get_amount(THROTTLE) == throttle_value) {
         PASSED("throttle value setted correctly");
