@@ -97,24 +97,24 @@ int8_t stop_engine(const enum ENGINES engine)
 
 int8_t set_regen_brake_engine(const enum ENGINES engine, int16_t brake)
 {
-    const struct AMK_Setpoints amk_stop ={
+    const struct AMK_Setpoints amk_brake ={
         .AMK_Control = 0,
         .AMK_TargetVelocity =0,
         .AMK_TorqueLimitPositive = 0,
         .AMK_TorqueLimitNegative = brake
     };
-    return send_message_amk(engine, &amk_stop);
+    return send_message_amk(engine, &amk_brake);
 }
 
 int8_t set_throttle_engine(const enum ENGINES engine, int16_t throttle)
 {
-    const struct AMK_Setpoints amk_stop ={
+    const struct AMK_Setpoints amk_throttle ={
         .AMK_Control = 0,
         .AMK_TargetVelocity =0,
         .AMK_TorqueLimitPositive = throttle,
         .AMK_TorqueLimitNegative = 0
     };
-    return send_message_amk(engine, &amk_stop);
+    return send_message_amk(engine, &amk_throttle);
 }
 
 
