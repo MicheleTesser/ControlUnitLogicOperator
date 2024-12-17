@@ -4,6 +4,8 @@
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
+#include "engine_common.h"
+#include <stdint.h>
 #include <string.h>
 
 #define SPEED_LIMIT                 18000   // Typical value: 15000
@@ -85,7 +87,9 @@ int8_t GIEI_check_running_condition(void)
     {
         GIEI.running =0;
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
-        stop_engines();
+        for (uint8_t i=FRONT_LEFT; i<=REAR_RIGHT; i++) {
+            stop_engine(i);
+        }
     }
 
     //continue with what you were doing

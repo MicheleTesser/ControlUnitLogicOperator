@@ -3,13 +3,7 @@
 
 #include <stdint.h>
 #include "../../lib/raceup_board/raceup_board.h"
-
-enum ENGINES {
-    FRONT_LEFT = 0,     //INFO: Front Left: Status Values: [0x283,0x285] SetPoint: 0x184
-    FRONT_RIGHT = 1,    //INFO: Front Right: Status Values: [0x284,0x286] SetPoint: 0x185
-    REAR_LEFT = 2,      //INFO: Rear Left: Status Values: [0x287,0x289] SetPoint: 0x188
-    REAR_RIGHT = 3,     //INFO: Rear Right: Status Values: [0x288,0x28A] SetPoint: 0x189
-};                              
+#include "../engine_common.h"
 
 int8_t stop_engine(const enum ENGINES engine);
 int8_t set_regen_brake_engine(const enum ENGINES engine, const int16_t brake);
