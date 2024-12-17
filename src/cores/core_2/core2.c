@@ -10,8 +10,8 @@ static void setup(void)
 {
     sd_log_init();
     telemetry_init();
-    hardware_init_gpio(LED_3);
-    alive_fd = i_m_alive_init(300 MILLIS, LED_3);
+    hardware_init_gpio(CORE_ALIVE_LED_3);
+    alive_fd = i_m_alive_init(300 MILLIS, CORE_ALIVE_LED_3);
 }
 
 static void loop(void)

@@ -17,10 +17,10 @@ static void setup(void)
     hardware_init_trap();
     hardware_init_gpio(AIR_PRECHARGE_INIT);
     hardware_init_gpio(AIR_PRECHARGE_DONE);
-    hardware_init_gpio(LED_1);
+    hardware_init_gpio(CORE_ALIVE_LED_1);
     hardware_init_gpio(SCS);
     hardware_init_serial(SERIAL);
-    alive_fd = i_m_alive_init(300 MILLIS, LED_1);
+    alive_fd = i_m_alive_init(300 MILLIS, CORE_ALIVE_LED_1);
     GIEI_initialize();
 
 
