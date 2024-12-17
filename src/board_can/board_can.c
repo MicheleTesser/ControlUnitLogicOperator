@@ -76,6 +76,11 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex){
         case CAN_ID_IMU3:
         case CAN_ID_IMUCALIB:
         case CAN_ID_MAP:
+            giei_set_run_map(MAP_POWER, m.can_0x064_Map.power);
+            giei_set_run_map(MAP_REGEN, m.can_0x064_Map.regen);
+            giei_set_run_map(MAP_POWER_REPARTITION, m.can_0x064_Map.torque_rep);
+            hardware_raise_trap(TRAP_CHANGE_MAP);
+            break;
         case CAN_ID_CARSTATUS:
         case CAN_ID_CARSETTINGS:
         case CAN_ID_LAPSTART:

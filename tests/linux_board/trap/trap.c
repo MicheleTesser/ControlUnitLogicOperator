@@ -86,3 +86,9 @@ int8_t hardware_trap_disable(void)
     trap_info.trap_enabled =0;
     return 0;
 }
+
+void hardware_raise_trap(const uint8_t trap_number)
+{
+    wait_init();
+    trap_info.trap_vec[trap_number] = 1;
+}
