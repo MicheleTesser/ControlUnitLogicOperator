@@ -67,12 +67,6 @@ int8_t hardware_trap_attach_fun(const BoardComponentId fun_id,
     return 0;
 }
 
-void raise_trap(uint8_t trap_number)
-{
-    wait_init();
-    trap_info.trap_vec[trap_number] = 1;
-}
-
 int8_t hardware_trap_enable(void)
 {
     wait_init();
