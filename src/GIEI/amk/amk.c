@@ -4,7 +4,7 @@
 #include "../../board_can/board_can.h"
 #include <stdint.h>
 
-//INFO: doc/amd_datasheet.pdf page 61
+//INFO: doc/amk_datasheet.pdf page 61
 
 struct AMK_Actual_Values_1{
     union{
@@ -95,7 +95,7 @@ int8_t stop_engine(const enum ENGINES engine)
     return send_message_amk(engine, &amk_stop);
 }
 
-int8_t set_regen_brake_engine(const enum ENGINES engine, int16_t brake)
+int8_t set_regen_brake_engine(const enum ENGINES engine, const int16_t brake)
 {
     const struct AMK_Setpoints amk_brake ={
         .AMK_Control = 0,
@@ -106,7 +106,7 @@ int8_t set_regen_brake_engine(const enum ENGINES engine, int16_t brake)
     return send_message_amk(engine, &amk_brake);
 }
 
-int8_t set_throttle_engine(const enum ENGINES engine, int16_t throttle)
+int8_t set_throttle_engine(const enum ENGINES engine, const int16_t throttle)
 {
     const struct AMK_Setpoints amk_throttle ={
         .AMK_Control = 0,
@@ -123,7 +123,7 @@ int8_t set_throttle_engine(const enum ENGINES engine, int16_t throttle)
  */
 uint8_t inverter_hv_status(void)
 {
-    uint32_t i;
+    uint8_t i;
     const uint8_t HV_TRAP = 50;
     static uint8_t hvCounter[sizeof(inverter_engine_data)/sizeof(inverter_engine_data[0])];
     static uint8_t inverterHV[sizeof(inverter_engine_data)/sizeof(inverter_engine_data[0])];
