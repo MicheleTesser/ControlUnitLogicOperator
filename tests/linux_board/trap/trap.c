@@ -59,15 +59,15 @@ int8_t hardware_init_trap(void)
     return 0;
 }
 
-int8_t hardware_trap_attach_fun(volatile const BoardComponentId fun_id,
-        volatile const trap_fun fun)
+int8_t hardware_trap_attach_fun(const BoardComponentId fun_id,
+        const trap_fun fun)
 {
     wait_init();
     trap_info.trap_table[fun_id] = fun;
     return 0;
 }
 
-void raise_trap(volatile uint8_t trap_number)
+void raise_trap(uint8_t trap_number)
 {
     wait_init();
     trap_info.trap_vec[trap_number] = 1;

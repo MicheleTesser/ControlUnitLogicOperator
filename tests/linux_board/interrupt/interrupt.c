@@ -59,15 +59,15 @@ int8_t hardware_init_interrupt(void)
     return 0;
 }
 
-int8_t hardware_interrupt_attach_fun(volatile const BoardComponentId fun_id,
-        volatile const interrupt_fun fun)
+int8_t hardware_interrupt_attach_fun(const BoardComponentId fun_id,
+        const interrupt_fun fun)
 {
     wait_init();
     interrupt_info.interrupt_table[fun_id] = fun;
     return 0;
 }
 
-void raise_interrupt(volatile uint8_t interrupt_number)
+void raise_interrupt(uint8_t interrupt_number)
 {
     wait_init();
     interrupt_info.interr[interrupt_number] = 1;
