@@ -1,5 +1,7 @@
 #include "./amk.h"
 #include "../../../lib/board_dbc/can1.h"
+#include "../../board_conf/id_conf.h"
+#include "../../board_can/board_can.h"
 #include <stdint.h>
 
 //INFO: doc/amd_datasheet.pdf page 61
@@ -39,25 +41,82 @@ struct AMK_Setpoints{
     //Control word See the table below: Content of the 'AMK_Control' control word
     uint16_t AMK_Control; 
     int16_t AMK_TargetVelocity; //INFO: unit: rpm Speed setpoint
-    int16_t AMK_TorqueLimitPositiv; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
-    int16_t AMK_TorqueLimitNegativ; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
+    int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
+    int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
 };
 
-enum ENGINES {
-    FRONT_LEFT = 0, //Front Left: Status Values: [0x283,0x285] SetPoint: 0x184
-    FRONT_RIGHT = 1, //Front Right: Status Values: [0x284,0x286] SetPoint: 0x185
-    REAR_LEFT = 2, //Rear Left: Status Values: [0x287,0x289] SetPoint: 0x188
-    REAR_RIGHT = 3, //Rear Right: Status Values: [0x288,0x28A] SetPoint: 0x189
-};
+
+//private
 
 static struct {
     struct AMK_Actual_Values_1 amk_data_1;
     struct AMK_Actual_Values_2 amk_data_2;
 }inverter_engine_data[4];
 
-void stop_engines(void)
-{
+#define POPULATE_MEX_ENGINE(om,amk_stop,engine)\
+    om.engine.NegTorq = amk_stop->AMK_TorqueLimitNegative;\
+    om.engine.PosTorq = amk_stop->AMK_TorqueLimitPositive;\
+    om.engine.TargetVel = amk_stop->AMK_TargetVelocity;\
+    om.engine.ControlWord = amk_stop->AMK_Control;
+
+static int8_t send_message_amk(const enum ENGINES engine,
+        const struct AMK_Setpoints* const restrict setpoint){
+    can_obj_can1_h_t om;
+    CanMessage mex;
+    switch (engine) {
+        case FRONT_LEFT:
+            POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            break;
+        case FRONT_RIGHT:
+            POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            break;
+        case REAR_LEFT:
+            POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            break;
+        case REAR_RIGHT:
+            POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            break;
+    }
+
+    mex.message_size = pack_message_can1(&om, CAN_ID_VCUINVFL + engine, &mex.full_word);
+    return board_can_write(CAN_MODULE_INVERTER, &mex);
 }
+
+//public
+
+int8_t stop_engine(const enum ENGINES engine)
+{
+    const struct AMK_Setpoints amk_stop ={
+        .AMK_Control = 0,
+        .AMK_TargetVelocity =0,
+        .AMK_TorqueLimitPositive = 0,
+        .AMK_TorqueLimitNegative = 0
+    };
+    return send_message_amk(engine, &amk_stop);
+}
+
+int8_t set_regen_brake_engine(const enum ENGINES engine, int16_t brake)
+{
+    const struct AMK_Setpoints amk_stop ={
+        .AMK_Control = 0,
+        .AMK_TargetVelocity =0,
+        .AMK_TorqueLimitPositive = 0,
+        .AMK_TorqueLimitNegative = brake
+    };
+    return send_message_amk(engine, &amk_stop);
+}
+
+int8_t set_throttle_engine(const enum ENGINES engine, int16_t throttle)
+{
+    const struct AMK_Setpoints amk_stop ={
+        .AMK_Control = 0,
+        .AMK_TargetVelocity =0,
+        .AMK_TorqueLimitPositive = throttle,
+        .AMK_TorqueLimitNegative = 0
+    };
+    return send_message_amk(engine, &amk_stop);
+}
+
 
 /*
  * Tramaccio: we wait 500ms before stating that an inverter has no Hv

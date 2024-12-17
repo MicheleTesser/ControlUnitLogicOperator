@@ -172,9 +172,9 @@ int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
     return 0;
 }
 
-int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict o_mex)
+int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict mex)
 {
-    return hardware_write_can(can_id, o_mex);
+    return hardware_write_can(can_id, mex);
 }
 
 int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const restrict mex)
