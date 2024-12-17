@@ -4,10 +4,26 @@
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
+#include <string.h>
+
+#define SPEED_LIMIT                 18000   // Typical value: 15000
+#define DEFAULT_MAX_POS_TORQUE              15.0f
+#define DEFAULT_MAX_NEG_TORQUE              -15.f
+#define DEFAULT_REGEN                       0
+#define DEFAULT_REPARTITION                 0.5f
+#define DEFAULT_POWER_LIMIT                 70000.0f       //Watt
+
 
 static struct{
     time_var_microseconds sound_start_at;
-    uint8_t running;
+    float limit_power;
+    float limit_pos_torque;
+    float limit_neg_torque;
+    float limit_regen;
+    float limit_max_speed;
+    float settings_power_repartition;
+    uint8_t activate_torque_vectoring :1;
+    uint8_t running :1;
 }GIEI;
 
 //private
@@ -21,7 +37,20 @@ static uint8_t GIEI_get_hv_status(void)
 
 //public
 
-uint8_t GIEI_check_running_condition(void)
+int8_t GIEI_initialize(void)
+{
+    GIEI.limit_power = DEFAULT_POWER_LIMIT;
+    GIEI.limit_pos_torque = DEFAULT_MAX_POS_TORQUE;
+    GIEI.limit_neg_torque = DEFAULT_MAX_NEG_TORQUE;
+    GIEI.limit_regen = DEFAULT_REGEN;
+    GIEI.limit_max_speed = SPEED_LIMIT;
+    GIEI.settings_power_repartition = DEFAULT_REPARTITION;
+    GIEI.activate_torque_vectoring = 0;
+    GIEI.running =0;
+
+    return 0;
+}
+int8_t GIEI_check_running_condition(void)
 {
     const uint8_t brake_treshold_percentage = 10;
     const time_var_microseconds sound_duration = 3 * 1000 * 1000;
@@ -66,5 +95,27 @@ uint8_t GIEI_check_running_condition(void)
 int8_t GIEI_recv_data(const CanMessage* const restrict mex)
 {
     update_status(mex);
+    return 0;
+}
+
+int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value)
+{
+    switch (category) {
+        case POWER_LIMIT:
+            GIEI.limit_power = value;
+            break;
+        case MAX_POS_TORQUE_LIMIT:
+            GIEI.limit_pos_torque = value;
+            break;
+        case MAX_NEG_TORQUE_LIMIT:
+            GIEI.limit_neg_torque= value;
+            break;
+        case MOTOR_REPARTIION:
+            GIEI.settings_power_repartition = value;
+            break;
+        case TORQUE_VECTORING_ACTIVATION:
+            GIEI.activate_torque_vectoring = value;
+            break;
+    }
     return 0;
 }

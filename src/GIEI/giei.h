@@ -14,15 +14,18 @@
 #include "./power_maps/power_maps.h"
 #include <stdint.h>
 
-struct init_args;
-struct GIEI_status;
+enum GIEI_LIMITS{
+    POWER_LIMIT,
+    MAX_POS_TORQUE_LIMIT,
+    MAX_NEG_TORQUE_LIMIT,
+    MOTOR_REPARTIION, // [0,1]: 0 rear, 1 front
+    TORQUE_VECTORING_ACTIVATION,
+};
 
-int8_t GIEI_initialize(const struct init_args* const restrict init_args);
-int8_t GIEI_get_all_data(const uint32_t data_type, const struct GIEI_status* restrict o_buffer, 
-        const uint32_t buffer_size);
-
+int8_t GIEI_initialize(void);
 int8_t GIEI_recv_data(const CanMessage* const restrict mex);
+int8_t GIEI_check_running_condition(void);
+int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value);
 
-uint8_t GIEI_check_running_condition(void);
 
 #endif // !__CAR_GIEI__
