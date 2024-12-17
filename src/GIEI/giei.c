@@ -6,7 +6,6 @@
 #include "../emergency_fault/emergency_fault.h"
 #include "engine_common.h"
 #include <stdint.h>
-#include <string.h>
 
 #define SPEED_LIMIT                 18000   // Typical value: 15000
 #define DEFAULT_MAX_POS_TORQUE              15.0f

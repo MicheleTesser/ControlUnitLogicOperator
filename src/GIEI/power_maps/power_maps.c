@@ -64,7 +64,7 @@ invalid_map_index:
     return err;
 }
 
-union car_map* giei_get_active_maps(void)
+const union car_map* giei_get_active_maps(void)
 {
     return &MAPS.active_maps;
 }

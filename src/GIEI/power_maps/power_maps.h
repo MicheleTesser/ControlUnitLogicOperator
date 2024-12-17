@@ -32,6 +32,6 @@ union car_map{
 
 int8_t giei_power_map_init(void);
 int8_t giei_set_run_map(const enum MAP_CATEGORY category, const uint8_t map_index);
-union car_map* giei_get_active_maps(void);
+const union car_map* giei_get_active_maps(void);
 
 #endif // !__GIEI_POWER_MAPS__
