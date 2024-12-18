@@ -39,7 +39,7 @@ int can_init(const char *ifname) {
 int can_send_frame(int socket, struct can_frame *frame) {
     int nbytes;
 
-    nbytes = write(socket, frame, sizeof(struct can_frame));
+    nbytes = write(socket, frame, sizeof(*frame));
     if (nbytes != sizeof(struct can_frame)) {
         perror("Write");
         return -1;

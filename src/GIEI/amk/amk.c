@@ -3,6 +3,7 @@
 #include "../../board_conf/id_conf.h"
 #include "../../board_can/board_can.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 //INFO: doc/amk_datasheet.pdf page 61
@@ -80,21 +81,25 @@ static int8_t send_message_amk(const enum ENGINES engine,
     switch (engine) {
         case FRONT_LEFT:
             POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            mex.id = CAN_ID_VCUINVFL;
             break;
         case FRONT_RIGHT:
-            POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            POPULATE_MEX_ENGINE(om,setpoint,can_0x185_VCUInvFR);
+            mex.id = CAN_ID_VCUINVFR;
             break;
         case REAR_LEFT:
-            POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            POPULATE_MEX_ENGINE(om,setpoint,can_0x188_VCUInvRL);
+            mex.id = CAN_ID_VCUINVRL;
             break;
         case REAR_RIGHT:
-            POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
+            POPULATE_MEX_ENGINE(om,setpoint,can_0x189_VCUInvRR);
+            mex.id = CAN_ID_VCUINVRR;
             break;
         default:
             goto invalid_mex_type;
     }
 
-    mex.message_size = pack_message_can1(&om, CAN_ID_VCUINVFL + engine, &mex.full_word);
+    mex.message_size = pack_message_can1(&om, mex.id, &mex.full_word);
     return board_can_write(CAN_MODULE_INVERTER, &mex);
 
 invalid_mex_type:
