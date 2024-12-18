@@ -49,6 +49,7 @@ int8_t hardware_write_can(const BoardComponentId id, const CanMessage* restrict 
     frame.can_id = mex->id;
     frame.len = mex->message_size;
     memcpy(frame.data, mex->buffer, mex->message_size);
+    printf("sending mex to :%d\n",id);
     can_send_frame(can_node, &frame);
     close(can_node);
     return 0;

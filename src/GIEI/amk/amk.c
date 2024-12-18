@@ -72,7 +72,9 @@ static struct {
     om.engine.ControlWord = amk_stop->AMK_Control;
 
 static int8_t send_message_amk(const enum ENGINES engine,
-        const struct AMK_Setpoints* const restrict setpoint){
+        const struct AMK_Setpoints* const restrict setpoint)
+{
+    int8_t err=0;
     can_obj_can1_h_t om;
     CanMessage mex;
     switch (engine) {
@@ -88,10 +90,17 @@ static int8_t send_message_amk(const enum ENGINES engine,
         case REAR_RIGHT:
             POPULATE_MEX_ENGINE(om,setpoint,can_0x184_VCUInvFL);
             break;
+        default:
+            goto invalid_mex_type;
     }
 
     mex.message_size = pack_message_can1(&om, CAN_ID_VCUINVFL + engine, &mex.full_word);
     return board_can_write(CAN_MODULE_INVERTER, &mex);
+
+invalid_mex_type:
+    err--;
+
+    return err;
 }
 
 //public
