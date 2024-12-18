@@ -26,6 +26,7 @@ int8_t GIEI_initialize(void);
 int8_t GIEI_recv_data(const CanMessage* const restrict mex);
 int8_t GIEI_check_running_condition(void);
 int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value);
+int8_t GIEI_input(const float throttle, const float brake, const float regen);
 
 
 #endif // !__CAR_GIEI__

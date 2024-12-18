@@ -22,6 +22,8 @@ static void setup(void)
     hardware_init_serial(SERIAL);
     alive_fd = i_m_alive_init(300 MILLIS, CORE_ALIVE_LED_1);
     GIEI_initialize();
+    pump_enable();
+    fan_enable();
 
 
     //INFO: open the SCS to power off the HV if it is on. May happen when the lv restarts.
@@ -32,16 +34,15 @@ static void setup(void)
 
 static void loop(void)
 {
+    const float throttle = driver_get_amount(THROTTLE);
+    const float brake = driver_get_amount(BRAKE);
+    const float regen = driver_get_amount(REGEN);
+
     i_m_alive(alive_fd);
     if (GIEI_check_running_condition()) {
-        if (!pump_init_done()){
-            pump_init();
-        }
-        if (!fan_init_done()){
-            fan_init();
-        }
-        pump_enable();
-        fan_enable();
+        pump_init();
+        fan_init();
+        GIEI_input(throttle,brake,regen);
     }
 }
 

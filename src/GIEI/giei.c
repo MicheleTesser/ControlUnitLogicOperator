@@ -139,3 +139,8 @@ int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value)
     }
     return 0;
 }
+
+int8_t GIEI_input(const float throttle, const float brake, const float regen)
+{
+    return 0;
+}

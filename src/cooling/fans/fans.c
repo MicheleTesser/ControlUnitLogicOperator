@@ -1,14 +1,21 @@
 #include "./fans.h"
 
-uint8_t fan_init(void)
+//private
+
+static inline uint8_t fan_init_done(void)
 {
     return 0;
 }
 
-uint8_t fan_init_done(void)
+//public
+uint8_t fan_init(void)
 {
+    if (!fan_init_done()) {
+    
+    }
     return 0;
 }
+
 
 uint8_t fan_enable(void)
 {

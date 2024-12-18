@@ -33,9 +33,7 @@ static void* interrupt_dispatcher(void* args __attribute_maybe_unused__){
         uint8_t interrup_num = interrupt_info.interr & (1 << i);
         if (interrupt_info.interrupt_enabled && interrup_num)
         {
-            // printf("intte\n");
             if (interrup_num < MAX_INTERRUPTS) {
-                // printf("intte1 %d\n",interrup_num);
                 interrupt_info.interrupt_table[interrup_num]();
                 interrupt_info.interr ^= interrup_num;
             }else{

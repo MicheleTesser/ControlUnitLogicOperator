@@ -1,12 +1,20 @@
 #include "./pumps.h"
+#include <stdint.h>
 
-uint8_t pump_init(void)
+//private
+
+static inline uint8_t pump_init_done(void)
 {
     return 0;
 }
 
-uint8_t pump_init_done(void)
+//public
+
+uint8_t pump_init(void)
 {
+    if (!pump_init_done()) {
+    
+    }
     return 0;
 }
 
