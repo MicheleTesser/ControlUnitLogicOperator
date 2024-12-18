@@ -19,7 +19,9 @@ static struct{
 
 //private
 static inline void wait_init(void){
-    while (!trap_info.init_done) {}
+    while (!trap_info.init_done) {
+        printf("waiting init trap\n");
+    }
 }
 
 static void default_trap_fun(void){

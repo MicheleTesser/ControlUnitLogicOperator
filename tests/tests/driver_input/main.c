@@ -158,8 +158,58 @@ static int test_regen(void){
 
 static int test_impls(void){
     int8_t err=0;
+    uint8_t no_imp = 0;
+    can_obj_can2_h_t mex;
+    CanMessage mex_c;
+    memset(&mex, 0, sizeof(mex));
+    memset(&mex_c, 0, sizeof(mex_c));
+    mex.can_0x053_Driver.no_implausibility = no_imp;
+    mex.can_0x053_Driver.bre_implausibility = 1;
+    mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
+    mex_c.id = CAN_ID_DRIVER;
+    raise_interrupt(INTERRUPT_CAN_2);
+    hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
+    sleep(1);
 
-    FAILED("Not tested yet");
+    if (check_impls(THROTTLE_BRAKE)) {
+        PASSED("THROTTLE_BRAKE implausibility setted correctly");
+    }else{
+        FAILED("THROTTLE_BRAKE implausibility set failed");
+        err--;
+    }
+    clear_implausibility();
+    memset(&mex, 0, sizeof(mex));
+    memset(&mex_c, 0, sizeof(mex_c));
+    mex.can_0x053_Driver.pad_implausibility =1;
+    mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
+    mex_c.id = CAN_ID_DRIVER;
+    raise_interrupt(INTERRUPT_CAN_2);
+    hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
+    sleep(1);
+
+    if (check_impls(THROTTLE_PADEL)) {
+        PASSED("THROTTLE_PADEL implausibility setted correctly");
+    }else{
+        FAILED("THROTTLE_PADEL implausibility set failed");
+        err--;
+    }
+
+    clear_implausibility();
+    memset(&mex, 0, sizeof(mex));
+    memset(&mex_c, 0, sizeof(mex_c));
+    mex.can_0x053_Driver.pot_implausibility=1;
+    mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
+    mex_c.id = CAN_ID_DRIVER;
+    raise_interrupt(INTERRUPT_CAN_2);
+    hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
+    sleep(1);
+
+    if (check_impls(THROTTLE_POT)) {
+        PASSED("THROTTLE_POT implausibility setted correctly");
+    }else{
+        FAILED("THROTTLE_POT implausibility set failed");
+        err--;
+    }
 
     return err;
 }

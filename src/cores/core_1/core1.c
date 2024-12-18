@@ -14,7 +14,7 @@ static void setup(void)
 {
     hardware_init_interrupt();
     hardware_init_gpio(CORE_ALIVE_LED_2);
-    board_can_init(CAN_MODULE_INVERTER, _500_KBYTE_S_);
+    board_can_init(CAN_MODULE_INVERTER, _1_MBYTE_S_);
     board_can_init(CAN_MODULE_GENERAL, _500_KBYTE_S_);
     board_can_init(CAN_MODULE_DV, _500_KBYTE_S_);
     alive_fd = i_m_alive_init(100 MILLIS, CORE_ALIVE_LED_2);

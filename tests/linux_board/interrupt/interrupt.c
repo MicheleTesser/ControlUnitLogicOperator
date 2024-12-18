@@ -19,7 +19,9 @@ static struct{
 
 //private
 static inline void wait_init(void){
-    while (!interrupt_info.init_done) {}
+    while (!interrupt_info.init_done) {
+        printf("waiting init interrupt\n");
+    }
 }
 
 static void default_interr_fun(void){

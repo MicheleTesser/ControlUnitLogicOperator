@@ -3,6 +3,7 @@
 #include "../../board_conf/id_conf.h"
 #include "../../board_can/board_can.h"
 #include <stdint.h>
+#include <string.h>
 
 //INFO: doc/amk_datasheet.pdf page 61
 
@@ -39,7 +40,17 @@ struct AMK_Actual_Values_2{
 struct AMK_Setpoints{
     //INFO: AMK_Control: 
     //Control word See the table below: Content of the 'AMK_Control' control word
-    uint16_t AMK_Control; 
+    union{
+        struct {
+            uint8_t AMK_bReserve_start;
+            uint8_t AMK_bInverterOn:1;
+            uint8_t AMK_bDcOn:1;
+            uint8_t AMK_bEnable:1;
+            uint8_t AMK_bErrorReset:1;
+            uint8_t AMK_bReserve_end :4;
+        }AMK_Control_fields;
+        uint16_t AMK_Control; 
+    };
     int16_t AMK_TargetVelocity; //INFO: unit: rpm Speed setpoint
     int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
     int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
@@ -51,6 +62,7 @@ struct AMK_Setpoints{
 static struct {
     struct AMK_Actual_Values_1 amk_data_1;
     struct AMK_Actual_Values_2 amk_data_2;
+    uint8_t engine_on:1;
 }inverter_engine_data[4];
 
 #define POPULATE_MEX_ENGINE(om,amk_stop,engine)\
@@ -83,6 +95,32 @@ static int8_t send_message_amk(const enum ENGINES engine,
 }
 
 //public
+
+int8_t init_engine(const enum ENGINES engine)
+{
+    struct AMK_Setpoints setpoint;
+    memset(&setpoint, 0, sizeof(setpoint));
+    struct AMK_Actual_Values_1* engine_info = &inverter_engine_data[engine].amk_data_1;
+
+    if (engine_info->AMK_STATUS.fields.bSystemReady) {
+        setpoint.AMK_Control_fields.AMK_bDcOn=1;
+    }
+
+    if (inverter_engine_data[engine].engine_on && engine_info->AMK_STATUS.fields.AMK_bQuitDcOn) {
+        setpoint.AMK_Control_fields.AMK_bEnable =1;
+        setpoint.AMK_Control_fields.AMK_bInverterOn =1;
+    }
+
+    int8_t return_send = send_message_amk(engine, &setpoint);
+
+    if (engine_info->AMK_STATUS.fields.bSystemReady &&
+            engine_info->AMK_STATUS.fields.AMK_bQuitDcOn &&
+            engine_info->AMK_STATUS.fields.AMK_bQuitInverterOn) {
+        inverter_engine_data[engine].engine_on =1;
+    }
+
+    return return_send;
+}
 
 int8_t stop_engine(const enum ENGINES engine)
 {

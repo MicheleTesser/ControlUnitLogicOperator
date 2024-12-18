@@ -37,6 +37,20 @@ static uint8_t GIEI_get_hv_status(void)
         gpio_read_state(AIR_PRECHARGE_DONE);
 }
 
+static inline void GIEI_stop_engines(void)
+{
+    for (uint8_t i=FRONT_LEFT; i<=REAR_RIGHT; i++) {
+        stop_engine(i);
+    }
+}
+
+static inline void GIEI_start_engines(void)
+{
+    for (uint8_t i=FRONT_LEFT; i<=REAR_RIGHT; i++) {
+        init_engine(i);
+    }
+}
+
 //public
 
 int8_t GIEI_initialize(void)
@@ -75,10 +89,12 @@ int8_t GIEI_check_running_condition(void)
                 gpio_set_low(READY_TO_DRIVE_OUT_LED);
                 gpio_set_low(READY_TO_DRIVE_OUT_SOUND);
                 GIEI.sound_start_at = timer_time_now();
+                GIEI_start_engines();
                 GIEI.running =1;
             //starting failed. Precharge not finished. opening scs to stop precharge
             }else if(!gpio_read_state(AIR_PRECHARGE_INIT) || !gpio_read_state(AIR_PRECHARGE_DONE)){
                 one_emergency_raised();
+                GIEI_stop_engines();
             }
         //reset scs. can start again the precharge
         }else if(!GIEI_get_hv_status()){
@@ -89,9 +105,7 @@ int8_t GIEI_check_running_condition(void)
     {
         GIEI.running =0;
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
-        for (uint8_t i=FRONT_LEFT; i<=REAR_RIGHT; i++) {
-            stop_engine(i);
-        }
+        GIEI_stop_engines();
     }
 
     //continue with what you were doing
