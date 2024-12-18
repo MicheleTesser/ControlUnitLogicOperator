@@ -8,12 +8,12 @@
 #include "power_maps/power_maps.h"
 #include <stdint.h>
 
-#define SPEED_LIMIT                 18000   // Typical value: 15000
+#define SPEED_LIMIT                         18000           //INFO: Typical value: 15000
 #define DEFAULT_MAX_POS_TORQUE              15.0f
 #define DEFAULT_MAX_NEG_TORQUE              -15.f
 #define DEFAULT_REGEN                       0
 #define DEFAULT_REPARTITION                 0.5f
-#define DEFAULT_POWER_LIMIT                 70000.0f       //Watt
+#define DEFAULT_POWER_LIMIT                 70000.0f       //INFO: Watt
 
 
 static struct{
@@ -51,6 +51,13 @@ static inline void GIEI_start_engines(void)
     }
 }
 
+static inline uint8_t GIEI_exit_running_mode(void)
+{
+    return  !GIEI_get_hv_status() || 
+            !gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON) ||
+            amk_fault();
+}
+
 //public
 
 int8_t GIEI_initialize(void)
@@ -68,10 +75,11 @@ int8_t GIEI_initialize(void)
 
     return 0;
 }
+
 int8_t GIEI_check_running_condition(void)
 {
     const uint8_t brake_treshold_percentage = 10;
-    const time_var_microseconds sound_duration = 3 * 1000 * 1000;
+    const time_var_microseconds sound_duration = 3 SECONDS;
 
     if ((timer_time_now() - GIEI.sound_start_at) > sound_duration) {
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
@@ -101,7 +109,7 @@ int8_t GIEI_check_running_condition(void)
             one_emergency_solved();
         }
     //exiting from R2D
-    }else if (GIEI.running && (!GIEI_get_hv_status() || !gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON))) 
+    }else if (GIEI.running && GIEI_exit_running_mode())
     {
         GIEI.running =0;
         gpio_set_high(READY_TO_DRIVE_OUT_LED);

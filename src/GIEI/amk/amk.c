@@ -261,3 +261,12 @@ void update_status(const CanMessage* const restrict mex)
             break;
     }
 }
+
+uint8_t amk_fault(void)
+{
+    return 
+        inverter_engine_data[FRONT_LEFT].amk_data_1.AMK_STATUS.fields.AMK_bError |
+        inverter_engine_data[FRONT_RIGHT].amk_data_1.AMK_STATUS.fields.AMK_bError |
+        inverter_engine_data[REAR_LEFT].amk_data_1.AMK_STATUS.fields.AMK_bError |
+        inverter_engine_data[REAR_RIGHT].amk_data_1.AMK_STATUS.fields.AMK_bError;
+}

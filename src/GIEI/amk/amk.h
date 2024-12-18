@@ -11,5 +11,6 @@ int8_t set_regen_brake_engine(const enum ENGINES engine, const int16_t brake);
 int8_t set_throttle_engine(const enum ENGINES engine, const int16_t throttle);
 uint8_t inverter_hv_status(void);
 void update_status(const CanMessage* const restrict mex);
+uint8_t amk_fault(void);
 
 #endif // !__AMK_POWER_SYSTEM__
