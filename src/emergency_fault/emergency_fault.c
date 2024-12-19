@@ -3,20 +3,23 @@
 #include "../board_conf/id_conf.h"
 #include <stdint.h>
 
-static uint8_t num_of_emergency =0;
+static uint32_t num_of_emergency =0;
 
-int8_t one_emergency_raised(void)
+
+int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
 {
-    num_of_emergency++;
+    num_of_emergency|=  id;
     gpio_set_low(SCS);
 
     return 0;
 }
-int8_t one_emergency_solved(void)
+
+int8_t one_emergency_solved(const enum EMERGENCY_FAULT id)
 {
-    if (num_of_emergency > 0) {
-        num_of_emergency--;
+    if (num_of_emergency & id) {
+        num_of_emergency^= id;
     }
+
     if (!num_of_emergency) {
         gpio_set_high(SCS);
     }

@@ -39,7 +39,7 @@ static void loop(void)
     const float regen = driver_get_amount(REGEN);
 
     i_m_alive(alive_fd);
-    if (GIEI_check_running_condition()) {
+    if (GIEI_check_running_condition() == RUNNING) {
         pump_init();
         fan_init();
         GIEI_input(throttle,brake,regen);

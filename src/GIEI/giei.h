@@ -12,6 +12,7 @@
 
 #include "../lib/raceup_board/raceup_board.h"
 #include "./power_maps/power_maps.h"
+#include "./engine_common.h"
 #include <stdint.h>
 
 enum GIEI_LIMITS{
@@ -22,9 +23,10 @@ enum GIEI_LIMITS{
     TORQUE_VECTORING_ACTIVATION,
 };
 
+
 int8_t GIEI_initialize(void);
 int8_t GIEI_recv_data(const CanMessage* const restrict mex);
-int8_t GIEI_check_running_condition(void);
+enum RUNNING_STATUS GIEI_check_running_condition(void);
 int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value);
 int8_t GIEI_input(const float throttle, const float brake, const float regen);
 

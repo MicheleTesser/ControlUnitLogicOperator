@@ -8,6 +8,9 @@
 #include "power_maps/power_maps.h"
 #include <stdint.h>
 
+
+//private
+
 #define SPEED_LIMIT                         18000           //INFO: Typical value: 15000
 #define DEFAULT_MAX_POS_TORQUE              15.0f
 #define DEFAULT_MAX_NEG_TORQUE              -15.f
@@ -24,39 +27,10 @@ static struct{
     float limit_regen;
     float limit_max_speed;
     float settings_power_repartition;
+
     uint8_t activate_torque_vectoring :1;
-    uint8_t running :1;
 }GIEI;
 
-//private
-static uint8_t GIEI_get_hv_status(void)
-{
-    return 
-        inverter_hv_status() &&
-        gpio_read_state(AIR_PRECHARGE_INIT) && 
-        gpio_read_state(AIR_PRECHARGE_DONE);
-}
-
-static inline void GIEI_stop_engines(void)
-{
-    for (uint8_t i=FRONT_LEFT; i<=REAR_RIGHT; i++) {
-        stop_engine(i);
-    }
-}
-
-static inline void GIEI_start_engines(void)
-{
-    for (uint8_t i=FRONT_LEFT; i<=REAR_RIGHT; i++) {
-        init_engine(i);
-    }
-}
-
-static inline uint8_t GIEI_exit_running_mode(void)
-{
-    return  !GIEI_get_hv_status() || 
-            !gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON) ||
-            amk_fault();
-}
 
 //public
 
@@ -69,60 +43,40 @@ int8_t GIEI_initialize(void)
     GIEI.limit_max_speed = SPEED_LIMIT;
     GIEI.settings_power_repartition = DEFAULT_REPARTITION;
     GIEI.activate_torque_vectoring = 0;
-    GIEI.running =0;
 
+    amk_module_init();
     giei_power_map_init();
 
     return 0;
 }
 
-int8_t GIEI_check_running_condition(void)
+enum RUNNING_STATUS GIEI_check_running_condition(void)
 {
-    const uint8_t brake_treshold_percentage = 10;
+    static uint8_t rtd_done = 0;
     const time_var_microseconds sound_duration = 3 SECONDS;
+    enum RUNNING_STATUS rt = SYSTEM_OFF;
 
     if ((timer_time_now() - GIEI.sound_start_at) > sound_duration) {
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
-    }
-    if (!GIEI.running && GIEI_get_hv_status()) 
-    {
-        //starting
-        // printf("try starting brake amount: %f\n",driver_get_amount(BRAKE));
-        if (driver_get_amount(BRAKE) > brake_treshold_percentage && 
-                gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON))
-        {
-            //starting ok
-            if (gpio_read_state(AIR_PRECHARGE_INIT) && gpio_read_state(AIR_PRECHARGE_DONE)) 
-            {
-                gpio_set_low(READY_TO_DRIVE_OUT_LED);
-                gpio_set_low(READY_TO_DRIVE_OUT_SOUND);
-                GIEI.sound_start_at = timer_time_now();
-                GIEI_start_engines();
-                GIEI.running =1;
-            //starting failed. Precharge not finished. opening scs to stop precharge
-            }else if(!gpio_read_state(AIR_PRECHARGE_INIT) || !gpio_read_state(AIR_PRECHARGE_DONE)){
-                one_emergency_raised();
-                GIEI_stop_engines();
-            }
-        //reset scs. can start again the precharge
-        }else if(!GIEI_get_hv_status()){
-            one_emergency_solved();
-        }
-    //exiting from R2D
-    }else if (GIEI.running && GIEI_exit_running_mode())
-    {
-        GIEI.running =0;
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
-        GIEI_stop_engines();
     }
-
-    //continue with what you were doing
-    return GIEI.running;
+    rt = amk_rtd_procedure();
+    if (rt == RUNNING && !rtd_done) {
+        rtd_done =1;
+        gpio_set_low(READY_TO_DRIVE_OUT_SOUND);
+        gpio_set_low(READY_TO_DRIVE_OUT_LED);
+        GIEI.sound_start_at = timer_time_now();
+    }else if (rt != RUNNING) {
+        rtd_done =0;
+        gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
+        gpio_set_high(READY_TO_DRIVE_OUT_LED);
+    }
+    return rt;
 }
 
 int8_t GIEI_recv_data(const CanMessage* const restrict mex)
 {
-    update_status(mex);
+    amk_update_status(mex);
     return 0;
 }
 

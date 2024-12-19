@@ -8,4 +8,10 @@ enum ENGINES {
     REAR_RIGHT = 3,     //INFO: Rear Right: Status Values: [0x288,0x28A] SetPoint: 0x189
 };                              
 
+enum RUNNING_STATUS{
+    SYSTEM_OFF = 0,
+    SYSTEM_PRECAHRGE,
+    RUNNING,
+};
+
 #endif // !__GIEI_ENGINES_COMMON__
