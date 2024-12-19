@@ -48,6 +48,9 @@ static void* interrupt_dispatcher(void* args __attribute_maybe_unused__){
 //public
 int8_t hardware_init_interrupt(void)
 {
+    if (interrupt_info.init_done) {
+        return 0;
+    }
     interrupt_info.init_done = 0;
     pthread_t interrupt_dispatch;
     memset(&interrupt_info.interr, 0, sizeof(interrupt_info.interr));

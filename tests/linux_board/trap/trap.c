@@ -48,6 +48,9 @@ static void* trap_dispatcher(void* args __attribute_maybe_unused__){
 //public
 int8_t hardware_init_trap(void)
 {
+    if (trap_info.init_done) {
+        return 0;
+    }
     trap_info.init_done = 0;
     pthread_t trap_dispatch;
     memset(trap_info.trap_vec, 0, sizeof(trap_info.trap_vec[0]));
