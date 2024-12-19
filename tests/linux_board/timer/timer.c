@@ -4,9 +4,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-int8_t wait_milliseconds(const time_var_microseconds milliseconds)
+int8_t wait_milliseconds(const time_var_microseconds time)
 {
-    usleep(milliseconds MILLIS);
+    usleep(time);
     return 0;
 }
 
