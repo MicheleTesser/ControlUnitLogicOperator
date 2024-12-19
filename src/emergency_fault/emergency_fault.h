@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 enum EMERGENCY_FAULT{
-    FAILED_RTD_SEQ = 0,
-    ENGINE_FAULT = (1 << 0),
+    FAILED_RTD_SEQ = (1 << 0),
+    ENGINE_FAULT = (1 << 1),
 };
 
 int8_t one_emergency_raised(const enum EMERGENCY_FAULT id);
