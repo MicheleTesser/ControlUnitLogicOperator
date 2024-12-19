@@ -72,7 +72,7 @@ static struct AMK_POWER{
 }inverter_engine_data;
 
 #define FOR_EACH_ENGINE(exp) \
-    for(uint8_t index_engines=FRONT_LEFT;index_engines<REAR_RIGHT;index_engines++){\
+    for(uint8_t index_engine=FRONT_LEFT;index_engine<REAR_RIGHT;index_engine++){\
         exp;\
     };
 
@@ -123,7 +123,7 @@ static uint8_t amk_inverter_on(void)
 {
     uint8_t res =1;
     FOR_EACH_ENGINE({
-        struct amk_engines* engine = &inverter_engine_data.engines[index_engines];
+        struct amk_engines* engine = &inverter_engine_data.engines[index_engine];
         res &= engine->amk_data_1.AMK_STATUS.fields.bSystemReady;
     })
     return res;
@@ -135,7 +135,7 @@ static uint8_t amk_activate_hv(void)
         struct AMK_Setpoints setpoint;
         memset(&setpoint, 0, sizeof(setpoint));
         setpoint.AMK_Control_fields.AMK_bDcOn =1;
-        send_message_amk(index_engines, &setpoint);
+        send_message_amk(index_engine, &setpoint);
     })
     return 0;
 }
@@ -145,7 +145,7 @@ static uint8_t amk_disable_inverter(void)
     FOR_EACH_ENGINE({
         struct AMK_Setpoints setpoint;
         memset(&setpoint, 0, sizeof(setpoint));
-        send_message_amk(index_engines, &setpoint);
+        send_message_amk(index_engine, &setpoint);
     })
     return 0;
 }
@@ -154,9 +154,10 @@ static uint8_t amk_activate_control(void)
     FOR_EACH_ENGINE({
         struct AMK_Setpoints setpoint;
         memset(&setpoint, 0, sizeof(setpoint));
+        setpoint.AMK_Control_fields.AMK_bDcOn =1;
         setpoint.AMK_Control_fields.AMK_bEnable=1;
         setpoint.AMK_Control_fields.AMK_bInverterOn=1;
-        send_message_amk(index_engines, &setpoint);
+        send_message_amk(index_engine, &setpoint);
     })
     return 0;
 }
@@ -165,8 +166,7 @@ static uint8_t amk_activate_control(void)
 static inline uint8_t rtd_input_request(void)
 {
     const uint8_t brake_treshold_percentage = 10;
-    return 
-            driver_get_amount(BRAKE) > brake_treshold_percentage &&
+    return  driver_get_amount(BRAKE) > brake_treshold_percentage &&
             gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON);
 }
 
