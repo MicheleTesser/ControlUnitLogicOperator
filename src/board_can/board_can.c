@@ -3,15 +3,17 @@
 #include "../lib/board_dbc/can1.h"
 #include "../lib/board_dbc/can2.h"
 #include "../lib/board_dbc/can3.h"
+#include "../lib/DPS/dps_slave.h"
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 //private
 
 //FIX: add an abstract atomic operation
- static uint8_t mex_to_read[3];
+static uint8_t mex_to_read[3];
 
 
 static void inverter_can_interrupt(void) INTERRUP_ATTRIBUTE 
@@ -27,6 +29,19 @@ static void general_can_interrupt(void) INTERRUP_ATTRIBUTE
 static void dv_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
     mex_to_read[2] = 1;
+}
+
+static int dps_send(DPSCanMessage* dps_mex){
+    CanMessage mex;
+    memset(&mex, 0, sizeof(mex));
+    mex.full_word = dps_mex->GenericPayload.rawMex.full_buffer[0];
+    mex.id = dps_mex->id;
+    mex.message_size = dps_mex->dlc;
+
+    if(board_can_write(CAN_MODULE_GENERAL, &mex) < 0){
+        return -1;
+    }
+    return 0;
 }
 
 static int8_t manage_can_1_message(const CanMessage* const restrict mex){
@@ -160,6 +175,10 @@ int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
             goto invalid_can_module;
     }
 
+    BoardName board_name = {
+        .full_data.name = "CULO",
+    };
+    dps_init(dps_send, &board_name);
 
     return 0;
 

@@ -8,3 +8,6 @@
 [submodule "lib/board_dbc/dbc"]
 	path = lib/board_dbc/dbc
 	url = https://github.com/raceup-electric/dbc.git
+[submodule "lib/DPS"]
+	path = lib/DPS
+	url = https://github.com/mrmonopoly-cyber/DPS.git

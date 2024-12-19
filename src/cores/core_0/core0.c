@@ -1,6 +1,7 @@
 #include "./core0.h"
 #include "../../cooling/cooling.h"
 #include "../../driver_input/driver_input.h"
+#include "../../lib/DPS/dps_slave.h"
 #include "../../GIEI/giei.h"
 #include "../../board_conf/id_conf.h"
 #include "../../lib/raceup_board/raceup_board.h"
@@ -30,6 +31,7 @@ static void setup(void)
     gpio_set_low(SCS); 
     wait_milliseconds(100);
     gpio_set_high(SCS);
+    while (dps_is_init_done()) {}
 }
 
 static void loop(void)

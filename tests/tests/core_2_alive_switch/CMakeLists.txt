@@ -14,6 +14,8 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_SOURCE_DIR}/linux_board/*.c"
     "${CMAKE_SOURCE_DIR}/score_lib/*.c"
     "${CMAKE_SOURCE_DIR}/lib/board_dbc/can[0-9].c"
+    "${CMAKE_SOURCE_DIR}/lib/DPS/dps_*.c"
+    "${CMAKE_SOURCE_DIR}/lib/DPS/lib/c_vector/c_vector.c"
 )
 
 # Add executable
