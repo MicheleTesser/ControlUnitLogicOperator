@@ -4,6 +4,7 @@
 #include "../../lib/raceup_board/raceup_board.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 //private
 

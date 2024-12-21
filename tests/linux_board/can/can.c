@@ -1,5 +1,6 @@
 #include "can.h"
 #include "can_lib/canlib.h"
+#include "../../../lib/board_dbc/can2.h"
 #include <linux/can.h>
 #include <stdio.h>
 #include <string.h>

@@ -30,5 +30,9 @@ enum RUNNING_STATUS GIEI_check_running_condition(void);
 int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value);
 int8_t GIEI_input(const float throttle, const float brake, const float regen);
 
+//debug
+uint8_t DEBUG_GIEI_check_limits(float power_limit, float pos_torque, 
+        float neg_torque, float repartition, float tv_on);
+
 
 #endif // !__CAR_GIEI__

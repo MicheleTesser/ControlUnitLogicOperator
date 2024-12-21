@@ -12,7 +12,7 @@
 
 static struct{
     trap_fun trap_table[MAX_TRAP];
-    _Atomic uint8_t trap_vec[MAX_TRAP];
+    _Atomic uint8_t trap_vec;
     _Atomic uint8_t trap_enabled;
     uint8_t init_done : 1;
 }trap_info;
@@ -30,12 +30,12 @@ static void default_trap_fun(void){
 
 static void* trap_dispatcher(void* args __attribute_maybe_unused__){
     for(uint8_t i=0;;i = (i+1)%MAX_TRAP){
-        uint8_t trap_num = trap_info.trap_vec[i];
+        uint8_t trap_num = trap_info.trap_vec & (1 << i);
         if (trap_info.trap_enabled && trap_num)
         {
             if (trap_num < MAX_TRAP) {
                 trap_info.trap_table[trap_num]();
-                trap_info.trap_vec[i] = 0;
+                trap_info.trap_vec ^= trap_num;
             }else{
                 fprintf(stderr, "invalid trap %d\n", trap_num);
             }
@@ -53,7 +53,7 @@ int8_t hardware_init_trap(void)
     }
     trap_info.init_done = 0;
     pthread_t trap_dispatch;
-    memset(trap_info.trap_vec, 0, sizeof(trap_info.trap_vec[0]));
+    trap_info.trap_vec = 0;
     for (int i =0; i<MAX_TRAP; i++) {
         trap_info.trap_table[i] = default_trap_fun;
     }
@@ -89,5 +89,5 @@ int8_t hardware_trap_disable(void)
 void hardware_raise_trap(const uint8_t trap_number)
 {
     wait_init();
-    trap_info.trap_vec[trap_number] = 1;
+    trap_info.trap_vec |= ((trap_number > 0) << (trap_number -1));
 }

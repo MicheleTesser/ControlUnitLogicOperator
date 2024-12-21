@@ -7,7 +7,6 @@
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 //private
@@ -18,17 +17,17 @@ static uint8_t mex_to_read[3];
 
 static void inverter_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
-    mex_to_read[0] = 1;
+    mex_to_read[0]++;
 }
 
 static void general_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
-    mex_to_read[1] = 1;
+    mex_to_read[1]++;
 }
 
 static void dv_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
-    mex_to_read[2] = 1;
+    mex_to_read[2]++;
 }
 
 static int dps_send(DPSCanMessage* dps_mex){
@@ -223,7 +222,7 @@ int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
     }
 
 
-    mex_to_read[mex_to_read_t] = 0;
+    mex_to_read[mex_to_read_t]--;
 
     return 0;
 

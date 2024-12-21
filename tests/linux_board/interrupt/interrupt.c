@@ -53,7 +53,7 @@ int8_t hardware_init_interrupt(void)
     }
     interrupt_info.init_done = 0;
     pthread_t interrupt_dispatch;
-    memset(&interrupt_info.interr, 0, sizeof(interrupt_info.interr));
+    interrupt_info.interr = 0;
     for (int i =0; i<MAX_INTERRUPTS; i++) {
         interrupt_info.interrupt_table[i] = default_interr_fun;
     }
@@ -75,8 +75,7 @@ int8_t hardware_interrupt_attach_fun(const BoardComponentId fun_id,
 void raise_interrupt(const uint8_t interrupt_number)
 {
     wait_init();
-    interrupt_info.interr |= 
-        ((interrupt_number > 0) << (interrupt_number -1)) + !interrupt_number;
+    interrupt_info.interr |= ((interrupt_number > 0) << (interrupt_number -1));
 }
 
 int8_t hardware_interrupt_enable(void)
