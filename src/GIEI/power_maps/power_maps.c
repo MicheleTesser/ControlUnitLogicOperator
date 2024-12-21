@@ -48,44 +48,44 @@ static inline void set_repartition_map(const uint8_t map_i, const float repartit
 
 static void init_power_maps(void)
 {
-    set_pow_map(0, 35, 13);
-    set_pow_map(1, 35, 13);
-    set_pow_map(2, 35, 13);
-    set_pow_map(3, 35, 13);
-    set_pow_map(4, 35, 13);
-    set_pow_map(5, 35, 13);
+    set_pow_map(0, 77, 21);
+    set_pow_map(1, 75, 20);
+    set_pow_map(2, 70, 18);
+    set_pow_map(3, 60, 16);
+    set_pow_map(4, 50, 15);
+    set_pow_map(5, 40, 15);
     set_pow_map(6, 35, 13);
-    set_pow_map(7, 35, 13);
-    set_pow_map(8, 35, 13);
-    set_pow_map(9, 35, 13);
+    set_pow_map(7, 30, 13);
+    set_pow_map(8, 15, 12);
+    set_pow_map(9, 10, 10);
 }
 
 static void init_regen_maps(void)
 {
-    set_regen_map(0, 35, 13);
-    set_regen_map(1, 35, 13);
-    set_regen_map(2, 35, 13);
-    set_regen_map(3, 35, 13);
-    set_regen_map(4, 35, 13);
-    set_regen_map(5, 35, 13);
-    set_regen_map(6, 35, 13);
-    set_regen_map(7, 35, 13);
-    set_regen_map(8, 35, 13);
-    set_regen_map(9, 35, 13);
+    set_regen_map(0, 0, 0);
+    set_regen_map(1, 20, -8);
+    set_regen_map(2, 30, -10);
+    set_regen_map(3, 40, -12);
+    set_regen_map(4, 50, -15);
+    set_regen_map(5, 60, -17);
+    set_regen_map(6, 70, -18);
+    set_regen_map(7, 80, -19);
+    set_regen_map(8, 90, -20);
+    set_regen_map(9, 100, -21);
 }
 
 static void init_repartition_maps(void)
 {
-    set_repartition_map(0, 35, 13);
-    set_repartition_map(1, 35, 13);
-    set_repartition_map(2, 35, 13);
-    set_repartition_map(3, 35, 13);
-    set_repartition_map(4, 35, 13);
-    set_repartition_map(5, 35, 13);
-    set_repartition_map(6, 35, 13);
-    set_repartition_map(7, 35, 13);
-    set_repartition_map(8, 35, 13);
-    set_repartition_map(9, 35, 13);
+    set_repartition_map(0, 50, 1);
+    set_repartition_map(1, 100, 0);
+    set_repartition_map(2, 82, 18);
+    set_repartition_map(3, 80, 20);
+    set_repartition_map(4, 78, 22);
+    set_repartition_map(5, 75, 25);
+    set_repartition_map(6, 70, 30);
+    set_repartition_map(7, 60, 40);
+    set_repartition_map(8, 50, 50);
+    set_repartition_map(9, 50, 50);
 }
 
 //public

@@ -20,8 +20,8 @@ struct regen_map_settings{
 };
 
 struct tv_repartition_map{
-    float repartition;
-    uint8_t torque_vectoring_on;
+    float repartition; //INFO: [0,100]: 0 back, 100 front 
+    uint8_t torque_vectoring_on :1;
 };
 
 struct car_map{
