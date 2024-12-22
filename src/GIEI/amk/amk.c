@@ -236,31 +236,15 @@ int8_t amk_set_max_speed(const uint32_t speed)
     return 0;
 }
 
-int8_t amk_pos_torque(const enum ENGINES engine, const float pos_torque)
+int8_t amk_send_torque(const enum ENGINES engine, const float pos_torque, const float neg_torque)
 {
     struct AMK_Setpoints setpoint  ={
         .AMK_Control = 0,
         .AMK_TargetVelocity = inverter_engine_data.max_speed,
         .AMK_TorqueLimitPositive = pos_torque,
-        .AMK_TorqueLimitNegative = 0,
-    };
-    return send_message_amk(engine, &setpoint);
-}
-
-int8_t amk_neg_torque(const enum ENGINES engine, const float neg_torque)
-{
-    struct AMK_Setpoints setpoint  ={
-        .AMK_Control = 0,
-        .AMK_TargetVelocity = 0,
-        .AMK_TorqueLimitPositive = 0,
         .AMK_TorqueLimitNegative = neg_torque,
     };
     return send_message_amk(engine, &setpoint);
-}
-
-int8_t amk_send_torque(const enum ENGINES engine, const float pos_torque, const float neg_torque)
-{
-    return 0;
 }
 
 #define STATUS_WORD_1(engine,mex)\
@@ -385,6 +369,13 @@ void amk_shut_down_power(void)
 
 float amk_get_info(const enum ENGINES engine, const enum ENGINE_INFO info)
 {
+    switch (info) {
+        case ENGINE_VOLTAGE:
+            return inverter_engine_data.engines[engine].amk_data_1.AMK_TorqueCurrent;
+            break;
+        default:
+            return -1;
+    }
     return 0;
 }
 
