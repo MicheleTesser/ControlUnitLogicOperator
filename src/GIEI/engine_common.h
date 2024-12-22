@@ -1,6 +1,8 @@
 #ifndef __GIEI_ENGINES_COMMON__
 #define __GIEI_ENGINES_COMMON__
 
+#define NUM_OF_EGINES 4
+
 enum ENGINES {
     FRONT_LEFT = 0,     //INFO: Front Left: Status Values: [0x283,0x285] SetPoint: 0x184
     FRONT_RIGHT = 1,    //INFO: Front Right: Status Values: [0x284,0x286] SetPoint: 0x185
@@ -12,6 +14,10 @@ enum RUNNING_STATUS{
     SYSTEM_OFF = 0,
     SYSTEM_PRECAHRGE,
     RUNNING,
+};
+
+enum ENGINE_INFO{
+    ENGINE_VOLTAGE,
 };
 
 #endif // !__GIEI_ENGINES_COMMON__

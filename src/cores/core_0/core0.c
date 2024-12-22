@@ -37,14 +37,13 @@ static void setup(void)
 static void loop(void)
 {
     const float throttle = driver_get_amount(THROTTLE);
-    const float brake = driver_get_amount(BRAKE);
     const float regen = driver_get_amount(REGEN);
 
     i_m_alive(alive_fd);
     if (GIEI_check_running_condition() == RUNNING) {
         pump_init();
         fan_init();
-        GIEI_input(throttle,brake,regen);
+        GIEI_input(throttle,regen);
     }
 }
 

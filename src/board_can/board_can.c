@@ -112,6 +112,8 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
         case CAN_ID_INVVOLT:
         case CAN_ID_PCU:
         case CAN_ID_LEM:
+            GIEI_recv_data(mex);
+            break;
         default:
             goto invalid_general_message;
     }

@@ -4,6 +4,8 @@
 #include "../../board_can/board_can.h"
 #include "../../driver_input/driver_input.h"
 #include "../../emergency_fault/emergency_fault.h"
+#include "../../utility/arithmetic/arithmetic.h"
+#include "../engine_common.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -62,17 +64,18 @@ struct AMK_Setpoints{
 
 //private
 
-#define NUM_OF_ENGINES 4
+#define MAX_MOTOR_TORQUE            21.0f
 static struct AMK_POWER{
     struct amk_engines{
         struct AMK_Actual_Values_1 amk_data_1;
         struct AMK_Actual_Values_2 amk_data_2;
-    }engines[NUM_OF_ENGINES];
+    }engines[NUM_OF_EGINES];
     enum RUNNING_STATUS engine_status :2;
+    uint32_t max_speed;
 }inverter_engine_data;
 
 #define FOR_EACH_ENGINE(exp) \
-    for(uint8_t index_engine=FRONT_LEFT;index_engine<REAR_RIGHT;index_engine++){\
+    for(uint8_t index_engine=FRONT_LEFT;index_engine<=REAR_RIGHT;index_engine++){\
         exp;\
     };
 
@@ -183,10 +186,10 @@ static uint8_t amk_inverter_hv_status(void)
 {
     uint8_t i;
     const uint8_t HV_TRAP = 50;
-    static uint8_t hvCounter[NUM_OF_ENGINES];
-    static uint8_t inverterHV[NUM_OF_ENGINES];
+    static uint8_t hvCounter[NUM_OF_EGINES];
+    static uint8_t inverterHV[NUM_OF_EGINES];
 
-    for (i = 0; i < NUM_OF_ENGINES; i++)
+    for (i = 0; i < NUM_OF_EGINES; i++)
     {
         if (!(inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn) && 
                 (hvCounter[i] < HV_TRAP))
@@ -227,29 +230,33 @@ int8_t amk_module_init(void)
     return 0;
 }
 
-int8_t amk_set_regen_brake_engine(const enum ENGINES engine, const int16_t brake)
+int8_t amk_set_max_speed(const uint32_t speed)
 {
-    const struct AMK_Setpoints amk_brake ={
+    inverter_engine_data.max_speed = speed;
+    return 0;
+}
+
+int8_t amk_pos_torque(const enum ENGINES engine, const float pos_torque)
+{
+    struct AMK_Setpoints setpoint  ={
         .AMK_Control = 0,
-        .AMK_TargetVelocity =0,
+        .AMK_TargetVelocity = inverter_engine_data.max_speed,
+        .AMK_TorqueLimitPositive = pos_torque,
+        .AMK_TorqueLimitNegative = 0,
+    };
+    return send_message_amk(engine, &setpoint);
+}
+
+int8_t amk_neg_torque(const enum ENGINES engine, const float neg_torque)
+{
+    struct AMK_Setpoints setpoint  ={
+        .AMK_Control = 0,
+        .AMK_TargetVelocity = 0,
         .AMK_TorqueLimitPositive = 0,
-        .AMK_TorqueLimitNegative = brake
+        .AMK_TorqueLimitNegative = neg_torque,
     };
-    return send_message_amk(engine, &amk_brake);
+    return send_message_amk(engine, &setpoint);
 }
-
-int8_t amk_set_throttle_engine(const enum ENGINES engine, const int16_t throttle)
-{
-    const struct AMK_Setpoints amk_throttle ={
-        .AMK_Control = 0,
-        .AMK_TargetVelocity =0,
-        .AMK_TorqueLimitPositive = throttle,
-        .AMK_TorqueLimitNegative = 0
-    };
-    return send_message_amk(engine, &amk_throttle);
-}
-
-
 
 #define STATUS_WORD_1(engine,mex)\
         values_1 = &inverter_engine_data.engines[engine].amk_data_1;\
@@ -369,4 +376,18 @@ void amk_shut_down_power(void)
 {
     amk_disable_inverter();
     inverter_engine_data.engine_status= SYSTEM_OFF;
+}
+
+float max_pos_torque(const float max_pos_torque)
+{
+    const float actual_velocity = inverter_engine_data.engines[0].amk_data_1.AMK_ActualVelocity;
+    const float unsaturated_pos_torque = MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
+    return saturate_float(unsaturated_pos_torque, max_pos_torque, 0.0f);
+
+}
+float max_neg_torque(const float max_neg_torque)
+{
+    float actual_velocity = inverter_engine_data.engines[0].amk_data_1.AMK_ActualVelocity;
+    const float unsaturated_neg_torque = MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
+    return  saturate_float(unsaturated_neg_torque, 0.0f, max_neg_torque);
 }

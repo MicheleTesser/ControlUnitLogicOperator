@@ -4,9 +4,14 @@
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
+#include "../utility/arithmetic/arithmetic.h"
+#include "../../lib/board_dbc/can2.h"
+#include "../../lib/board_dbc/can1.h"
 #include "engine_common.h"
+#include "power_control/power_control.h"
 #include "power_maps/power_maps.h"
 #include <stdint.h>
+#include <string.h>
 
 
 //private
@@ -18,6 +23,7 @@
 #define DEFAULT_REPARTITION                 0.5f
 #define DEFAULT_POWER_LIMIT                 70000.0f       //INFO: Watt
 
+#define M_N                         9.8f
 
 static struct __GIEI{
     time_var_microseconds sound_start_at;
@@ -29,8 +35,95 @@ static struct __GIEI{
     float settings_power_repartition;
 
     uint8_t activate_torque_vectoring :1;
+    uint32_t batteryPackTension;
+    float total_power;
+    float lem_current;
 }GIEI;
 
+
+/*
+ * Battery pack tension is given indipendently by every motor.
+ * The function seems complex because takes in consideration the case
+ * that one or more motor are inactive.
+ *
+ * BMS precharge needs a message with the tot voltage
+ */
+static void computeBatteryPackTension(const float engines_voltages[NUM_OF_EGINES])
+{
+    uint8_t active_motors = 0;
+    float sum = 0.0f;
+    uint8_t max = 0;
+
+    // find max voltage
+    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
+    {
+        if (engines_voltages[i] > max)
+        {
+            max = engines_voltages[i];
+        }
+    }
+
+    // Compute sum of voltages, exclude if it is below 50 V than the maximum reading
+    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
+    {
+        if (engines_voltages[i] > (max - 50))
+        {
+            active_motors++;
+            sum += engines_voltages[i];
+        }
+    }
+
+    if (!active_motors) {
+        GIEI.batteryPackTension = 0;
+        GIEI.total_power = 0.0f;
+    }
+    else {
+        GIEI.batteryPackTension = (sum / active_motors);
+        GIEI.total_power = GIEI.batteryPackTension * GIEI.lem_current;
+    }
+}
+
+static float torqueSetpointToNM(const int setpoint)
+{
+    return (setpoint/1000.0)*M_N;
+}
+
+static int NMtoTorqueSetpoint(const float torqueNM)
+{
+    return (torqueNM/M_N)*1000;
+}
+
+
+static void update_torque_NM_vectors_no_tv(
+        const float throttle, const float regen,
+        float posTorquesNM[NUM_OF_EGINES], float negTorquesNM[NUM_OF_EGINES],
+        const float actual_max_pos_torque, const float actual_mex_neg_torque)
+{
+    float probability_of_success = (GIEI.settings_power_repartition/ (1 - GIEI.settings_power_repartition));
+    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
+    {
+        /*
+         * 0 - 100 throttle and brake to Nm (setpoint is relative to nominal torque and goes in 0.1% that's why there is * 10)
+         * Setpoints are scaled to obtain desired torque repartition that inverts during braking
+         * Negative torques are computed in regBrake() 
+         */
+        uint32_t setpoint =  throttle* (actual_max_pos_torque/M_N) * 10;
+        switch (i) {
+            case FRONT_LEFT:
+            case FRONT_RIGHT:
+                posTorquesNM[i] = torqueSetpointToNM(setpoint * probability_of_success);
+                negTorquesNM[i] = 0.0f;
+                break;
+            case REAR_LEFT:
+            case REAR_RIGHT:
+                posTorquesNM[i] = torqueSetpointToNM(setpoint);
+                negTorquesNM[i] = 0.0f;
+                break;
+        }
+    }
+
+    //TODO: REGEN
+}
 
 //public
 
@@ -76,7 +169,26 @@ enum RUNNING_STATUS GIEI_check_running_condition(void)
 
 int8_t GIEI_recv_data(const CanMessage* const restrict mex)
 {
-    amk_update_status(mex);
+    switch (mex->id) {
+        case CAN_ID_LEM:
+            can_obj_can2_h_t o;
+            unpack_message_can2(&o, mex->id, mex->full_word, mex->message_size, 0);
+            GIEI.lem_current = o.can_0x3c2_Lem.current;
+            break;
+        case CAN_ID_INVERTERFL1:
+        case CAN_ID_INVERTERFL2:
+        case CAN_ID_INVERTERFR1:
+        case CAN_ID_INVERTERFR2:
+        case CAN_ID_INVERTERRL1:
+        case CAN_ID_INVERTERRL2:
+        case CAN_ID_INVERTERRR1:
+        case CAN_ID_INVERTERRR2:
+            break;
+            amk_update_status(mex);
+        default:
+            return -1;
+    
+    }
     return 0;
 }
 
@@ -102,8 +214,49 @@ int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value)
     return 0;
 }
 
-int8_t GIEI_input(const float throttle, const float brake, const float regen)
+int8_t GIEI_input(const float throttle, const float regen)
 {
+    const float actual_max_pos_torque = amk_max_pos_torque();
+    const float actual_max_neg_torque = amk_max_neg_torque();
+    float posTorquesNM[NUM_OF_EGINES];
+    float negTorquesNM[NUM_OF_EGINES];
+    float engines_voltages[NUM_OF_EGINES] = {
+        amk_get_info(FRONT_LEFT,ENGINE_VOLTAGE),
+        amk_get_info(FRONT_RIGHT,ENGINE_VOLTAGE),
+        amk_get_info(REAR_LEFT,ENGINE_VOLTAGE),
+        amk_get_info(REAR_RIGHT,ENGINE_VOLTAGE),
+    };
+    memset(posTorquesNM, 0, sizeof(posTorquesNM));
+    memset(negTorquesNM, 0, sizeof(negTorquesNM));
+
+    if (GIEI.activate_torque_vectoring) {
+        //TODO: tv
+    }else{
+        update_torque_NM_vectors_no_tv(throttle, regen, 
+                posTorquesNM, negTorquesNM, actual_max_neg_torque, actual_max_neg_torque);
+    }
+
+    computeBatteryPackTension(engines_voltages);
+    if (throttle > 0 && regen >= 0){
+        powerControl(GIEI.total_power, GIEI.limit_power, posTorquesNM);
+    }
+
+
+    for (uint8_t i = 0; i < NUM_OF_EGINES; i++) {
+        const float saturated_pos_torque_nm = 
+            saturate_float(posTorquesNM[i], actual_max_pos_torque, 0.0f);
+        const float saturated_neg_torque_nm = 
+            saturate_float(negTorquesNM[i],0.0f, actual_max_neg_torque);
+        const float posTorque = NMtoTorqueSetpoint(saturated_pos_torque_nm);
+        const float negTorque = NMtoTorqueSetpoint(saturated_neg_torque_nm);
+
+        if (posTorque > 0 && negTorque < 0) {
+            amk_send_torque(i, 0, negTorque);
+        }else {
+            amk_send_torque(i, posTorque, negTorque);
+        }
+    }
+
     return 0;
 }
 
