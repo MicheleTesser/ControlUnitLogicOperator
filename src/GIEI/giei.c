@@ -1,5 +1,6 @@
 #include "giei.h"
 #include "./amk/amk.h"
+#include "engine_interface.h"
 #include "../driver_input/driver_input.h"
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
@@ -137,7 +138,7 @@ int8_t GIEI_initialize(void)
     GIEI.settings_power_repartition = DEFAULT_REPARTITION;
     GIEI.activate_torque_vectoring = 0;
 
-    amk_module_init();
+    engine_module_init();
     giei_power_map_init();
 
     return 0;
@@ -153,7 +154,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(void)
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
     }
-    rt = amk_rtd_procedure();
+    rt = engine_rtd_procedure();
     if (rt == RUNNING && !rtd_done) {
         rtd_done =1;
         gpio_set_low(READY_TO_DRIVE_OUT_SOUND);
@@ -184,7 +185,7 @@ int8_t GIEI_recv_data(const CanMessage* const restrict mex)
         case CAN_ID_INVERTERRR1:
         case CAN_ID_INVERTERRR2:
             break;
-            amk_update_status(mex);
+            engine_update_status(mex);
         default:
             return -1;
     
@@ -216,15 +217,15 @@ int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value)
 
 int8_t GIEI_input(const float throttle, const float regen)
 {
-    const float actual_max_pos_torque = amk_max_pos_torque();
-    const float actual_max_neg_torque = amk_max_neg_torque();
+    const float actual_max_pos_torque = engine_max_pos_torque(GIEI.limit_pos_torque);
+    const float actual_max_neg_torque = engine_max_neg_torque(GIEI.limit_neg_torque);
     float posTorquesNM[NUM_OF_EGINES];
     float negTorquesNM[NUM_OF_EGINES];
     float engines_voltages[NUM_OF_EGINES] = {
-        amk_get_info(FRONT_LEFT,ENGINE_VOLTAGE),
-        amk_get_info(FRONT_RIGHT,ENGINE_VOLTAGE),
-        amk_get_info(REAR_LEFT,ENGINE_VOLTAGE),
-        amk_get_info(REAR_RIGHT,ENGINE_VOLTAGE),
+        engine_get_info(FRONT_LEFT,ENGINE_VOLTAGE),
+        engine_get_info(FRONT_RIGHT,ENGINE_VOLTAGE),
+        engine_get_info(REAR_LEFT,ENGINE_VOLTAGE),
+        engine_get_info(REAR_RIGHT,ENGINE_VOLTAGE),
     };
     memset(posTorquesNM, 0, sizeof(posTorquesNM));
     memset(negTorquesNM, 0, sizeof(negTorquesNM));
@@ -251,9 +252,9 @@ int8_t GIEI_input(const float throttle, const float regen)
         const float negTorque = NMtoTorqueSetpoint(saturated_neg_torque_nm);
 
         if (posTorque > 0 && negTorque < 0) {
-            amk_send_torque(i, 0, negTorque);
+            engine_send_torque(i, 0, negTorque);
         }else {
-            amk_send_torque(i, posTorque, negTorque);
+            engine_send_torque(i, posTorque, negTorque);
         }
     }
 

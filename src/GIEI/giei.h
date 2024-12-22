@@ -34,5 +34,4 @@ int8_t GIEI_input(const float throttle, const float regen);
 uint8_t DEBUG_GIEI_check_limits(float power_limit, float pos_torque, 
         float neg_torque, float repartition, float tv_on);
 
-
 #endif // !__CAR_GIEI__

@@ -258,6 +258,11 @@ int8_t amk_neg_torque(const enum ENGINES engine, const float neg_torque)
     return send_message_amk(engine, &setpoint);
 }
 
+int8_t amk_send_torque(const enum ENGINES engine, const float pos_torque, const float neg_torque)
+{
+    return 0;
+}
+
 #define STATUS_WORD_1(engine,mex)\
         values_1 = &inverter_engine_data.engines[engine].amk_data_1;\
         values_1->AMK_STATUS.fields.bSystemReady = mex.SystemReady;\
@@ -378,16 +383,21 @@ void amk_shut_down_power(void)
     inverter_engine_data.engine_status= SYSTEM_OFF;
 }
 
-float max_pos_torque(const float max_pos_torque)
+float amk_get_info(const enum ENGINES engine, const enum ENGINE_INFO info)
+{
+    return 0;
+}
+
+float amk_max_pos_torque(const float limit_max_pos_torque)
 {
     const float actual_velocity = inverter_engine_data.engines[0].amk_data_1.AMK_ActualVelocity;
     const float unsaturated_pos_torque = MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
-    return saturate_float(unsaturated_pos_torque, max_pos_torque, 0.0f);
+    return saturate_float(unsaturated_pos_torque, limit_max_pos_torque, 0.0f);
 
 }
-float max_neg_torque(const float max_neg_torque)
+float amk_max_neg_torque(const float limit_max_neg_torque)
 {
     float actual_velocity = inverter_engine_data.engines[0].amk_data_1.AMK_ActualVelocity;
     const float unsaturated_neg_torque = MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
-    return  saturate_float(unsaturated_neg_torque, 0.0f, max_neg_torque);
+    return  saturate_float(unsaturated_neg_torque, 0.0f, limit_max_neg_torque);
 }
