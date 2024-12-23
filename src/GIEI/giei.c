@@ -5,6 +5,7 @@
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
+#include "rege_alg/regen_alg.h"
 #include "../board_can/board_can.h"
 #include "../utility/arithmetic/arithmetic.h"
 #include "../../lib/board_dbc/can2.h"
@@ -98,9 +99,7 @@ static int NMtoTorqueSetpoint(const float torqueNM)
 
 
 static void update_torque_NM_vectors_no_tv(
-        const float throttle, const float regen,
-        float posTorquesNM[NUM_OF_EGINES], float negTorquesNM[NUM_OF_EGINES],
-        const float actual_max_pos_torque, const float actual_mex_neg_torque)
+        const float throttle, float posTorquesNM[NUM_OF_EGINES], const float actual_max_pos_torque)
 {
     float probability_of_success = (GIEI.settings_power_repartition/ (1 - GIEI.settings_power_repartition));
     for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
@@ -115,17 +114,13 @@ static void update_torque_NM_vectors_no_tv(
             case FRONT_LEFT:
             case FRONT_RIGHT:
                 posTorquesNM[i] = torqueSetpointToNM(setpoint * probability_of_success);
-                negTorquesNM[i] = 0.0f;
                 break;
             case REAR_LEFT:
             case REAR_RIGHT:
                 posTorquesNM[i] = torqueSetpointToNM(setpoint);
-                negTorquesNM[i] = 0.0f;
                 break;
         }
     }
-
-    //TODO: REGEN
 }
 
 static int8_t send_can_settings_message(void)
@@ -182,6 +177,7 @@ int8_t GIEI_initialize(void)
 
     engine_module_init();
     giei_power_map_init();
+    regen_alg_init();
 
     return 0;
 }
@@ -276,14 +272,21 @@ int8_t GIEI_input(const float throttle, const float regen)
     if (GIEI.activate_torque_vectoring) {
         //TODO: tv
     }else{
-        update_torque_NM_vectors_no_tv(throttle, regen, 
-                posTorquesNM, negTorquesNM, actual_max_neg_torque, actual_max_neg_torque);
+        update_torque_NM_vectors_no_tv(throttle, posTorquesNM, actual_max_neg_torque);
     }
 
     computeBatteryPackTension(engines_voltages);
     if (throttle > 0 && regen >= 0){
         powerControl(GIEI.total_power, GIEI.limit_power, posTorquesNM);
     }
+
+    const struct RegenAlgInput input ={
+        .rear_left_velocity = engine_get_info(REAR_LEFT, ENGINE_VOLTAGE),
+        .rear_right_velocity = engine_get_info(REAR_RIGHT, ENGINE_VOLTAGE),
+        .front_left_velocity = engine_get_info(FRONT_LEFT, ENGINE_VOLTAGE),
+        .front_right_velocity = engine_get_info(FRONT_RIGHT, ENGINE_VOLTAGE),
+    };
+    regen_alg_compute(&input, negTorquesNM);
 
 
     for (uint8_t i = 0; i < NUM_OF_EGINES; i++) {
