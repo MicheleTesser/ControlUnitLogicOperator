@@ -52,7 +52,7 @@ static int test_default_active_maps(void)
         .max_neg_torque = 0
     };
     const struct tv_repartition_map expected_repartition ={
-        .repartition = 50,
+        .repartition = 0.50f,
         .torque_vectoring_on = 1,
     };
     const struct car_map* maps = giei_get_active_maps();
@@ -130,6 +130,8 @@ static void check_repartition_map(uint8_t MAP_NUM, float REPARTITION, float TV_O
     };
     can_obj_can2_h_t o;
     CanMessage mex;
+    o.can_0x064_Map.power = 9;
+    o.can_0x064_Map.regen = 9;
     o.can_0x064_Map.torque_rep = MAP_NUM;
     mex.message_size =pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
     mex.id = CAN_ID_MAP;
@@ -145,6 +147,7 @@ static void check_repartition_map(uint8_t MAP_NUM, float REPARTITION, float TV_O
         PASSED("Repartition Map setted correctly");
     }else{
         FAILED("Repartition Map setted wrongly");
+        printf("expected repartition: %f\t given repartition: %f\n",map.repartition,curr_map->repartition->repartition);
     }
 }
 
@@ -182,16 +185,16 @@ static int test_change_regen_map(void)
 
 static int test_change_repartition_map(void)
 {
-    check_repartition_map(0, 50, 1);
-    check_repartition_map(1, 100, 0);
-    check_repartition_map(2, 82, 18);
-    check_repartition_map(3, 80, 20);
-    check_repartition_map(4, 78, 22);
-    check_repartition_map(5, 75, 25);
-    check_repartition_map(6, 70, 30);
-    check_repartition_map(7, 60, 40);
-    check_repartition_map(8, 50, 50);
-    check_repartition_map(9, 50, 50);
+    check_repartition_map(0, 0.50, 1);
+    check_repartition_map(1, 1.0f, 0);
+    check_repartition_map(2, 0.82, 18);
+    check_repartition_map(3, 0.80, 20);
+    check_repartition_map(4, 0.78, 22);
+    check_repartition_map(5, 0.75, 25);
+    check_repartition_map(6, 0.70, 30);
+    check_repartition_map(7, 0.60, 40);
+    check_repartition_map(8, 0.50, 50);
+    check_repartition_map(9, 0.50, 50);
 
     return 0;
 }
@@ -216,7 +219,7 @@ int main(void)
     test_change_power_map();
     test_change_regen_map();
     test_change_repartition_map();
-    if(DEBUG_GIEI_check_limits(10, 10, -21, 50, 0)){
+    if(DEBUG_GIEI_check_limits(10, 10, -21, 0.50f, 0)){
         PASSED("GIEI limit setted ok");
     }else{
         FAILED("GIEI limit not setted properly");

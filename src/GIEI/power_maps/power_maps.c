@@ -77,16 +77,16 @@ static void init_regen_maps(void)
 
 static void init_repartition_maps(void)
 {
-    set_repartition_map(0, 50, 1);
-    set_repartition_map(1, 100, 0);
-    set_repartition_map(2, 82, 18);
-    set_repartition_map(3, 80, 20);
-    set_repartition_map(4, 78, 22);
-    set_repartition_map(5, 75, 25);
-    set_repartition_map(6, 70, 30);
-    set_repartition_map(7, 60, 40);
-    set_repartition_map(8, 50, 50);
-    set_repartition_map(9, 50, 50);
+    set_repartition_map(0, 0.50f, 1);
+    set_repartition_map(1, 1.0f, 0);
+    set_repartition_map(2, 0.82f, 18);
+    set_repartition_map(3, 0.80f, 20);
+    set_repartition_map(4, 0.78f, 22);
+    set_repartition_map(5, 0.75f, 25);
+    set_repartition_map(6, 0.70f, 30);
+    set_repartition_map(7, 0.60f, 40);
+    set_repartition_map(8, 0.50f, 50);
+    set_repartition_map(9, 0.50f, 50);
 }
 
 //public
