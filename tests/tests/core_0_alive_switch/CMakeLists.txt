@@ -13,16 +13,34 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_SOURCE_DIR}/src/*.c"
     "${CMAKE_SOURCE_DIR}/linux_board/*.c"
     "${CMAKE_SOURCE_DIR}/score_lib/*.c"
+    "${CMAKE_SOURCE_DIR}/main.c"
+)
+
+file(GLOB_RECURSE PROJECT_LIBS
     "${CMAKE_SOURCE_DIR}/lib/board_dbc/can[0-9].c"
     "${CMAKE_SOURCE_DIR}/lib/DPS/dps_*.c"
     "${CMAKE_SOURCE_DIR}/lib/DPS/lib/c_vector/c_vector.c"
     "${CMAKE_SOURCE_DIR}/lib/rigen_fun_simulink22_ert_rtw/*.c"
-    "${CMAKE_SOURCE_DIR}/main.c"
 )
 
 # Add executable
 add_executable(main
     ${PROJECT_SOURCES}
+)
+
+# Create a library for the `lib` sources
+add_library(lib_sources STATIC
+    ${PROJECT_LIBS}
+)
+
+# Include directories for the library
+target_include_directories(lib_sources PRIVATE
+    "${CMAKE_SOURCE_DIR}/lib"
+)
+
+target_compile_options(lib_sources PRIVATE
+    $<$<CONFIG:Debug>:-O0 -fsanitize=address -g>
+    $<$<CONFIG:Release>:-O2>
 )
 
 # Include libgpiod headers
@@ -34,15 +52,18 @@ target_link_libraries(main PRIVATE ${GPIOD_LIBRARIES})
 # Link the math library
 target_link_libraries(main PRIVATE m)
 
+# Link the `lib_sources` library to the main executable
+target_link_libraries(main PRIVATE lib_sources)
+
 # Set compile options based on build type
 target_compile_options(main PRIVATE
-    $<$<CONFIG:Debug>:-Wall -Wextra -O0 -fsanitize=address -g>
-    $<$<CONFIG:Release>:-Wall -Wextra -O2>
+    $<$<CONFIG:Debug>:-Wall -Wextra -Werror -O0 -fsanitize=address -g>
+    $<$<CONFIG:Release>:-Wall -Wextra -Werror -O2>
 )
 
 target_link_options(main PRIVATE
-    $<$<CONFIG:Debug>:-Wall -Wextra -O0 -fsanitize=address -g>
-    $<$<CONFIG:Release>:-Wall -Wextra -O2>
+    $<$<CONFIG:Debug>:-Wall -Wextra -Werror -O0 -fsanitize=address -g>
+    $<$<CONFIG:Release>:-Wall -Wextra -Werror -O2>
 )
 
 # Optional: Create custom targets for convenience
@@ -55,5 +76,6 @@ add_custom_target(build_release
     COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release -Brelease -S${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build release
 )
+
 
 
