@@ -1,11 +1,15 @@
 #include "./board_can.h"
-#include "../board_conf/id_conf.h"
+#include "../board_conf/can/can.h"
+#include "../board_conf/interrupt/interrupt.h"
+#include "../board_conf/trap/trap.h"
 #include "../lib/board_dbc/can1.h"
 #include "../lib/board_dbc/can2.h"
 #include "../lib/board_dbc/can3.h"
 #include "../lib/DPS/dps_slave.h"
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
+#include "../cooling/temperatures/temperatures.h"
+#include "../batteries/batteries.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -44,7 +48,6 @@ static int dps_send(DPSCanMessage* dps_mex){
 }
 
 static int8_t manage_can_1_message(const CanMessage* const restrict mex){
-    int8_t err=0;
     switch (mex->id) {
         case CAN_ID_INVERTERFL1:
         case CAN_ID_INVERTERFL2:
@@ -56,19 +59,12 @@ static int8_t manage_can_1_message(const CanMessage* const restrict mex){
         case CAN_ID_INVERTERRR2:
             return GIEI_recv_data(mex);
         default:
-            goto invalid_inverter_message;
+            return -1;
     }
-    return 0;
-
-invalid_inverter_message:
-    err--;
-
-    return err;
 }
 
 static int8_t manage_can_2_message(const CanMessage* const restrict mex)
 {
-    int8_t err=0;
     can_obj_can2_h_t m;
     unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, 0);
     switch (mex->id) {
@@ -88,13 +84,26 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             }
             break;
         case CAN_ID_BMSLV1:
+            lv_update_status(mex);
+            break;
         case CAN_ID_BMSLV2:
+            lv_update_status(mex);
+            save_temperature(BMS_LV_1, m.can_0x055_BmsLv2.temp1);
+            save_temperature(BMS_LV_2, m.can_0x055_BmsLv2.temp2);
+            break;
         case CAN_ID_BMSHV1:
+            hv_update_status(mex);
+            break;
         case CAN_ID_BMSHV2:
+            hv_update_status(mex);
+            save_temperature(BMS_HV_MIN, m.can_0x058_BmsHv2.min_temp);
+            save_temperature(BMS_HV_MAX, m.can_0x058_BmsHv2.max_temp);
+            save_temperature(BMS_HV_AVG, m.can_0x058_BmsHv2.avg_temp);
+            break;
         case CAN_ID_IMU1:
         case CAN_ID_IMU2:
         case CAN_ID_IMU3:
-        case CAN_ID_IMUCALIB:
+            break;
         case CAN_ID_MAP:
             giei_set_run_map(MAP_POWER, m.can_0x064_Map.power);
             giei_set_run_map(MAP_REGEN, m.can_0x064_Map.regen);
@@ -102,31 +111,37 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             hardware_raise_trap(TRAP_CHANGE_MAP);
             break;
         case CAN_ID_LAPSTART:
-        case CAN_ID_TEMP1:
-        case CAN_ID_TEMP2:
-        case CAN_ID_SUSPREAR:
-        case CAN_ID_SUSPFRONT:
+            //TODO: not yet implemented
+            break;
+        case CAN_ID_TEMP1: //INFO: smu
+            save_temperature(ENGINE_PRE_L, m.can_0x100_Temp1.temp_motor_pre_L);
+            save_temperature(ENGINE_POST_L, m.can_0x100_Temp1.temp_motor_post_L);
+            save_temperature(ENGINE_PRE_R, m.can_0x100_Temp1.temp_motor_pre_R);
+            save_temperature(COLDPLATE_PRE_R, m.can_0x100_Temp1.temp_coldplate_pre_R);
+            break;
+        case CAN_ID_TEMP2: //INFO: smu
+            save_temperature(COLDPLATE_PRE_L, m.can_0x101_Temp2.temp_cold_pre_L);
+            save_temperature(COLDPLATE_POST_R, m.can_0x101_Temp2.temp_mot_post_R);
+            save_temperature(COLDPLATE_POST_L, m.can_0x101_Temp2.temp_cold_post_L);
+            save_temperature(COLDPLATE_POST_R, m.can_0x101_Temp2.temp_cold_post_R);
+            break;
+        case CAN_ID_SUSPREAR: //INFO: smu
+        case CAN_ID_SUSPFRONT: //INFO: smu
         case CAN_ID_TEMPFRONTR:
         case CAN_ID_INVVOLT:
-        case CAN_ID_PCU:
+            break;
         case CAN_ID_LEM:
-            GIEI_recv_data(mex);
+            return GIEI_recv_data(mex);
             break;
         default:
-            goto invalid_general_message;
+            return -1;
     }
     
 
     return 0;
-
-invalid_general_message:
-    err--;
-
-    return err;
 }
 
 static int8_t manage_can_3_message(const CanMessage* const restrict mex){
-    int8_t err=0;
     switch (mex->id) {
         case CAN_ID_DV_DRIVING_DYNAMICS_1:
             break;
@@ -135,14 +150,9 @@ static int8_t manage_can_3_message(const CanMessage* const restrict mex){
         case CAN_ID_DV_SYSTEM_STATUS:
             break;
         default:
-            goto invalid_dv_message;
+            return -1;
     }
     return 0;
-
-invalid_dv_message:
-    err--;
-
-    return err;
 }
 
 //public
@@ -229,7 +239,6 @@ int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict me
 
 int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const restrict mex)
 {
-    int8_t err=0;
     switch (can_id) {
         case CAN_MODULE_INVERTER:
             return manage_can_1_message(mex);
@@ -238,12 +247,6 @@ int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const re
         case CAN_MODULE_DV:
             return manage_can_3_message(mex);
         default:
-            goto invalid_can_module_id;
             return -1;
     }
-
-invalid_can_module_id:
-    err--;
-
-    return err;
 }

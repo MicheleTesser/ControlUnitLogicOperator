@@ -1,9 +1,11 @@
 #include "./core0.h"
-#include "../../cooling/cooling.h"
+#include "../../cooling/pumps/pumps.h"
+#include "../../cooling/fans/fans.h"
 #include "../../driver_input/driver_input.h"
 #include "../../lib/DPS/dps_slave.h"
 #include "../../GIEI/giei.h"
 #include "../../board_conf/id_conf.h"
+#include "../../batteries/batteries.h"
 #include "../../lib/raceup_board/raceup_board.h"
 #include "../alive_blink/alive_blink.h"
 #include <stdint.h>
@@ -22,6 +24,8 @@ static void setup(void)
     hardware_init_gpio(SCS);
     hardware_init_serial(SERIAL);
     alive_fd = i_m_alive_init(300 MILLIS, CORE_ALIVE_LED_1);
+    lv_init();
+    hv_init();
     GIEI_initialize();
     pump_enable();
     fan_enable();
