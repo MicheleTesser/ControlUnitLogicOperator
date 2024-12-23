@@ -16,6 +16,7 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_SOURCE_DIR}/lib/board_dbc/can[0-9].c"
     "${CMAKE_SOURCE_DIR}/lib/DPS/dps_*.c"
     "${CMAKE_SOURCE_DIR}/lib/DPS/lib/c_vector/c_vector.c"
+    "${CMAKE_SOURCE_DIR}/lib/rigen_fun_simulink22_ert_rtw/*.c"
 )
 
 # Add executable
@@ -29,6 +30,9 @@ target_include_directories(main PRIVATE ${GPIOD_INCLUDE_DIRS})
 
 # Link libgpiod library
 target_link_libraries(main PRIVATE ${GPIOD_LIBRARIES})
+
+# Link the math library
+target_link_libraries(main PRIVATE m)
 
 # Set custom build profiles
 set(DEBUG_FLAGS "-Wall -Wextra -Werror -O0 -fsanitize=address -g")
