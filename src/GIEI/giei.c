@@ -223,8 +223,8 @@ int8_t GIEI_recv_data(const CanMessage* const restrict mex)
         case CAN_ID_INVERTERRL2:
         case CAN_ID_INVERTERRR1:
         case CAN_ID_INVERTERRR2:
-            break;
             engine_update_status(mex);
+            break;
         default:
             return -1;
     
