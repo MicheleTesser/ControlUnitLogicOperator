@@ -18,6 +18,10 @@
 #define engine_update_status(mex) engine_update_status_not_defined(mex)
 #endif
 
+#if !defined (engine_inverter_hv_status)
+#define engine_inverter_hv_status() engine_inverter_hv_status()
+#endif
+
 #if !defined (engine_rtd_procedure)
 #define engine_rtd_procedure() engine_rtd_procedure_not_defined()
 #endif

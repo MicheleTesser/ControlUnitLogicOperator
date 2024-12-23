@@ -38,12 +38,17 @@ static void loop(void)
 {
     const float throttle = driver_get_amount(THROTTLE);
     const float regen = driver_get_amount(REGEN);
+    static time_var_microseconds car_status_last_time = 0;
 
     i_m_alive(alive_fd);
     if (GIEI_check_running_condition() == RUNNING) {
         pump_init();
         fan_init();
         GIEI_input(throttle,regen);
+    }
+    if((timer_time_now() - car_status_last_time > 200 MILLIS) ){
+        GIEI_send_status_info_in_can();
+        car_status_last_time = timer_time_now();
     }
 }
 

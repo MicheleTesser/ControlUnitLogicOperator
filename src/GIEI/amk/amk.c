@@ -179,38 +179,6 @@ static inline uint8_t precharge_ended(void)
 }
 
 
-/*
- * Tramaccio: we wait 500ms before stating that an inverter has no Hv
- */
-static uint8_t amk_inverter_hv_status(void)
-{
-    uint8_t i;
-    const uint8_t HV_TRAP = 50;
-    static uint8_t hvCounter[NUM_OF_EGINES];
-    static uint8_t inverterHV[NUM_OF_EGINES];
-
-    for (i = 0; i < NUM_OF_EGINES; i++)
-    {
-        if (!(inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn) && 
-                (hvCounter[i] < HV_TRAP))
-            hvCounter[i]++;
-
-        else if (!(inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn) && 
-                (hvCounter[i] >= HV_TRAP))
-        {
-            inverterHV[i] = inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
-            hvCounter[i] = 0;
-        }
-        else if (inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn)
-        {
-            inverterHV[i] = inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
-            hvCounter[i] = 0;
-        }
-    }
-
-    return inverterHV[FRONT_RIGHT] | inverterHV[FRONT_LEFT]
-        | inverterHV[REAR_RIGHT] | REAR_LEFT;
-}
 
 static inline uint8_t amk_fault(void)
 {
@@ -312,6 +280,39 @@ void amk_update_status(const CanMessage* const restrict mex)
     }else{
         one_emergency_solved(ENGINE_FAULT);
     }
+}
+
+/*
+ * Tramaccio: we wait 500ms before stating that an inverter has no Hv
+ */
+uint8_t amk_inverter_hv_status(void)
+{
+    uint8_t i;
+    const uint8_t HV_TRAP = 50;
+    static uint8_t hvCounter[NUM_OF_EGINES];
+    static uint8_t inverterHV[NUM_OF_EGINES];
+
+    for (i = 0; i < NUM_OF_EGINES; i++)
+    {
+        if (!(inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn) && 
+                (hvCounter[i] < HV_TRAP))
+            hvCounter[i]++;
+
+        else if (!(inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn) && 
+                (hvCounter[i] >= HV_TRAP))
+        {
+            inverterHV[i] = inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
+            hvCounter[i] = 0;
+        }
+        else if (inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn)
+        {
+            inverterHV[i] = inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
+            hvCounter[i] = 0;
+        }
+    }
+
+    return inverterHV[FRONT_RIGHT] | inverterHV[FRONT_LEFT]
+        | inverterHV[REAR_RIGHT] | REAR_LEFT;
 }
 
 enum RUNNING_STATUS amk_rtd_procedure(void)

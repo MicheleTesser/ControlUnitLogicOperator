@@ -31,8 +31,8 @@ target_include_directories(main PRIVATE ${GPIOD_INCLUDE_DIRS})
 target_link_libraries(main PRIVATE ${GPIOD_LIBRARIES})
 
 # Set custom build profiles
-set(DEBUG_FLAGS "-O0 -fsanitize=address -g")
-set(RELEASE_FLAGS "-O2")
+set(DEBUG_FLAGS "-Wall -Wextra -Werror -O0 -fsanitize=address -g")
+set(RELEASE_FLAGS "-Wall -Wextra -Werror -O2")
 
 # Add custom build configurations
 add_custom_target(build_debug

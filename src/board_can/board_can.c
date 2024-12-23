@@ -101,8 +101,6 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             giei_set_run_map(MAP_POWER_REPARTITION, m.can_0x064_Map.torque_rep);
             hardware_raise_trap(TRAP_CHANGE_MAP);
             break;
-        case CAN_ID_CARSTATUS:
-        case CAN_ID_CARSETTINGS:
         case CAN_ID_LAPSTART:
         case CAN_ID_TEMP1:
         case CAN_ID_TEMP2:
@@ -150,6 +148,7 @@ invalid_dv_message:
 //public
 int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
 {
+    static uint8_t dps_init_flag = 0;
     int8_t err=0;
 
     if(hardware_init_can(can_id, freq) < 0){
@@ -179,7 +178,8 @@ int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
     BoardName board_name = {
         .full_data.name = "CULO",
     };
-    dps_init(dps_send, &board_name);
+    while(!dps_init_flag && dps_init(dps_send, &board_name)){}
+    dps_init_flag=1;
 
     return 0;
 
@@ -195,7 +195,6 @@ hardware_init_failed:
 
 int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
 {
-    int8_t err=0;
     int8_t mex_to_read_t = -1;
     memset(o_mex, 0, sizeof(*o_mex));
     switch (can_id) {
@@ -216,22 +215,11 @@ int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex)
             return -1;
     }
     if (mex_to_read_t == -1) {
-        return 0;
+        return -2;
     }
-
-    if(hardware_read_can(mex_to_read_t, o_mex) <0){
-        goto hardware_failed_read_can;
-    }
-
 
     mex_to_read[mex_to_read_t]--;
-
-    return 0;
-
-hardware_failed_read_can:
-    err--;
-
-    return err;
+    return hardware_read_can(mex_to_read_t, o_mex);
 }
 
 int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict mex)

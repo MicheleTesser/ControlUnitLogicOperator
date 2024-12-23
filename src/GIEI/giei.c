@@ -5,6 +5,7 @@
 #include "../board_conf/id_conf.h"
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
+#include "../board_can/board_can.h"
 #include "../utility/arithmetic/arithmetic.h"
 #include "../../lib/board_dbc/can2.h"
 #include "../../lib/board_dbc/can1.h"
@@ -20,7 +21,7 @@
 #define SPEED_LIMIT                         18000           //INFO: Typical value: 15000
 #define DEFAULT_MAX_POS_TORQUE              15.0f
 #define DEFAULT_MAX_NEG_TORQUE              -15.f
-#define DEFAULT_REGEN                       0
+#define PEAK_REGEN_CURRENT                  150.0f
 #define DEFAULT_REPARTITION                 0.5f
 #define DEFAULT_POWER_LIMIT                 70000.0f       //INFO: Watt
 
@@ -39,6 +40,7 @@ static struct __GIEI{
     uint32_t batteryPackTension;
     float total_power;
     float lem_current;
+    enum RUNNING_STATUS running_status;
 }GIEI;
 
 
@@ -126,6 +128,46 @@ static void update_torque_NM_vectors_no_tv(
     //TODO: REGEN
 }
 
+static int8_t send_can_settings_message(void)
+{
+    can_obj_can2_h_t o;
+    memset(&o, 0, sizeof(o));
+    CanMessage mex;
+    o.can_0x066_CarSettings.pwr_limit = GIEI.limit_power;
+    o.can_0x066_CarSettings.speed_lim = GIEI.limit_max_speed;
+    o.can_0x066_CarSettings.max_neg_trq = engine_max_pos_torque(GIEI.limit_max_speed);
+    o.can_0x066_CarSettings.max_neg_trq = engine_max_neg_torque(GIEI.limit_max_speed);
+    o.can_0x066_CarSettings.torque_vectoring = GIEI.activate_torque_vectoring;
+    o.can_0x066_CarSettings.max_regen_current = GIEI.limit_regen;
+    o.can_0x066_CarSettings.rear_motor_repartition = 
+        (uint8_t) (GIEI.settings_power_repartition * 100);
+    o.can_0x066_CarSettings.front_motor_repartition = 
+        (uint8_t) ((1.0f - GIEI.settings_power_repartition) * 100);
+    mex.id = CAN_ID_CARSETTINGS;
+    mex.message_size = pack_message_can2(&o, CAN_ID_CARSETTINGS, &mex.full_word);
+
+    return board_can_write(CAN_MODULE_GENERAL, &mex);
+}
+
+static int8_t send_can_status_message(void)
+{
+    can_obj_can2_h_t o;
+    memset(&o, 0, sizeof(o));
+    CanMessage mex;
+    o.can_0x065_CarStatus.HV = engine_inverter_hv_status();
+    o.can_0x065_CarStatus.RF = gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON); //FIX: use ack from the inverter
+    o.can_0x065_CarStatus.R2D = GIEI.running_status == RUNNING;
+    o.can_0x065_CarStatus.AIR1 = gpio_read_state(AIR_PRECHARGE_INIT);
+    o.can_0x065_CarStatus.AIR2 = gpio_read_state(AIR_PRECHARGE_DONE);
+    o.can_0x065_CarStatus.precharge = 
+        gpio_read_state(AIR_PRECHARGE_INIT) && gpio_read_state(AIR_PRECHARGE_DONE);
+    o.can_0x065_CarStatus.speed = 0; //TODO: not yet implemented
+    mex.id = CAN_ID_CARSTATUS;
+    mex.message_size = pack_message_can2(&o, CAN_ID_CARSTATUS, &mex.full_word);
+
+    return board_can_write(CAN_MODULE_GENERAL, &mex);
+}
+
 //public
 
 int8_t GIEI_initialize(void)
@@ -133,7 +175,7 @@ int8_t GIEI_initialize(void)
     GIEI.limit_power = DEFAULT_POWER_LIMIT;
     GIEI.limit_pos_torque = DEFAULT_MAX_POS_TORQUE;
     GIEI.limit_neg_torque = DEFAULT_MAX_NEG_TORQUE;
-    GIEI.limit_regen = DEFAULT_REGEN;
+    GIEI.limit_regen = PEAK_REGEN_CURRENT;
     GIEI.limit_max_speed = SPEED_LIMIT;
     GIEI.settings_power_repartition = DEFAULT_REPARTITION;
     GIEI.activate_torque_vectoring = 0;
@@ -165,6 +207,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(void)
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
     }
+    GIEI.running_status = rt;
     return rt;
 }
 
@@ -259,6 +302,11 @@ int8_t GIEI_input(const float throttle, const float regen)
     }
 
     return 0;
+}
+
+int8_t GIEI_send_status_info_in_can(void)
+{
+    return send_can_status_message() | send_can_settings_message();
 }
 
 
