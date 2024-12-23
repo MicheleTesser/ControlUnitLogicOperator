@@ -14,7 +14,6 @@
 #include "power_control/power_control.h"
 #include "power_maps/power_maps.h"
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 
@@ -252,9 +251,6 @@ int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value)
             GIEI.activate_torque_vectoring = value;
             break;
     }
-    printf("power limit: %f\t pos torque: %f\t neg torque: %f\t repartition: %f\t tv: %d\n",
-            GIEI.limit_power, GIEI.limit_pos_torque, GIEI.limit_neg_torque, 
-            GIEI.settings_power_repartition,GIEI.activate_torque_vectoring);
     return 0;
 }
 
