@@ -112,7 +112,8 @@ int8_t hardware_init_gpio(const BoardComponentId id __attribute_maybe_unused__)
     return 0;
 }
 
-int8_t gpio_set_pin_mode(const BoardComponentId id, uint8_t mode )
+int8_t gpio_set_pin_mode(const BoardComponentId id __attribute_maybe_unused__, 
+        const uint8_t mode __attribute_maybe_unused__)
 {
     return 0;
 }

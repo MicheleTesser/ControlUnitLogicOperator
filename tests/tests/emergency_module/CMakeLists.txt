@@ -17,11 +17,11 @@ file(GLOB_RECURSE PROJECT_SOURCES
     "${CMAKE_SOURCE_DIR}/lib/DPS/dps_*.c"
     "${CMAKE_SOURCE_DIR}/lib/DPS/lib/c_vector/c_vector.c"
     "${CMAKE_SOURCE_DIR}/lib/rigen_fun_simulink22_ert_rtw/*.c"
+    "${CMAKE_SOURCE_DIR}/main.c"
 )
 
 # Add executable
 add_executable(main
-    ./main.c
     ${PROJECT_SOURCES}
 )
 
@@ -34,19 +34,26 @@ target_link_libraries(main PRIVATE ${GPIOD_LIBRARIES})
 # Link the math library
 target_link_libraries(main PRIVATE m)
 
-# Set custom build profiles
-set(DEBUG_FLAGS "-Wall -Wextra -Werror -O0 -fsanitize=address -g")
-set(RELEASE_FLAGS "-Wall -Wextra -Werror -O2")
+# Set compile options based on build type
+target_compile_options(main PRIVATE
+    $<$<CONFIG:Debug>:-Wall -Wextra -O0 -fsanitize=address -g>
+    $<$<CONFIG:Release>:-Wall -Wextra -O2>
+)
 
-# Add custom build configurations
+target_link_options(main PRIVATE
+    $<$<CONFIG:Debug>:-Wall -Wextra -O0 -fsanitize=address -g>
+    $<$<CONFIG:Release>:-Wall -Wextra -O2>
+)
+
+# Optional: Create custom targets for convenience
 add_custom_target(build_debug
-    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Building Debug Version"
-    COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -Bdebug -H${CMAKE_SOURCE_DIR}
-    COMMAND ${CMAKE_COMMAND} --build debug -- -j$(nproc)
+    COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug -Bdebug -S${CMAKE_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} --build debug
 )
 
 add_custom_target(build_release
-    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Building Release Version"
-    COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release -Brelease -H${CMAKE_SOURCE_DIR}
-    COMMAND ${CMAKE_COMMAND} --build release -- -j$(nproc)
+    COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release -Brelease -S${CMAKE_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} --build release
 )
+
+
