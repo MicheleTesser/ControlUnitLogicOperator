@@ -18,6 +18,7 @@ static int8_t setup_fan_radiator(const uint8_t enable)
 {
     can_obj_can2_h_t o;
     CanMessage mex;
+    memset(&o, 0, sizeof(o));
     memset(&mex, 0, sizeof(mex));
     o.can_0x130_Pcu.fan_enable = enable;
     mex.id = CAN_ID_PCU;
