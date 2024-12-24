@@ -8,6 +8,7 @@
 #include "rege_alg/regen_alg.h"
 #include "../board_can/board_can.h"
 #include "../utility/arithmetic/arithmetic.h"
+#include "../batteries/hv/hv.h"
 #include "../../lib/board_dbc/can2.h"
 #include "../../lib/board_dbc/can1.h"
 #include "engine_common.h"
@@ -26,7 +27,7 @@
 #define DEFAULT_REPARTITION                 0.5f
 #define DEFAULT_POWER_LIMIT                 70000.0f       //INFO: Watt
 
-#define M_N                         9.8f
+#define M_N                                 9.8f
 
 static struct __GIEI{
     time_var_microseconds sound_start_at;
@@ -36,67 +37,11 @@ static struct __GIEI{
     float limit_regen;
     float limit_max_speed;
     float settings_power_repartition;
-
     uint8_t activate_torque_vectoring :1;
-    uint32_t batteryPackTension;
-    float total_power;
-    float lem_current;
     enum RUNNING_STATUS running_status;
 }GIEI;
 
-static int8_t send_tension_bms(const uint64_t tension){
-    can_obj_can2_h_t o;
-    CanMessage mex;
-    memset(&mex, 0, sizeof(mex));
 
-    o.can_0x120_InvVolt.car_voltage = tension;
-    mex.id = CAN_ID_INVVOLT;
-    mex.message_size = pack_message_can2(&o, CAN_ID_INVVOLT, &mex.full_word);
-
-    return hardware_write_can(CAN_MODULE_GENERAL, &mex);
-}
-
-/*
- * Battery pack tension is given indipendently by every motor.
- * The function seems complex because takes in consideration the case
- * that one or more motor are inactive.
- *
- * BMS precharge needs a message with the tot voltage
- */
-static void computeBatteryPackTension(const float engines_voltages[NUM_OF_EGINES])
-{
-    uint8_t active_motors = 0;
-    float sum = 0.0f;
-    uint8_t max = 0;
-
-    // find max voltage
-    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
-    {
-        if (engines_voltages[i] > max)
-        {
-            max = engines_voltages[i];
-        }
-    }
-
-    // Compute sum of voltages, exclude if it is below 50 V than the maximum reading
-    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
-    {
-        if (engines_voltages[i] > (max - 50))
-        {
-            active_motors++;
-            sum += engines_voltages[i];
-        }
-    }
-
-    if (!active_motors) {
-        GIEI.batteryPackTension = 0;
-        GIEI.total_power = 0.0f;
-    }
-    else {
-        GIEI.batteryPackTension = (sum / active_motors);
-        GIEI.total_power = GIEI.batteryPackTension * GIEI.lem_current;
-    }
-}
 
 static float torqueSetpointToNM(const int setpoint)
 {
@@ -221,11 +166,6 @@ enum RUNNING_STATUS GIEI_check_running_condition(void)
 int8_t GIEI_recv_data(const CanMessage* const restrict mex)
 {
     switch (mex->id) {
-        case CAN_ID_LEM:
-            can_obj_can2_h_t o;
-            unpack_message_can2(&o, mex->id, mex->full_word, mex->message_size, 0);
-            GIEI.lem_current = o.can_0x3c2_Lem.current;
-            break;
         case CAN_ID_INVERTERFL1:
         case CAN_ID_INVERTERFL2:
         case CAN_ID_INVERTERFR1:
@@ -286,10 +226,12 @@ int8_t GIEI_input(const float throttle, const float regen)
         update_torque_NM_vectors_no_tv(throttle, posTorquesNM, actual_max_neg_torque);
     }
 
-    computeBatteryPackTension(engines_voltages);
-    send_tension_bms(GIEI.batteryPackTension);
+    hv_computeBatteryPackTension(engines_voltages);
     if (throttle > 0 && regen >= 0){
-        powerControl(GIEI.total_power, GIEI.limit_power, posTorquesNM);
+        float total_power;
+        if (!hv_get_info(HV_TOTAL_POWER, &total_power, sizeof(total_power))) {
+            powerControl(total_power, GIEI.limit_power, posTorquesNM);
+        }
     }
 
     const struct RegenAlgInput input ={

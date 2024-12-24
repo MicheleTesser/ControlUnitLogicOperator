@@ -9,6 +9,7 @@
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
 #include "../cooling/temperatures/temperatures.h"
+#include "../cooling/fans/fans.h"
 #include "../suspensions/suspensions.h"
 #include "../batteries/batteries.h"
 #include <stdint.h>
@@ -20,17 +21,17 @@
 static uint8_t mex_to_read[3];
 
 
-static void inverter_can_interrupt(void) INTERRUP_ATTRIBUTE 
+static inline void inverter_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
     mex_to_read[0]++;
 }
 
-static void general_can_interrupt(void) INTERRUP_ATTRIBUTE 
+static inline void general_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
     mex_to_read[1]++;
 }
 
-static void dv_can_interrupt(void) INTERRUP_ATTRIBUTE 
+static inline void dv_can_interrupt(void) INTERRUP_ATTRIBUTE 
 {
     mex_to_read[2]++;
 }
@@ -69,10 +70,10 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
     can_obj_can2_h_t m;
     unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, 0);
     switch (mex->id) {
-        case CAN_ID_PADDLE:
+        case CAN_ID_PADDLE: //INFO: SW
             driver_set_amount(REGEN, m.can_0x052_Paddle.regen);
             break;
-        case CAN_ID_DRIVER:
+        case CAN_ID_DRIVER: //INFO: STW
             driver_set_amount(THROTTLE, m.can_0x053_Driver.throttle);
             driver_set_amount(BRAKE, m.can_0x053_Driver.brake);
             driver_set_amount(STEERING_ANGLE, m.can_0x053_Driver.steering);
@@ -100,12 +101,13 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             save_temperature(BMS_HV_MIN, m.can_0x058_BmsHv2.min_temp);
             save_temperature(BMS_HV_MAX, m.can_0x058_BmsHv2.max_temp);
             save_temperature(BMS_HV_AVG, m.can_0x058_BmsHv2.avg_temp);
+            fan_set_value(FAN_BMS_HV, m.can_0x058_BmsHv2.fan_speed);
             break;
         case CAN_ID_IMU1:
         case CAN_ID_IMU2:
         case CAN_ID_IMU3:
             break;
-        case CAN_ID_MAP:
+        case CAN_ID_MAP: //INFO: STW
             giei_set_run_map(MAP_POWER, m.can_0x064_Map.power);
             giei_set_run_map(MAP_REGEN, m.can_0x064_Map.regen);
             giei_set_run_map(MAP_POWER_REPARTITION, m.can_0x064_Map.torque_rep);
@@ -134,12 +136,12 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             suspensions_save(SUSP_FRONT_LEFT, m.can_0x104_SuspFront.susp_fl);
             suspensions_save(SUSP_FRONT_RIGHT, m.can_0x104_SuspFront.susp_fr);
             break;
-        case CAN_ID_TEMPFRONTR:
+        case CAN_ID_TEMPFRONTR: //INFO: atc
             save_temperature(ENGINE_POT_FRONT_RIGHT, m.can_0x105_TempFrontR.temp_mot_pot_FR);
             save_temperature(ENGINE_PRE_FRONT_RIGHT, m.can_0x105_TempFrontR.temp_mot_pre_FR);
             break;
-        case CAN_ID_LEM:
-            return GIEI_recv_data(mex);
+        case CAN_ID_LEM: //INFO: lem
+            return hv_update_status(mex);
             break;
         default:
             return -1;
@@ -152,10 +154,13 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
 static int8_t manage_can_3_message(const CanMessage* const restrict mex){
     switch (mex->id) {
         case CAN_ID_DV_DRIVING_DYNAMICS_1:
+            //TODO: not yet implemented
             break;
         case CAN_ID_DV_DRIVING_DYNAMICS_2:
+            //TODO: not yet implemented
             break;
         case CAN_ID_DV_SYSTEM_STATUS:
+            //TODO: not yet implemented
             break;
         default:
             return -1;

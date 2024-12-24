@@ -28,7 +28,7 @@ static void setup(void)
     hv_init();
     GIEI_initialize();
     pump_enable();
-    fan_enable();
+    fan_enable(FANS_RADIATOR);
 
 
     //INFO: open the SCS to power off the HV if it is on. May happen when the lv restarts.
