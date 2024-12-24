@@ -6,6 +6,7 @@
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
 #include "rege_alg/regen_alg.h"
+#include "torque_vec_alg/torque_vec_alg.h"
 #include "../board_can/board_can.h"
 #include "../utility/arithmetic/arithmetic.h"
 #include "../batteries/hv/hv.h"
@@ -221,7 +222,23 @@ int8_t GIEI_input(const float throttle, const float regen)
     memset(negTorquesNM, 0, sizeof(negTorquesNM));
 
     if (GIEI.activate_torque_vectoring) {
-        //TODO: tv
+        struct TVInputArgs tv_input = {
+            .ax = 0, //TODO: implement IMU
+            .ay =0, //TODO: implement IMU
+            .yaw_r =0, //TODO: implement IMU
+            .throttle = driver_get_amount(THROTTLE),
+            .regenpaddle = driver_get_amount(REGEN),
+            .brakepressurefront = 0, //TODO: not yet implemented in the code
+            .brakepressurerear = 0, //TODO: not yet implemented in the code
+            .steering = driver_get_amount(STEERING_ANGLE),
+            .rpm[0] = engine_get_info(FRONT_LEFT, ENGINE_RPM),
+            .rpm[1] = engine_get_info(FRONT_RIGHT, ENGINE_RPM),
+            .rpm[2] = engine_get_info(REAR_RIGHT, ENGINE_RPM),
+            .rpm[3] = engine_get_info(REAR_RIGHT, ENGINE_RPM),
+            .voltage = 0,
+        };
+        hv_get_info(HV_BATTERY_PACK_TENSION, &tv_input.voltage, sizeof(tv_input.voltage));
+        tv_alg_compute(&tv_input, posTorquesNM);
     }else{
         update_torque_NM_vectors_no_tv(throttle, posTorquesNM, actual_max_neg_torque);
     }

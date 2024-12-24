@@ -374,6 +374,8 @@ float amk_get_info(const enum ENGINES engine, const enum ENGINE_INFO info)
         case ENGINE_VOLTAGE:
             return inverter_engine_data.engines[engine].amk_data_1.AMK_TorqueCurrent;
             break;
+        case ENGINE_RPM:
+            return inverter_engine_data.engines[engine].amk_data_1.AMK_ActualVelocity;
         default:
             return -1;
     }

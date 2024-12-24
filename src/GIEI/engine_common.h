@@ -18,6 +18,7 @@ enum RUNNING_STATUS{
 
 enum ENGINE_INFO{
     ENGINE_VOLTAGE,
+    ENGINE_RPM,
 };
 
 #endif // !__GIEI_ENGINES_COMMON__
