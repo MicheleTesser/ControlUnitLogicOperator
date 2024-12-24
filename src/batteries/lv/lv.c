@@ -1,6 +1,6 @@
 #include "lv.h"
 #include "../../lib/raceup_board/components/can.h"
-#include "../../lib/board_dbc/can2.h"
+#include "../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include <stdint.h>
 
 #define NUM_OF_LV_CELLS 6

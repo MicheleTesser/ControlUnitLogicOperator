@@ -1,7 +1,7 @@
 #include "score_lib/test_lib.h"
 #include "linux_board/linux_board.h"
 #include "ControlUnitLogicOperator.h"
-#include "lib/board_dbc/can2.h"
+#include "lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "linux_board/linux_board.h"
 #include "src/board_conf/id_conf.h"
 #include "src/GIEI/giei.h"

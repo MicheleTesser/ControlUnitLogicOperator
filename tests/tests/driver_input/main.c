@@ -1,6 +1,6 @@
 #include "score_lib/test_lib.h"
 #include "src/driver_input/driver_input.h"
-#include "lib/board_dbc/can2.h"
+#include "lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "./src/board_conf/id_conf.h"
 #include "linux_board/linux_board.h"
 #include "ControlUnitLogicOperator.h"

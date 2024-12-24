@@ -1,5 +1,5 @@
 #include "./fans.h"
-#include "../../lib/board_dbc/can2.h"
+#include "../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../board_can/board_can.h"
 #include "../../board_conf/id_conf.h"
 #include <stdint.h>

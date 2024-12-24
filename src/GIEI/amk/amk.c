@@ -1,5 +1,5 @@
 #include "./amk.h"
-#include "../../../lib/board_dbc/can1.h"
+#include "../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../board_conf/id_conf.h"
 #include "../../board_can/board_can.h"
 #include "../../driver_input/driver_input.h"
