@@ -9,6 +9,7 @@
 #include "../GIEI/giei.h"
 #include "../driver_input/driver_input.h"
 #include "../cooling/temperatures/temperatures.h"
+#include "../suspensions/suspensions.h"
 #include "../batteries/batteries.h"
 #include <stdint.h>
 #include <string.h>
@@ -126,9 +127,16 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             save_temperature(COLDPLATE_POST_R, m.can_0x101_Temp2.temp_cold_post_R);
             break;
         case CAN_ID_SUSPREAR: //INFO: smu
+            suspensions_save(SUSP_REAR_LEFT,m.can_0x102_SuspRear.susp_rl);
+            suspensions_save(SUSP_REAR_RIGHT,m.can_0x102_SuspRear.susp_rr);
+            break;
         case CAN_ID_SUSPFRONT: //INFO: smu
+            suspensions_save(SUSP_FRONT_LEFT, m.can_0x104_SuspFront.susp_fl);
+            suspensions_save(SUSP_FRONT_RIGHT, m.can_0x104_SuspFront.susp_fr);
+            break;
         case CAN_ID_TEMPFRONTR:
-        case CAN_ID_INVVOLT:
+            save_temperature(ENGINE_POT_FRONT_RIGHT, m.can_0x105_TempFrontR.temp_mot_pot_FR);
+            save_temperature(ENGINE_PRE_FRONT_RIGHT, m.can_0x105_TempFrontR.temp_mot_pre_FR);
             break;
         case CAN_ID_LEM:
             return GIEI_recv_data(mex);

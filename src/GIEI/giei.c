@@ -44,6 +44,17 @@ static struct __GIEI{
     enum RUNNING_STATUS running_status;
 }GIEI;
 
+static int8_t send_tension_bms(const uint64_t tension){
+    can_obj_can2_h_t o;
+    CanMessage mex;
+    memset(&mex, 0, sizeof(mex));
+
+    o.can_0x120_InvVolt.car_voltage = tension;
+    mex.id = CAN_ID_INVVOLT;
+    mex.message_size = pack_message_can2(&o, CAN_ID_INVVOLT, &mex.full_word);
+
+    return hardware_write_can(CAN_MODULE_GENERAL, &mex);
+}
 
 /*
  * Battery pack tension is given indipendently by every motor.
@@ -276,6 +287,7 @@ int8_t GIEI_input(const float throttle, const float regen)
     }
 
     computeBatteryPackTension(engines_voltages);
+    send_tension_bms(GIEI.batteryPackTension);
     if (throttle > 0 && regen >= 0){
         powerControl(GIEI.total_power, GIEI.limit_power, posTorquesNM);
     }

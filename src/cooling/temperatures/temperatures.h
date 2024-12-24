@@ -20,6 +20,9 @@ enum TEMPS_CATEGORY{
     COLDPLATE_POST_R,
     COLDPLATE_PRE_R,
 
+    ENGINE_POT_FRONT_RIGHT,
+    ENGINE_PRE_FRONT_RIGHT,
+
     TEMPS_AMOUNT, //INFO: do not use this enum, leave it at the end
 };
 
