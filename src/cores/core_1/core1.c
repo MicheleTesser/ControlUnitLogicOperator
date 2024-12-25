@@ -35,7 +35,7 @@ static void loop(void)
         board_can_manage_message(CAN_MODULE_GENERAL, &mex);
     }
 
-    if (get_current_mission() != MANUALY) {
+    if (get_current_mission() <= MANUALY) {
         read_ok = board_can_read(CAN_MODULE_DV, &mex);
         if(read_ok >= 0){
             board_can_manage_message(CAN_MODULE_DV, &mex);

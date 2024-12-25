@@ -2,8 +2,12 @@
 #define __CAR_MISSIONS_DV__
 
 #include <stdint.h>
+
+//INFO: mantain the incremental values of the missions and keep the order of definition
 enum MISSIONS{
+    NONE=0,
     MANUALY,
+
     DV_ACCELERATION,
     DV_SKIDPAD,
     DV_AUTOCROSS,
