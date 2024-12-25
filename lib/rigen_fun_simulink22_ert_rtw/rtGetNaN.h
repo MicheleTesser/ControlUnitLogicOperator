@@ -23,8 +23,8 @@
 #define RTW_HEADER_rtGetNaN_h_
 #include "rtwtypes.h"
 
-extern real_T rtGetNaN(void);
-extern real32_T rtGetNaNF(void);
+extern real_T RigenrtGetNaN(void);
+extern real32_T RigenrtGetNaNF(void);
 
 #endif                                 /* RTW_HEADER_rtGetNaN_h_ */
 

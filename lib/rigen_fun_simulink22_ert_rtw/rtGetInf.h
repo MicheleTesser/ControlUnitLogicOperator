@@ -23,10 +23,10 @@
 #define RTW_HEADER_rtGetInf_h_
 #include "rtwtypes.h"
 
-extern real_T rtGetInf(void);
-extern real32_T rtGetInfF(void);
-extern real_T rtGetMinusInf(void);
-extern real32_T rtGetMinusInfF(void);
+extern real_T RigenrtGetInf(void);
+extern real32_T RigenrtGetInfF(void);
+extern real_T RigenrtGetMinusInf(void);
+extern real32_T RigenrtGetMinusInfF(void);
 
 #endif                                 /* RTW_HEADER_rtGetInf_h_ */
 

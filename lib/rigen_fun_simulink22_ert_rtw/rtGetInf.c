@@ -29,12 +29,12 @@
  * Initialize rtInf needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real_T rtGetInf(void)
+real_T RigenrtGetInf(void)
 {
   size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
   real_T inf = 0.0;
   if (bitsPerReal == 32U) {
-    inf = rtGetInfF();
+    inf = RigenrtGetInfF();
   } else {
     union {
       LittleEndianIEEEDouble bitVal;
@@ -53,7 +53,7 @@ real_T rtGetInf(void)
  * Initialize rtInfF needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real32_T rtGetInfF(void)
+real32_T RigenrtGetInfF(void)
 {
   IEEESingle infF;
   infF.wordL.wordLuint = 0x7F800000U;
@@ -64,12 +64,12 @@ real32_T rtGetInfF(void)
  * Initialize rtMinusInf needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real_T rtGetMinusInf(void)
+real_T RigenrtGetMinusInf(void)
 {
   size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
   real_T minf = 0.0;
   if (bitsPerReal == 32U) {
-    minf = rtGetMinusInfF();
+    minf = RigenrtGetMinusInfF();
   } else {
     union {
       LittleEndianIEEEDouble bitVal;
@@ -88,7 +88,7 @@ real_T rtGetMinusInf(void)
  * Initialize rtMinusInfF needed by the generated code.
  * Inf is initialized as non-signaling. Assumes IEEE.
  */
-real32_T rtGetMinusInfF(void)
+real32_T RigenrtGetMinusInfF(void)
 {
   IEEESingle minfF;
   minfF.wordL.wordLuint = 0xFF800000U;

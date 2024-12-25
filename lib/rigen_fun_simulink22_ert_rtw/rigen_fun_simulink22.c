@@ -70,7 +70,7 @@ void rigen_fun_simulink22_step(void)
   /* MinMax: '<S2>/MinMax' incorporates:
    *  Constant: '<Root>/max_curr'
    */
-  if ((rigen_fun_simulink22_P.max_curr <= rtb_Power_front) || rtIsNaN
+  if ((rigen_fun_simulink22_P.max_curr <= rtb_Power_front) || RigenrtIsNaN
       (rtb_Power_front)) {
     rtb_Power_front = rigen_fun_simulink22_P.max_curr;
   }
@@ -203,7 +203,7 @@ void rigen_fun_simulink22_initialize(void)
   /* Registration code */
 
   /* initialize non-finites */
-  rt_InitInfAndNaN(sizeof(real_T));
+  Rigenrt_InitInfAndNaN(sizeof(real_T));
 
   /* initialize error status */
   rtmSetErrorStatus(rigen_fun_simulink22_M, (NULL));

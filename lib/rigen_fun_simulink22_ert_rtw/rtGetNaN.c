@@ -29,12 +29,12 @@
  * Initialize rtNaN needed by the generated code.
  * NaN is initialized as non-signaling. Assumes IEEE.
  */
-real_T rtGetNaN(void)
+real_T RigenrtGetNaN(void)
 {
   size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
   real_T nan = 0.0;
   if (bitsPerReal == 32U) {
-    nan = rtGetNaNF();
+    nan = RigenrtGetNaNF();
   } else {
     union {
       LittleEndianIEEEDouble bitVal;
@@ -53,7 +53,7 @@ real_T rtGetNaN(void)
  * Initialize rtNaNF needed by the generated code.
  * NaN is initialized as non-signaling. Assumes IEEE.
  */
-real32_T rtGetNaNF(void)
+real32_T RigenrtGetNaNF(void)
 {
   IEEESingle nanF = { { 0.0F } };
 

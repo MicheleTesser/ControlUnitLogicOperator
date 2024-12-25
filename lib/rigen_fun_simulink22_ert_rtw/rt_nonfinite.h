@@ -25,17 +25,17 @@
 #include "rtwtypes.h"
 #define NOT_USING_NONFINITE_LITERALS   1
 
-extern real_T rtInf;
-extern real_T rtMinusInf;
-extern real_T rtNaN;
-extern real32_T rtInfF;
-extern real32_T rtMinusInfF;
-extern real32_T rtNaNF;
-extern void rt_InitInfAndNaN(size_t realSize);
-extern boolean_T rtIsInf(real_T value);
-extern boolean_T rtIsInfF(real32_T value);
-extern boolean_T rtIsNaN(real_T value);
-extern boolean_T rtIsNaNF(real32_T value);
+extern real_T RigenrtInf;
+extern real_T RigenrtMinusInf;
+extern real_T RigenrtNaN;
+extern real32_T RigenrtInfF;
+extern real32_T RigenrtMinusInfF;
+extern real32_T RigenrtNaNF;
+extern void Rigenrt_InitInfAndNaN(size_t realSize);
+extern boolean_T RigenrtIsInf(real_T value);
+extern boolean_T RigenrtIsInfF(real32_T value);
+extern boolean_T RigenrtIsNaN(real_T value);
+extern boolean_T RigenrtIsNaNF(real32_T value);
 typedef struct {
   struct {
     uint32_T wordH;

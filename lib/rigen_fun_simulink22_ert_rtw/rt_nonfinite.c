@@ -26,47 +26,47 @@
 #include "rt_nonfinite.h"
 #define NumBitsPerChar                 16U
 
-real_T rtInf;
-real_T rtMinusInf;
-real_T rtNaN;
-real32_T rtInfF;
-real32_T rtMinusInfF;
-real32_T rtNaNF;
+real_T RigenrtInf;
+real_T RigenrtMinusInf;
+real_T RigenrtNaN;
+real32_T RigenrtInfF;
+real32_T RigenrtMinusInfF;
+real32_T RigenrtNaNF;
 
 /*
- * Initialize the rtInf, rtMinusInf, and rtNaN needed by the
+ * Initialize the RigenrtInf, RigenrtMinusInf, and RigenrtNaN needed by the
  * generated code. NaN is initialized as non-signaling. Assumes IEEE.
  */
-void rt_InitInfAndNaN(size_t realSize)
+void Rigenrt_InitInfAndNaN(size_t realSize)
 {
   (void) (realSize);
-  rtNaN = rtGetNaN();
-  rtNaNF = rtGetNaNF();
-  rtInf = rtGetInf();
-  rtInfF = rtGetInfF();
-  rtMinusInf = rtGetMinusInf();
-  rtMinusInfF = rtGetMinusInfF();
+  RigenrtNaN = RigenrtGetNaN();
+  RigenrtNaNF = RigenrtGetNaNF();
+  RigenrtInf = RigenrtGetInf();
+  RigenrtInfF = RigenrtGetInfF();
+  RigenrtMinusInf = RigenrtGetMinusInf();
+  RigenrtMinusInfF = RigenrtGetMinusInfF();
 }
 
 /* Test if value is infinite */
-boolean_T rtIsInf(real_T value)
+boolean_T RigenrtIsInf(real_T value)
 {
-  return (boolean_T)((value==rtInf || value==rtMinusInf) ? 1U : 0U);
+  return (boolean_T)((value==RigenrtInf || value==RigenrtMinusInf) ? 1U : 0U);
 }
 
 /* Test if single-precision value is infinite */
-boolean_T rtIsInfF(real32_T value)
+boolean_T RigenrtIsInfF(real32_T value)
 {
-  return (boolean_T)(((value)==rtInfF || (value)==rtMinusInfF) ? 1U : 0U);
+  return (boolean_T)(((value)==RigenrtInfF || (value)==RigenrtMinusInfF) ? 1U : 0U);
 }
 
 /* Test if value is not a number */
-boolean_T rtIsNaN(real_T value)
+boolean_T RigenrtIsNaN(real_T value)
 {
   boolean_T result = (boolean_T) 0;
   size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
   if (bitsPerReal == 32U) {
-    result = rtIsNaNF((real32_T)value);
+    result = RigenrtIsNaNF((real32_T)value);
   } else {
     union {
       LittleEndianIEEEDouble bitVal;
@@ -83,7 +83,7 @@ boolean_T rtIsNaN(real_T value)
 }
 
 /* Test if single-precision value is not a number */
-boolean_T rtIsNaNF(real32_T value)
+boolean_T RigenrtIsNaNF(real32_T value)
 {
   IEEESingle tmp;
   tmp.wordL.wordLreal = value;

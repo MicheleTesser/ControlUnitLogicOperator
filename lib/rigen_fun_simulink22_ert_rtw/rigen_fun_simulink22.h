@@ -40,7 +40,7 @@
 #define rtmSetErrorStatus(rtm, val)    ((rtm)->errorStatus = (val))
 #endif
 
-extern void configureCPU2Peripherals(uint32_T gpioNumber, uint32_T gpGRegValA,
+extern void RigenconfigureCPU2Peripherals(uint32_T gpioNumber, uint32_T gpGRegValA,
   uint32_T gpRegValA);
 
 typedef struct {
