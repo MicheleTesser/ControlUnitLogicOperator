@@ -7,6 +7,7 @@
 #include "../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../lib/DPS/dps_slave.h"
 #include "../GIEI/giei.h"
+#include "../IMU/imu.h"
 #include "../driver_input/driver_input.h"
 #include "../cooling/temperatures/temperatures.h"
 #include "../cooling/fans/fans.h"
@@ -67,6 +68,10 @@ static int8_t manage_can_1_message(const CanMessage* const restrict mex){
 
 static int8_t manage_can_2_message(const CanMessage* const restrict mex)
 {
+    union u32_flot{
+        uint32_t u_data;
+        float f_data;
+    };
     can_obj_can2_h_t m;
     unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, 0);
     switch (mex->id) {
@@ -104,8 +109,36 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             fan_set_value(FAN_BMS_HV, m.can_0x058_BmsHv2.fan_speed);
             break;
         case CAN_ID_IMU1:
+            {
+                union u32_flot conv ={
+                    .u_data = m.can_0x060_Imu1.acc_x,
+                };
+                conv.u_data = m.can_0x060_Imu1.acc_x;
+                imu_update_info(IMU_accelerations, axis_X, conv.f_data);
+                conv.u_data = m.can_0x060_Imu1.acc_y;
+                imu_update_info(IMU_accelerations, axis_Y, conv.f_data);
+            }
+            break;
         case CAN_ID_IMU2:
+            {
+                union u32_flot conv ={
+                    .u_data = m.can_0x061_Imu2.acc_z,
+                };
+                imu_update_info(IMU_accelerations, axis_Z, conv.f_data);
+                imu_calibrate();
+                conv.u_data = m.can_0x061_Imu2.omega_x;
+                imu_update_info(IMU_angles, axis_X, conv.f_data);
+            }
+            break;
         case CAN_ID_IMU3:
+            {
+                union u32_flot conv ={
+                    .u_data = m.can_0x062_Imu3.omega_y,
+                };
+                imu_update_info(IMU_angles, axis_Y, conv.f_data);
+                conv.u_data = m.can_0x062_Imu3.omega_z;
+                imu_update_info(IMU_angles, axis_Z, conv.f_data);
+            }
             break;
         case CAN_ID_MAP: //INFO: STW
             giei_set_run_map(MAP_POWER, m.can_0x064_Map.power);

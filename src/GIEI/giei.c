@@ -10,6 +10,7 @@
 #include "../board_can/board_can.h"
 #include "../utility/arithmetic/arithmetic.h"
 #include "../batteries/hv/hv.h"
+#include "../IMU/imu.h"
 #include "../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "engine_common.h"
@@ -223,9 +224,9 @@ int8_t GIEI_input(const float throttle, const float regen)
 
     if (GIEI.activate_torque_vectoring) {
         struct TVInputArgs tv_input = {
-            .ax = 0, //TODO: implement IMU
-            .ay =0, //TODO: implement IMU
-            .yaw_r =0, //TODO: implement IMU
+            .ax = imu_get_info(IMU_accelerations, axis_X),
+            .ay = imu_get_info(IMU_accelerations, axis_Y),
+            .yaw_r = imu_get_info(IMU_angles, axis_Y),
             .throttle = driver_get_amount(THROTTLE),
             .regenpaddle = driver_get_amount(REGEN),
             .brakepressurefront = 0, //TODO: not yet implemented in the code
