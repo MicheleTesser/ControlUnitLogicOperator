@@ -2,6 +2,7 @@
 #include "../../cooling/pumps/pumps.h"
 #include "../../cooling/fans/fans.h"
 #include "../../driver_input/driver_input.h"
+#include "../../missions/missons.h"
 #include "../../lib/DPS/dps_slave.h"
 #include "../../GIEI/giei.h"
 #include "../../board_conf/id_conf.h"
@@ -45,10 +46,12 @@ static void loop(void)
     static time_var_microseconds car_status_last_time = 0;
 
     i_m_alive(alive_fd);
-    if (GIEI_check_running_condition() == RUNNING) {
-        pump_init();
-        fan_init();
-        GIEI_input(throttle,regen);
+    if (get_current_mission() != NONE) {
+        if (GIEI_check_running_condition() == RUNNING) {
+            pump_init();
+            fan_init();
+            GIEI_input(throttle,regen);
+        }
     }
     if((timer_time_now() - car_status_last_time > 200 MILLIS) ){
         GIEI_send_status_info_in_can();
