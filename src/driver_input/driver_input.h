@@ -8,6 +8,7 @@ enum INPUT_TYPES{
     BRAKE =1,
     STEERING_ANGLE = 2,
     REGEN =3,
+    READY_TO_DRIVE_BUTTON =4,
 
     NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX
 };
@@ -18,6 +19,7 @@ enum IMPL{
     THROTTLE_POT = (1<<2),
 };
 
+int8_t driver_input_init(void);
 float driver_get_amount(const enum INPUT_TYPES driver_input);
 uint8_t driver_set_amount(const enum INPUT_TYPES driver_input, const float percentage);
 

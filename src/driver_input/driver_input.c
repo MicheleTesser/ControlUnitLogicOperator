@@ -1,3 +1,5 @@
+#include "../../lib/raceup_board/raceup_board.h"
+#include "../board_conf/id_conf.h"
 #include "./driver_input.h"
 #include <stdint.h>
 
@@ -14,15 +16,29 @@ static struct{
     };
 }driver_info;
 
+static void rtd_physical_button_toggled(void) INTERRUP_ATTRIBUTE
+{
+    driver_info.percentages[READY_TO_DRIVE_BUTTON] = gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON);
+}
+
 //public
+
+int8_t driver_input_init(void)
+{
+    return hardware_interrupt_attach_fun(INTERRUPT_RTD_BUTTON, rtd_physical_button_toggled);
+}
+
 float driver_get_amount(enum INPUT_TYPES driver_input)
 {
-    return driver_info.percentages[driver_input];
+    if (driver_input < NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX) {
+        return driver_info.percentages[driver_input];
+    }
+    return -1;
 }
 
 uint8_t driver_set_amount(enum INPUT_TYPES driver_input, float percentage)
 {
-    if (percentage > 100) {
+    if (percentage > 100 || driver_input >= NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX) {
         return -1;
     }
     driver_info.percentages[driver_input] = percentage;

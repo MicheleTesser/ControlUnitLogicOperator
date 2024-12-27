@@ -170,7 +170,7 @@ static inline uint8_t rtd_input_request(void)
 {
     const uint8_t brake_treshold_percentage = 10;
     return  driver_get_amount(BRAKE) > brake_treshold_percentage &&
-            gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON);
+            driver_get_amount(READY_TO_DRIVE_BUTTON);
 }
 
 static inline uint8_t precharge_ended(void)
@@ -353,7 +353,7 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
             }
             break;
         case RUNNING:
-            if (!gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON)) {
+            if (!driver_get_amount(READY_TO_DRIVE_BUTTON)) {
                 amk_disable_inverter();
                 inverter_engine_data.engine_status= SYSTEM_PRECAHRGE;
             }

@@ -5,4 +5,6 @@
 #define INTERRUPT_CAN_2 1
 #define INTERRUPT_CAN_3 2
 
+#define INTERRUPT_RTD_BUTTON 3
+
 #endif // !__ID_INTERRUPT__
