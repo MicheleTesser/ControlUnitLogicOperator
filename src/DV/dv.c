@@ -7,6 +7,7 @@
 #include "../driver_input/driver_input.h"
 #include "../emergency_fault/emergency_fault.h"
 #include "asms/asms.h"
+#include "res/res.h"
 #include <stdint.h>
 
 //private
@@ -28,6 +29,7 @@ int8_t dv_class_init(void)
 {
     asms_class_init();
     asb_class_init();
+    res_class_init();
     DV.status = AS_OFF;
     return 0;
 }
@@ -35,6 +37,23 @@ int8_t dv_class_init(void)
 int8_t dv_set_status(const enum AS_STATUS status)
 {
     DV.status = status;
+    if (status != AS_OFF) {
+        input_rtd_set_mode(RES);
+    }
+    switch (status) {
+        case AS_OFF:
+            input_rtd_set_mode(BUTTON);
+            break;
+        case AS_READY:
+            input_rtd_set_mode(RES);
+            break;
+        case AS_DRIVING:
+            break;
+        case AS_EMERGENCY:
+            break;
+        case AS_FINISHED:
+            break;
+    }
     return 0;
 }
 
@@ -42,7 +61,8 @@ int8_t dv_set_status(const enum AS_STATUS status)
 int8_t dv_update_status(void)
 {
     const enum RUNNING_STATUS giei_status = GIEI_check_running_condition();
-    if (!ebs_on()) {
+    if (!ebs_on()) 
+    {
         if (get_current_mission() > MANUALY &&  asb_consistency_check() && giei_status >= TS_READY)
         {
             if (giei_status == RUNNING) {
@@ -86,6 +106,7 @@ int8_t dv_update_led(void)
             gpio_set_high(ASSI_LIGHT_BLU);
             gpio_set_low(ASSI_LIGHT_YELLOW);
             gpio_set_high(AS_EMERGENCY_SOUND);
+            res_start_time();
             break;
         case AS_DRIVING:
             gpio_set_high(ASSI_LIGHT_BLU);
@@ -114,4 +135,10 @@ int8_t dv_update_led(void)
             break;
     }
     return 0;
+}
+
+int8_t dv_go(void)
+{
+    return (DV.status == AS_READY && res_check_go()) ||
+        DV.status == AS_DRIVING;
 }
