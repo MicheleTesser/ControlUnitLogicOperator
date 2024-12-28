@@ -1,5 +1,6 @@
 #include "../../lib/raceup_board/raceup_board.h"
 #include "../board_conf/id_conf.h"
+#include "input_rtd/input_rtd.h"
 #include "./driver_input.h"
 #include <stdint.h>
 
@@ -19,16 +20,17 @@ static struct{
     };
 }driver_info;
 
-static void rtd_physical_button_toggled(void) INTERRUP_ATTRIBUTE
+static void input_rtd_physical_button_toggled(void) INTERRUP_ATTRIBUTE
 {
-    driver_info.percentages[READY_TO_DRIVE_BUTTON].value = gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON);
+    input_rtd_check();
 }
 
 //public
 
 int8_t driver_input_init(void)
 {
-    return hardware_interrupt_attach_fun(INTERRUPT_RTD_BUTTON, rtd_physical_button_toggled);
+    input_rtd_class_init();
+    return hardware_interrupt_attach_fun(INTERRUPT_RTD_BUTTON, input_rtd_physical_button_toggled);
 }
 
 float driver_get_amount(enum INPUT_TYPES driver_input)

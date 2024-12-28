@@ -9,6 +9,7 @@
 #include "../GIEI/giei.h"
 #include "../IMU/imu.h"
 #include "../driver_input/driver_input.h"
+#include "../DV/dv.h"
 #include "../cooling/temperatures/temperatures.h"
 #include "../cooling/fans/fans.h"
 #include "../suspensions/suspensions.h"
@@ -212,6 +213,7 @@ static int8_t manage_can_3_message(const CanMessage* const restrict mex,
             {
                 const can_0x1f6_DV_system_status_t* const data __attribute_maybe_unused__ =
                     &o.can_0x1f6_DV_system_status;
+                dv_set_status(data->AS_state);
             }
             break;
         default:

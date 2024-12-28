@@ -3,13 +3,13 @@
 
 #include <stdint.h>
 #include "../../lib/raceup_board/components/timer.h"
+#include "input_rtd/input_rtd.h"
 
 enum INPUT_TYPES{
     THROTTLE =0,
     BRAKE =1,
     STEERING_ANGLE = 2,
     REGEN =3,
-    READY_TO_DRIVE_BUTTON =4,
 
     NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX
 };

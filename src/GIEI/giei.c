@@ -108,7 +108,7 @@ static int8_t send_can_status_message(void)
     memset(&o, 0, sizeof(o));
     CanMessage mex;
     o.can_0x065_CarStatus.HV = engine_inverter_hv_status();
-    o.can_0x065_CarStatus.RF = driver_get_amount(READY_TO_DRIVE_BUTTON); //FIX: use ack from the inverter
+    o.can_0x065_CarStatus.RF = input_rtd_check(); //FIX: use ack from the inverter
     o.can_0x065_CarStatus.R2D = GIEI.running_status == RUNNING;
     o.can_0x065_CarStatus.AIR1 = gpio_read_state(AIR_PRECHARGE_INIT);
     o.can_0x065_CarStatus.AIR2 = gpio_read_state(AIR_PRECHARGE_DONE);

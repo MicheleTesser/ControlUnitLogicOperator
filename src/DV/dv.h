@@ -3,12 +3,13 @@
 
 #include <stdint.h>
 
+//INFO: check dbc of can3 in message DV_system_status
 enum AS_STATUS{
-    AS_OFF,
-    AS_READY,
-    AS_DRIVING,
-    AS_EMERGENCY,
-    AS_FINISHED,
+    AS_OFF =1,
+    AS_READY =2,
+    AS_DRIVING =3,
+    AS_EMERGENCY =4,
+    AS_FINISHED =5,
 };
 
 int8_t dv_class_init(void);
