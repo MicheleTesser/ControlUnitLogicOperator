@@ -15,7 +15,13 @@ enum MISSIONS{
     DV_INSPECTION,
 };
 
+enum MISSION_STATUS{
+    MISSION_RUNNING,
+    MISSION_FINISHED,
+};
+
 uint8_t update_current_mission(const enum MISSIONS mission);
 enum MISSIONS get_current_mission(void);
+int8_t mission_status(void);
 
 #endif // !__CAR_MISSIONS_DV__

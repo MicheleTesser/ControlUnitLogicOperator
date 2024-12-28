@@ -13,7 +13,8 @@ enum ENGINES {
 enum RUNNING_STATUS{
     SYSTEM_OFF = 0,
     SYSTEM_PRECAHRGE =1,
-    RUNNING =2,
+    TS_READY =2,
+    RUNNING =3,
 };
 
 enum ENGINE_INFO{

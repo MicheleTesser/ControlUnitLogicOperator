@@ -338,27 +338,33 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
             }
             break;
         case SYSTEM_PRECAHRGE:
-            if (!amk_inverter_hv_status()) {
+            if (!amk_inverter_hv_status() || input_rtd_check()) {
                 amk_shut_down_power();
                 one_emergency_raised(FAILED_RTD_SEQ);
                 break;
             }
-            if (rtd_input_request()) {
-                if (precharge_ended()){
-                    amk_activate_control();
-                }else{
-                    amk_shut_down_power();
-                    one_emergency_raised(FAILED_RTD_SEQ);
-                }
+            if (precharge_ended()){
+                amk_activate_control();
+                inverter_engine_data.engine_status = TS_READY;
+            }
+            break;
+        case TS_READY:
+            if (!amk_inverter_hv_status() || !precharge_ended()) {
+                amk_shut_down_power();
+                one_emergency_raised(FAILED_RTD_SEQ);
+                break;
+            }
+            if (input_rtd_check()) {
+                inverter_engine_data.engine_status = RUNNING;
             }
             break;
         case RUNNING:
             if (!input_rtd_check()) {
                 amk_disable_inverter();
-                inverter_engine_data.engine_status= SYSTEM_PRECAHRGE;
+                inverter_engine_data.engine_status= TS_READY;
             }
             break;
-    }
+        }
     return inverter_engine_data.engine_status;
 }
 

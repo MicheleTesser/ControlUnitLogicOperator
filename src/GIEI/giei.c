@@ -6,6 +6,7 @@
 #include "../lib/raceup_board/raceup_board.h"
 #include "../emergency_fault/emergency_fault.h"
 #include "rege_alg/regen_alg.h"
+#include "speed_alg/speed_alg.h"
 #include "torque_vec_alg/torque_vec_alg.h"
 #include "../board_can/board_can.h"
 #include "../utility/arithmetic/arithmetic.h"
@@ -114,7 +115,7 @@ static int8_t send_can_status_message(void)
     o.can_0x065_CarStatus.AIR2 = gpio_read_state(AIR_PRECHARGE_DONE);
     o.can_0x065_CarStatus.precharge = 
         gpio_read_state(AIR_PRECHARGE_INIT) && gpio_read_state(AIR_PRECHARGE_DONE);
-    o.can_0x065_CarStatus.speed = 0; //TODO: not yet implemented
+    o.can_0x065_CarStatus.speed = giei_speed_alg_get_speed(); //TODO: not yet implemented
     mex.id = CAN_ID_CARSTATUS;
     mex.message_size = pack_message_can2(&o, CAN_ID_CARSTATUS, &mex.full_word);
 
@@ -136,6 +137,7 @@ int8_t GIEI_initialize(void)
     engine_module_init();
     giei_power_map_init();
     regen_alg_init();
+    giei_speed_alg_class_init();
 
     return 0;
 }
@@ -284,6 +286,10 @@ int8_t GIEI_send_status_info_in_can(void)
     return send_can_status_message() | send_can_settings_message();
 }
 
+uint8_t GIEI_get_speed(void)
+{
+    return giei_speed_alg_get_speed();
+}
 
 //debug
 
