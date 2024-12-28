@@ -19,6 +19,7 @@ enum CAN_FREQUENCY{
 int8_t board_can_init(const uint8_t can_id, const enum CAN_FREQUENCY freq);
 int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex);
 int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict mex);
-int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const restrict mex);
+int8_t board_can_manage_message(const uint8_t can_id, 
+        const CanMessage* const restrict mex, time_var_microseconds read_timestamp);
 
 #endif // !__BOARD_CAN__

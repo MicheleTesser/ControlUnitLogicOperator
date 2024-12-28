@@ -15,6 +15,7 @@
 #include "../batteries/batteries.h"
 #include <stdint.h>
 #include <string.h>
+#include <sys/cdefs.h>
 
 //private
 
@@ -66,29 +67,30 @@ static int8_t manage_can_1_message(const CanMessage* const restrict mex){
     }
 }
 
-static int8_t manage_can_2_message(const CanMessage* const restrict mex)
+static int8_t manage_can_2_message(const CanMessage* const restrict mex, 
+        const time_var_microseconds read_time)
 {
-    union u32_flot{
+    union u32_float{
         uint32_t u_data;
         float f_data;
     };
     can_obj_can2_h_t m;
-    unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, 0);
+    unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, read_time);
     switch (mex->id) {
         case CAN_ID_PADDLE: //INFO: SW
-            driver_set_amount(REGEN, m.can_0x052_Paddle.regen);
+            driver_set_amount(REGEN, m.can_0x052_Paddle.regen, m.can_0x053_Driver_time_stamp_rx);
             break;
         case CAN_ID_DRIVER: //INFO: STW
-            driver_set_amount(THROTTLE, m.can_0x053_Driver.throttle);
-            driver_set_amount(BRAKE, m.can_0x053_Driver.brake);
-            driver_set_amount(STEERING_ANGLE, m.can_0x053_Driver.steering);
-            if (!m.can_0x053_Driver.no_implausibility) {
-                set_implausibility(THROTTLE_BRAKE,m.can_0x053_Driver.bre_implausibility);
-                set_implausibility(THROTTLE_PADEL,m.can_0x053_Driver.pad_implausibility);
-                set_implausibility(THROTTLE_POT,m.can_0x053_Driver.pot_implausibility);
-            }else{
-                clear_implausibility();
-            }
+                driver_set_amount(THROTTLE, m.can_0x053_Driver.throttle, m.can_0x053_Driver_time_stamp_rx);
+                driver_set_amount(BRAKE, m.can_0x053_Driver.brake, m.can_0x053_Driver_time_stamp_rx);
+                driver_set_amount(STEERING_ANGLE, m.can_0x053_Driver.steering, m.can_0x053_Driver_time_stamp_rx);
+                if (!m.can_0x053_Driver.no_implausibility) {
+                    set_implausibility(THROTTLE_BRAKE,m.can_0x053_Driver.bre_implausibility);
+                    set_implausibility(THROTTLE_PADEL,m.can_0x053_Driver.pad_implausibility);
+                    set_implausibility(THROTTLE_POT,m.can_0x053_Driver.pot_implausibility);
+                }else{
+                    clear_implausibility();
+                }
             break;
         case CAN_ID_BMSLV1:
             lv_update_status(mex);
@@ -110,7 +112,7 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             break;
         case CAN_ID_IMU1:
             {
-                union u32_flot conv ={
+                union u32_float conv ={
                     .u_data = m.can_0x060_Imu1.acc_x,
                 };
                 conv.u_data = m.can_0x060_Imu1.acc_x;
@@ -121,7 +123,7 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             break;
         case CAN_ID_IMU2:
             {
-                union u32_flot conv ={
+                union u32_float conv ={
                     .u_data = m.can_0x061_Imu2.acc_z,
                 };
                 imu_update_info(IMU_accelerations, axis_Z, conv.f_data);
@@ -132,7 +134,7 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
             break;
         case CAN_ID_IMU3:
             {
-                union u32_flot conv ={
+                union u32_float conv ={
                     .u_data = m.can_0x062_Imu3.omega_y,
                 };
                 imu_update_info(IMU_angles, axis_Y, conv.f_data);
@@ -184,16 +186,33 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex)
     return 0;
 }
 
-static int8_t manage_can_3_message(const CanMessage* const restrict mex){
+static int8_t manage_can_3_message(const CanMessage* const restrict mex,
+        const time_var_microseconds read_time){
+    can_obj_can3_h_t o;
+    unpack_message_can3(&o, mex->id, mex->full_word, mex->message_size, read_time);
     switch (mex->id) {
         case CAN_ID_DV_DRIVING_DYNAMICS_1:
-            //TODO: not yet implemented
+            {
+                const can_0x1f4_DV_driving_dynamics_1_t* const data = 
+                    &o.can_0x1f4_DV_driving_dynamics_1;
+
+                driver_set_amount(BRAKE,data->Brake_hydr_actual,
+                        o.can_0x1f4_DV_driving_dynamics_1_time_stamp_rx);
+                driver_set_amount(STEERING_ANGLE, data->Steering_angle_actual, 
+                        o.can_0x1f4_DV_driving_dynamics_1_time_stamp_rx);
+            }
             break;
         case CAN_ID_DV_DRIVING_DYNAMICS_2:
-            //TODO: not yet implemented
+            {
+                const can_0x1f5_DV_driving_dynamics_2_t* const data __attribute_maybe_unused__ = 
+                    &o.can_0x1f5_DV_driving_dynamics_2; 
+            }
             break;
         case CAN_ID_DV_SYSTEM_STATUS:
-            //TODO: not yet implemented
+            {
+                const can_0x1f6_DV_system_status_t* const data __attribute_maybe_unused__ =
+                    &o.can_0x1f6_DV_system_status;
+            }
             break;
         default:
             return -1;
@@ -283,15 +302,16 @@ int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict me
     return hardware_write_can(can_id, mex);
 }
 
-int8_t board_can_manage_message(const uint8_t can_id, const CanMessage* const restrict mex)
+int8_t board_can_manage_message(const uint8_t can_id, 
+        const CanMessage* const restrict mex, const time_var_microseconds read_time)
 {
     switch (can_id) {
         case CAN_MODULE_INVERTER:
             return manage_can_1_message(mex);
         case CAN_MODULE_GENERAL:
-            return manage_can_2_message(mex);
+            return manage_can_2_message(mex, read_time);
         case CAN_MODULE_DV:
-            return manage_can_3_message(mex);
+            return manage_can_3_message(mex, read_time);
         default:
             return -1;
     }

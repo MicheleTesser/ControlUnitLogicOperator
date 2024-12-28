@@ -5,7 +5,10 @@
 
 //private
 static struct{
-    float percentages[NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX];
+    struct PercentageValue{
+        float value;
+        time_var_microseconds timestamp;
+    }percentages[NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX];
     union{
         struct{
             uint8_t thr_brk : 1;
@@ -18,7 +21,7 @@ static struct{
 
 static void rtd_physical_button_toggled(void) INTERRUP_ATTRIBUTE
 {
-    driver_info.percentages[READY_TO_DRIVE_BUTTON] = gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON);
+    driver_info.percentages[READY_TO_DRIVE_BUTTON].value = gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON);
 }
 
 //public
@@ -31,17 +34,27 @@ int8_t driver_input_init(void)
 float driver_get_amount(enum INPUT_TYPES driver_input)
 {
     if (driver_input < NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX) {
-        return driver_info.percentages[driver_input];
+        return driver_info.percentages[driver_input].value;
     }
     return -1;
 }
 
-uint8_t driver_set_amount(enum INPUT_TYPES driver_input, float percentage)
+uint8_t driver_set_amount(enum INPUT_TYPES driver_input, 
+        const float percentage, const time_var_microseconds timestamp)
 {
+    struct PercentageValue* val = &driver_info.percentages[driver_input];
+
     if (percentage > 100 || driver_input >= NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX) {
         return -1;
     }
-    driver_info.percentages[driver_input] = percentage;
+
+    //INFO: repsecting rule T 15.1.4
+    if (driver_input == BRAKE && val->timestamp == timestamp && val->value > percentage) {
+        return -2;
+    }
+
+    driver_info.percentages[driver_input].value = percentage;
+    driver_info.percentages[driver_input].timestamp = timestamp;
     return 0;
 }
 
