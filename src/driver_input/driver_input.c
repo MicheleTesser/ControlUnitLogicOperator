@@ -48,7 +48,7 @@ uint8_t driver_set_amount(enum INPUT_TYPES driver_input,
         return -1;
     }
 
-    //INFO: repsecting rule T 15.1.4
+    //INFO: respecting rule T 15.1.4
     if (driver_input == BRAKE && val->timestamp == timestamp && val->value > percentage) {
         return -2;
     }
