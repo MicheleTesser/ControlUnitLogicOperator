@@ -39,13 +39,16 @@ int8_t dv_update_led(void)
         case AS_OFF:
             gpio_set_high(ASSI_LIGHT_BLU);
             gpio_set_high(ASSI_LIGHT_YELLOW);
+            gpio_set_high(AS_EMERGENCY_SOUND);
             break;
         case AS_READY:
             gpio_set_high(ASSI_LIGHT_BLU);
             gpio_set_low(ASSI_LIGHT_YELLOW);
+            gpio_set_high(AS_EMERGENCY_SOUND);
             break;
         case AS_DRIVING:
             gpio_set_high(ASSI_LIGHT_BLU);
+            gpio_set_high(AS_EMERGENCY_SOUND);
             if ((timer_time_now() - driving_last_time_on) > 100 MILLIS ) {
                 gpio_toggle(ASSI_LIGHT_YELLOW);
                 driving_last_time_on = timer_time_now();
@@ -64,8 +67,9 @@ int8_t dv_update_led(void)
             }
             break;
         case AS_FINISHED:
-            gpio_set_low(ASSI_LIGHT_BLU);
+            gpio_set_high(AS_EMERGENCY_SOUND);
             gpio_set_high(ASSI_LIGHT_YELLOW);
+            gpio_set_low(ASSI_LIGHT_BLU);
             break;
     }
     return 0;
