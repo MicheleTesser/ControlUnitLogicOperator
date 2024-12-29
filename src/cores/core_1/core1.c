@@ -12,10 +12,18 @@ static alive_blink_fd alive_fd;
 
 static void setup(void)
 {
-    hardware_init_gpio(CORE_ALIVE_LED_2);
-    board_can_init(CAN_MODULE_INVERTER, _1_MBYTE_S_);
-    board_can_init(CAN_MODULE_GENERAL, _500_KBYTE_S_);
-    board_can_init(CAN_MODULE_DV, _500_KBYTE_S_);
+    while(hardware_init_gpio(CORE_ALIVE_LED_2)<0){
+        serial_write_str(SERIAL, "core 1 alive led gpio init failed");
+    };
+    while(board_can_init(CAN_MODULE_INVERTER, _1_MBYTE_S_)<0){
+        serial_write_str(SERIAL, "can inverter init failed");
+    };
+    while(board_can_init(CAN_MODULE_GENERAL, _500_KBYTE_S_)<0){
+        serial_write_str(SERIAL, "can general init failed");
+    };
+    while(board_can_init(CAN_MODULE_DV, _500_KBYTE_S_)<0){
+        serial_write_str(SERIAL, "can dv init failed");
+    };
     alive_fd = i_m_alive_init(100 MILLIS, CORE_ALIVE_LED_2);
 }
 

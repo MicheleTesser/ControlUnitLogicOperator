@@ -8,7 +8,6 @@ extern int8_t hardware_init_serial(const BoardComponentId id);
 extern int8_t serial_setup(const BoardComponentId id, const uint32_t freq);
 extern int8_t serial_read(const BoardComponentId id, uint8_t* restrict const o_buffer,
         const uint32_t buffer_size);
-extern int8_t serial_write(const BoardComponentId id, uint8_t* const restrict o_buffer,
-       const uint32_t buffer_size);
+extern int8_t serial_write_str(const BoardComponentId id, const char* const restrict str);
 
 #endif // !__VIRTUA__SERIAL__

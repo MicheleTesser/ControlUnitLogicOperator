@@ -17,17 +17,39 @@ static alive_blink_fd alive_fd =0;
 
 static void setup(void)
 {
-    hardware_init_interrupt();
-    hardware_init_trap();
-    hardware_init_gpio(AIR_PRECHARGE_INIT);
-    hardware_init_gpio(AIR_PRECHARGE_DONE);
-    hardware_init_gpio(CORE_ALIVE_LED_1);
-    hardware_init_gpio(SCS);
-    hardware_init_serial(SERIAL);
+    while(hardware_init_serial(SERIAL) <0){
+        serial_write_str(SERIAL, "serial init failed");
+    };
+
+    while(hardware_init_interrupt()<0){
+        serial_write_str(SERIAL, "interrupt init failed");
+    };
+    while(hardware_init_trap() <0){
+        serial_write_str(SERIAL, "trap init failed");
+    };
+    while(hardware_init_gpio(AIR_PRECHARGE_INIT) <0){
+        serial_write_str(SERIAL, "air 1 gpio init failed");
+    };
+    while(hardware_init_gpio(AIR_PRECHARGE_DONE) <0){
+        serial_write_str(SERIAL, "air 2 gpio init failed");
+    };
+    while(hardware_init_gpio(CORE_ALIVE_LED_1) <0){
+        serial_write_str(SERIAL, "core 0 alive led gpio init failed");
+    };
+    while(hardware_init_gpio(SCS) <0){
+        serial_write_str(SERIAL, "scs gpio init failed");
+    };
     alive_fd = i_m_alive_init(300 MILLIS, CORE_ALIVE_LED_1);
-    lv_init();
-    hv_init();
-    GIEI_initialize();
+    while(lv_init() <0){
+        serial_write_str(SERIAL, "lv init failed");
+    };
+    while(hv_init() <0){
+        serial_write_str(SERIAL, "hv init failed");
+    };
+    while(GIEI_initialize() <0){
+        serial_write_str(SERIAL, "GIEI init failed");
+    };
+    while (dps_is_init_done()) {}
     pump_enable();
     fan_enable(FANS_RADIATOR);
 
@@ -36,7 +58,6 @@ static void setup(void)
     gpio_set_low(SCS); 
     wait_milliseconds(100);
     gpio_set_high(SCS);
-    while (dps_is_init_done()) {}
 }
 
 static void loop(void)

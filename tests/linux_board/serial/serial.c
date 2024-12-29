@@ -1,5 +1,6 @@
 #include "./raceup_board/raceup_board.h"
 #include <stdio.h>
+#include <string.h>
 #include <sys/cdefs.h>
 
 int8_t hardware_init_serial(const BoardComponentId id __attribute_maybe_unused__)
@@ -24,10 +25,9 @@ int8_t serial_read(const BoardComponentId id __attribute_maybe_unused__,
     return 0;
 }
 
-int8_t serial_write(const BoardComponentId id __attribute_maybe_unused__, uint8_t* const restrict o_buffer,
-       const uint32_t buffer_size)
+int8_t serial_write_str(const BoardComponentId id __attribute_maybe_unused__, 
+        const char* const restrict buffer)
 {
-    o_buffer[buffer_size] = '\0';
-    printf("%s\n",o_buffer);
+    printf("%s\n",buffer);
     return 0;
 }
