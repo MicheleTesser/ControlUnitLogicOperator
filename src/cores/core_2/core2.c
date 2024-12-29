@@ -27,6 +27,8 @@ static void setup(void)
     };
     while (dps_is_init_done() <0) {
     };
+
+    serial_write_str(SERIAL, "core 2 init done");
 }
 
 static void loop(void)

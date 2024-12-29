@@ -58,6 +58,8 @@ static void setup(void)
     gpio_set_low(SCS); 
     wait_milliseconds(100);
     gpio_set_high(SCS);
+
+    serial_write_str(SERIAL, "core 0 init done");
 }
 
 static void loop(void)

@@ -25,6 +25,8 @@ static void setup(void)
         serial_write_str(SERIAL, "can dv init failed");
     };
     alive_fd = i_m_alive_init(100 MILLIS, CORE_ALIVE_LED_2);
+
+    serial_write_str(SERIAL, "core 1 init done");
 }
 
 static void loop(void)
