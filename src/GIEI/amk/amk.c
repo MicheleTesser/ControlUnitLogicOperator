@@ -317,7 +317,7 @@ uint8_t amk_inverter_hv_status(void)
 
 enum RUNNING_STATUS amk_rtd_procedure(void)
 {
-    if(inverter_engine_data.engine_status == SYSTEM_OFF && is_emergency_state()){
+    if(inverter_engine_data.engine_status == SYSTEM_OFF){
         one_emergency_solved(FAILED_RTD_SEQ);
     }
 

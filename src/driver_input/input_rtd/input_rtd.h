@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 enum RTD_MODE{
+    DISABLE,
     BUTTON,
     RES,
 };

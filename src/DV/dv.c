@@ -40,6 +40,9 @@ int8_t dv_set_status(const enum AS_STATUS status)
     if (status != AS_OFF) {
         input_rtd_set_mode(RES);
     }
+    if (status != AS_EMERGENCY) {
+        one_emergency_solved(DV_EMERGENCY_STATE);
+    }
     switch (status) {
         case AS_OFF:
             input_rtd_set_mode(BUTTON);
@@ -50,6 +53,7 @@ int8_t dv_set_status(const enum AS_STATUS status)
         case AS_DRIVING:
             break;
         case AS_EMERGENCY:
+            one_emergency_raised(DV_EMERGENCY_STATE);
             break;
         case AS_FINISHED:
             break;
@@ -65,20 +69,30 @@ int8_t dv_update_status(void)
     {
         if (get_current_mission() > MANUALY &&  asb_consistency_check() && giei_status >= TS_READY)
         {
-            if (giei_status == RUNNING) {
+            if (giei_status == RUNNING)
+            {
                 dv_set_status(AS_DRIVING);
-            }else if(driver_get_amount(BRAKE) > 50){
+            }
+            else if(driver_get_amount(BRAKE) > 50)
+            {
                 dv_set_status(AS_READY);
-            }else{
+            }
+            else
+            {
                 dv_set_status(AS_OFF);
             }
-        }else{
+        }
+        else
+        {
             dv_set_status(AS_OFF);
         }
-    }else if (mission_status() == MISSION_FINISHED && !GIEI_get_speed() && sdc_closed())
+    }
+    else if (mission_status() == MISSION_FINISHED && !GIEI_get_speed() && sdc_closed())
     {
         dv_set_status(AS_FINISHED);
-    }else{
+    }
+    else
+    {
         dv_set_status(AS_EMERGENCY);
     }
     return 0;

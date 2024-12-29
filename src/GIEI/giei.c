@@ -12,6 +12,7 @@
 #include "../utility/arithmetic/arithmetic.h"
 #include "../batteries/hv/hv.h"
 #include "../IMU/imu.h"
+#include "../missions/missons.h"
 #include "../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "engine_common.h"
@@ -153,6 +154,11 @@ enum RUNNING_STATUS GIEI_check_running_condition(void)
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
     }
     rt = engine_rtd_procedure();
+    if (rt > SYSTEM_OFF) {
+        mission_lock_mission();
+    }else{
+        mission_unlock_mission();
+    }
     if (rt == RUNNING && !rtd_done) {
         rtd_done =1;
         gpio_set_low(READY_TO_DRIVE_OUT_SOUND);

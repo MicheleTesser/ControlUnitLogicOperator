@@ -6,6 +6,8 @@
 enum EMERGENCY_FAULT{
     FAILED_RTD_SEQ = (1 << 0),
     ENGINE_FAULT = (1 << 1),
+    DV_EMERGENCY_STATE = (1 << 2),
+    RTD_IN_NONE_MISSION = (1 << 3),
 };
 
 int8_t one_emergency_raised(const enum EMERGENCY_FAULT id);
