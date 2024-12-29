@@ -13,7 +13,7 @@ static struct{
 
 int8_t input_rtd_class_init(void)
 {
-    RTD.mode = BUTTON;
+    RTD.mode = DISABLE;
     return 0;
 }
 
