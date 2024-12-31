@@ -1,4 +1,5 @@
 #include "./core0.h"
+#include "../core_status/core_status.h"
 #include "../../cooling/pumps/pumps.h"
 #include "../../cooling/fans/fans.h"
 #include "../../driver_input/driver_input.h"
@@ -60,6 +61,7 @@ static void setup(void)
     gpio_set_high(SCS);
 
     serial_write_str(SERIAL, "core 0 init done");
+
 }
 
 static void loop(void)
@@ -86,7 +88,13 @@ static void loop(void)
 //INFO: Main logic operator core
 void main_0(void)
 {
+    core_update_status(0, CORE_INIT);
     setup();
+    core_update_status(0, CORE_READY);
+    while (
+            core_status(0) != CORE_READY || 
+            core_status(1) != CORE_READY || 
+            core_status(2) != CORE_READY) {}
     for (;;) {
         loop();
     }

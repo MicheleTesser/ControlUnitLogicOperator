@@ -12,8 +12,17 @@ static struct{
 
 int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
 {
-    const uint8_t buffer_index = id / sizeof(EMERGENCYS.num_of_emergency[0]);
-    EMERGENCYS.num_of_emergency[buffer_index]|=  id;
+    switch (id) {
+
+        case FAILED_RTD_SEQ:
+        case ENGINE_FAULT:
+        case DV_EMERGENCY_STATE:
+        case RTD_IN_NONE_MISSION:
+            EMERGENCYS.num_of_emergency[0] |=  id;
+            break;
+        default:
+            return -1;
+    }
     gpio_set_low(SCS);
     if (get_current_mission() > MANUALY) {
         dv_set_status(AS_EMERGENCY);
@@ -24,9 +33,18 @@ int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
 
 int8_t one_emergency_solved(const enum EMERGENCY_FAULT id)
 {
-    const uint8_t buffer_index = id / sizeof(EMERGENCYS.num_of_emergency[0]);
-    if (EMERGENCYS.num_of_emergency[buffer_index] & id) {
-        EMERGENCYS.num_of_emergency[buffer_index]^= id;
+    switch (id) {
+
+        case FAILED_RTD_SEQ:
+        case ENGINE_FAULT:
+        case DV_EMERGENCY_STATE:
+        case RTD_IN_NONE_MISSION:
+            if (EMERGENCYS.num_of_emergency[0] & id) {
+                EMERGENCYS.num_of_emergency[0]^= id;
+            }
+            break;
+        default:
+            return -1;
     }
 
     if (!EMERGENCYS.num_of_emergency[0] && !EMERGENCYS.num_of_emergency[1]) {

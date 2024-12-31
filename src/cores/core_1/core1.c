@@ -1,4 +1,5 @@
 #include "./core1.h"
+#include "../core_status/core_status.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -27,6 +28,7 @@ static void setup(void)
     alive_fd = i_m_alive_init(100 MILLIS, CORE_ALIVE_LED_2);
 
     serial_write_str(SERIAL, "core 1 init done");
+
 }
 
 static void loop(void)
@@ -57,7 +59,13 @@ static void loop(void)
 //INFO: Service core
 void main_1(void)
 {
+    core_update_status(1, CORE_INIT);
     setup();
+    core_update_status(1, CORE_READY);
+    while (
+            core_status(0) != CORE_READY || 
+            core_status(1) != CORE_READY || 
+            core_status(2) != CORE_READY) {}
     for(;;){
         loop();
     }

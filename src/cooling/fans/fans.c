@@ -7,11 +7,14 @@
 
 //private
 
-static float fans[NUMBER_OF_FAN_TYPES];
+static struct{
+    float fans[NUMBER_OF_FAN_TYPES];
+    uint8_t init_done:1;
+}FANS;
 
 static inline int8_t fan_init_done(void)
 {
-    return 0;
+    return FANS.init_done;
 }
 
 static int8_t setup_fan_radiator(const uint8_t enable)
@@ -30,7 +33,7 @@ static int8_t setup_fan_radiator(const uint8_t enable)
 int8_t fan_init(void)
 {
     if (!fan_init_done()) {
-       
+       FANS.init_done =1;
     }
     return 0;
 }
@@ -57,7 +60,7 @@ int8_t fan_set_value(const enum FAN_TYPES fan, const float value)
     switch (fan) {
         case FAN_BMS_HV:
         case FANS_RADIATOR:
-            fans[fan] = value;
+            FANS.fans[fan] = value;
             return 0;
         default:
             return -1;

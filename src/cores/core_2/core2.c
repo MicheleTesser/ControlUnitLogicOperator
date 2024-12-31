@@ -1,4 +1,5 @@
 #include "./core2.h"
+#include "../core_status/core_status.h"
 #include "../../board_conf/id_conf.h"
 #include "../../lib/raceup_board/raceup_board.h"
 #include "../../lib/DPS/dps_slave.h"
@@ -12,6 +13,7 @@ static alive_blink_fd alive_fd =0;
 
 static void setup(void)
 {
+
     while(mission_class_init()<0){
         serial_write_str(SERIAL, "mission class init failed");
     };
@@ -29,6 +31,7 @@ static void setup(void)
     };
 
     serial_write_str(SERIAL, "core 2 init done");
+
 }
 
 static void loop(void)
@@ -41,7 +44,12 @@ static void loop(void)
 //INFO: Main logic operator core
 void main_2(void)
 {
+    core_update_status(2, CORE_INIT);
     setup();
+    core_update_status(2, CORE_READY);
+    while (core_status(0) != CORE_READY || 
+            core_status(1) != CORE_READY ||
+            core_status(2) != CORE_READY) {}
 
     for(;;){
         loop();

@@ -7,7 +7,6 @@
 #include "../../utility/arithmetic/arithmetic.h"
 #include "../engine_common.h"
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 //INFO: doc/amk_datasheet.pdf page 61
