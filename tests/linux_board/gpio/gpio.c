@@ -24,7 +24,7 @@ int8_t create_virtual_chip(void)
 
     lines.line_request = NULL;
     for (int i =0; i<gpio_pin_cnt; i++) {
-        lines.init_values[i] = GPIOD_LINE_VALUE_ACTIVE;
+        lines.init_values[i] = GPIOD_LINE_VALUE_INACTIVE;
     }
 
     static struct gpiod_chip* chip = NULL;
