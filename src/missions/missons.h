@@ -24,9 +24,9 @@ enum MISSION_STATUS{
 };
 
 int8_t mission_class_init(void);
-uint8_t update_current_mission(const enum MISSIONS mission);
+int8_t update_current_mission(const enum MISSIONS mission);
 enum MISSIONS get_current_mission(void);
-int8_t mission_status(void);
+enum MISSION_STATUS mission_status(void);
 int8_t mission_lock_mission(void);
 int8_t mission_unlock_mission(void);
 

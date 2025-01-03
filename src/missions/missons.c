@@ -19,7 +19,7 @@ int8_t mission_class_init(void)
     return 0;
 }
 
-uint8_t update_current_mission(const enum MISSIONS mission)
+int8_t update_current_mission(const enum MISSIONS mission)
 {
     if (!CAR_MISSION.lock_mission) {
         CAR_MISSION.current_mission = mission;
@@ -32,7 +32,7 @@ enum MISSIONS get_current_mission(void)
     return CAR_MISSION.current_mission;
 }
 
-int8_t mission_status(void)
+enum MISSION_STATUS mission_status(void)
 {
     return CAR_MISSION.missions_status;
 }
