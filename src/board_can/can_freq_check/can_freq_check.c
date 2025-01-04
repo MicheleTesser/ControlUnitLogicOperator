@@ -61,7 +61,8 @@ failed_malloc_info_pool:
     return err;
 }
 
-int8_t can_freq_add_mex_freq(const uint16_t can_id, const time_var_microseconds freq, const fault_manager fault_fun)
+int8_t can_freq_add_mex_freq(const uint16_t can_id, const time_var_microseconds freq, 
+        const fault_manager fault_fun)
 {
     if (FREQ_TREE.info_pool_cursor >= FREQ_TREE.info_pool_size) {
         FREQ_TREE.info_pool = realloc(FREQ_TREE.info_pool, FREQ_TREE.info_pool_size * 2);
