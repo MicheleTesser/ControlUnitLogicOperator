@@ -236,11 +236,12 @@ int8_t amk_send_torque(const enum ENGINES engine, const float pos_torque, const 
     values_2->AMK_ErrorInfo = mex.ErrorInfo;\
     values_2->AMK_TempInverter = mex.TempInv;
 
-void amk_update_status(const CanMessage* const restrict mex)
+int8_t amk_update_status(const CanMessage* const restrict mex)
 {
     struct AMK_Actual_Values_2* values_2 = NULL;
     struct AMK_Actual_Values_1* values_1 = NULL;
     can_obj_can1_h_t o;
+    memset(&o, 0, sizeof(0));
     unpack_message_can1(&o, mex->id, mex->full_word, mex->message_size, 0);
     switch (mex->id) {
         case CAN_ID_INVERTERFL1:
@@ -270,6 +271,8 @@ void amk_update_status(const CanMessage* const restrict mex)
         case CAN_ID_INVERTERRR2:
             STATUS_WORD_2(REAR_RIGHT, o.can_0x28a_InverterRR2);
             break;
+        default:
+            return -1;
     }
 
     if (amk_fault()) {
@@ -279,6 +282,7 @@ void amk_update_status(const CanMessage* const restrict mex)
     }else{
         one_emergency_solved(ENGINE_FAULT);
     }
+    return 0;
 }
 
 /*

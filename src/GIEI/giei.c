@@ -184,13 +184,11 @@ int8_t GIEI_recv_data(const CanMessage* const restrict mex)
         case CAN_ID_INVERTERRL2:
         case CAN_ID_INVERTERRR1:
         case CAN_ID_INVERTERRR2:
-            engine_update_status(mex);
-            break;
+            return engine_update_status(mex);
         default:
             return -1;
     
     }
-    return 0;
 }
 
 int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value)

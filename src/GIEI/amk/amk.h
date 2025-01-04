@@ -8,7 +8,7 @@
 int8_t amk_module_init(void);
 int8_t amk_set_max_speed(const uint32_t speed);
 int8_t amk_send_torque(const enum ENGINES engine, const float pos_torque, const float neg_torque);
-void amk_update_status(const CanMessage* const restrict mex);
+int8_t amk_update_status(const CanMessage* const restrict mex);
 uint8_t amk_inverter_hv_status(void);
 enum RUNNING_STATUS amk_rtd_procedure(void);
 void amk_shut_down_power(void);
