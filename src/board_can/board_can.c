@@ -1,4 +1,5 @@
 #include "./board_can.h"
+#include "./can_freq_check/can_freq_check.h"
 #include "../board_conf/can/can.h"
 #include "../board_conf/interrupt/interrupt.h"
 #include "../board_conf/trap/trap.h"
@@ -223,14 +224,16 @@ static int8_t manage_can_3_message(const CanMessage* const restrict mex,
 }
 
 //public
-int8_t board_can_init(uint8_t can_id, enum CAN_FREQUENCY freq)
+int8_t board_can_init(const uint8_t can_id, const enum CAN_FREQUENCY freq)
 {
     static uint8_t dps_init_flag = 0;
     int8_t err=0;
 
+    can_freq_class_init(8);
     if(hardware_init_can(can_id, freq) < 0){
         goto hardware_init_failed;
     }
+
 
     switch (can_id) {
         case CAN_MODULE_INVERTER:

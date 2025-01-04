@@ -39,6 +39,7 @@ static void loop(void)
     i_m_alive(alive_fd);
     dv_update_status();
     dv_update_led();
+    dv_compute();
 }
 
 //INFO: Main logic operator core
