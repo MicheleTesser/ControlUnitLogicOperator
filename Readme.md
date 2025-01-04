@@ -29,3 +29,8 @@ src/ControlUnitLogicOperator.c which defines a common main for every core.
 
 The project uses the linux implementation to run a series of unit-tests which are defined 
 in the directory tests. For more info check [test](./tests/Readme.md)
+
+## Doc
+
+The repo also contains in itself a lot of documentation that may be useful to understand 
+how the code works. All the documents can be found in the doc directory
