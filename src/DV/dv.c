@@ -8,6 +8,7 @@
 #include "../emergency_fault/emergency_fault.h"
 #include "asms/asms.h"
 #include "res/res.h"
+#include "steering_wheel_alg/stw_alg.h"
 #include <stdint.h>
 
 //private
@@ -30,6 +31,7 @@ int8_t dv_class_init(void)
     asms_class_init();
     asb_class_init();
     res_class_init();
+    dv_stw_alg_init();
     DV.status = AS_OFF;
     return 0;
 }
@@ -153,6 +155,15 @@ int8_t dv_update_led(void)
 
 int8_t dv_go(void)
 {
-    return (DV.status == AS_READY && res_check_go()) ||
+    return (DV.status == AS_READY && res_check_go() && get_current_mission() > MANUALY) ||
         DV.status == AS_DRIVING;
+}
+
+int8_t dv_compute(void)
+{
+    if (DV.status == AS_DRIVING && get_current_mission() > MANUALY) {
+        dv_stw_alg_compute(0, 0); //TODO: not yet implemented
+        return 0;
+    }
+    return -1;
 }

@@ -2,7 +2,6 @@
 #define __CAR_DV__
 
 #include <stdint.h>
-#include "asb/asb.h"
 
 //INFO: check dbc of can3 in message DV_system_status
 enum AS_STATUS{
@@ -17,6 +16,7 @@ int8_t dv_class_init(void);
 int8_t dv_set_status(const enum AS_STATUS status);
 int8_t dv_update_status(void);
 int8_t dv_go(void);
+int8_t dv_compute(void);
 
 int8_t dv_update_led(void);
 
