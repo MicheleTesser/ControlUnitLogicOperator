@@ -15,11 +15,6 @@ struct MexInfo{
     fault_manager fault_f;
 };
 
-struct FreqNode{
-    time_var_microseconds time_id;
-    struct MexInfo* metadata;
-};
-
 struct BstNode{
     time_var_microseconds deadline;
     struct MexInfo* metadata;
@@ -51,6 +46,32 @@ static struct bst* bst_new(const uint16_t initial_size)
     res->free_queue.queue_size = initial_size;
 
     return  res;
+}
+
+static struct BstNode* bst_node_min(struct BstNode* const restrict self)
+{
+    struct BstNode* parent= NULL;
+    struct BstNode* node = self;
+
+    while (node) {
+        parent = node;
+        node = node->l_child;
+    }
+
+    return parent;
+}
+
+static struct BstNode* bst_node_max(struct BstNode* const restrict self)
+{
+    struct BstNode* parent= NULL;
+    struct BstNode* node = self;
+
+    while (node) {
+        parent = node;
+        node = node->r_child;
+    }
+
+    return parent;
 }
 
 static int8_t bst_push(struct bst* const restrict self, const time_var_microseconds deadline, 
@@ -107,29 +128,66 @@ static int8_t bst_push(struct bst* const restrict self, const time_var_microseco
 }
 
 static int8_t bst_pop(struct bst* const restrict self, 
-        const time_var_microseconds deadline __attribute_maybe_unused__, 
-        const uint16_t can_id __attribute_maybe_unused__)
+        const time_var_microseconds deadline , const uint16_t can_id )
 {
     if (!self->node_root) {
         return -1;
     }
 
-    return 0;
-}
+    struct BstNode* parent = self->node_root;
+    struct BstNode* cursor = self->node_root;
+    struct BstNode* new = NULL;
+    int8_t last_move = -1;
 
-static const struct BstNode* bst_min(struct bst* const restrict self)
-{
-    struct BstNode* parent= NULL;
-    struct BstNode* node = self->node_root;
-
-    while (node) {
-        parent = node;
-        node = node->l_child;
+    while (cursor && (cursor->deadline != deadline || cursor->metadata->can_id != can_id)) {
+        parent = cursor;
+        if (deadline < cursor->deadline)
+        {
+            cursor = cursor->l_child;
+            last_move =0;
+        }
+        else if (deadline >= cursor->deadline)
+        {
+            cursor = cursor->r_child;
+            last_move =1;
+        }
     }
 
-    return parent;
-}
+    if (!cursor) {
+        return  -1;
+    }
 
+    if (cursor->r_child)
+    {
+        struct BstNode* min = bst_node_min(cursor->r_child);
+        min->l_child = cursor->l_child;
+        new = cursor->r_child;
+    }
+    else if(cursor->l_child)
+    {
+        struct BstNode* max = bst_node_max(cursor->l_child);
+        max->r_child = cursor->r_child;
+        new = cursor->l_child;
+    }
+
+    switch (last_move) {
+        case 0:
+            parent->l_child = new;
+            break;
+        case 1:
+            parent->r_child = new;
+            break;
+        default:
+            self->node_root = new;
+    }
+
+    uint8_t size_of_node = sizeof(*cursor);
+    uint8_t index_node = (cursor - self->node_pool)/size_of_node;
+    self->free_queue.nodes[self->free_queue.next_free] = index_node;
+    self->free_queue.next_free += 1;
+
+    return 0;
+}
 
 
 static struct{
@@ -212,9 +270,10 @@ int8_t can_freq_update_freq(const uint16_t can_id)
     return 0;
 }
 
+
 int8_t can_freq_check_faults(void)
 {
-    const struct BstNode* min = bst_min(FREQ_TREE.freq_tree);
+    const struct BstNode* min = bst_node_min(FREQ_TREE.freq_tree->node_root);
     if (min && min->deadline < timer_time_now()) {
         bst_pop(FREQ_TREE.freq_tree, min->deadline, min->metadata->can_id);
         min->metadata->fault_f();
