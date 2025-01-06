@@ -36,7 +36,7 @@ struct bst{
 
 static struct bst* bst_new(const uint16_t initial_size)
 {
-    struct bst* res = calloc(sizeof(struct bst), 1);
+    struct bst* res = calloc(1,sizeof(*res));
     res->node_pool = calloc(initial_size, sizeof(*res->node_pool));
     res->free_queue.nodes = calloc(initial_size, sizeof(*res->free_queue.nodes));
     for (uint16_t i =0; i< initial_size; i++) {
@@ -245,7 +245,7 @@ int8_t can_freq_add_mex_freq(const uint16_t can_id, const time_var_microseconds 
     info->fault_f = fault_fun;
     FREQ_TREE.info_pool_cursor++;
     
-    const time_var_microseconds init_value = 0;
+    const time_var_microseconds init_value = timer_time_now() + freq;
     return bst_push(FREQ_TREE.freq_tree, init_value , info);
 }
 
