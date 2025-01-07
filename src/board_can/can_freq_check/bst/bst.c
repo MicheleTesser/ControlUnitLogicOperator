@@ -1,0 +1,335 @@
+#include "bst.h"
+#include <stdint.h>
+#include <stdlib.h>
+
+
+struct queue{
+    uint8_t queue_size;
+    int8_t cursor;
+
+    uint8_t nodes_queue[];
+};
+
+struct sub_node{
+    uint8_t data_index;
+    int16_t l_child_index;
+    int16_t r_child_index;
+};
+
+struct sub_search{
+    struct queue* sub_queue;
+    struct sub_node* node_pool;
+    uint8_t pool_size;
+    key_compare* cmp_fun;
+    int16_t root;
+};
+
+struct bst{
+    struct queue* free_queue;
+    key_update* update_fun;
+
+    struct sub_search id_search;
+    struct sub_search timeline_search;
+
+    uint8_t data_size;
+    void* data[];
+};
+
+static inline void* get_data_from_index(struct bst* const restrict self, const uint8_t index)
+{
+    return self->data + (self->data_size * index);
+}
+
+static inline void add_fre_data_index(struct queue* self, const uint8_t index)
+{
+    self->nodes_queue[++self->cursor] = index;
+}
+
+static struct queue* queue_new(const uint8_t data_reserved)
+{
+    struct queue *queue= calloc(1, sizeof(*queue) + 
+                                (data_reserved* sizeof(*queue->nodes_queue)));
+    queue->cursor = -1;
+    for (uint8_t i=0; i<data_reserved; i++){
+        add_fre_data_index(queue, i);
+    }
+    return queue;
+}
+
+static inline uint8_t get_new_data_index(struct queue* self)
+{
+    return self->nodes_queue[self->cursor--];
+}
+
+
+static struct sub_search* extract_sub_search_from_filter_id(struct bst* const restrict self,
+        const uint8_t search)
+{
+    switch (search) {
+        case 0:
+            return &self->id_search;
+        case 1:
+            return &self->timeline_search;
+        default:
+            return NULL;
+    }
+}
+
+static void sub_bst_init(struct sub_search* sub, const uint8_t data_reserved, key_compare cmp_fun)
+{
+    sub->sub_queue = queue_new(data_reserved);
+    sub->cmp_fun = cmp_fun;
+    sub->root = -1;
+    sub->node_pool = malloc(data_reserved * sizeof(*sub->node_pool));
+    sub->pool_size = data_reserved;
+    for (uint8_t i=0; i<data_reserved; i++) {
+        sub->node_pool[i].data_index = 0;
+        sub->node_pool[i].r_child_index = -1;
+        sub->node_pool[i].l_child_index = -1;
+    }
+}
+
+static int16_t sub_bst_min(struct sub_search* self, const uint8_t start_index)
+{
+    if (self->root <0) {
+        return -1;
+    }
+
+    int16_t parent = -1;
+    int16_t cursor = start_index;
+    
+    while (cursor >= 0) {
+        parent = cursor;
+        cursor = self->node_pool[cursor].l_child_index;
+    }
+
+    return  parent;
+}
+
+static int16_t sub_bst_max(struct sub_search* self, const uint8_t start_index)
+{
+    if (self->root <0) {
+        return -1;
+    }
+
+    int16_t parent = -1;
+    int16_t cursor = start_index;
+    
+    while (cursor >= 0) {
+        parent = cursor;
+        cursor = self->node_pool[cursor].r_child_index;
+    }
+
+    return  parent;
+}
+
+static int8_t sub_bst_insert(struct bst* root, struct sub_search* self, 
+        const uint8_t data_index)
+{
+    uint8_t new_index = get_new_data_index(self->sub_queue);
+    void* key = get_data_from_index(root, data_index);
+    key_compare* cmp_fun = self->cmp_fun;
+    int16_t parent = -1;
+    int16_t cursor = self->root;
+    int8_t last_move = 0;
+    struct sub_node* p_node = NULL;
+
+    self->node_pool[new_index].data_index = data_index;
+    if (self->root < 0)
+    {
+        self->root = new_index;
+        return 0;
+    }
+
+    while (cursor >= 0) {
+        parent = cursor;
+        p_node = &self->node_pool[cursor];
+        void* data = get_data_from_index(root, p_node->data_index);
+        int8_t cmp_res = cmp_fun(data,key);
+        if (cmp_res > 0){
+            cursor = p_node->r_child_index;
+            last_move=1;
+        }else if(cmp_res < 0){
+            cursor = p_node->l_child_index;
+            last_move=-1;
+        }else{
+            break;
+        }
+    }
+
+    if (last_move > 0)
+    {
+        self->node_pool[parent].r_child_index = new_index;
+    }
+    else if (last_move < 0)
+    {
+        self->node_pool[parent].l_child_index = new_index;
+    }
+
+    return 0;
+}
+
+static int8_t sub_bst_delete(struct bst* root, struct sub_search* self,
+        const void* const restrict key)
+{
+    if (self->root <0) {
+        return -1;
+    }
+
+    key_compare* cmp_fun = self->cmp_fun;
+    int16_t parent = -1;
+    int16_t cursor = self->root;
+    int8_t last_move = 0;
+    struct sub_node* p_node = NULL;
+    
+    while (cursor >= 0) {
+        parent = cursor;
+        p_node = &self->node_pool[cursor];
+        void* data = get_data_from_index(root, p_node->data_index);
+        int8_t cmp_res = cmp_fun(data,key);
+        if (cmp_res > 0){
+            cursor = p_node->r_child_index;
+            last_move=1;
+        }else if(cmp_res < 0){
+            cursor = p_node->l_child_index;
+            last_move=-1;
+        }else{
+            break;
+        }
+    }
+
+    if (cursor < 0) {
+        return  -1;
+    }
+
+    uint8_t new_index = -1;
+    struct sub_node* new = NULL;
+    if (p_node->l_child_index >= 0)
+    {
+        new_index = sub_bst_max(self,p_node->l_child_index);
+        new = &self->node_pool[new_index];
+        new->r_child_index = p_node->r_child_index;
+    }
+    else if (p_node->r_child_index >= 0)
+    {
+        new_index = sub_bst_max(self,p_node->r_child_index);
+        new = &self->node_pool[new_index];
+        new->l_child_index = p_node->l_child_index;
+    }
+
+    struct sub_node* p_parent = &self->node_pool[parent];
+    if (last_move < 0)
+    {
+        p_parent->l_child_index = new_index;
+    }
+    else if (last_move > 0)
+    {
+        p_parent->r_child_index = new_index;
+    }
+    else //root last_move == 0
+    {
+        self->root = -1;
+    }
+
+
+    return 0;
+}
+
+
+static void sub_bst_free(struct sub_search* self)
+{
+    free(self->sub_queue);
+    free(self->node_pool);
+    self->sub_queue = NULL;
+    self->node_pool = NULL;
+}
+
+//public
+
+struct bst* bst_new(key_compare cmp_fun_id, key_compare cmp_fun_timeline, key_update update_fun,
+        const uint8_t initial_reserved_size, 
+        const uint16_t ele_size)
+{
+    struct bst* res = calloc(1, sizeof(*res) + ele_size * initial_reserved_size);
+    res->update_fun = update_fun;
+    res->data_size = ele_size;
+
+    res->free_queue = queue_new(initial_reserved_size);
+
+    sub_bst_init(&res->id_search, initial_reserved_size, cmp_fun_id);
+    sub_bst_init(&res->timeline_search, initial_reserved_size, cmp_fun_timeline);
+
+    return  res;
+}
+
+int8_t bst_insert(struct bst* self, void* const restrict key)
+{
+    if (self->free_queue->cursor < 0) {
+        //TODO: resize
+    }
+    
+    uint8_t new_data_index = get_new_data_index(self->free_queue);
+    self->data[new_data_index] = key;
+
+    if (sub_bst_insert(self,&self->id_search, new_data_index) < 0){
+        goto failed_insert_timeline;
+    }
+
+    if (sub_bst_insert(self,&self->timeline_search, new_data_index) < 0) {
+        goto failed_insert_id;
+    }
+
+    return 0;
+
+failed_insert_timeline:
+    sub_bst_delete(self,&self->id_search, key);
+failed_insert_id:
+    add_fre_data_index(self->free_queue, new_data_index);
+    return -1;
+}
+
+int8_t bst_delete(struct bst* self, const void* const restrict key)
+{
+    sub_bst_delete(self,&self->timeline_search, key);
+    uint8_t data_index = sub_bst_delete(self,&self->id_search, key);
+    add_fre_data_index(self->free_queue, data_index);
+    return 0;
+}
+
+uint8_t bst_update(struct bst* const restrict self, const void* const restrict key, 
+        const uint8_t filter_index)
+{
+    struct sub_search* tree = extract_sub_search_from_filter_id(self, filter_index);
+
+    const int16_t index = sub_bst_min(tree, tree->root);
+    if (index < 0) {
+        return -1;
+    }
+
+    void* data = NULL;
+    data = self->data + (index * self->data_size);
+    self->update_fun(data,key);
+
+    return 0;
+}
+
+const void* bst_min(struct bst* self, const uint8_t filter_index)
+{
+    struct sub_search* tree = extract_sub_search_from_filter_id(self, filter_index);
+    const int16_t index = sub_bst_min(tree, tree->root);
+    if (index >= 0) {
+        return self->data + (index * self->data_size);
+    }
+    return NULL;
+}
+
+int8_t bst_free(struct bst* self)
+{
+    sub_bst_free(&self->timeline_search);
+    sub_bst_free(&self->id_search);
+    free(self->free_queue);
+    self->free_queue = NULL;
+    free(self);
+
+    return 0;
+}
