@@ -18,7 +18,7 @@ struct bst* bst_new(key_compare cmp_fun_1, key_compare cmp_fun_2, key_update upd
         const uint8_t initial_reserved_size, 
         const uint16_t ele_size);
 int8_t bst_insert(struct bst* self, void* const restrict key);
-int8_t bst_delete(struct bst* self, const void* const restrict key);
+int8_t bst_delete(struct bst* self, const void* const restrict key, uint8_t which_sub_tree);
 uint8_t bst_update(struct bst* const restrict self, const void* const restrict key, 
         const uint8_t filter_index);
 const void* bst_min(struct bst* self, const uint8_t filter_index);

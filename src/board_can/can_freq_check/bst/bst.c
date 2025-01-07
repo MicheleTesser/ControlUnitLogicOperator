@@ -1,6 +1,7 @@
 #include "bst.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 struct queue{
@@ -25,14 +26,15 @@ struct sub_search{
 };
 
 struct bst{
-    struct queue* free_queue;
     key_update* update_fun;
 
     struct sub_search id_search;
     struct sub_search timeline_search;
 
     uint8_t data_size;
-    void* data[];
+    uint8_t data_amount;
+    uint8_t data_cursor;
+    uint8_t data[];
 };
 
 static inline void* get_data_from_index(struct bst* const restrict self, const uint8_t index)
@@ -103,7 +105,7 @@ static int16_t sub_bst_min(struct sub_search* self, const uint8_t start_index)
         cursor = self->node_pool[cursor].l_child_index;
     }
 
-    return  parent;
+    return  self->node_pool[parent].data_index;
 }
 
 static int16_t sub_bst_max(struct sub_search* self, const uint8_t start_index)
@@ -253,8 +255,8 @@ struct bst* bst_new(key_compare cmp_fun_id, key_compare cmp_fun_timeline, key_up
     struct bst* res = calloc(1, sizeof(*res) + ele_size * initial_reserved_size);
     res->update_fun = update_fun;
     res->data_size = ele_size;
-
-    res->free_queue = queue_new(initial_reserved_size);
+    res->data_amount = initial_reserved_size;
+    res->data_cursor = 0;
 
     sub_bst_init(&res->id_search, initial_reserved_size, cmp_fun_id);
     sub_bst_init(&res->timeline_search, initial_reserved_size, cmp_fun_timeline);
@@ -264,35 +266,35 @@ struct bst* bst_new(key_compare cmp_fun_id, key_compare cmp_fun_timeline, key_up
 
 int8_t bst_insert(struct bst* self, void* const restrict key)
 {
-    if (self->free_queue->cursor < 0) {
+    if (self->data_cursor >= self->data_amount) {
         //TODO: resize
     }
     
-    uint8_t new_data_index = get_new_data_index(self->free_queue);
-    self->data[new_data_index] = key;
+    void* data = get_data_from_index(self, self->data_cursor);
+    memcpy(data, key, self->data_size);
 
-    if (sub_bst_insert(self,&self->id_search, new_data_index) < 0){
+    if (sub_bst_insert(self,&self->id_search, self->data_cursor) < 0){
         goto failed_insert_timeline;
     }
 
-    if (sub_bst_insert(self,&self->timeline_search, new_data_index) < 0) {
+    if (sub_bst_insert(self,&self->timeline_search, self->data_cursor) < 0) {
         goto failed_insert_id;
     }
+
+    self->data_cursor++;
 
     return 0;
 
 failed_insert_timeline:
     sub_bst_delete(self,&self->id_search, key);
 failed_insert_id:
-    add_fre_data_index(self->free_queue, new_data_index);
     return -1;
 }
 
-int8_t bst_delete(struct bst* self, const void* const restrict key)
+int8_t bst_delete(struct bst* self, const void* const restrict key, uint8_t which_sub_tree)
 {
-    sub_bst_delete(self,&self->timeline_search, key);
-    uint8_t data_index = sub_bst_delete(self,&self->id_search, key);
-    add_fre_data_index(self->free_queue, data_index);
+    struct sub_search* tree = extract_sub_search_from_filter_id(self, which_sub_tree);
+    sub_bst_delete(self,tree, key);
     return 0;
 }
 
@@ -327,8 +329,6 @@ int8_t bst_free(struct bst* self)
 {
     sub_bst_free(&self->timeline_search);
     sub_bst_free(&self->id_search);
-    free(self->free_queue);
-    self->free_queue = NULL;
     free(self);
 
     return 0;

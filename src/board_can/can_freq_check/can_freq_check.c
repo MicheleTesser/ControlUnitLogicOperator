@@ -96,7 +96,7 @@ int8_t can_freq_check_faults(void)
 {
     const struct MexInfo* min = bst_min(FREQ_TREE,DEADLINE_FILTER);
     if (min && min->deadline < timer_time_now()) {
-        bst_delete(FREQ_TREE, min);
+        bst_delete(FREQ_TREE, min, DEADLINE_FILTER);
         min->fault_f();
         return min->can_id;
     }
