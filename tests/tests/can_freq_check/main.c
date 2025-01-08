@@ -22,11 +22,6 @@ DUMMY_FUN_FOR(2)
 int main(void)
 {
     int8_t err=0;
-    if(create_virtual_chip() <0){
-        err--;
-        goto end;
-    }
-
     if (can_freq_class_init(10) < 0) {
         FAILED("init can freq failed");
         goto end;
@@ -59,7 +54,7 @@ int main(void)
         printf("%d\n", id_fault);
     }
 
-    wait_milliseconds(4 SECONDS);
+    wait_milliseconds(3 SECONDS);
 
     id_fault= can_freq_check_faults();
     if (id_fault > 0) {
