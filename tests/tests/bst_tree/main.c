@@ -121,6 +121,54 @@ int main(void)
         FAILED("extracted wrong min after first delete with search alg 2: ");
     }
     printf("(%d,%d)\n",new_min_2->key_1 ,new_min_2->key_2);
+    
+    const struct BstNodeData update_node = {
+        .key_1 = 13,
+        .key_2 = 15,
+    };
+
+    if (bst_update_existing(root, &update_node, 1) < 0) {
+        FAILED("failed updating of node");
+    }else{
+        PASSED("passed updating of node");
+    }
+
+    const struct BstNodeData* updated_node = bst_search(root, &update_node, 0);
+    if (!updated_node) {
+        FAILED("updated node not found");
+    }else{
+        if (updated_node->key_1 == update_node.key_1 && updated_node->key_2 == update_node.key_2) {
+            PASSED("node updated and found");
+        }else{
+            FAILED("updated node status is incorrect: ");
+            printf("(%d,%d)\n", updated_node->key_1 , updated_node->key_2);
+        }
+    }
+    {
+        const struct BstNodeData update_node = {
+            .key_1 = 10,
+            .key_2 = 12,
+        };
+
+        if (bst_update_existing(root, &update_node, 0) < 0) {
+            FAILED("failed updating of node");
+        }else{
+            PASSED("passed updating of node");
+        }
+
+        const struct BstNodeData* updated_node = bst_search(root, &update_node, 1);
+        if (!updated_node) {
+            FAILED("updated node not found");
+        }else{
+            if (updated_node->key_1 == update_node.key_1 && updated_node->key_2 == update_node.key_2) {
+                PASSED("node updated and found");
+            }else{
+                FAILED("updated node status is incorrect: ");
+                printf("(%d,%d)\n", updated_node->key_1 , updated_node->key_2);
+            }
+        }
+    }
+
 
     bst_free(root);
     print_SCORE();

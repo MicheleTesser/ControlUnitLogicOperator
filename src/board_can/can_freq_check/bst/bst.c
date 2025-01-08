@@ -312,7 +312,7 @@ failed_insert_id:
     return -1;
 }
 
-int8_t bst_update_existing(struct bst* self, void* const restrict key, const uint8_t filter_index)
+int8_t bst_update_existing(struct bst* self, const void* const restrict key, const uint8_t filter_index)
 {
     const uint16_t data_index = sub_bst_search(self, &self->search_tree[!filter_index], key);
     struct sub_search* tree_to_update = &self->search_tree[filter_index];
@@ -333,7 +333,7 @@ int8_t bst_delete(struct bst* self, const void* const restrict key, uint8_t filt
     return sub_bst_delete(self,tree, key);
 }
 
-void* bst_search(struct bst* const restrict self, const void* const restrict key, 
+const void* bst_search(struct bst* const restrict self, const void* const restrict key, 
         const uint8_t filter_index)
 {
     struct sub_search* tree = &self->search_tree[filter_index];
