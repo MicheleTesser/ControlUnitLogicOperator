@@ -52,6 +52,8 @@ int main(void)
     if (id_fault > 0) {
         FAILED("failed recognized fault too early with id: ");
         printf("%d\n", id_fault);
+    }else{
+        PASSED("passed recognized fault too early");
     }
 
     wait_milliseconds(3 SECONDS);

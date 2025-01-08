@@ -106,15 +106,15 @@ int main(void)
     }
     printf("(%d,%d)\n",new_min_1->key_1 ,new_min_1->key_2);
 
-    if(bst_delete(root, min_2, 0) < 0){
+    if(bst_delete(root, min_2, 1) < 0){
         FAILED("delete of min with search alg 2 failed: ");
     }else{
         PASSED("delete of min with search alg 2 passed: ");
     }
-    printf("(%d,%d)\n",min_2->key_2 ,min_2->key_2);
+    printf("(%d,%d)\n",min_2->key_1 ,min_2->key_2);
     
 
-    const struct BstNodeData* new_min_2 = bst_min(root, 0);
+    const struct BstNodeData* new_min_2 = bst_min(root, 1);
     if (new_min_2->key_2==11) {
         PASSED("extracted correct min after first delete with search alg 2: ");
     }else{

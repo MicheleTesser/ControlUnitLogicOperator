@@ -47,7 +47,7 @@ static int8_t cmp_key_freq(const void* const restrict tree_key,
     }
     else
     {
-        return tree_info->can_id == other_info->can_id;
+        return tree_info->can_id != other_info->can_id;
     }
 }
 

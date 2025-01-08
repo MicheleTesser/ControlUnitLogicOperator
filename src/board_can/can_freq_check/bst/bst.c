@@ -205,15 +205,20 @@ static int16_t sub_bst_delete(struct bst* root, struct sub_search* self,
         void* data = get_data_from_index(root, p_node->data_index);
         int8_t cmp_res = cmp_fun(data,key);
         if (cmp_res > 0){
+            if (p_node->r_child_index >= 0) {
+                parent = cursor;
+                last_move=1;
+            }
             cursor = p_node->r_child_index;
-            last_move=1;
         }else if(cmp_res < 0){
+            if (p_node->l_child_index >= 0) {
+                parent = cursor;
+                last_move=-1;
+            }
             cursor = p_node->l_child_index;
-            last_move=-1;
         }else{
             break;
         }
-        parent = cursor;
     }
 
     if (cursor < 0) {
