@@ -19,14 +19,14 @@ struct bst* bst_new(key_compare cmp_fun_1, key_compare cmp_fun_2,
         key_update update_fun_1, key_update update_fun_2,
         const uint8_t initial_reserved_size, 
         const uint16_t ele_size);
-int8_t bst_insert_new(struct bst* self, void* const restrict key);
+int8_t bst_insert_new(struct bst** self, void* const restrict key);
 int8_t bst_update_existing(struct bst* self, const void* const restrict key,
         const uint8_t filter_index);
 int8_t bst_delete(struct bst* self, const void* const restrict key, uint8_t which_sub_tree);
 const void* bst_search(struct bst* const restrict self, const void* const restrict key, 
         const uint8_t filter_index);
 const void* bst_min(struct bst* self, const uint8_t filter_index);
-int8_t bst_free(struct bst* self);
+int8_t bst_free(struct bst* const restrict self);
 
 
 #endif // !__GENERIC_BST__

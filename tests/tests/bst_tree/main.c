@@ -42,7 +42,7 @@ static int8_t update_key_freq(void* const restrict tree_key)
     return 0;
 }
 
-static int8_t insert_new_node(struct bst* self, const uint8_t key_1, const uint8_t key_2)
+static int8_t insert_new_node(struct bst** self, const uint8_t key_1, const uint8_t key_2)
 {
     struct BstNodeData temp_node = {
         .key_1 = key_1,
@@ -63,16 +63,49 @@ static int8_t insert_new_node(struct bst* self, const uint8_t key_1, const uint8
     return 0;
 }
 
+static int8_t search_node(struct bst* const restrict self,
+        const uint8_t key_1, const uint8_t key_2)
+{
+    struct BstNodeData key_search_0 = {
+        .key_1 = key_1,
+        .key_2 = key_2,
+    };
+    const struct BstNodeData* temp_1 = bst_search(self, &key_search_0, 0);
+    const struct BstNodeData* temp_2 = bst_search(self, &key_search_0, 1);
+    if (memcmp(temp_1, temp_2, sizeof(*temp_1))) {
+        FAILED("search node failed: node found differ: ");
+        printf("(%d,%d) != (%d,%d)\t expected: (%d,%d)\n",
+                temp_1->key_1, temp_1->key_2,
+                temp_2->key_1, temp_2->key_2,
+                key_1,key_2
+                );
+        return -1;
+    }
+
+    if (memcmp(&key_search_0, temp_1, sizeof(key_search_0))){
+        FAILED("search node failed: node found is not what expected: ");
+        printf("(%d,%d) != (%d,%d)\n",
+                key_search_0.key_1, key_search_0.key_2,
+                temp_2->key_1, temp_2->key_2);
+        return -2;
+    }
+    PASSED("element found ok for: ");
+    printf("(%d,%d)\n", key_search_0.key_1, key_search_0.key_2);
+
+    return 0;
+    
+}
+
 int main(void)
 {
     struct bst* root = bst_new(cmp_key_1, cmp_key_2,
             update_key_info, update_key_freq,
             10, sizeof(struct BstNodeData));
     
-    insert_new_node(root, 20, 11);
-    insert_new_node(root, 13, 5);
-    insert_new_node(root, 10, 15);
-    insert_new_node(root, 5, 12);
+    insert_new_node(&root, 20, 11);
+    insert_new_node(&root, 13, 5);
+    insert_new_node(&root, 10, 15);
+    insert_new_node(&root, 5, 12);
 
     const struct BstNodeData* min_1 = bst_min(root, 0);
     if (min_1->key_1==5) {
@@ -171,5 +204,20 @@ int main(void)
 
 
     bst_free(root);
+    root= bst_new(cmp_key_1, cmp_key_2, update_key_info, update_key_freq,
+            2, sizeof(struct BstNodeData));
+
+    insert_new_node(&root, 20, 11);
+    insert_new_node(&root, 13, 5);
+    insert_new_node(&root, 10, 15);
+    insert_new_node(&root, 5, 12);
+
+    search_node(root, 20, 11);
+    search_node(root, 13, 5);
+    search_node(root, 10, 15);
+    search_node(root, 5, 12);
+
+    bst_free(root);
+    root=NULL;
     print_SCORE();
 }

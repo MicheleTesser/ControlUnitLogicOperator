@@ -21,5 +21,6 @@ int8_t board_can_read(const uint8_t can_id, CanMessage* const restrict o_mex);
 int8_t board_can_write(const uint8_t can_id, const CanMessage* const restrict mex);
 int8_t board_can_manage_message(const uint8_t can_id, 
         const CanMessage* const restrict mex, time_var_microseconds read_timestamp);
+int16_t board_can_consistency_check(void);
 
 #endif // !__BOARD_CAN__

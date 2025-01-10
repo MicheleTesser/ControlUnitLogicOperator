@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef int16_t array_index;
 
 struct queue{
     uint8_t queue_size;
@@ -12,26 +13,26 @@ struct queue{
 };
 
 struct sub_node{
-    uint8_t data_index;
-    int16_t l_child_index;
-    int16_t r_child_index;
+    array_index data_index;
+    array_index l_child_index;
+    array_index r_child_index;
 };
 
 struct sub_search{
     struct queue* sub_queue;
-    struct sub_node* node_pool;
     key_compare* cmp_fun;
     key_update* update_fun;
-    int16_t root;
+    array_index root;
     uint8_t pool_size;
+    struct sub_node node_pool[];
 };
 
 struct bst{
-    struct sub_search search_tree[2];
+    struct sub_search* search_tree[2];
 
     uint8_t data_size;
     uint8_t data_amount;
-    uint8_t data_cursor;
+    array_index data_cursor;
     uint8_t data[];
 };
 
@@ -40,7 +41,7 @@ static inline void* get_data_from_index(struct bst* const restrict self, const u
     return self->data + (self->data_size * index);
 }
 
-static inline void add_fre_data_index(struct queue* self, const uint8_t index)
+static inline void add_free_data_index(struct queue* self, const uint8_t index)
 {
     self->nodes_queue[++self->cursor] = index;
 }
@@ -50,8 +51,9 @@ static struct queue* queue_new(const uint8_t data_reserved)
     struct queue *queue= calloc(1, sizeof(*queue) + 
                                 (data_reserved* sizeof(*queue->nodes_queue)));
     queue->cursor = -1;
+    queue->queue_size = data_reserved;
     for (uint8_t i=0; i<data_reserved; i++){
-        add_fre_data_index(queue, i);
+        add_free_data_index(queue, i);
     }
     return queue;
 }
@@ -61,20 +63,21 @@ static inline uint8_t get_new_data_index(struct queue* self)
     return self->nodes_queue[self->cursor--];
 }
 
-static void sub_bst_init(struct sub_search* sub, const uint8_t data_reserved, 
-        key_compare cmp_fun, key_update update_fun)
+static struct sub_search* 
+sub_bst_new(const uint8_t data_reserved,  key_compare cmp_fun, key_update update_fun)
 {
+    struct sub_search* sub = calloc(1, sizeof(*sub) + data_reserved * sizeof(*sub->node_pool));
     sub->sub_queue = queue_new(data_reserved);
     sub->cmp_fun = cmp_fun;
     sub->update_fun = update_fun;
     sub->root = -1;
-    sub->node_pool = malloc(data_reserved * sizeof(*sub->node_pool));
     sub->pool_size = data_reserved;
-    for (uint8_t i=0; i<data_reserved; i++) {
-        sub->node_pool[i].data_index = 0;
+    for (array_index i=0; i<data_reserved; i++) {
+        sub->node_pool[i].data_index = -1;
         sub->node_pool[i].r_child_index = -1;
         sub->node_pool[i].l_child_index = -1;
     }
+    return sub;
 }
 
 static int16_t sub_bst_min(struct sub_search* self, const uint8_t start_index)
@@ -114,16 +117,9 @@ static int16_t sub_bst_max(struct sub_search* self, const uint8_t start_index)
 static int16_t sub_bst_search(struct bst* root, struct sub_search* self, 
         const void* const restrict key)
 {
-    uint16_t new_index = get_new_data_index(self->sub_queue);
     key_compare* cmp_fun = self->cmp_fun;
-    int16_t cursor = self->root;
+    array_index cursor = self->root;
     struct sub_node* p_node = NULL;
-
-    if (self->root < 0)
-    {
-        self->root = new_index;
-        return 0;
-    }
 
     while (cursor >= 0) {
         p_node = &self->node_pool[cursor];
@@ -144,11 +140,11 @@ static int16_t sub_bst_search(struct bst* root, struct sub_search* self,
 static int8_t sub_bst_insert(struct bst* root, struct sub_search* self, 
         const uint8_t data_index)
 {
-    uint16_t new_index = get_new_data_index(self->sub_queue);
+    array_index new_index = get_new_data_index(self->sub_queue);
     void* key = get_data_from_index(root, data_index);
     key_compare* cmp_fun = self->cmp_fun;
-    int16_t parent = -1;
-    int16_t cursor = self->root;
+    array_index parent = -1;
+    array_index cursor = self->root;
     int8_t last_move = 0;
     struct sub_node* p_node = NULL;
 
@@ -195,8 +191,8 @@ static int16_t sub_bst_delete(struct bst* root, struct sub_search* self,
     }
 
     key_compare* cmp_fun = self->cmp_fun;
-    int16_t parent = -1;
-    int16_t cursor = self->root;
+    array_index parent = -1;
+    array_index cursor = self->root;
     int8_t last_move = 0;
     struct sub_node* p_node = NULL;
     
@@ -225,7 +221,7 @@ static int16_t sub_bst_delete(struct bst* root, struct sub_search* self,
         return  -1;
     }
 
-    uint16_t new_index = -1;
+    array_index new_index = -1;
     struct sub_node* new = NULL;
     if (p_node->l_child_index >= 0)
     {
@@ -259,12 +255,29 @@ static int16_t sub_bst_delete(struct bst* root, struct sub_search* self,
 }
 
 
-static void sub_bst_free(struct sub_search* self)
+static void sub_bst_free(struct sub_search** const restrict self)
 {
-    free(self->sub_queue);
-    free(self->node_pool);
-    self->sub_queue = NULL;
-    self->node_pool = NULL;
+    free((*self)->sub_queue);
+    (*self)->sub_queue = NULL;
+    free(*self);
+    *self = NULL;
+}
+
+static int8_t sub_bst_resize(struct sub_search** const self_p, const uint8_t new_size)
+{
+    *self_p = realloc(*self_p, sizeof(**self_p) + new_size * sizeof(*(*self_p)->node_pool));
+    struct sub_search* const self = *self_p;
+    self->pool_size = new_size;
+    self->sub_queue = realloc(self->sub_queue, 
+            sizeof(*self->sub_queue) + new_size * sizeof(*self->sub_queue->nodes_queue));
+    for (array_index i =self->sub_queue->queue_size; i<new_size; i++) {
+        add_free_data_index(self->sub_queue, i);
+        self->node_pool[i].data_index = -1;
+        self->node_pool[i].r_child_index = -1;
+        self->node_pool[i].l_child_index = -1;
+    }
+    self->sub_queue->queue_size = new_size;
+    return 0;
 }
 
 //public
@@ -279,26 +292,31 @@ struct bst* bst_new(key_compare cmp_fun_id, key_compare cmp_fun_timeline,
     res->data_amount = initial_reserved_size;
     res->data_cursor = 0;
 
-    sub_bst_init(&res->search_tree[0], initial_reserved_size, cmp_fun_id, update_fun_1);
-    sub_bst_init(&res->search_tree[1], initial_reserved_size, cmp_fun_timeline, update_fun_2);
+    res->search_tree[0] = sub_bst_new(initial_reserved_size, cmp_fun_id, update_fun_1);
+    res->search_tree[1] = sub_bst_new(initial_reserved_size, cmp_fun_timeline, update_fun_2);
 
     return  res;
 }
 
-int8_t bst_insert_new(struct bst* self, void* const restrict key)
+int8_t bst_insert_new(struct bst** self_p, void* const restrict key)
 {
+    struct bst* self = *self_p;
     if (self->data_cursor >= self->data_amount) {
-        //TODO: resize
+        self->data_amount *= 2;
+        sub_bst_resize(&self->search_tree[0],self->data_amount);
+        sub_bst_resize(&self->search_tree[1],self->data_amount);
+        *self_p= realloc(self, sizeof(*self) + self->data_amount * self->data_size);
+        self = *self_p;
     }
     
     void* const restrict data = get_data_from_index(self, self->data_cursor);
     memcpy(data, key, self->data_size);
 
-    if (sub_bst_insert(self,&self->search_tree[0], self->data_cursor) < 0){
+    if (sub_bst_insert(self,self->search_tree[0], self->data_cursor) < 0){
         goto failed_insert_timeline;
     }
 
-    if (sub_bst_insert(self,&self->search_tree[1], self->data_cursor) < 0) {
+    if (sub_bst_insert(self,self->search_tree[1], self->data_cursor) < 0) {
         goto failed_insert_id;
     }
 
@@ -307,15 +325,15 @@ int8_t bst_insert_new(struct bst* self, void* const restrict key)
     return 0;
 
 failed_insert_timeline:
-    sub_bst_delete(self,&self->search_tree[0], key);
+    sub_bst_delete(self,self->search_tree[0], key);
 failed_insert_id:
     return -1;
 }
 
 int8_t bst_update_existing(struct bst* self, const void* const restrict key, const uint8_t filter_index)
 {
-    const uint16_t data_index = sub_bst_search(self, &self->search_tree[!filter_index], key);
-    struct sub_search* tree_to_update = &self->search_tree[filter_index];
+    const array_index data_index = sub_bst_search(self, self->search_tree[!filter_index], key);
+    struct sub_search* tree_to_update = self->search_tree[filter_index];
     void* tree_data = NULL;
 
     tree_data = get_data_from_index(self, data_index);
@@ -329,22 +347,22 @@ int8_t bst_update_existing(struct bst* self, const void* const restrict key, con
 
 int8_t bst_delete(struct bst* self, const void* const restrict key, uint8_t filter_index)
 {
-    struct sub_search* tree = &self->search_tree[filter_index];
+    struct sub_search* tree = self->search_tree[filter_index];
     return sub_bst_delete(self,tree, key);
 }
 
 const void* bst_search(struct bst* const restrict self, const void* const restrict key, 
         const uint8_t filter_index)
 {
-    struct sub_search* tree = &self->search_tree[filter_index];
-    const int16_t data_index = sub_bst_search(self, tree, key);
+    struct sub_search* tree = self->search_tree[filter_index];
+    const array_index data_index = sub_bst_search(self, tree, key);
     return get_data_from_index(self, data_index);
 }
 
 const void* bst_min(struct bst* self, const uint8_t filter_index)
 {
-    struct sub_search* tree = &self->search_tree[filter_index];
-    const int16_t index = sub_bst_min(tree, tree->root);
+    struct sub_search* tree = self->search_tree[filter_index];
+    const array_index index = sub_bst_min(tree, tree->root);
     if (index >= 0) {
         return self->data + (index * self->data_size);
     }

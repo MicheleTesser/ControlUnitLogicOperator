@@ -3,6 +3,7 @@
 #include "../board_conf/can/can.h"
 #include "../board_conf/interrupt/interrupt.h"
 #include "../board_conf/trap/trap.h"
+#include "../emergency_fault/emergency_fault.h"
 #include "../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../lib/board_dbc/dbc/out_lib/can3/can3.h"
@@ -223,6 +224,40 @@ static int8_t manage_can_3_message(const CanMessage* const restrict mex,
     return 0;
 }
 
+static int8_t engine_fault(void){
+    return one_emergency_raised(ENGINE_FAULT);
+}
+
+static int8_t bms_lv_fault(void){
+    return one_emergency_raised(BMS_LV_FAULT);
+}
+
+static int8_t bms_hv_fault(void){
+    return one_emergency_raised(BMS_HV_FAULT);
+}
+
+static int8_t imu_fault(void){
+    return one_emergency_raised(IMU_FAULT);
+}
+
+static int8_t paddle_fault(void){
+    //TODO: disable regen, map change
+    return 0;
+}
+
+static int8_t lem_fault(void){
+    return one_emergency_raised(LEM_FAULT);
+}
+
+static int8_t atc_fault(void){
+    return one_emergency_raised(ATC_FRONT_FAULT);
+}
+
+static int8_t smu_fault(void){
+    return one_emergency_raised(SMU_FAULT);
+}
+
+
 //public
 int8_t board_can_init(const uint8_t can_id, const enum CAN_FREQUENCY freq)
 {
@@ -237,11 +272,58 @@ int8_t board_can_init(const uint8_t can_id, const enum CAN_FREQUENCY freq)
 
     switch (can_id) {
         case CAN_MODULE_INVERTER:
+
+#define ADD_ENGINE_MEX_TO_FREQ_CHECK(MEX_ID_ENGINE) \
+    can_freq_add_mex_freq(MEX_ID_ENGINE, 200 MILLIS, engine_fault);
+
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERFL1);
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERFR1);
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERFL2);
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERFR2);
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERRL1);
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERRR1);
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERRL2);
+            ADD_ENGINE_MEX_TO_FREQ_CHECK(CAN_ID_INVERTERRR2);
             if(hardware_interrupt_attach_fun(INTERRUPT_CAN_1, inverter_can_interrupt)){
                 goto hardware_interrupt_attach_fail;
             }
             break;
         case CAN_MODULE_GENERAL:
+
+#define ADD_BMS_LV_MEX_TO_FREQ_CHECK(MEX_ID_BMS_LV) \
+    can_freq_add_mex_freq(MEX_ID_BMS_LV, 400 MILLIS, bms_lv_fault);
+
+            ADD_BMS_LV_MEX_TO_FREQ_CHECK(CAN_ID_BMSLV1);
+            ADD_BMS_LV_MEX_TO_FREQ_CHECK(CAN_ID_BMSLV2);
+
+#define ADD_BMS_HV_MEX_TO_FREQ_CHECK(MEX_ID_BMS_HV) \
+    can_freq_add_mex_freq(MEX_ID_BMS_HV, 300 MILLIS, bms_hv_fault);
+
+            ADD_BMS_HV_MEX_TO_FREQ_CHECK(CAN_ID_BMSHV1);
+            ADD_BMS_HV_MEX_TO_FREQ_CHECK(CAN_ID_BMSHV2);
+
+#define ADD_IMU_MEX_TO_FREQ_CHECK(MEX_ID_IMU) \
+    can_freq_add_mex_freq(MEX_ID_IMU, 200 MILLIS, imu_fault);
+
+            ADD_IMU_MEX_TO_FREQ_CHECK(CAN_ID_IMU1);
+            ADD_IMU_MEX_TO_FREQ_CHECK(CAN_ID_IMU2);
+            ADD_IMU_MEX_TO_FREQ_CHECK(CAN_ID_IMU3);
+
+            can_freq_add_mex_freq(CAN_ID_PADDLE, 200 MILLIS, paddle_fault);
+            can_freq_add_mex_freq(CAN_ID_DRIVER, 200 MILLIS, atc_fault);
+
+            can_freq_add_mex_freq(CAN_ID_LEM, 100 MILLIS, lem_fault);
+
+            can_freq_add_mex_freq(CAN_ID_TEMPFRONTR, 200 MILLIS, atc_fault);
+
+#define ADD_SMU_MEX_TO_FREQ_CHECK(MEX_ID_SMU) \
+    can_freq_add_mex_freq(MEX_ID_SMU, 200 MILLIS, smu_fault);
+
+            ADD_SMU_MEX_TO_FREQ_CHECK(CAN_ID_TEMP1);
+            ADD_SMU_MEX_TO_FREQ_CHECK(CAN_ID_TEMP2);
+            ADD_SMU_MEX_TO_FREQ_CHECK(CAN_ID_SUSPREAR);
+            ADD_SMU_MEX_TO_FREQ_CHECK(CAN_ID_SUSPFRONT);
+
             if(hardware_interrupt_attach_fun(INTERRUPT_CAN_2, general_can_interrupt)){
                 goto hardware_interrupt_attach_fail;
             }
@@ -320,4 +402,9 @@ int8_t board_can_manage_message(const uint8_t can_id,
         default:
             return -1;
     }
+}
+
+int16_t board_can_consistency_check(void)
+{
+    return can_freq_check_faults();
 }

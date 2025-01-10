@@ -54,6 +54,9 @@ static void loop(void)
             board_can_manage_message(CAN_MODULE_DV, &mex, read_time);
         }
     }
+    #ifndef DISABLE_FREQ_CONSISTENCY_CHECK
+    board_can_consistency_check();
+    #endif /* ifndef DISABLE_FREQ_CONSISTENCY_CHECK */
 }
 
 //INFO: Service core

@@ -91,7 +91,7 @@ int8_t can_freq_add_mex_freq(const uint16_t can_id, const time_var_microseconds 
         .freq = freq,
         .deadline = timer_time_now() + freq,
     };
-    return !!bst_insert_new(FREQ_TREE , &info);
+    return !!bst_insert_new(&FREQ_TREE , &info);
 }
 
 int8_t can_freq_update_freq(const uint16_t can_id)
