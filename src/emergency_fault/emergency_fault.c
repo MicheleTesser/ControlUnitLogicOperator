@@ -8,7 +8,7 @@
 //private
 
 static struct{
-    uint8_t num_of_emergency[(__NUM_OF_EMERGENCY_FAULTS -1)/8 + !!(__NUM_OF_EMERGENCY_FAULTS % 8)];
+    uint8_t num_of_emergency[__NUM_OF_EMERGENCY_FAULTS/8 + !!(__NUM_OF_EMERGENCY_FAULTS % 8)];
 }EMERGENCYS;
 
 struct ErrorIndexArray {

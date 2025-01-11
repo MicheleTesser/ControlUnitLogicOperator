@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 enum EMERGENCY_FAULT{
-    FAILED_RTD_SEQ = 1,
+    FAILED_RTD_SEQ = 0,
     ENGINE_FAULT,
     DV_EMERGENCY_STATE,
     RTD_IN_NONE_MISSION,
