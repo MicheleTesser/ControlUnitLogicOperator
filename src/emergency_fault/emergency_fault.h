@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+
 enum EMERGENCY_FAULT{
     FAILED_RTD_SEQ = 0,
     ENGINE_FAULT,

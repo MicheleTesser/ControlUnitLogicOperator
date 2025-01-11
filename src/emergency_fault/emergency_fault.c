@@ -7,7 +7,7 @@
 
 //private
 
-#define EMERGENCY_BUFFER_SIZE (__NUM_OF_EMERGENCY_FAULTS/8 + !!(__NUM_OF_EMERGENCY_FAULTS % 8))
+const uint8_t EMERGENCY_BUFFER_SIZE = __NUM_OF_EMERGENCY_FAULTS/8 + !!(__NUM_OF_EMERGENCY_FAULTS % 8);
 static struct{
     uint8_t num_of_emergency[EMERGENCY_BUFFER_SIZE];
 }EMERGENCYS;
