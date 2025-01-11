@@ -5,24 +5,31 @@
 #include "../DV/dv.h"
 #include <stdint.h>
 
+//private
+
 static struct{
-    uint32_t num_of_emergency[2];
+    uint8_t num_of_emergency[(__NUM_OF_EMERGENCY_FAULTS -1)/8 + !!(__NUM_OF_EMERGENCY_FAULTS % 8)];
 }EMERGENCYS;
 
+struct ErrorIndexArray {
+    uint8_t emergency_buffer;
+    uint8_t emergencY_bit;
+};
+
+static void 
+get_error_index(const enum EMERGENCY_FAULT fault, struct ErrorIndexArray* const restrict o_buffer)
+{
+    o_buffer->emergency_buffer = fault/8;
+    o_buffer->emergencY_bit = fault%8;
+}
+
+//public
 
 int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
 {
-    switch (id) {
-
-        case FAILED_RTD_SEQ:
-        case ENGINE_FAULT:
-        case DV_EMERGENCY_STATE:
-        case RTD_IN_NONE_MISSION:
-            EMERGENCYS.num_of_emergency[0] |=  id;
-            break;
-        default:
-            return -1;
-    }
+    struct ErrorIndexArray index;
+    get_error_index(id, &index);
+    EMERGENCYS.num_of_emergency[index.emergency_buffer] |= index.emergencY_bit;
     gpio_set_low(SCS);
     if (get_current_mission() > MANUALY) {
         dv_set_status(AS_EMERGENCY);
@@ -33,18 +40,10 @@ int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
 
 int8_t one_emergency_solved(const enum EMERGENCY_FAULT id)
 {
-    switch (id) {
-
-        case FAILED_RTD_SEQ:
-        case ENGINE_FAULT:
-        case DV_EMERGENCY_STATE:
-        case RTD_IN_NONE_MISSION:
-            if (EMERGENCYS.num_of_emergency[0] & id) {
-                EMERGENCYS.num_of_emergency[0]^= id;
-            }
-            break;
-        default:
-            return -1;
+    struct ErrorIndexArray index;
+    get_error_index(id, &index);
+    if (EMERGENCYS.num_of_emergency[index.emergency_buffer] & index.emergencY_bit) {
+        EMERGENCYS.num_of_emergency[index.emergency_buffer]^= index.emergencY_bit;
     }
 
     if (!EMERGENCYS.num_of_emergency[0] && !EMERGENCYS.num_of_emergency[1]) {
