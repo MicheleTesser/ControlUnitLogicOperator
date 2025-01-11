@@ -31,14 +31,11 @@ static void setup(void)
     };
 
     serial_write_str(SERIAL, "core 2 init done");
-
 }
 
 static void loop(void)
 {
     i_m_alive(alive_fd);
-    dv_update_status();
-    dv_update_led();
     dv_compute();
 }
 

@@ -24,83 +24,7 @@ static uint8_t sdc_closed(void)
             !is_emergency_state();
 }
 
-//public
-
-int8_t dv_class_init(void)
-{
-    asms_class_init();
-    asb_class_init();
-    res_class_init();
-    dv_stw_alg_init();
-    DV.status = AS_OFF;
-    return 0;
-}
-
-int8_t dv_set_status(const enum AS_STATUS status)
-{
-    DV.status = status;
-    if (status != AS_OFF) {
-        input_rtd_set_mode(RES);
-    }
-    if (status != AS_EMERGENCY) {
-        one_emergency_solved(DV_EMERGENCY_STATE);
-    }
-    switch (status) {
-        case AS_OFF:
-            input_rtd_set_mode(BUTTON);
-            break;
-        case AS_READY:
-            input_rtd_set_mode(RES);
-            break;
-        case AS_DRIVING:
-            break;
-        case AS_EMERGENCY:
-            one_emergency_raised(DV_EMERGENCY_STATE);
-            break;
-        case AS_FINISHED:
-            break;
-    }
-    return 0;
-}
-
-//INFO: Flowchart T 14.9.2
-int8_t dv_update_status(void)
-{
-    const enum RUNNING_STATUS giei_status = GIEI_check_running_condition();
-    if (!ebs_on()) 
-    {
-        if (get_current_mission() > MANUALY &&  asb_consistency_check() && giei_status >= TS_READY)
-        {
-            if (giei_status == RUNNING)
-            {
-                dv_set_status(AS_DRIVING);
-            }
-            else if(driver_get_amount(BRAKE) > 50)
-            {
-                dv_set_status(AS_READY);
-            }
-            else
-            {
-                dv_set_status(AS_OFF);
-            }
-        }
-        else
-        {
-            dv_set_status(AS_OFF);
-        }
-    }
-    else if (mission_status() == MISSION_FINISHED && !GIEI_get_speed() && sdc_closed())
-    {
-        dv_set_status(AS_FINISHED);
-    }
-    else
-    {
-        dv_set_status(AS_EMERGENCY);
-    }
-    return 0;
-}
-
-int8_t dv_update_led(void)
+static int8_t dv_update_led(void)
 {
     static time_var_microseconds driving_last_time_on =0;
     static time_var_microseconds emergency_last_time_on =0;
@@ -153,6 +77,84 @@ int8_t dv_update_led(void)
     return 0;
 }
 
+static int8_t dv_update_status(void)
+{
+    const enum RUNNING_STATUS giei_status = GIEI_check_running_condition();
+    if (!ebs_on()) 
+    {
+        if (get_current_mission() > MANUALY &&  asb_consistency_check() && giei_status >= TS_READY)
+        {
+            if (giei_status == RUNNING)
+            {
+                dv_set_status(AS_DRIVING);
+            }
+            else if(driver_get_amount(BRAKE) > 50)
+            {
+                dv_set_status(AS_READY);
+            }
+            else
+            {
+                dv_set_status(AS_OFF);
+            }
+        }
+        else
+        {
+            dv_set_status(AS_OFF);
+        }
+    }
+    else if (mission_status() == MISSION_FINISHED && !GIEI_get_speed() && sdc_closed())
+    {
+        dv_set_status(AS_FINISHED);
+    }
+    else
+    {
+        dv_set_status(AS_EMERGENCY);
+    }
+    return 0;
+}
+
+//public
+
+int8_t dv_class_init(void)
+{
+    asms_class_init();
+    asb_class_init();
+    res_class_init();
+    dv_stw_alg_init();
+    DV.status = AS_OFF;
+    return 0;
+}
+
+int8_t dv_set_status(const enum AS_STATUS status)
+{
+    DV.status = status;
+    if (status != AS_OFF) {
+        input_rtd_set_mode(RES);
+    }
+    if (status != AS_EMERGENCY) {
+        one_emergency_solved(DV_EMERGENCY_STATE);
+    }
+    switch (status) {
+        case AS_OFF:
+            input_rtd_set_mode(BUTTON);
+            break;
+        case AS_READY:
+            input_rtd_set_mode(RES);
+            break;
+        case AS_DRIVING:
+            break;
+        case AS_EMERGENCY:
+            one_emergency_raised(DV_EMERGENCY_STATE);
+            break;
+        case AS_FINISHED:
+            break;
+    }
+    return 0;
+}
+
+//INFO: Flowchart T 14.9.2
+
+
 int8_t dv_go(void)
 {
     return (DV.status == AS_READY && res_check_go() && get_current_mission() > MANUALY) ||
@@ -161,6 +163,8 @@ int8_t dv_go(void)
 
 int8_t dv_compute(void)
 {
+    dv_update_status();
+    dv_update_led();
     if (DV.status == AS_DRIVING && get_current_mission() > MANUALY) {
         dv_stw_alg_compute(0, 0); //TODO: not yet implemented
         return 0;
