@@ -189,6 +189,16 @@ static inline uint8_t amk_fault(void)
         inverter_engine_data.engines[REAR_RIGHT].amk_data_1.AMK_STATUS.fields.AMK_bError;
 }
 
+static float max_torque()
+{
+    float actual_velocity_sum = 0;
+    for (uint8_t i=0; i< NUM_OF_EGINES ; i++) {
+        const float actual_velocity = inverter_engine_data.engines[i].amk_data_1.AMK_ActualVelocity;
+        actual_velocity_sum += MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
+    }
+    return  actual_velocity_sum/4;
+}
+
 //public
 
 int8_t amk_module_init(void)
@@ -393,14 +403,12 @@ float amk_get_info(const enum ENGINES engine, const enum ENGINE_INFO info)
 
 float amk_max_pos_torque(const float limit_max_pos_torque)
 {
-    const float actual_velocity = inverter_engine_data.engines[0].amk_data_1.AMK_ActualVelocity;
-    const float unsaturated_pos_torque = MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
-    return saturate_float(unsaturated_pos_torque, limit_max_pos_torque, 0.0f);
+    const float v_max_torque = max_torque();
+    return saturate_float(v_max_torque, limit_max_pos_torque, 0.0f);
 
 }
 float amk_max_neg_torque(const float limit_max_neg_torque)
 {
-    float actual_velocity = inverter_engine_data.engines[0].amk_data_1.AMK_ActualVelocity;
-    const float unsaturated_neg_torque = MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
-    return  saturate_float(unsaturated_neg_torque, 0.0f, limit_max_neg_torque);
+    const float v_max_torque = max_torque();
+    return  -saturate_float(v_max_torque, 0.0f, limit_max_neg_torque);
 }

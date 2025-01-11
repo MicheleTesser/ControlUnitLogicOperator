@@ -33,9 +33,11 @@ float amk_max_neg_torque(const float limit_max_neg_torque);
 
 #define engine_get_info(engine, info) amk_get_info(engine, info)
 
-#define engine_max_pos_torque(limit_max_pos_torque) amk_max_pos_torque(limit_max_pos_torque)
+#define engine_max_pos_torque(limit_max_pos_torque) \
+    amk_max_pos_torque(limit_max_pos_torque)
 
-#define engine_max_neg_torque(limit_max_neg_torque) amk_max_neg_torque(limit_max_neg_torque)
+#define engine_max_neg_torque(limit_max_neg_torque) \
+    amk_max_neg_torque(limit_max_neg_torque)
 
 
 #endif // !__AMK_POWER_SYSTEM__
