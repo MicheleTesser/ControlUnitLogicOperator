@@ -13,18 +13,6 @@
 #include <stdint.h>
 #include <unistd.h>
 
-extern struct __GIEI{
-    time_var_microseconds sound_start_at;
-    float limit_power;
-    float limit_pos_torque;
-    float limit_neg_torque;
-    float limit_regen;
-    float limit_max_speed;
-    float settings_power_repartition;
-
-    uint8_t activate_torque_vectoring :1;
-}GIEI;
-
 
 static int init_core_0(void* args __attribute_maybe_unused__){
     main_cpu_x(0);

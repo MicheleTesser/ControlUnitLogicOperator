@@ -123,10 +123,9 @@ invalid_mex_type:
 
 static uint8_t amk_inverter_on(void)
 {
-    uint8_t res =1;
+    uint8_t res = 0xFF;
     FOR_EACH_ENGINE({
-        struct amk_engines* engine = &inverter_engine_data.engines[index_engine];
-        res &= engine->amk_data_1.AMK_STATUS.fields.bSystemReady;
+        res &= inverter_engine_data.engines[index_engine].amk_data_1.AMK_STATUS.fields.bSystemReady;
     })
     return res;
 }
@@ -177,26 +176,15 @@ static inline uint8_t precharge_ended(void)
     return gpio_read_state(AIR_PRECHARGE_INIT) && gpio_read_state(AIR_PRECHARGE_DONE);
 }
 
-
-
-static inline uint8_t amk_fault(void)
+static float max_torque(void)
 {
-    return 
-        !amk_inverter_hv_status() ||
-        inverter_engine_data.engines[FRONT_LEFT].amk_data_1.AMK_STATUS.fields.AMK_bError ||
-        inverter_engine_data.engines[FRONT_RIGHT].amk_data_1.AMK_STATUS.fields.AMK_bError ||
-        inverter_engine_data.engines[REAR_LEFT].amk_data_1.AMK_STATUS.fields.AMK_bError ||
-        inverter_engine_data.engines[REAR_RIGHT].amk_data_1.AMK_STATUS.fields.AMK_bError;
-}
-
-static float max_torque()
-{
-    float actual_velocity_sum = 0;
-    for (uint8_t i=0; i< NUM_OF_EGINES ; i++) {
-        const float actual_velocity = inverter_engine_data.engines[i].amk_data_1.AMK_ActualVelocity;
-        actual_velocity_sum += MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
-    }
-    return  actual_velocity_sum/4;
+    float torque_max_sum = 0;
+    FOR_EACH_ENGINE({
+        const float actual_velocity = 
+            inverter_engine_data.engines[index_engine].amk_data_1.AMK_ActualVelocity;
+        torque_max_sum += MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
+    })
+    return  torque_max_sum/4;
 }
 
 //public
@@ -285,13 +273,6 @@ int8_t amk_update_status(const CanMessage* const restrict mex)
             return -1;
     }
 
-    if (amk_fault()) {
-        one_emergency_raised(ENGINE_FAULT);
-        amk_disable_inverter();
-        inverter_engine_data.engine_status = SYSTEM_OFF;
-    }else{
-        one_emergency_solved(ENGINE_FAULT);
-    }
     return 0;
 }
 
@@ -300,32 +281,25 @@ int8_t amk_update_status(const CanMessage* const restrict mex)
  */
 uint8_t amk_inverter_hv_status(void)
 {
-    uint8_t i;
     const uint8_t HV_TRAP = 50;
     static uint8_t hvCounter[NUM_OF_EGINES];
-    static uint8_t inverterHV[NUM_OF_EGINES];
 
-    for (i = 0; i < NUM_OF_EGINES; i++)
-    {
-        if (!(inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn) && 
-                (hvCounter[i] < HV_TRAP))
-            hvCounter[i]++;
-
-        else if (!(inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn) && 
-                (hvCounter[i] >= HV_TRAP))
+    uint8_t res = 0;
+    FOR_EACH_ENGINE({
+        const uint8_t AMK_bQuitDcOn = 
+            inverter_engine_data.engines[index_engine].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
+        if (!(AMK_bQuitDcOn) && (hvCounter[index_engine] < HV_TRAP))
         {
-            inverterHV[i] = inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
-            hvCounter[i] = 0;
+            hvCounter[index_engine]++;
         }
-        else if (inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn)
+        else if (AMK_bQuitDcOn || (hvCounter[index_engine] >= HV_TRAP))
         {
-            inverterHV[i] = inverter_engine_data.engines[i].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
-            hvCounter[i] = 0;
+            res |= (AMK_bQuitDcOn << index_engine);
+            hvCounter[index_engine] = 0;
         }
-    }
+    })
 
-    return inverterHV[FRONT_RIGHT] | inverterHV[FRONT_LEFT]
-        | inverterHV[REAR_RIGHT] | REAR_LEFT;
+    return res;
 }
 
 enum RUNNING_STATUS amk_rtd_procedure(void)
@@ -342,37 +316,45 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
 
     switch (inverter_engine_data.engine_status) {
         case SYSTEM_OFF:
-            if (amk_inverter_on() && !rtd_input_request()){
+            if (amk_inverter_on() && !rtd_input_request())
+            {
                 amk_activate_hv();
                 inverter_engine_data.engine_status = SYSTEM_PRECAHRGE;
-            }else{
+            }
+            else if(rtd_input_request())
+            {
                 amk_shut_down_power();
                 one_emergency_raised(FAILED_RTD_SEQ);
             }
             break;
         case SYSTEM_PRECAHRGE:
-            if (!amk_inverter_hv_status() || input_rtd_check()) {
+            if (!amk_inverter_hv_status() || input_rtd_check())
+            {
                 amk_shut_down_power();
                 one_emergency_raised(FAILED_RTD_SEQ);
                 break;
             }
-            if (precharge_ended()){
+            if (precharge_ended())
+            {
                 amk_activate_control();
                 inverter_engine_data.engine_status = TS_READY;
             }
             break;
         case TS_READY:
-            if (!amk_inverter_hv_status() || !precharge_ended()) {
+            if (!amk_inverter_hv_status() || !precharge_ended())
+            {
                 amk_shut_down_power();
                 one_emergency_raised(FAILED_RTD_SEQ);
                 break;
             }
-            if (input_rtd_check()) {
+            if (input_rtd_check())
+            {
                 inverter_engine_data.engine_status = RUNNING;
             }
             break;
         case RUNNING:
-            if (!input_rtd_check()) {
+            if (!input_rtd_check())
+            {
                 amk_disable_inverter();
                 inverter_engine_data.engine_status= TS_READY;
             }

@@ -33,7 +33,7 @@
 
 #define M_N                                 9.8f
 
-static struct __GIEI{
+static struct{
     time_var_microseconds sound_start_at;
     float limit_power;
     float limit_pos_torque;
@@ -70,7 +70,8 @@ static void update_torque_NM_vectors_no_tv(
          * Negative torques are computed in regBrake() 
          */
         uint32_t setpoint =  throttle* (actual_max_pos_torque/M_N) * 10;
-        switch (i) {
+        switch (i)
+        {
             case FRONT_LEFT:
             case FRONT_RIGHT:
                 posTorquesNM[i] = torqueSetpointToNM(setpoint * probability_of_success);
@@ -136,9 +137,11 @@ int8_t GIEI_initialize(void)
     GIEI.activate_torque_vectoring = 0;
 
     engine_module_init();
+    engine_set_max_speed(GIEI.limit_max_speed);
     giei_power_map_init();
     regen_alg_init();
     giei_speed_alg_class_init();
+    
 
     return 0;
 }
@@ -149,22 +152,29 @@ enum RUNNING_STATUS GIEI_check_running_condition(void)
     const time_var_microseconds sound_duration = 3 SECONDS;
     enum RUNNING_STATUS rt = SYSTEM_OFF;
 
-    if ((timer_time_now() - GIEI.sound_start_at) > sound_duration) {
+    if ((timer_time_now() - GIEI.sound_start_at) > sound_duration)
+    {
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
     }
     rt = engine_rtd_procedure();
-    if (rt > SYSTEM_OFF) {
+    if (rt > SYSTEM_OFF)
+    {
         mission_lock_mission();
-    }else{
+    }
+    else
+    {
         mission_unlock_mission();
     }
-    if (rt == RUNNING && !rtd_done) {
+    if (rt == RUNNING && !rtd_done)
+    {
         rtd_done =1;
         gpio_set_low(READY_TO_DRIVE_OUT_SOUND);
         gpio_set_low(READY_TO_DRIVE_OUT_LED);
         GIEI.sound_start_at = timer_time_now();
-    }else if (rt != RUNNING) {
+    }
+    else if (rt != RUNNING)
+    {
         rtd_done =0;
         gpio_set_high(READY_TO_DRIVE_OUT_SOUND);
         gpio_set_high(READY_TO_DRIVE_OUT_LED);
@@ -175,7 +185,8 @@ enum RUNNING_STATUS GIEI_check_running_condition(void)
 
 int8_t GIEI_recv_data(const CanMessage* const restrict mex)
 {
-    switch (mex->id) {
+    switch (mex->id)
+    {
         case CAN_ID_INVERTERFL1:
         case CAN_ID_INVERTERFL2:
         case CAN_ID_INVERTERFR1:
@@ -193,7 +204,8 @@ int8_t GIEI_recv_data(const CanMessage* const restrict mex)
 
 int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value)
 {
-    switch (category) {
+    switch (category)
+    {
         case POWER_LIMIT:
             GIEI.limit_power = value;
             break;
@@ -228,8 +240,10 @@ int8_t GIEI_input(const float throttle, const float regen)
     memset(posTorquesNM, 0, sizeof(posTorquesNM));
     memset(negTorquesNM, 0, sizeof(negTorquesNM));
 
-    if (GIEI.activate_torque_vectoring) {
-        struct TVInputArgs tv_input = {
+    if (GIEI.activate_torque_vectoring)
+    {
+        struct TVInputArgs tv_input =
+        {
             .ax = imu_get_info(IMU_accelerations, axis_X),
             .ay = imu_get_info(IMU_accelerations, axis_Y),
             .yaw_r = imu_get_info(IMU_angles, axis_Y),
@@ -246,19 +260,24 @@ int8_t GIEI_input(const float throttle, const float regen)
         };
         hv_get_info(HV_BATTERY_PACK_TENSION, &tv_input.voltage, sizeof(tv_input.voltage));
         tv_alg_compute(&tv_input, posTorquesNM);
-    }else{
-        update_torque_NM_vectors_no_tv(throttle, posTorquesNM, actual_max_neg_torque);
+    }
+    else
+    {
+        update_torque_NM_vectors_no_tv(throttle, posTorquesNM, actual_max_pos_torque);
     }
 
     hv_computeBatteryPackTension(engines_voltages);
-    if (throttle > 0 && regen >= 0){
+    if (throttle > 0 && regen >= 0)
+    {
         float total_power;
-        if (!hv_get_info(HV_TOTAL_POWER, &total_power, sizeof(total_power))) {
+        if (!hv_get_info(HV_TOTAL_POWER, &total_power, sizeof(total_power)))
+        {
             powerControl(total_power, GIEI.limit_power, posTorquesNM);
         }
     }
 
-    const struct RegenAlgInput input ={
+    const struct RegenAlgInput input =
+    {
         .rear_left_velocity = engine_get_info(REAR_LEFT, ENGINE_VOLTAGE),
         .rear_right_velocity = engine_get_info(REAR_RIGHT, ENGINE_VOLTAGE),
         .front_left_velocity = engine_get_info(FRONT_LEFT, ENGINE_VOLTAGE),
@@ -267,7 +286,8 @@ int8_t GIEI_input(const float throttle, const float regen)
     regen_alg_compute(&input, negTorquesNM);
 
 
-    for (uint8_t i = 0; i < NUM_OF_EGINES; i++) {
+    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
+    {
         const float saturated_pos_torque_nm = 
             saturate_float(posTorquesNM[i], actual_max_pos_torque, 0.0f);
         const float saturated_neg_torque_nm = 
@@ -275,9 +295,12 @@ int8_t GIEI_input(const float throttle, const float regen)
         const float posTorque = NMtoTorqueSetpoint(saturated_pos_torque_nm);
         const float negTorque = NMtoTorqueSetpoint(saturated_neg_torque_nm);
 
-        if (posTorque > 0 && negTorque < 0) {
+        if (posTorque > 0 && negTorque < 0)
+        {
             engine_send_torque(i, 0, negTorque);
-        }else {
+        }
+        else
+        {
             engine_send_torque(i, posTorque, negTorque);
         }
     }

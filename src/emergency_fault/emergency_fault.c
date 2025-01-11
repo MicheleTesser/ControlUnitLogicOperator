@@ -67,5 +67,12 @@ int8_t one_emergency_solved(const enum EMERGENCY_FAULT id)
 
 int8_t is_emergency_state(void)
 {
-    return !!(EMERGENCYS.num_of_emergency[0] || EMERGENCYS.num_of_emergency[1]);
+    for (uint8_t i=0;i<EMERGENCY_BUFFER_SIZE; i++) {
+        const uint8_t f= EMERGENCYS.num_of_emergency[i];
+        if (f)
+        {
+            return f;
+        }
+    }
+    return  0;
 }
