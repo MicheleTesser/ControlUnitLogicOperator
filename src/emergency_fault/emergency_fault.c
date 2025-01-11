@@ -7,9 +7,10 @@
 
 //private
 
-const uint8_t EMERGENCY_BUFFER_SIZE = __NUM_OF_EMERGENCY_FAULTS/8 + !!(__NUM_OF_EMERGENCY_FAULTS % 8);
+#define EMERGENCY_BUFFER_SIZE_MACRO __NUM_OF_EMERGENCY_FAULTS/8 + !!(__NUM_OF_EMERGENCY_FAULTS % 8)
+const uint8_t EMERGENCY_BUFFER_SIZE = EMERGENCY_BUFFER_SIZE_MACRO;
 static struct{
-    uint8_t num_of_emergency[EMERGENCY_BUFFER_SIZE];
+    uint8_t num_of_emergency[EMERGENCY_BUFFER_SIZE_MACRO];
 }EMERGENCYS;
 
 struct ErrorIndexArray {
