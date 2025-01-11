@@ -27,6 +27,9 @@ get_error_index(const enum EMERGENCY_FAULT fault, struct ErrorIndexArray* const 
 
 int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
 {
+    if (id == __NUM_OF_EMERGENCY_FAULTS) {
+        return  -1;
+    }
     struct ErrorIndexArray index;
     get_error_index(id, &index);
     EMERGENCYS.num_of_emergency[index.emergency_buffer] |= index.emergencY_bit;
@@ -40,6 +43,9 @@ int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
 
 int8_t one_emergency_solved(const enum EMERGENCY_FAULT id)
 {
+    if (id == __NUM_OF_EMERGENCY_FAULTS) {
+        return  -1;
+    }
     struct ErrorIndexArray index;
     get_error_index(id, &index);
     if (EMERGENCYS.num_of_emergency[index.emergency_buffer] & index.emergencY_bit) {
