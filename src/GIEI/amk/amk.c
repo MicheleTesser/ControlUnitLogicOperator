@@ -73,11 +73,6 @@ static struct AMK_POWER{
     uint32_t max_speed;
 }inverter_engine_data;
 
-#define FOR_EACH_ENGINE(exp) \
-    for(uint8_t index_engine=FRONT_LEFT;index_engine<=REAR_RIGHT;index_engine++){\
-        exp;\
-    };
-
 #define POPULATE_MEX_ENGINE(om,amk_stop,engine)\
     om.engine.NegTorq = amk_stop->AMK_TorqueLimitNegative;\
     om.engine.PosTorq = amk_stop->AMK_TorqueLimitPositive;\
@@ -328,7 +323,7 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
             }
             break;
         case SYSTEM_PRECAHRGE:
-            if (!amk_inverter_hv_status() || input_rtd_check())
+            if (!amk_inverter_hv_status() || rtd_input_request())
             {
                 amk_shut_down_power();
                 one_emergency_raised(FAILED_RTD_SEQ);
@@ -341,19 +336,24 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
             }
             break;
         case TS_READY:
-            if (!amk_inverter_hv_status() || !precharge_ended())
+            if (!amk_inverter_hv_status() || !precharge_ended() || !amk_inverter_on())
             {
                 amk_shut_down_power();
                 one_emergency_raised(FAILED_RTD_SEQ);
                 break;
             }
-            if (input_rtd_check())
+            if (rtd_input_request())
             {
                 inverter_engine_data.engine_status = RUNNING;
             }
             break;
         case RUNNING:
-            if (!input_rtd_check())
+            if (!amk_inverter_hv_status() || !precharge_ended() || !amk_inverter_on())
+            {
+                amk_shut_down_power();
+                one_emergency_raised(FAILED_RTD_SEQ);
+            }
+            else if (!input_rtd_check())
             {
                 amk_disable_inverter();
                 inverter_engine_data.engine_status= TS_READY;

@@ -77,6 +77,7 @@ static int8_t dv_update_led(void)
     return 0;
 }
 
+//INFO: Flowchart T 14.9.2
 static int8_t dv_update_status(void)
 {
     const enum RUNNING_STATUS giei_status = GIEI_check_running_condition();
@@ -128,31 +129,22 @@ int8_t dv_class_init(void)
 int8_t dv_set_status(const enum AS_STATUS status)
 {
     DV.status = status;
-    if (status != AS_OFF) {
-        input_rtd_set_mode(RES);
-    }
     if (status != AS_EMERGENCY) {
         one_emergency_solved(DV_EMERGENCY_STATE);
     }
     switch (status) {
         case AS_OFF:
-            input_rtd_set_mode(BUTTON);
-            break;
         case AS_READY:
-            input_rtd_set_mode(RES);
-            break;
         case AS_DRIVING:
+        case AS_FINISHED:
             break;
         case AS_EMERGENCY:
             one_emergency_raised(DV_EMERGENCY_STATE);
-            break;
-        case AS_FINISHED:
             break;
     }
     return 0;
 }
 
-//INFO: Flowchart T 14.9.2
 
 
 int8_t dv_go(void)
