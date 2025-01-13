@@ -75,7 +75,8 @@ int8_t hardware_interrupt_attach_fun(const BoardComponentId fun_id,
 void raise_interrupt(const uint8_t interrupt_number)
 {
     wait_init();
-    interrupt_info.interr |= ((interrupt_number > 0) << (interrupt_number -1));
+    interrupt_info.interr |= ((interrupt_number > 0) << (interrupt_number -1))
+        + !interrupt_number;
 }
 
 int8_t hardware_interrupt_enable(void)
