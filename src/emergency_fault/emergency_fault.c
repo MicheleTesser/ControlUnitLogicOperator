@@ -2,7 +2,6 @@
 #include "../../lib/raceup_board/raceup_board.h"
 #include "../board_conf/id_conf.h"
 #include "../missions/missons.h"
-#include "../DV/dv.h"
 #include <stdint.h>
 
 //private
@@ -36,9 +35,6 @@ int8_t one_emergency_raised(const enum EMERGENCY_FAULT id)
     get_error_index(id, &index);
     EMERGENCYS.num_of_emergency[index.emergency_buffer] |= (1 << index.emergencY_bit);
     gpio_set_low(SCS);
-    if (get_current_mission() > MANUALY) {
-        dv_set_status(AS_EMERGENCY);
-    }
 
     return 0;
 }

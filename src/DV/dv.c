@@ -7,6 +7,7 @@
 #include "../driver_input/driver_input.h"
 #include "../emergency_fault/emergency_fault.h"
 #include "asms/asms.h"
+#include "dv_status/dv_status.h"
 #include "res/res.h"
 #include "steering_wheel_alg/stw_alg.h"
 #include <stdint.h>
@@ -14,7 +15,7 @@
 //private
 
 static struct {
-    enum AS_STATUS status;
+    struct DvStatus* p_dv_status;
 }DV;
 
 static uint8_t sdc_closed(void)
@@ -36,7 +37,7 @@ static int8_t dv_update_led(void)
         emergency_sound_last_time_on = timer_time_now();
     }
 
-    switch (DV.status) {
+    switch (dv_status_get(DV.p_dv_status)) {
         case AS_OFF:
             gpio_set_high(ASSI_LIGHT_BLU);
             gpio_set_high(ASSI_LIGHT_YELLOW);
@@ -80,6 +81,9 @@ static int8_t dv_update_led(void)
 //INFO: Flowchart T 14.9.2
 static int8_t dv_update_status(void)
 {
+    if (is_emergency_state()) {
+        dv_status_set(DV.p_dv_status, AS_EMERGENCY);
+    }
     const enum RUNNING_STATUS giei_status = GIEI_check_running_condition();
     if (!ebs_on()) 
     {
@@ -87,29 +91,29 @@ static int8_t dv_update_status(void)
         {
             if (giei_status == RUNNING)
             {
-                dv_set_status(AS_DRIVING);
+                dv_status_set(DV.p_dv_status, AS_DRIVING);
             }
             else if(driver_get_amount(BRAKE) > 50)
             {
-                dv_set_status(AS_READY);
+                dv_status_set(DV.p_dv_status, AS_READY);
             }
             else
             {
-                dv_set_status(AS_OFF);
+                dv_status_set(DV.p_dv_status, AS_OFF);
             }
         }
         else
         {
-            dv_set_status(AS_OFF);
+            dv_status_set(DV.p_dv_status, AS_OFF);
         }
     }
     else if (mission_status() == MISSION_FINISHED && !GIEI_get_speed() && sdc_closed())
     {
-        dv_set_status(AS_FINISHED);
+        dv_status_set(DV.p_dv_status, AS_FINISHED);
     }
     else
     {
-        dv_set_status(AS_EMERGENCY);
+        dv_status_set(DV.p_dv_status, AS_EMERGENCY);
     }
     return 0;
 }
@@ -122,42 +126,16 @@ int8_t dv_class_init(void)
     asb_class_init();
     res_class_init();
     dv_stw_alg_init();
-    DV.status = AS_OFF;
+    DV.p_dv_status = dv_status_class_init();
+
     return 0;
-}
-
-int8_t dv_set_status(const enum AS_STATUS status)
-{
-    DV.status = status;
-    if (status != AS_EMERGENCY) {
-        one_emergency_solved(DV_EMERGENCY_STATE);
-    }
-    switch (status) {
-        case AS_OFF:
-        case AS_READY:
-        case AS_DRIVING:
-        case AS_FINISHED:
-            break;
-        case AS_EMERGENCY:
-            one_emergency_raised(DV_EMERGENCY_STATE);
-            break;
-    }
-    return 0;
-}
-
-
-
-int8_t dv_go(void)
-{
-    return (DV.status == AS_READY && res_check_go() && get_current_mission() > MANUALY) ||
-        DV.status == AS_DRIVING;
 }
 
 int8_t dv_compute(void)
 {
     dv_update_status();
     dv_update_led();
-    if (DV.status == AS_DRIVING && get_current_mission() > MANUALY) {
+    if (dv_status_get(DV.p_dv_status) == AS_DRIVING && get_current_mission() > MANUALY) {
         dv_stw_alg_compute(0, 0); //TODO: not yet implemented
         return 0;
     }
