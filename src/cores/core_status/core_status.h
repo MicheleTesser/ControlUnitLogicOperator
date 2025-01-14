@@ -11,5 +11,6 @@ enum CORE_STATUS{
 
 enum CORE_STATUS core_status(const uint8_t core);
 int8_t core_update_status(const uint8_t core, const enum CORE_STATUS status);
+uint8_t are_cores_in_sync(void);
 
 #endif // !__CORE_STATUS__

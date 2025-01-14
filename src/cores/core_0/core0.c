@@ -91,10 +91,9 @@ void main_0(void)
     core_update_status(0, CORE_INIT);
     setup();
     core_update_status(0, CORE_READY);
-    while (
-            core_status(0) != CORE_READY || 
-            core_status(1) != CORE_READY || 
-            core_status(2) != CORE_READY) {}
+
+    while (!are_cores_in_sync()){}
+
     for (;;) {
         loop();
     }

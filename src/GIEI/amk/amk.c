@@ -281,11 +281,6 @@ uint8_t amk_inverter_hv_status(void)
     static uint8_t hvCounter[NUM_OF_EGINES];
     uint8_t res = 0;
 
-    if ((timer_time_now() - inverter_engine_data.enter_precharge_phase) < 100 MILLIS) {
-        return 1;
-    }
-    inverter_engine_data.enter_precharge_phase = timer_time_now();
-
     FOR_EACH_ENGINE({
         const uint8_t AMK_bQuitDcOn = 
             inverter_engine_data.engines[index_engine].amk_data_1.AMK_STATUS.fields.AMK_bQuitDcOn;
