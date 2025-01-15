@@ -3,6 +3,7 @@
 #include "../../board_can/board_can.h"
 #include "../../board_conf/id_conf.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 //private
@@ -37,9 +38,10 @@ static int8_t setup_fan_radiator(const uint8_t fan_speed, const uint8_t enable)
 //public
 int8_t fan_init(void)
 {
-    if (!FANS.init_done) {
-        FANS.fans[0].set_f = setup_fan_radiator;
-       FANS.init_done =1;
+    if (!FANS.init_done)
+    {
+        FANS.fans[FANS_RADIATOR].set_f = setup_fan_radiator;
+        FANS.init_done =1;
     }
     return 0;
 }
@@ -57,8 +59,9 @@ struct Fan* fan_get_mut(const enum FAN_TYPES type)
 int8_t fan_enable(struct Fan* const restrict self)
 {
     self->active = 1;
-    if (self->set_f) {
-        return self->set_f(0,1);
+    if (self->set_f)
+    {
+        return self->set_f(0,self->active);
     }
     return 0;
 }

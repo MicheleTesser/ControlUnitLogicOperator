@@ -126,10 +126,16 @@ uint8_t check_impls(const struct DriverInput* const restrict self, const uint8_t
 
 void driver_input_free_read_ptr(void)
 {
-    DRIVER_INFO.read_ptr--;
+    //HACK: preventing negative number. decrement is not atomic and may happen
+    if (DRIVER_INFO.read_ptr) { 
+        DRIVER_INFO.read_ptr--;
+    }
 }
 
 void driver_input_free_mut_ptr(void)
 {
-    DRIVER_INFO.mut_ptr--;
+    //HACK: preventing negative number. decrement is not atomic and may happen
+    if (DRIVER_INFO.mut_ptr) {
+        DRIVER_INFO.mut_ptr--;
+    }
 }

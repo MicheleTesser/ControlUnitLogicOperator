@@ -61,6 +61,7 @@ static void loop(void)
     #endif /* ifndef DISABLE_FREQ_CONSISTENCY_CHECK */
 
     if((timer_time_now() - car_status_last_time > 200 MILLIS) ){
+        car_status_last_time = timer_time_now();
         car_status_send_status();
     }
 }

@@ -42,9 +42,14 @@ static int test_throttle(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
     uint8_t try = 0;
-    while(driver_get_amount(THROTTLE) != throttle_value && try < 5) {}
+    float throttle =0;
+    while(throttle != throttle_value && try < 5) {
+        DRIVER_INPUT_READ_ONLY_ACTION({
+            throttle = driver_get_amount(driver_input_read_ptr, THROTTLE);
+        })
+    }
 
-    if (driver_get_amount(THROTTLE) == throttle_value) {
+    if (throttle == throttle_value) {
         PASSED("throttle value setted correctly");
     }else{
         FAILED("throttle value set fail");
@@ -62,7 +67,10 @@ static int test_throttle(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (driver_get_amount(THROTTLE) == throttle_value) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        throttle = driver_get_amount(driver_input_read_ptr, THROTTLE);
+    })
+    if (throttle == throttle_value) {
         PASSED("throttle value upadte correctly");
     }else{
         FAILED("brake value update fail");
@@ -77,6 +85,7 @@ static int test_brake(void){
     uint8_t brk_value = 42;
     can_obj_can2_h_t mex;
     CanMessage mex_c;
+    float brake =0;
     memset(&mex, 0, sizeof(mex));
     memset(&mex_c, 0, sizeof(mex_c));
     mex.can_0x053_Driver.no_implausibility =1;
@@ -87,7 +96,11 @@ static int test_brake(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (driver_get_amount(BRAKE) == brk_value) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        brake = driver_get_amount(driver_input_read_ptr, BRAKE);
+    })
+
+    if (brake == brk_value) {
         PASSED("brake value setted correctly");
     }else{
         FAILED("brake value set fail");
@@ -105,7 +118,11 @@ static int test_brake(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (driver_get_amount(BRAKE) == brk_value) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        brake = driver_get_amount(driver_input_read_ptr, BRAKE);
+    })
+
+    if (brake == brk_value) {
         PASSED("brake value upadte correctly");
     }else{
         FAILED("brake value update fail");
@@ -120,6 +137,7 @@ static int test_regen(void){
     uint8_t regen_value = 10;
     can_obj_can2_h_t mex;
     CanMessage mex_c;
+    float regen =0;
     memset(&mex, 0, sizeof(mex));
     memset(&mex_c, 0, sizeof(mex_c));
     mex.can_0x052_Paddle.regen = regen_value;
@@ -129,7 +147,11 @@ static int test_regen(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (driver_get_amount(REGEN) == regen_value) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        regen = driver_get_amount(driver_input_read_ptr, REGEN);
+    })
+
+    if (regen == regen_value) {
         PASSED("regen value setted correctly");
     }else{
         FAILED("regen value set fail");
@@ -146,7 +168,11 @@ static int test_regen(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (driver_get_amount(REGEN) == regen_value) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        regen = driver_get_amount(driver_input_read_ptr, REGEN);
+    })
+
+    if (regen == regen_value) {
         PASSED("regen value upadte correctly");
     }else{
         FAILED("brake value update fail");
@@ -161,6 +187,7 @@ static int test_impls(void){
     uint8_t no_imp = 0;
     can_obj_can2_h_t mex;
     CanMessage mex_c;
+    uint8_t impl = 0;
     memset(&mex, 0, sizeof(mex));
     memset(&mex_c, 0, sizeof(mex_c));
     mex.can_0x053_Driver.no_implausibility = no_imp;
@@ -171,13 +198,20 @@ static int test_impls(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (check_impls(THROTTLE_BRAKE)) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        impl = check_impls(driver_input_read_ptr, THROTTLE_BRAKE);
+    });
+
+    if (impl) {
         PASSED("THROTTLE_BRAKE implausibility setted correctly");
     }else{
         FAILED("THROTTLE_BRAKE implausibility set failed");
         err--;
     }
-    clear_implausibility();
+
+    DRIVER_INPUT_MUT_ACTION({
+        clear_implausibility(driver_input_mut_ptr);
+    })
     memset(&mex, 0, sizeof(mex));
     memset(&mex_c, 0, sizeof(mex_c));
     mex.can_0x053_Driver.pad_implausibility =1;
@@ -187,14 +221,20 @@ static int test_impls(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (check_impls(THROTTLE_PADEL)) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        impl = check_impls(driver_input_read_ptr, THROTTLE_BRAKE);
+    });
+
+    if (impl) {
         PASSED("THROTTLE_PADEL implausibility setted correctly");
     }else{
         FAILED("THROTTLE_PADEL implausibility set failed");
         err--;
     }
 
-    clear_implausibility();
+    DRIVER_INPUT_MUT_ACTION({
+        clear_implausibility(driver_input_mut_ptr);
+    })
     memset(&mex, 0, sizeof(mex));
     memset(&mex_c, 0, sizeof(mex_c));
     mex.can_0x053_Driver.pot_implausibility=1;
@@ -204,7 +244,11 @@ static int test_impls(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (check_impls(THROTTLE_POT)) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        impl = check_impls(driver_input_read_ptr, THROTTLE_POT);
+    });
+
+    if (impl) {
         PASSED("THROTTLE_POT implausibility setted correctly");
     }else{
         FAILED("THROTTLE_POT implausibility set failed");
@@ -219,6 +263,7 @@ static int test_steering_wheel(void){
     uint8_t steering_value = 10;
     can_obj_can2_h_t mex;
     CanMessage mex_c;
+    float stw =0;
     memset(&mex, 0, sizeof(mex));
     memset(&mex_c, 0, sizeof(mex_c));
     mex.can_0x053_Driver.steering = steering_value;
@@ -228,7 +273,11 @@ static int test_steering_wheel(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (driver_get_amount(STEERING_ANGLE) == steering_value) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        stw = driver_get_amount(driver_input_read_ptr, STEERING_ANGLE);
+    })
+
+    if (stw == steering_value) {
         PASSED("steering value setted correctly");
     }else{
         FAILED("steering value set fail");
@@ -245,7 +294,11 @@ static int test_steering_wheel(void){
     hardware_write_can(CAN_MODULE_GENERAL, &mex_c);
     sleep(1);
 
-    if (driver_get_amount(STEERING_ANGLE) == steering_value) {
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        stw = driver_get_amount(driver_input_read_ptr, STEERING_ANGLE);
+    })
+
+    if (stw == steering_value) {
         PASSED("steering value upadte correctly");
     }else{
         FAILED("brake value update fail");

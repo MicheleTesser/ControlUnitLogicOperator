@@ -309,16 +309,13 @@ uint8_t amk_inverter_hv_status(void)
 
 enum RUNNING_STATUS amk_rtd_procedure(void)
 {
+    uint8_t emergency_state =0;
     if(inverter_engine_data.engine_status == SYSTEM_OFF){
         EMERGENCY_FAULT_MUT_ACTION({
             one_emergency_solved(emergency_mut_ptr, FAILED_RTD_SEQ);
+            emergency_state = is_emergency_state(emergency_mut_ptr);
         })
     }
-
-    uint8_t emergency_state =0;
-    EMERGENCY_FAULT_READ_ONLY_ACTION({
-            emergency_state = is_emergency_state(emergency_read_ptr);
-    })
 
     if (emergency_state) {
         amk_disable_inverter();

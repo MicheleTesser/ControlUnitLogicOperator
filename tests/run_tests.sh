@@ -21,14 +21,14 @@ run_test() {
     cd build
     rm -rf ./*
     cmake .. 1>/dev/null
-    make build_debug 1>/dev/null
+    make build_debug -j8 1>/dev/null
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
     cd debug
     ./main
     cd ..
     make clean 1>/dev/null
     echo -e ${YELLOW}building in RELEASE mode $ENDCOLOR
-    make build_release 1>/dev/null
+    make build_release -j8 1>/dev/null
     echo -e ${GREEN}running in RELEASE mode $ENDCOLOR
     cd release
     ./main
