@@ -50,9 +50,11 @@ static void setup(void)
     while(GIEI_init() <0){
         serial_write_str(SERIAL, "GIEI init failed");
     };
-    while (dps_is_init_done()) {}
-    pump_enable();
-    fan_enable(FANS_RADIATOR);
+    while (driver_input_init() < 0) {
+        serial_write_str(SERIAL, "driver input init failed");
+    }
+    pump_init();
+    fan_init();
 
 
     //INFO: open the SCS to power off the HV if it is on. May happen when the lv restarts.
@@ -77,8 +79,10 @@ static void loop(void)
     i_m_alive(alive_fd);
     if (get_current_mission() != NONE) {
         if (GIEI_check_running_condition() == RUNNING) {
-            pump_init();
-            fan_init();
+            pump_enable();
+            FAN_MUT_ACTION(FANS_RADIATOR, {
+                fan_enable(fan_mut_ptr);
+            });
             GIEI_input(throttle,regen);
         }
     }

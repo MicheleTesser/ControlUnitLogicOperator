@@ -16,9 +16,13 @@
 
 static uint8_t sdc_closed(void)
 {
+    uint8_t emergency_state =0;
+    EMERGENCY_FAULT_READ_ONLY_ACTION({
+        emergency_state = is_emergency_state(emergency_read_ptr);
+    });
     return  gpio_read_state(AIR_PRECHARGE_INIT) &&
             gpio_read_state(AIR_PRECHARGE_DONE) &&
-            !is_emergency_state();
+            !emergency_state;
 }
 
 static int8_t dv_update_led(void)
@@ -85,8 +89,12 @@ static int8_t dv_update_status(void)
 {
     float giei_speed = 0;
     float driver_brake =0;
+    uint8_t emergency_state =0;
+    EMERGENCY_FAULT_READ_ONLY_ACTION({
+        emergency_state = is_emergency_state(emergency_read_ptr);
+    });
 
-    if (is_emergency_state()) {
+    if (emergency_state) {
         DV_STATUS_MUT_ACTION({
             dv_status_set(dv_status_mut_ptr, AS_EMERGENCY);
         })

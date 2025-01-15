@@ -131,7 +131,9 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex,
             save_temperature(BMS_HV_MIN, m.can_0x058_BmsHv2.min_temp);
             save_temperature(BMS_HV_MAX, m.can_0x058_BmsHv2.max_temp);
             save_temperature(BMS_HV_AVG, m.can_0x058_BmsHv2.avg_temp);
-            fan_set_value(FAN_BMS_HV, m.can_0x058_BmsHv2.fan_speed);
+            FAN_MUT_ACTION(FAN_BMS_HV, {
+                fan_set_speed(fan_mut_ptr, m.can_0x058_BmsHv2.fan_speed);
+            });
             break;
         case CAN_ID_IMU1:
             {
@@ -139,9 +141,11 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex,
                     .u_data = m.can_0x060_Imu1.acc_x,
                 };
                 conv.u_data = m.can_0x060_Imu1.acc_x;
-                imu_update_info(IMU_accelerations, axis_X, conv.f_data);
-                conv.u_data = m.can_0x060_Imu1.acc_y;
-                imu_update_info(IMU_accelerations, axis_Y, conv.f_data);
+                IMU_MUT_ACTION({
+                    imu_update_info(imu_mut_ptr, IMU_accelerations, axis_X, conv.f_data);
+                    conv.u_data = m.can_0x060_Imu1.acc_y;
+                    imu_update_info(imu_mut_ptr, IMU_accelerations, axis_Y, conv.f_data);
+                })
             }
             break;
         case CAN_ID_IMU2:
@@ -149,10 +153,13 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex,
                 union u32_float conv ={
                     .u_data = m.can_0x061_Imu2.acc_z,
                 };
-                imu_update_info(IMU_accelerations, axis_Z, conv.f_data);
-                imu_calibrate();
-                conv.u_data = m.can_0x061_Imu2.omega_x;
-                imu_update_info(IMU_angles, axis_X, conv.f_data);
+                IMU_MUT_ACTION({
+                    imu_update_info(imu_mut_ptr, IMU_accelerations, axis_Z, conv.f_data);
+                    conv.u_data = m.can_0x061_Imu2.omega_x;
+                    imu_calibrate(imu_mut_ptr);
+                    imu_update_info(imu_mut_ptr, IMU_angles, axis_X, conv.f_data);
+
+                })
             }
             break;
         case CAN_ID_IMU3:
@@ -160,9 +167,11 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex,
                 union u32_float conv ={
                     .u_data = m.can_0x062_Imu3.omega_y,
                 };
-                imu_update_info(IMU_angles, axis_Y, conv.f_data);
-                conv.u_data = m.can_0x062_Imu3.omega_z;
-                imu_update_info(IMU_angles, axis_Z, conv.f_data);
+                IMU_MUT_ACTION({
+                    imu_update_info(imu_mut_ptr, IMU_angles, axis_Y, conv.f_data);
+                    conv.u_data = m.can_0x062_Imu3.omega_z;
+                    imu_update_info(imu_mut_ptr, IMU_angles, axis_Z, conv.f_data);
+                })
             }
             break;
         case CAN_ID_MAP: //INFO: STW
@@ -252,19 +261,27 @@ static int8_t manage_can_3_message(const CanMessage* const restrict mex,
 }
 
 static int8_t engine_fault(void){
-    return one_emergency_raised(ENGINE_FAULT);
+    EMERGENCY_FAULT_MUT_ACTION({
+        return one_emergency_raised(emergency_mut_ptr, ENGINE_FAULT);
+    })
 }
 
 static int8_t bms_lv_fault(void){
-    return one_emergency_raised(BMS_LV_FAULT);
+    EMERGENCY_FAULT_MUT_ACTION({
+        return one_emergency_raised(emergency_mut_ptr, BMS_LV_FAULT);
+    })
 }
 
 static int8_t bms_hv_fault(void){
-    return one_emergency_raised(BMS_HV_FAULT);
+    EMERGENCY_FAULT_MUT_ACTION({
+        return one_emergency_raised(emergency_mut_ptr, BMS_HV_FAULT);
+    })
 }
 
 static int8_t imu_fault(void){
-    return one_emergency_raised(IMU_FAULT);
+    EMERGENCY_FAULT_MUT_ACTION({
+        return one_emergency_raised(emergency_mut_ptr, IMU_FAULT);
+    })
 }
 
 static int8_t paddle_fault(void){
@@ -273,15 +290,21 @@ static int8_t paddle_fault(void){
 }
 
 static int8_t lem_fault(void){
-    return one_emergency_raised(LEM_FAULT);
+    EMERGENCY_FAULT_MUT_ACTION({
+        return one_emergency_raised(emergency_mut_ptr, LEM_FAULT);
+    })
 }
 
 static int8_t atc_fault(void){
-    return one_emergency_raised(ATC_FRONT_FAULT);
+    EMERGENCY_FAULT_MUT_ACTION({
+        return one_emergency_raised(emergency_mut_ptr, ATC_FRONT_FAULT);
+    })
 }
 
 static int8_t smu_fault(void){
-    return one_emergency_raised(SMU_FAULT);
+    EMERGENCY_FAULT_MUT_ACTION({
+        return one_emergency_raised(emergency_mut_ptr, SMU_FAULT);
+    })
 }
 
 

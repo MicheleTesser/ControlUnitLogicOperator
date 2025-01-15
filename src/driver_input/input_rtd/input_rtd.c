@@ -48,9 +48,13 @@ int8_t input_rtd_check(void)
     switch (RTD_t.mode) {
         case DISABLE:
             if (gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON) || dv_go()) {
-                one_emergency_raised(RTD_IN_NONE_MISSION);
+                EMERGENCY_FAULT_MUT_ACTION({
+                    one_emergency_raised(emergency_mut_ptr, RTD_IN_NONE_MISSION);
+                })
             }else{
-                one_emergency_solved(RTD_IN_NONE_MISSION);
+                EMERGENCY_FAULT_MUT_ACTION({
+                    one_emergency_solved(emergency_mut_ptr, RTD_IN_NONE_MISSION);
+                })
             }
             return 0;
         case BUTTON:

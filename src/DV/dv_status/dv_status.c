@@ -34,7 +34,9 @@ int8_t dv_status_set(struct DvStatus* const restrict self, const enum AS_STATUS 
 {
     self->status = status;
     if (status != AS_EMERGENCY) {
-        one_emergency_solved(DV_EMERGENCY_STATE);
+        EMERGENCY_FAULT_MUT_ACTION({
+            one_emergency_solved(emergency_mut_ptr, DV_EMERGENCY_STATE);
+        })
     }
     switch (status) {
         case AS_OFF:
@@ -43,7 +45,9 @@ int8_t dv_status_set(struct DvStatus* const restrict self, const enum AS_STATUS 
         case AS_FINISHED:
             break;
         case AS_EMERGENCY:
-            one_emergency_raised(DV_EMERGENCY_STATE);
+            EMERGENCY_FAULT_MUT_ACTION({
+                one_emergency_raised(emergency_mut_ptr, DV_EMERGENCY_STATE);
+            });
             break;
     }
     return 0;

@@ -11,10 +11,20 @@ enum FAN_TYPES {
     NUMBER_OF_FAN_TYPES,//INFO: do not use this enum.
 };
 
+struct Fan;
+
 int8_t fan_init(void);
-int8_t fan_enable(const uint8_t fans);
-int8_t fan_disable(const uint8_t fans);
-int8_t fan_set_value(const enum FAN_TYPES fan, const float value);
+struct Fan* fan_get_mut(const enum FAN_TYPES type);
+
+int8_t fan_enable(struct Fan* const restrict self);
+int8_t fan_disable(struct Fan* const restrict self);
+int8_t fan_set_speed(struct Fan* const restrict self, const float value);
+
+#define FAN_MUT_ACTION(type,exp)\
+{\
+    struct Fan* fan_mut_ptr = fan_get_mut(type);\
+    exp;\
+}
 
 //debug
 

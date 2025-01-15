@@ -47,7 +47,7 @@ in the directory tests. For more info check [test](./tests/Readme.md)
 
 The repo also contains in itself a lot of documentation that may be useful to understand 
 how the code works. All the documents can be found in the doc directory
-There is also a Doxygen documentation. To create it run the command:
+There is also a [Doxygen](https://www.doxygen.nl/) documentation. To create it run the command:
 ```sh
     doxygen Doxyfile
 ```

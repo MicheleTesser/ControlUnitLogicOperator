@@ -216,11 +216,20 @@ int8_t GIEI_input(const float throttle, const float regen)
     float driver_regen = 0;
     float driver_throttle =0;
     float driver_sterring_angle =0;
+    float imu_acc_x =0;
+    float imu_acc_y =0;
+    float imu_acc_z =0;
 
     DRIVER_INPUT_READ_ONLY_ACTION({
         driver_regen = driver_get_amount(driver_input_read_ptr, REGEN);
         driver_throttle = driver_get_amount(driver_input_read_ptr, THROTTLE);
         driver_sterring_angle = driver_get_amount(driver_input_read_ptr, STEERING_ANGLE);
+    });
+
+    IMU_READ_ONLY_ACTION({
+        imu_acc_x = imu_get_info(imu_read_ptr, IMU_accelerations, axis_X);
+        imu_acc_y = imu_get_info(imu_read_ptr, IMU_accelerations, axis_Y);
+        imu_acc_z = imu_get_info(imu_read_ptr, IMU_accelerations, axis_Z);
     });
 
     memset(posTorquesNM, 0, sizeof(posTorquesNM));
@@ -230,9 +239,9 @@ int8_t GIEI_input(const float throttle, const float regen)
     {
         struct TVInputArgs tv_input =
         {
-            .ax = imu_get_info(IMU_accelerations, axis_X),
-            .ay = imu_get_info(IMU_accelerations, axis_Y),
-            .yaw_r = imu_get_info(IMU_angles, axis_Y),
+            .ax = imu_acc_x,
+            .ay = imu_acc_y,
+            .yaw_r = imu_acc_z,
             .throttle = driver_regen,
             .regenpaddle = driver_throttle,
             .brakepressurefront = 0, //TODO: not yet implemented in the code

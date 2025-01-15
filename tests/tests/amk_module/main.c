@@ -44,6 +44,7 @@ static void test_initial_emergency_state(void)
     }
 }
 
+
 static void update_status_engine(uint8_t engine, const uint8_t attributes[5])
 {
     can_obj_can1_h_t o = {0};
@@ -88,6 +89,23 @@ static void update_status_engine(uint8_t engine, const uint8_t attributes[5])
     amk_update_status(&mex);
 }
 
+static void reset(void)
+{
+    uint8_t attr[5] = {0};
+    gpio_set_high(READY_TO_DRIVE_INPUT_BUTTON);
+    gpio_set_high(AIR_PRECHARGE_INIT);
+    gpio_set_high(AIR_PRECHARGE_DONE);
+    gpio_set_high(READY_TO_DRIVE_INPUT_BUTTON);
+    update_status_engine(FRONT_LEFT, attr);
+    update_status_engine(FRONT_RIGHT, attr);
+    update_status_engine(REAR_LEFT, attr);
+    update_status_engine(REAR_RIGHT, attr);
+    update_current_mission(NONE);
+    if (amk_rtd_procedure() != SYSTEM_OFF) {
+        FAILED("reset amk module failed");
+    }
+}
+
 static void test_rtd_correct_in_manual_mode(void)
 {
     enum RUNNING_STATUS rtd_status = SYSTEM_OFF;
@@ -98,6 +116,8 @@ static void test_rtd_correct_in_manual_mode(void)
 
     uint8_t engine_attr[5] = {0};
     engine_attr[0] = 1;
+    engine_attr[1] = 1;
+    engine_attr[2] = 1;
 
     FOR_EACH_ENGINE({
         update_status_engine(index_engine,engine_attr);
@@ -112,8 +132,6 @@ static void test_rtd_correct_in_manual_mode(void)
     }
 
     gpio_set_low(AIR_PRECHARGE_INIT);
-    engine_attr[1] = 1;
-    engine_attr[2] = 1;
 
     FOR_EACH_ENGINE({
         update_status_engine(index_engine,engine_attr);
@@ -164,6 +182,54 @@ static void test_rtd_correct_in_manual_mode(void)
     }
 }
 
+
+static void test_rtd_failed_in_manual_mode(void)
+{
+    enum RUNNING_STATUS rtd_status __attribute_maybe_unused__ = SYSTEM_OFF;
+
+    if(update_current_mission(MANUALY)){
+        FAILED("failed updating mission to manually");
+    }
+
+    uint8_t engine_attr[5] = {0};
+    engine_attr[0] = 1;
+
+    FOR_EACH_ENGINE({
+        update_status_engine(index_engine,engine_attr);
+    })
+
+    rtd_status = amk_rtd_procedure();
+    if (rtd_status == SYSTEM_OFF && !is_emergency_state()) {
+        PASSED("rtd still SYSTEM_OFF with no emergency, waiting ack from inverter for HV");
+    }else{
+        FAILED("rtd still SYSTEM_OFF with no emergency, waiting ack from inverter for HV");
+        printf("%d\n",rtd_status);
+    }
+
+    engine_attr[1] = 1;
+    engine_attr[2] = 1;
+
+    FOR_EACH_ENGINE({
+        update_status_engine(index_engine,engine_attr);
+    })
+
+    const enum RUNNING_STATUS rtd_old = amk_rtd_procedure();
+
+    engine_attr[1] = 0;
+    engine_attr[2] = 0;
+    FOR_EACH_ENGINE({
+        update_status_engine(index_engine,engine_attr);
+    })
+
+    rtd_status = amk_rtd_procedure();
+    if (rtd_old == SYSTEM_PRECAHRGE && rtd_status == SYSTEM_OFF && is_emergency_state()) {
+        PASSED("recognized emergency in PRECHARGE because HV was OFF");
+    }else{
+        PASSED("not recognized emergency in PRECHARGE when HV was OFF");
+    }
+
+}
+
 int main(void)
 {
     if(create_virtual_chip() <0){
@@ -176,11 +242,17 @@ int main(void)
         goto end;
     }
 
+    reset();
     test_initial_running_status();
+    reset();
     test_initial_inverter_status();
+    reset();
     test_initial_emergency_state();
-    
+
+    reset();
     test_rtd_correct_in_manual_mode();
+    reset();
+    test_rtd_failed_in_manual_mode();
 
 end:
     print_SCORE();

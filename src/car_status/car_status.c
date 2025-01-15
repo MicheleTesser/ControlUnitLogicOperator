@@ -57,20 +57,19 @@ int8_t car_status_get_info(const enum CarStatusInfo info)
 {
     switch (info) {
         case CAR_STATUS_DV_STATUS_READY:
-            {
-                const struct DvStatus* p_dv_status = dv_status_class_get();
-                return dv_status_get(p_dv_status) == AS_READY;
-            }
+            DV_STATUS_READ_ONLY_ACTION({
+                return dv_status_get(dv_status_read_ptr) == AS_READY;
+            });
+            break;
         case CAR_STATUS_DV_STATUS_DRIVING:
-            {
-                const struct DvStatus* p_dv_status = dv_status_class_get();
-                return dv_status_get(p_dv_status) == AS_DRIVING;
-            }
+            DV_STATUS_READ_ONLY_ACTION({
+                return dv_status_get(dv_status_read_ptr) == AS_DRIVING;
+            });
+            break;
         case CAR_STATUS_RES_READY_GO:
-            {
-                const struct DvRes* p_res = res_class_get();
-                return res_check_go(p_res);
-            }
+            RES_READ_ONLY_ACTION({
+                return res_check_go(res_read_ptr);
+            });
             break;
     }
     return -1;

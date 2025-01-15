@@ -310,10 +310,17 @@ uint8_t amk_inverter_hv_status(void)
 enum RUNNING_STATUS amk_rtd_procedure(void)
 {
     if(inverter_engine_data.engine_status == SYSTEM_OFF){
-        one_emergency_solved(FAILED_RTD_SEQ);
+        EMERGENCY_FAULT_MUT_ACTION({
+            one_emergency_solved(emergency_mut_ptr, FAILED_RTD_SEQ);
+        })
     }
 
-    if (is_emergency_state()) {
+    uint8_t emergency_state =0;
+    EMERGENCY_FAULT_READ_ONLY_ACTION({
+            emergency_state = is_emergency_state(emergency_read_ptr);
+    })
+
+    if (emergency_state) {
         amk_disable_inverter();
         inverter_engine_data.engine_status = SYSTEM_OFF;
         return inverter_engine_data.engine_status;
@@ -336,7 +343,9 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
                 if(rtd_input_request())
                 {
                     amk_shut_down_power();
-                    one_emergency_raised(FAILED_RTD_SEQ);
+                    EMERGENCY_FAULT_MUT_ACTION({
+                        one_emergency_raised(emergency_mut_ptr, FAILED_RTD_SEQ);
+                    })
                 }
             }
             break;
@@ -344,7 +353,9 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
             if (!amk_inverter_on() || !amk_inverter_hv_status() || rtd_input_request())
             {
                 amk_shut_down_power();
-                one_emergency_raised(FAILED_RTD_SEQ);
+                EMERGENCY_FAULT_MUT_ACTION({
+                    one_emergency_raised(emergency_mut_ptr, FAILED_RTD_SEQ);
+                })
                 inverter_engine_data.engine_status = SYSTEM_OFF;
             }
             else if (precharge_ended())
@@ -357,7 +368,9 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
             if (!amk_inverter_hv_status() || !precharge_ended() || !amk_inverter_on())
             {
                 amk_shut_down_power();
-                one_emergency_raised(FAILED_RTD_SEQ);
+                EMERGENCY_FAULT_MUT_ACTION({
+                    one_emergency_raised(emergency_mut_ptr, FAILED_RTD_SEQ);
+                })
                 inverter_engine_data.engine_status = SYSTEM_OFF;
                 break;
             }
@@ -371,7 +384,9 @@ enum RUNNING_STATUS amk_rtd_procedure(void)
                     !precharge_ended() || !amk_inverter_on())
             {
                 amk_shut_down_power();
-                one_emergency_raised(FAILED_RTD_SEQ);
+                EMERGENCY_FAULT_MUT_ACTION({
+                    one_emergency_raised(emergency_mut_ptr, FAILED_RTD_SEQ);
+                });
                 inverter_engine_data.engine_status = SYSTEM_OFF;
             }
             else if (!input_rtd_check())
