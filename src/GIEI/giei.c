@@ -8,7 +8,6 @@
 #include "rege_alg/regen_alg.h"
 #include "speed_alg/speed_alg.h"
 #include "torque_vec_alg/torque_vec_alg.h"
-#include "../board_can/board_can.h"
 #include "../utility/arithmetic/arithmetic.h"
 #include "../batteries/hv/hv.h"
 #include "../IMU/imu.h"
@@ -33,7 +32,7 @@
 
 #define M_N                                 9.8f
 
-static struct{
+static struct GIEI{
     time_var_microseconds sound_start_at;
     float limit_power;
     float limit_pos_torque;
@@ -41,8 +40,11 @@ static struct{
     float limit_regen;
     float limit_max_speed;
     float settings_power_repartition;
-    uint8_t activate_torque_vectoring :1;
     enum RUNNING_STATUS running_status;
+    uint8_t activate_torque_vectoring :1;
+    uint8_t init_done: 1;
+    uint8_t mut_ptr: 1;
+    uint8_t read_ptr:5;
 }GIEI;
 
 
@@ -84,49 +86,9 @@ static void update_torque_NM_vectors_no_tv(
     }
 }
 
-static int8_t send_can_settings_message(void)
-{
-    can_obj_can2_h_t o;
-    memset(&o, 0, sizeof(o));
-    CanMessage mex;
-    o.can_0x066_CarSettings.pwr_limit = GIEI.limit_power;
-    o.can_0x066_CarSettings.speed_lim = GIEI.limit_max_speed;
-    o.can_0x066_CarSettings.max_neg_trq = engine_max_pos_torque(GIEI.limit_max_speed);
-    o.can_0x066_CarSettings.max_neg_trq = engine_max_neg_torque(GIEI.limit_max_speed);
-    o.can_0x066_CarSettings.torque_vectoring = GIEI.activate_torque_vectoring;
-    o.can_0x066_CarSettings.max_regen_current = GIEI.limit_regen;
-    o.can_0x066_CarSettings.rear_motor_repartition = 
-        (uint8_t) (GIEI.settings_power_repartition * 100);
-    o.can_0x066_CarSettings.front_motor_repartition = 
-        (uint8_t) ((1.0f - GIEI.settings_power_repartition) * 100);
-    mex.id = CAN_ID_CARSETTINGS;
-    mex.message_size = pack_message_can2(&o, CAN_ID_CARSETTINGS, &mex.full_word);
-
-    return board_can_write(CAN_MODULE_GENERAL, &mex);
-}
-
-static int8_t send_can_status_message(void)
-{
-    can_obj_can2_h_t o;
-    memset(&o, 0, sizeof(o));
-    CanMessage mex;
-    o.can_0x065_CarStatus.HV = engine_inverter_hv_status();
-    o.can_0x065_CarStatus.RF = input_rtd_check(); //FIX: use ack from the inverter
-    o.can_0x065_CarStatus.R2D = GIEI.running_status == RUNNING;
-    o.can_0x065_CarStatus.AIR1 = gpio_read_state(AIR_PRECHARGE_INIT);
-    o.can_0x065_CarStatus.AIR2 = gpio_read_state(AIR_PRECHARGE_DONE);
-    o.can_0x065_CarStatus.precharge = 
-        gpio_read_state(AIR_PRECHARGE_INIT) && gpio_read_state(AIR_PRECHARGE_DONE);
-    o.can_0x065_CarStatus.speed = giei_speed_alg_get_speed(); //TODO: not yet implemented
-    mex.id = CAN_ID_CARSTATUS;
-    mex.message_size = pack_message_can2(&o, CAN_ID_CARSTATUS, &mex.full_word);
-
-    return board_can_write(CAN_MODULE_GENERAL, &mex);
-}
-
 //public
 
-int8_t GIEI_initialize(void)
+int8_t GIEI_init(void)
 {
     GIEI.limit_power = DEFAULT_POWER_LIMIT;
     GIEI.limit_pos_torque = DEFAULT_MAX_POS_TORQUE;
@@ -142,8 +104,22 @@ int8_t GIEI_initialize(void)
     regen_alg_init();
     giei_speed_alg_class_init();
     
+    GIEI.init_done =1;
 
     return 0;
+}
+
+const struct GIEI* GIEI_get(void)
+{
+    while (!GIEI.init_done && GIEI.mut_ptr) {}
+    GIEI.read_ptr++;
+    return &GIEI;
+}
+struct GIEI* GIEI_get_mut(void)
+{
+    while (!GIEI.init_done && (GIEI.mut_ptr || GIEI.read_ptr)) {}
+    GIEI.mut_ptr++;
+    return &GIEI;
 }
 
 enum RUNNING_STATUS GIEI_check_running_condition(void)
@@ -237,6 +213,16 @@ int8_t GIEI_input(const float throttle, const float regen)
         engine_get_info(REAR_LEFT,ENGINE_VOLTAGE),
         engine_get_info(REAR_RIGHT,ENGINE_VOLTAGE),
     };
+    float driver_regen = 0;
+    float driver_throttle =0;
+    float driver_sterring_angle =0;
+
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        driver_regen = driver_get_amount(driver_input_read_ptr, REGEN);
+        driver_throttle = driver_get_amount(driver_input_read_ptr, THROTTLE);
+        driver_sterring_angle = driver_get_amount(driver_input_read_ptr, STEERING_ANGLE);
+    });
+
     memset(posTorquesNM, 0, sizeof(posTorquesNM));
     memset(negTorquesNM, 0, sizeof(negTorquesNM));
 
@@ -247,18 +233,21 @@ int8_t GIEI_input(const float throttle, const float regen)
             .ax = imu_get_info(IMU_accelerations, axis_X),
             .ay = imu_get_info(IMU_accelerations, axis_Y),
             .yaw_r = imu_get_info(IMU_angles, axis_Y),
-            .throttle = driver_get_amount(THROTTLE),
-            .regenpaddle = driver_get_amount(REGEN),
+            .throttle = driver_regen,
+            .regenpaddle = driver_throttle,
             .brakepressurefront = 0, //TODO: not yet implemented in the code
             .brakepressurerear = 0, //TODO: not yet implemented in the code
-            .steering = driver_get_amount(STEERING_ANGLE),
+            .steering = driver_sterring_angle,
             .rpm[0] = engine_get_info(FRONT_LEFT, ENGINE_RPM),
             .rpm[1] = engine_get_info(FRONT_RIGHT, ENGINE_RPM),
             .rpm[2] = engine_get_info(REAR_RIGHT, ENGINE_RPM),
             .rpm[3] = engine_get_info(REAR_RIGHT, ENGINE_RPM),
             .voltage = 0,
         };
-        hv_get_info(HV_BATTERY_PACK_TENSION, &tv_input.voltage, sizeof(tv_input.voltage));
+        HV_READ_ONLY_ACTION({
+            hv_get_info(hv_read_ptr, HV_BATTERY_PACK_TENSION, 
+                    &tv_input.voltage, sizeof(tv_input.voltage));
+        });
         tv_alg_compute(&tv_input, posTorquesNM);
     }
     else
@@ -266,14 +255,18 @@ int8_t GIEI_input(const float throttle, const float regen)
         update_torque_NM_vectors_no_tv(throttle, posTorquesNM, actual_max_pos_torque);
     }
 
-    hv_computeBatteryPackTension(engines_voltages);
+    HV_MUT_ACTION({
+        hv_computeBatteryPackTension(hv_mut_ptr, engines_voltages, NUM_OF_EGINES);
+    })
     if (throttle > 0 && regen >= 0)
     {
         float total_power;
-        if (!hv_get_info(HV_TOTAL_POWER, &total_power, sizeof(total_power)))
-        {
-            powerControl(total_power, GIEI.limit_power, posTorquesNM);
-        }
+        HV_READ_ONLY_ACTION({
+            if (!hv_get_info(hv_read_ptr, HV_TOTAL_POWER, &total_power, sizeof(total_power)))
+            {
+                powerControl(total_power, GIEI.limit_power, posTorquesNM);
+            }
+        })
     }
 
     const struct RegenAlgInput input =
@@ -308,14 +301,48 @@ int8_t GIEI_input(const float throttle, const float regen)
     return 0;
 }
 
-int8_t GIEI_send_status_info_in_can(void)
-{
-    return send_can_status_message() | send_can_settings_message();
-}
-
 uint8_t GIEI_get_speed(void)
 {
     return giei_speed_alg_get_speed();
+}
+
+float GIEI_get_info(const struct GIEI* const restrict self, const enum GIEI_INFO info)
+{
+    switch (info) {
+        case GIEI_INFO_LIMIT_POWER:
+            return self->limit_power;
+        case GIEI_INFO_MAX_SPEED:
+            return self->limit_max_speed;
+        case GIEI_INFO_MAX_POS_TORQUE:
+            return engine_max_pos_torque(self->limit_pos_torque);
+        case GIEI_INFO_MAX_NEG_TORQUE:
+            return engine_max_neg_torque(self->limit_pos_torque);
+        case GIEI_INFO_LIMIT_REGEN:
+            return self->limit_regen;
+        case GIEI_INFO_TV:
+            return self->activate_torque_vectoring;
+        case GIEI_INFO_REAR_REPARTITION:
+            return self->settings_power_repartition * 100;
+        case GIEI_INFO_FRONT_REPARTITION:
+            return (1.0f - self->settings_power_repartition) * 100;
+        case GIEI_INFO_STATUS_HV:
+            return engine_inverter_hv_status();
+        case GIEI_INFO_STATUS_RF:
+            return GIEI_check_running_condition() >= TS_READY;
+        case GIEI_INFO_CURRENT_SPEED:
+            return giei_speed_alg_get_speed();
+            break;
+    }
+    return -1;
+}
+
+void GIEI_free_read_ptr(void)
+{
+    GIEI.read_ptr--;
+}
+void GIEI_free_write_ptr(void)
+{
+    GIEI.mut_ptr--;
 }
 
 //debug

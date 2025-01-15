@@ -6,20 +6,27 @@
 struct DvStatus{
     enum AS_STATUS status;
     uint8_t init_done: 1;
+    uint8_t mut_ptr: 1;
+    uint8_t read_ptr : 6;
 }DV_STATUS;
 
-struct DvStatus* dv_status_class_init(void)
+int8_t dv_status_class_init(void)
 {
-    if (!DV_STATUS.init_done) {
-        DV_STATUS.status = AS_OFF;
-        DV_STATUS.init_done =1;
-        return &DV_STATUS;
-    }
-    return NULL;
+    DV_STATUS.status = AS_OFF;
+    DV_STATUS.init_done =1;
+    return 0;
 }
-struct DvStatus* dv_status_class_get(void)
+const struct DvStatus* dv_status_class_get(void)
 {
-    while (!DV_STATUS.init_done) {}
+    while (!DV_STATUS.init_done && DV_STATUS.mut_ptr) {}
+    DV_STATUS.read_ptr++;
+    return &DV_STATUS;
+}
+
+struct DvStatus* dv_status_class_get_mut(void)
+{
+    while (!DV_STATUS.init_done && DV_STATUS.mut_ptr && DV_STATUS.mut_ptr) {}
+    DV_STATUS.mut_ptr++;
     return &DV_STATUS;
 }
 
@@ -45,4 +52,13 @@ int8_t dv_status_set(struct DvStatus* const restrict self, const enum AS_STATUS 
 int8_t dv_status_get(const struct DvStatus* const restrict self)
 {
     return self->status;
+}
+
+void dv_status_free_read_ptr(void)
+{
+    DV_STATUS.read_ptr--;
+}
+void dv_status_free_write_ptr(void)
+{
+    DV_STATUS.mut_ptr--;
 }

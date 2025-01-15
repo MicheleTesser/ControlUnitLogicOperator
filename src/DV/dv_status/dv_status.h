@@ -14,9 +14,27 @@ enum AS_STATUS{
 
 struct DvStatus;
 
-struct DvStatus* dv_status_class_init(void);
-struct DvStatus* dv_status_class_get(void);
+int8_t dv_status_class_init(void);
+const struct DvStatus* dv_status_class_get(void);
+struct DvStatus* dv_status_class_get_mut(void);
 int8_t dv_status_set(struct DvStatus* const restrict self, const enum AS_STATUS status);
 int8_t dv_status_get(const struct DvStatus* const restrict self);
+
+void dv_status_free_read_ptr(void);
+void dv_status_free_write_ptr(void);
+
+#define DV_STATUS_READ_ONLY_ACTION(exp) \
+{\
+    const struct DvStatus* dv_status_read_ptr = dv_status_class_get();\
+    exp;\
+    dv_status_free_read_ptr();\
+}
+
+#define DV_STATUS_MUT_ACTION(exp) \
+{\
+    struct DvStatus* dv_status_mut_ptr = dv_status_class_get_mut();\
+    exp;\
+    dv_status_free_write_ptr();\
+}
 
 #endif // !__DV_STATUS__

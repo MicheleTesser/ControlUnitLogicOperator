@@ -3,9 +3,8 @@
 #include "../../lib/raceup_board/raceup_board.h"
 #include "../../board_conf/id_conf.h"
 #include "../../emergency_fault/emergency_fault.h"
-#include "../../DV/res/res.h"
-#include "../../DV/dv_status/dv_status.h"
 #include "../../missions/missons.h"
+#include "../../car_status/car_status.h"
 
 
 static struct RTD{
@@ -16,17 +15,22 @@ static struct RTD{
     uint8_t init_done: 1;
 }RTD_t;
 
-int8_t dv_go(struct RTD* self)
+int8_t dv_go(void)
 {
-    return (dv_status_get(self->p_dv_status) == AS_READY && res_check_go() && get_current_mission() > MANUALY) ||
-        dv_status_set(self->p_dv_status, AS_DRIVING);
+   
+    const uint8_t ready_to_go = (
+            car_status_get_info(CAR_STATUS_DV_STATUS_READY) && 
+            car_status_get_info(CAR_STATUS_RES_READY_GO));
+    const uint8_t already_driving = 
+        car_status_get_info(CAR_STATUS_DV_STATUS_DRIVING);
+
+    return ready_to_go || already_driving;
 }
 
 int8_t input_rtd_class_init(void)
 {
     if (!RTD_t.init_done) {
         RTD_t.mode = DISABLE;
-        RTD_t.p_dv_status = dv_status_class_get();
         RTD_t.init_done =1;
         // return *(int*) &RTD_t;
     }
@@ -43,7 +47,7 @@ int8_t input_rtd_check(void)
 {
     switch (RTD_t.mode) {
         case DISABLE:
-            if (gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON) || dv_go(&RTD_t)) {
+            if (gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON) || dv_go()) {
                 one_emergency_raised(RTD_IN_NONE_MISSION);
             }else{
                 one_emergency_solved(RTD_IN_NONE_MISSION);
@@ -52,7 +56,7 @@ int8_t input_rtd_check(void)
         case BUTTON:
             return gpio_read_state(READY_TO_DRIVE_INPUT_BUTTON);
         case RES:
-            return dv_go(&RTD_t);
+            return dv_go();
             break;
     }
     return -1;

@@ -1,15 +1,17 @@
 #include "./amk.h"
 #include "../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../board_conf/id_conf.h"
-#include "../../board_can/board_can.h"
 #include "../../driver_input/driver_input.h"
 #include "../../emergency_fault/emergency_fault.h"
 #include "../../utility/arithmetic/arithmetic.h"
+#include "../../board_can/board_can.h"
 #include "../engine_common.h"
 #include <stdint.h>
 #include <string.h>
 
 //INFO: doc/amk_datasheet.pdf page 61
+
+#define MAX_MOTOR_TORQUE            21.0f
 
 struct AMK_Actual_Values_1{
     union{
@@ -63,7 +65,7 @@ struct AMK_Setpoints{
 
 //private
 
-#define MAX_MOTOR_TORQUE            21.0f
+
 static struct AMK_POWER{
     struct amk_engines{
         struct AMK_Actual_Values_1 amk_data_1;
@@ -163,7 +165,13 @@ static uint8_t amk_activate_control(void)
 static inline uint8_t rtd_input_request(void)
 {
     const uint8_t brake_treshold_percentage = 10;
-    return  driver_get_amount(BRAKE) > brake_treshold_percentage &&
+    float driver_brake = 0;
+    
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        driver_brake = driver_get_amount(driver_input_read_ptr, BRAKE);
+    })
+
+    return  driver_brake > brake_treshold_percentage &&
             input_rtd_check();
 }
 

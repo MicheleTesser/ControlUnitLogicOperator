@@ -8,6 +8,7 @@
 #include "../../lib/raceup_board/raceup_board.h"
 #include "../alive_blink/alive_blink.h"
 #include "../../board_can/board_can.h"
+#include "../../car_status/car_status.h"
 
 static alive_blink_fd alive_fd;
 
@@ -37,6 +38,7 @@ static void loop(void)
     CanMessage mex;
     int8_t read_ok=-1;
     const time_var_microseconds read_time = timer_time_now();
+    time_var_microseconds car_status_last_time = 0;
 
     read_ok = board_can_read(CAN_MODULE_INVERTER, &mex);
     if(read_ok >= 0){
@@ -57,6 +59,10 @@ static void loop(void)
     #ifndef DISABLE_FREQ_CONSISTENCY_CHECK
     board_can_consistency_check();
     #endif /* ifndef DISABLE_FREQ_CONSISTENCY_CHECK */
+
+    if((timer_time_now() - car_status_last_time > 200 MILLIS) ){
+        car_status_send_status();
+    }
 }
 
 //INFO: Service core

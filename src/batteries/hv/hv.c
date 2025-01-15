@@ -8,7 +8,7 @@
 
 //private
 
-static struct{
+static struct Hv{
     uint16_t min_voltage;
     uint16_t avg_voltage;
     uint16_t max_voltage;
@@ -16,6 +16,9 @@ static struct{
     uint32_t battery_pack_tension;
     float lem_current;
     float total_power;
+    uint8_t init_done :1;
+    uint8_t mut_ptr :1;
+    uint8_t read_ptr :6;
 }HV;
 
 static int8_t send_tension_bms(const uint64_t tension){
@@ -34,23 +37,37 @@ static int8_t send_tension_bms(const uint64_t tension){
 
 int8_t hv_init(void)
 {
+    HV.init_done =1;
     return 0;
 }
 
-int8_t hv_update_status(const CanMessage* const restrict mex)
+const struct Hv* hv_get(void)
+{
+    while (!HV.init_done && HV.mut_ptr) {}
+    HV.read_ptr++;
+    return &HV;
+}
+struct Hv* hv_get_mut(void)
+{
+    while (!HV.init_done && (HV.mut_ptr || HV.read_ptr)) {}
+    HV.mut_ptr++;
+    return &HV;
+}
+
+int8_t hv_update_status(struct Hv* const restrict self, const CanMessage* const restrict mex)
 {
     can_obj_can2_h_t o;
     switch (mex->id) {
         case CAN_ID_LEM:
             unpack_message_can2(&o, mex->id, mex->full_word, mex->message_size, 0);
-            HV.lem_current = o.can_0x3c2_Lem.current;
+            self->lem_current = o.can_0x3c2_Lem.current;
             break;
         case CAN_ID_BMSHV1:
             unpack_message_can2(&o, mex->id, mex->full_word, mex->message_size, 0);
-            HV.min_voltage = o.can_0x057_BmsHv1.min_volt;
-            HV.max_voltage = o.can_0x057_BmsHv1.max_volt;
-            HV.avg_voltage = o.can_0x057_BmsHv1.avg_volt;
-            HV.soc= o.can_0x057_BmsHv1.soc;
+            self->min_voltage = o.can_0x057_BmsHv1.min_volt;
+            self->max_voltage = o.can_0x057_BmsHv1.max_volt;
+            self->avg_voltage = o.can_0x057_BmsHv1.avg_volt;
+            self->soc= o.can_0x057_BmsHv1.soc;
             break;
     }
     return -1;
@@ -63,14 +80,15 @@ int8_t hv_update_status(const CanMessage* const restrict mex)
  *
  * BMS precharge needs a message with the tot voltage
  */
-int8_t hv_computeBatteryPackTension(const float engines_voltages[NUM_OF_EGINES])
+int8_t hv_computeBatteryPackTension(struct Hv* const restrict self, 
+        const float* const engines_voltages, const uint8_t num_of_voltages)
 {
     uint8_t active_motors = 0;
     float sum = 0.0f;
     uint8_t max = 0;
 
     // find max voltage
-    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
+    for (uint8_t i = 0; i < num_of_voltages; i++)
     {
         if (engines_voltages[i] > max)
         {
@@ -79,7 +97,7 @@ int8_t hv_computeBatteryPackTension(const float engines_voltages[NUM_OF_EGINES])
     }
 
     // Compute sum of voltages, exclude if it is below 50 V than the maximum reading
-    for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
+    for (uint8_t i = 0; i < num_of_voltages; i++)
     {
         if (engines_voltages[i] > (max - 50))
         {
@@ -89,32 +107,33 @@ int8_t hv_computeBatteryPackTension(const float engines_voltages[NUM_OF_EGINES])
     }
 
     if (!active_motors) {
-        HV.battery_pack_tension= 0;
-        HV.total_power = 0.0f;
+        self->battery_pack_tension= 0;
+        self->total_power = 0.0f;
     }
     else {
-        HV.battery_pack_tension = (sum / active_motors);
-        HV.total_power = HV.battery_pack_tension * HV.lem_current;
+        self->battery_pack_tension = (sum / active_motors);
+        self->total_power = HV.battery_pack_tension * HV.lem_current;
     }
     return send_tension_bms(HV.battery_pack_tension);
 }
 
-int8_t hv_get_info(const enum HV_INFO info, void* const buffer, const uint8_t buffer_size)
+int8_t hv_get_info(const struct Hv* const restrict self, 
+        const enum HV_INFO info, void* const buffer, const uint8_t buffer_size)
 {
-    void* src = NULL;
+    const void* src = NULL;
     uint8_t src_size=0;
     switch (info) {
         case HV_TOTAL_POWER:
             src_size = sizeof(HV.total_power);
-            src = &HV.total_power;
+            src = &self->total_power;
             break;
         case HV_LEM_CURRENT:
             src_size = sizeof(HV.lem_current);
-            src = &HV.lem_current;
+            src = &self->lem_current;
             break;
         case HV_BATTERY_PACK_TENSION:
             src_size = sizeof(HV.battery_pack_tension);
-            src = &HV.battery_pack_tension;
+            src = &self->battery_pack_tension;
             break;
         default:
             return -1;
@@ -124,4 +143,13 @@ int8_t hv_get_info(const enum HV_INFO info, void* const buffer, const uint8_t bu
     }
     memcpy(buffer, src, src_size);
     return 0;
+}
+
+void hv_free_read_ptr(void)
+{
+    HV.read_ptr--;
+}
+void hv_free_mut_ptr(void)
+{
+    HV.mut_ptr--;
 }

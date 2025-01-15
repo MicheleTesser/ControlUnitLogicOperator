@@ -23,14 +23,47 @@ enum GIEI_LIMITS{
     TORQUE_VECTORING_ACTIVATION,
 };
 
+enum GIEI_INFO{
+    GIEI_INFO_LIMIT_POWER,
+    GIEI_INFO_MAX_SPEED,
+    GIEI_INFO_MAX_POS_TORQUE,
+    GIEI_INFO_MAX_NEG_TORQUE,
+    GIEI_INFO_LIMIT_REGEN,
+    GIEI_INFO_TV,
+    GIEI_INFO_REAR_REPARTITION,
+    GIEI_INFO_FRONT_REPARTITION,
+    GIEI_INFO_STATUS_HV,
+    GIEI_INFO_STATUS_RF,
+    GIEI_INFO_CURRENT_SPEED,
+};
 
-int8_t GIEI_initialize(void);
+struct GIEI;
+
+int8_t GIEI_init(void);
+const struct GIEI* GIEI_get(void);
+struct GIEI* GIEI_get_mut(void);
 int8_t GIEI_recv_data(const CanMessage* const restrict mex);
 enum RUNNING_STATUS GIEI_check_running_condition(void);
 int8_t GIEI_set_limits(const enum GIEI_LIMITS category, const float value);
 int8_t GIEI_input(const float throttle, const float regen);
-int8_t GIEI_send_status_info_in_can(void);
-uint8_t GIEI_get_speed(void);
+float GIEI_get_info(const struct GIEI* const restrict self, const enum GIEI_INFO info);
+
+void GIEI_free_read_ptr(void);
+void GIEI_free_write_ptr(void);
+
+#define GIEI_READ_ONLY_ACTION(exp) \
+{\
+    const struct GIEI* giei_read_ptr = GIEI_get();\
+    exp;\
+    GIEI_free_read_ptr();\
+}
+
+#define GIEI_MUT_ACTION(exp) \
+{\
+    struct GIEI* giei_read_ptr = GIEI_get_mut();\
+    exp;\
+    GIEI_free_write_ptr();\
+}
 
 //debug
 uint8_t DEBUG_GIEI_check_limits(float power_limit, float pos_torque, 

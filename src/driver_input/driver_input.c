@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 //private
-static struct{
+static struct DriverInput{
     struct PercentageValue{
         float value;
         time_var_microseconds timestamp;
@@ -18,7 +18,10 @@ static struct{
         }impls;
         uint8_t impls_raw;
     };
-}driver_info;
+    uint8_t init_done: 1;
+    uint8_t mut_ptr: 1;
+    uint8_t read_ptr :6;
+}DRIVER_INFO;
 
 static void input_rtd_physical_button_toggled(void) INTERRUP_ATTRIBUTE
 {
@@ -29,22 +32,44 @@ static void input_rtd_physical_button_toggled(void) INTERRUP_ATTRIBUTE
 
 int8_t driver_input_init(void)
 {
+    if (DRIVER_INFO.init_done) {
+        return -1;
+    }
     input_rtd_class_init();
-    return hardware_interrupt_attach_fun(INTERRUPT_RTD_BUTTON, input_rtd_physical_button_toggled);
+    hardware_interrupt_attach_fun(INTERRUPT_RTD_BUTTON, input_rtd_physical_button_toggled);
+    DRIVER_INFO.init_done=1;
+    return 0;
 }
 
-float driver_get_amount(enum INPUT_TYPES driver_input)
+const struct DriverInput* driver_input_get(void)
+{
+    while (!DRIVER_INFO.init_done || DRIVER_INFO.mut_ptr) {}
+
+    DRIVER_INFO.read_ptr++;
+    return &DRIVER_INFO;
+}
+struct DriverInput* driver_input_get_mut(void)
+{
+    while (!DRIVER_INFO.init_done || DRIVER_INFO.read_ptr || DRIVER_INFO.mut_ptr) {}
+
+    DRIVER_INFO.mut_ptr++;
+    return &DRIVER_INFO;
+}
+
+float driver_get_amount(const struct DriverInput* const restrict self,
+        const enum INPUT_TYPES driver_input)
 {
     if (driver_input < NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX) {
-        return driver_info.percentages[driver_input].value;
+        return self->percentages[driver_input].value;
     }
     return -1;
 }
 
-uint8_t driver_set_amount(enum INPUT_TYPES driver_input, 
+uint8_t driver_set_amount(struct DriverInput* const restrict self,
+        const enum INPUT_TYPES driver_input, 
         const float percentage, const time_var_microseconds timestamp)
 {
-    struct PercentageValue* val = &driver_info.percentages[driver_input];
+    struct PercentageValue* val = &self->percentages[driver_input];
 
     if (percentage > 100 || driver_input >= NUM_OF_INPUT_TYPES_USED_ONLY_FOR_INDEX) {
         return -1;
@@ -55,45 +80,56 @@ uint8_t driver_set_amount(enum INPUT_TYPES driver_input,
         return -2;
     }
 
-    driver_info.percentages[driver_input].value = percentage;
-    driver_info.percentages[driver_input].timestamp = timestamp;
+    self->percentages[driver_input].value = percentage;
+    self->percentages[driver_input].timestamp = timestamp;
     return 0;
 }
 
-void set_implausibility(const enum IMPL impl, const uint8_t value)
+void set_implausibility(struct DriverInput* const restrict self,
+        const enum IMPL impl,const uint8_t value)
 {
     switch (impl) {
         case THROTTLE_BRAKE:
-            driver_info.impls.thr_brk = value;
+            self->impls.thr_brk = value;
             break;
         case THROTTLE_PADEL:
-            driver_info.impls.thr_pdl = value;
+            self->impls.thr_pdl = value;
             break;
         case THROTTLE_POT:
-            driver_info.impls.thr_pot = value;
+            self->impls.thr_pot = value;
             break;
         default:
     }
 }
 
-void clear_implausibility(void)
+void clear_implausibility(struct DriverInput* const restrict self)
 {
-    driver_info.impls_raw = 0;
+    self->impls_raw = 0;
 }
 
-uint8_t check_impls(const uint8_t impls)
+uint8_t check_impls(const struct DriverInput* const restrict self, const uint8_t impls)
 {
-    if ((impls & THROTTLE_BRAKE) && driver_info.impls.thr_brk) {
+    if ((impls & THROTTLE_BRAKE) && self->impls.thr_brk) {
         return 1;
     }
 
-    if ((impls & THROTTLE_PADEL) && driver_info.impls.thr_pdl) {
+    if ((impls & THROTTLE_PADEL) && self->impls.thr_pdl) {
         return 1;
     }
 
-    if ((impls & THROTTLE_POT) && driver_info.impls.thr_pot) {
+    if ((impls & THROTTLE_POT) && self->impls.thr_pot) {
         return  1;
     }
 
     return 0;
+}
+
+void driver_input_free_read_ptr(void)
+{
+    DRIVER_INFO.read_ptr--;
+}
+
+void driver_input_free_mut_ptr(void)
+{
+    DRIVER_INFO.mut_ptr--;
 }

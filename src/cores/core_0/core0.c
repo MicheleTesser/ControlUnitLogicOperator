@@ -47,7 +47,7 @@ static void setup(void)
     while(hv_init() <0){
         serial_write_str(SERIAL, "hv init failed");
     };
-    while(GIEI_initialize() <0){
+    while(GIEI_init() <0){
         serial_write_str(SERIAL, "GIEI init failed");
     };
     while (dps_is_init_done()) {}
@@ -66,9 +66,13 @@ static void setup(void)
 
 static void loop(void)
 {
-    const float throttle = driver_get_amount(THROTTLE);
-    const float regen = driver_get_amount(REGEN);
-    static time_var_microseconds car_status_last_time = 0;
+    float throttle = 0;
+    float regen = 0;
+
+    DRIVER_INPUT_READ_ONLY_ACTION({
+        throttle = driver_get_amount(driver_input_read_ptr, THROTTLE);
+        regen = driver_get_amount(driver_input_read_ptr, REGEN);
+    })
 
     i_m_alive(alive_fd);
     if (get_current_mission() != NONE) {
@@ -77,10 +81,6 @@ static void loop(void)
             fan_init();
             GIEI_input(throttle,regen);
         }
-    }
-    if((timer_time_now() - car_status_last_time > 200 MILLIS) ){
-        GIEI_send_status_info_in_can();
-        car_status_last_time = timer_time_now();
     }
 }
 

@@ -20,14 +20,38 @@ enum IMPL{
     THROTTLE_POT = (1<<2),
 };
 
+struct DriverInput;
+
 int8_t driver_input_init(void);
-float driver_get_amount(const enum INPUT_TYPES driver_input);
-uint8_t driver_set_amount(const enum INPUT_TYPES driver_input, 
+const struct DriverInput* driver_input_get(void);
+struct DriverInput* driver_input_get_mut(void);
+
+float driver_get_amount(const struct DriverInput* const restrict self,
+        const enum INPUT_TYPES driver_input);
+uint8_t driver_set_amount(struct DriverInput* const restrict self,
+        const enum INPUT_TYPES driver_input, 
         const float percentage, const time_var_microseconds timestamp);
 
-void set_implausibility(const enum IMPL impl,const uint8_t value);
-void clear_implausibility(void);
+void set_implausibility(struct DriverInput* const restrict self,
+        const enum IMPL impl,const uint8_t value);
+void clear_implausibility(struct DriverInput* const restrict self);
+uint8_t check_impls(const struct DriverInput* const restrict self, const uint8_t impls);
 
-uint8_t check_impls(const uint8_t impls);
+void driver_input_free_read_ptr(void);
+void driver_input_free_mut_ptr(void);
+
+#define DRIVER_INPUT_READ_ONLY_ACTION(exp)\
+{\
+    const struct DriverInput* const driver_input_read_ptr = driver_input_get();\
+    exp;\
+    driver_input_free_read_ptr();\
+}
+
+#define DRIVER_INPUT_MUT_ACTION(exp)\
+{\
+    struct DriverInput* const driver_input_mut_ptr = driver_input_get_mut();\
+    exp;\
+    driver_input_free_mut_ptr();\
+}
 
 #endif // !__DRIVER_INPUT__

@@ -11,7 +11,7 @@
 #include "../GIEI/giei.h"
 #include "../IMU/imu.h"
 #include "../driver_input/driver_input.h"
-#include "../DV/dv.h"
+#include "../DV/dv_status/dv_status.h"
 #include "../cooling/temperatures/temperatures.h"
 #include "../cooling/fans/fans.h"
 #include "../suspensions/suspensions.h"
@@ -81,33 +81,53 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex,
     unpack_message_can2(&m, mex->id, mex->full_word, mex->message_size, read_time);
     switch (mex->id) {
         case CAN_ID_PADDLE: //INFO: SW
-            driver_set_amount(REGEN, m.can_0x052_Paddle.regen, m.can_0x053_Driver_time_stamp_rx);
+            DRIVER_INPUT_MUT_ACTION({
+                driver_set_amount(driver_input_mut_ptr, REGEN, m.can_0x052_Paddle.regen, 
+                        m.can_0x053_Driver_time_stamp_rx);
+            });
             break;
         case CAN_ID_DRIVER: //INFO: STW
-                driver_set_amount(THROTTLE, m.can_0x053_Driver.throttle, m.can_0x053_Driver_time_stamp_rx);
-                driver_set_amount(BRAKE, m.can_0x053_Driver.brake, m.can_0x053_Driver_time_stamp_rx);
-                driver_set_amount(STEERING_ANGLE, m.can_0x053_Driver.steering, m.can_0x053_Driver_time_stamp_rx);
-                if (!m.can_0x053_Driver.no_implausibility) {
-                    set_implausibility(THROTTLE_BRAKE,m.can_0x053_Driver.bre_implausibility);
-                    set_implausibility(THROTTLE_PADEL,m.can_0x053_Driver.pad_implausibility);
-                    set_implausibility(THROTTLE_POT,m.can_0x053_Driver.pot_implausibility);
-                }else{
-                    clear_implausibility();
-                }
+                DRIVER_INPUT_MUT_ACTION({
+                    driver_set_amount(driver_input_mut_ptr,
+                            THROTTLE, m.can_0x053_Driver.throttle,
+                            m.can_0x053_Driver_time_stamp_rx);
+                    driver_set_amount(driver_input_mut_ptr, BRAKE, m.can_0x053_Driver.brake,
+                            m.can_0x053_Driver_time_stamp_rx);
+                    driver_set_amount(driver_input_mut_ptr, STEERING_ANGLE,
+                            m.can_0x053_Driver.steering, m.can_0x053_Driver_time_stamp_rx);
+                    if (!m.can_0x053_Driver.no_implausibility) {
+                        set_implausibility(driver_input_mut_ptr,
+                                THROTTLE_BRAKE,m.can_0x053_Driver.bre_implausibility);
+                        set_implausibility(driver_input_mut_ptr,
+                                THROTTLE_PADEL,m.can_0x053_Driver.pad_implausibility);
+                        set_implausibility(driver_input_mut_ptr,
+                                THROTTLE_POT,m.can_0x053_Driver.pot_implausibility);
+                    }else{
+                        clear_implausibility(driver_input_mut_ptr);
+                    }
+                });
             break;
         case CAN_ID_BMSLV1:
-            lv_update_status(mex);
+            LV_MUT_ACTION({
+                lv_update_status(lv_mut_ptr, mex);
+            });
             break;
         case CAN_ID_BMSLV2:
-            lv_update_status(mex);
+            LV_MUT_ACTION({
+                lv_update_status(lv_mut_ptr, mex);
+            });
             save_temperature(BMS_LV_1, m.can_0x055_BmsLv2.temp1);
             save_temperature(BMS_LV_2, m.can_0x055_BmsLv2.temp2);
             break;
         case CAN_ID_BMSHV1:
-            hv_update_status(mex);
+            HV_MUT_ACTION({
+                hv_update_status(hv_mut_ptr, mex);
+            });
             break;
         case CAN_ID_BMSHV2:
-            hv_update_status(mex);
+            HV_MUT_ACTION({
+                hv_update_status(hv_mut_ptr, mex);
+            });
             save_temperature(BMS_HV_MIN, m.can_0x058_BmsHv2.min_temp);
             save_temperature(BMS_HV_MAX, m.can_0x058_BmsHv2.max_temp);
             save_temperature(BMS_HV_AVG, m.can_0x058_BmsHv2.avg_temp);
@@ -179,7 +199,9 @@ static int8_t manage_can_2_message(const CanMessage* const restrict mex,
             save_temperature(ENGINE_PRE_FRONT_RIGHT, m.can_0x105_TempFrontR.temp_mot_pre_FR);
             break;
         case CAN_ID_LEM: //INFO: lem
-            return hv_update_status(mex);
+            HV_MUT_ACTION({
+                return hv_update_status(hv_mut_ptr, mex);
+            })
             break;
         default:
             return -1;
@@ -199,10 +221,13 @@ static int8_t manage_can_3_message(const CanMessage* const restrict mex,
                 const can_0x1f4_DV_driving_dynamics_1_t* const data = 
                     &o.can_0x1f4_DV_driving_dynamics_1;
 
-                driver_set_amount(BRAKE,data->Brake_hydr_actual,
-                        o.can_0x1f4_DV_driving_dynamics_1_time_stamp_rx);
-                driver_set_amount(STEERING_ANGLE, data->Steering_angle_actual, 
-                        o.can_0x1f4_DV_driving_dynamics_1_time_stamp_rx);
+                DRIVER_INPUT_MUT_ACTION({
+                    driver_set_amount(driver_input_mut_ptr, BRAKE,data->Brake_hydr_actual,
+                            o.can_0x1f4_DV_driving_dynamics_1_time_stamp_rx);
+                    driver_set_amount(driver_input_mut_ptr, STEERING_ANGLE,
+                            data->Steering_angle_actual,
+                            o.can_0x1f4_DV_driving_dynamics_1_time_stamp_rx);
+                })
             }
             break;
         case CAN_ID_DV_DRIVING_DYNAMICS_2:
@@ -215,7 +240,9 @@ static int8_t manage_can_3_message(const CanMessage* const restrict mex,
             {
                 const can_0x1f6_DV_system_status_t* const data __attribute_maybe_unused__ =
                     &o.can_0x1f6_DV_system_status;
-                dv_set_status(data->AS_state);
+                DV_STATUS_MUT_ACTION({
+                    dv_status_set(dv_status_mut_ptr, data->AS_state);
+                })
             }
             break;
         default:

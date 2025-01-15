@@ -1,6 +1,6 @@
 #include "./fans.h"
 #include "../../lib/board_dbc/dbc/out_lib/can2/can2.h"
-// #include "../../board_can/board_can.h"
+#include "../../board_can/board_can.h"
 #include "../../board_conf/id_conf.h"
 #include <stdint.h>
 #include <string.h>
@@ -10,12 +10,9 @@
 static struct{
     float fans[NUMBER_OF_FAN_TYPES];
     uint8_t init_done:1;
+    uint8_t mut_ptr:1;
+    uint8_t read_ptr:6;
 }FANS;
-
-static inline int8_t fan_init_done(void)
-{
-    return FANS.init_done;
-}
 
 static int8_t setup_fan_radiator(const uint8_t enable)
 {
@@ -32,7 +29,7 @@ static int8_t setup_fan_radiator(const uint8_t enable)
 //public
 int8_t fan_init(void)
 {
-    if (!fan_init_done()) {
+    if (!FANS.init_done) {
        FANS.init_done =1;
     }
     return 0;
