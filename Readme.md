@@ -2,6 +2,19 @@
 
 This is the software for the new Main Control Unit (MCU) of the Raceup Car.
 
+## Setup
+
+To set up the project clone the repository  and generate the files for 
+the dbc can bus with the following command:
+(Because the repo is quite big is better to use --depth=1)
+
+```sh
+    git clone --depth=1 --recursive https://github.com/raceup-electric/ControlUnitLogicOperator.git
+    cd ./ControlUnitLogicOperator/lib/board_dbc/dbc
+    ./refresh_dbc.sh
+    cd -
+```
+
 ## I/O connections
 
 This list below represents all the I/O port used in the code:
