@@ -1,8 +1,8 @@
 #ifndef __GIEI_ENGINES__
 #define __GIEI_ENGINES__
 
-#include "engine_common.h"
 #include "amk/amk.h"
+#include "engine_common.h"
 
 #if !defined(InverterType)
 #define InverterType struct InvalidInverterType

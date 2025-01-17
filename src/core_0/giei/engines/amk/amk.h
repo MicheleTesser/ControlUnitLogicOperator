@@ -7,7 +7,7 @@
 //INFO: doc/amk_datasheet.pdf page 61
 
 struct AmkInverter_h{
-    uint8_t private_data[14];
+    uint8_t private_data[88];
 };
 
 int8_t amk_module_init(struct AmkInverter_h* const restrict self);

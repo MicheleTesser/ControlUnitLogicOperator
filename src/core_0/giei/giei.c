@@ -1,5 +1,4 @@
 #include "giei.h"
-#include "engines/engine_common.h"
 #include "engines/engines.h"
 #include <stdint.h>
 
@@ -12,8 +11,8 @@ union Giei_conv{
     struct Giei_t* clear;
 };
 
-const uint8_t giei_size_check[(sizeof(struct Giei_h) == sizeof(struct Giei_t))? 1 : -1];
 #ifdef DEBUG
+const uint8_t giei_size_check[(sizeof(struct Giei_h) == sizeof(struct Giei_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
 int8_t giei_init(struct Giei_h* const restrict self)
