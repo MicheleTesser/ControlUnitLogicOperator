@@ -1,9 +1,11 @@
 #include "giei.h"
+#include "../../emergency_module/emergency_module.h"
 #include "engines/engines.h"
 #include <stdint.h>
 
 struct Giei_t{
     EngineType inverter;
+    struct EmergencyNode* giei_emergency;
 };
 
 union Giei_conv{
@@ -20,6 +22,7 @@ int8_t giei_init(struct Giei_h* const restrict self)
     union Giei_conv g_conv = {self};
     struct Giei_t* p_self = g_conv.clear;
     inverter_module_init(&p_self->inverter);
+    p_self->giei_emergency = EmergencyNode_init(1);
 
     return 0;
 }

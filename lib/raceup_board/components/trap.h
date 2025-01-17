@@ -9,6 +9,11 @@
 #endif // !TRAP_ATTRIBUTE
 typedef void (*trap_fun) (void);
 
+enum TRAP_SLOT{
+    __0__,
+    __1__,
+};
+
 extern int8_t hardware_init_trap(void);
 extern int8_t hardware_trap_enable(void);
 extern int8_t hardware_trap_disable(void);
