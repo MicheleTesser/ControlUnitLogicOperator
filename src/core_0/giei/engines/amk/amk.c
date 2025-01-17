@@ -1,12 +1,18 @@
 #include "./amk.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
+#include "../../../../emergency_module/emergency_module.h"
+#include "../../../IO_id_0/IO_id_0.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdatomic.h>
 
 
 //private
+
+enum AMK_EMERGENCY {
+    FAILED_RTD_AMK =0,
+};
 
 struct AMK_Actual_Values_1{
     struct{
@@ -51,12 +57,6 @@ struct AMK_Setpoints{
     int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
 };
 
-enum AMK_MEX_IDS{
-    STATUS_1 =0,
-    STATUS_2,
-    SETPOINT,
-};
-
 struct AMKInverter_t{
     struct{
         struct AMK_Actual_Values_1 amk_values_1;
@@ -65,6 +65,11 @@ struct AMKInverter_t{
         int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
         int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
     }engines[NUM_OF_EGINES];
+    enum RUNNING_STATUS engine_status;
+    time_var_microseconds enter_precharge_phase;
+    struct EmergencyNode* amk_emergency;
+    struct CanNode* can_inverter;
+    struct DriverInput_h* driver_input;
 };
 
 union AMKConv{
@@ -81,21 +86,169 @@ const uint8_t __debug_amk_size__[(sizeof(struct AmkInverter_h) == sizeof(struct 
 #endif /* ifdef DEBUG */
 
 static atomic_ulong mex_inverter;
+static uint8_t rtd_input_on;
 
 static inline void inverter_mex_recv(void)
 {
     atomic_fetch_add(&mex_inverter, 1);
 }
 
+static inline void toggle_active_rtd_input(void)
+{
+    rtd_input_on ^=1;
+}
+
+#define POPULATE_MEX_ENGINE(amk_stop,engine)\
+    engine.NegTorq = amk_stop->AMK_TorqueLimitNegative;\
+    engine.PosTorq = amk_stop->AMK_TorqueLimitPositive;\
+    engine.TargetVel = amk_stop->AMK_TargetVelocity;\
+    engine.ControlWord |= (setpoint->AMK_Control_fields.AMK_bInverterOn << 8);\
+    engine.ControlWord |= (setpoint->AMK_Control_fields.AMK_bDcOn << 9);\
+    engine.ControlWord |= (setpoint->AMK_Control_fields.AMK_bEnable << 10);\
+    engine.ControlWord |= (setpoint->AMK_Control_fields.AMK_bErrorReset << 11);\
+
+static int8_t send_message_amk(const struct AMKInverter_t* const restrict self,
+        const enum ENGINES engine, 
+        const struct AMK_Setpoints* const restrict setpoint)
+{
+    int8_t err=0;
+    can_obj_can1_h_t om;
+    CanMessage mex;
+    switch (engine) {
+        case FRONT_LEFT:
+            POPULATE_MEX_ENGINE(setpoint, om.can_0x184_VCUInvFL);
+            mex.id = CAN_ID_VCUINVFL;
+            break;
+        case FRONT_RIGHT:
+            POPULATE_MEX_ENGINE(setpoint, om.can_0x185_VCUInvFR);
+            mex.id = CAN_ID_VCUINVFR;
+            break;
+        case REAR_LEFT:
+            POPULATE_MEX_ENGINE(setpoint, om.can_0x188_VCUInvRL);
+            mex.id = CAN_ID_VCUINVRL;
+            break;
+        case REAR_RIGHT:
+            POPULATE_MEX_ENGINE(setpoint, om.can_0x189_VCUInvRR);
+            mex.id = CAN_ID_VCUINVRR;
+            break;
+        default:
+            goto invalid_mex_type;
+    }
+
+    mex.message_size = pack_message_can1(&om, mex.id, &mex.full_word);
+    return hardware_write_can(self->can_inverter, &mex);
+
+invalid_mex_type:
+    err--;
+
+    return err;
+}
+
+static uint8_t amk_disable_inverter(const struct AMKInverter_t* const restrict self)
+{
+    FOR_EACH_ENGINE({
+        struct AMK_Setpoints setpoint;
+        memset(&setpoint, 0, sizeof(setpoint));
+        send_message_amk(self, index_engine, &setpoint);
+    })
+    return 0;
+}
+
+
+static uint8_t amk_inverter_on(const struct AMKInverter_t* const restrict self)
+{
+    uint8_t res = 0xFF;
+    FOR_EACH_ENGINE({
+        res &= self->engines[index_engine].amk_values_1.AMK_status.bSystemReady;
+    })
+    return res;
+}
+
+static inline uint8_t precharge_ended(void)
+{
+    return gpio_read_state(AIR_PRECHARGE_INIT) && gpio_read_state(AIR_PRECHARGE_DONE);
+}
+
+static void amk_shut_down_power(struct AMKInverter_t* const restrict self)
+{
+    amk_disable_inverter(self);
+    self->engine_status= SYSTEM_OFF;
+}
+
+static uint8_t amk_activate_hv(const struct AMKInverter_t* const restrict self)
+{
+    FOR_EACH_ENGINE({
+        struct AMK_Setpoints setpoint;
+        memset(&setpoint, 0, sizeof(setpoint));
+        setpoint.AMK_Control_fields.AMK_bDcOn =1;
+        send_message_amk(self, index_engine, &setpoint);
+    })
+    return 0;
+}
+
+static uint8_t amk_inverter_hv_status(const struct AMKInverter_t* const restrict self)
+{
+    const uint8_t HV_TRAP = 50;
+    static uint8_t hvCounter[NUM_OF_EGINES];
+    uint8_t res = 0;
+
+    FOR_EACH_ENGINE({
+        const uint8_t AMK_bQuitDcOn = 
+            self->engines[index_engine].amk_values_1.AMK_status.AMK_bQuitDcOn;
+        if (!(AMK_bQuitDcOn) && (hvCounter[index_engine] < HV_TRAP))
+        {
+            hvCounter[index_engine]++;
+        }
+        else if (AMK_bQuitDcOn || (hvCounter[index_engine] >= HV_TRAP))
+        {
+            res |= AMK_bQuitDcOn;
+            hvCounter[index_engine] = 0;
+        }
+    })
+
+
+    return res;
+}
+
+static uint8_t amk_activate_control(const struct AMKInverter_t* const restrict self)
+{
+    FOR_EACH_ENGINE({
+        struct AMK_Setpoints setpoint;
+        memset(&setpoint, 0, sizeof(setpoint));
+        setpoint.AMK_Control_fields.AMK_bDcOn =1;
+        setpoint.AMK_Control_fields.AMK_bEnable=1;
+        setpoint.AMK_Control_fields.AMK_bInverterOn=1;
+        send_message_amk(self, index_engine, &setpoint);
+    })
+    return 0;
+}
+
+static inline uint8_t rtd_input_request(const struct AMKInverter_t* const restrict self)
+{
+    const float brake = driver_get_amount(self->driver_input, BRAKE);
+    return gpio_read_state(GPIO_RTD_BUTTON) && brake > 20;
+}
 
 //public
 
-int8_t amk_module_init(struct AmkInverter_h* const restrict self)
+int8_t amk_module_init(struct AmkInverter_h* const restrict self,
+        struct DriverInput_h* const p_driver_input)
 {
     AMK_H_T_CONV(self, p_self);
     memset(p_self, 0, sizeof(*p_self));
-    if(hardware_interrupt_attach_fun(INTERRUPT_0_, inverter_mex_recv) <0 || 
-            hardware_init_can(CAN_INVERTER, _1_MBYTE_S_))
+    p_self->engine_status =SYSTEM_OFF;
+    p_self->amk_emergency = EmergencyNode_init(1); //TODO: set the correct amount
+    p_self->driver_input = p_driver_input;
+    if (!p_self->amk_emergency) {
+        EmergencyNode_free(p_self->amk_emergency);
+        return -1;
+    }
+    p_self->can_inverter = hardware_init_can(CAN_INVERTER, _1_MBYTE_S_);
+    if (!p_self->can_inverter) {
+        return -1;
+    }
+    if(hardware_interrupt_attach_fun(INTERRUPT_INVERTER_MEX, inverter_mex_recv) <0 || 
+            hardware_trap_attach_fun(TRAP__4__, toggle_active_rtd_input) <0)
     {
         return -1;
     }
@@ -132,7 +285,7 @@ int8_t amk_update_status(struct AmkInverter_h* const restrict self)
 
     if (atomic_load(&mex_inverter))
     {
-        hardware_read_can(CAN_INVERTER, &mex);
+        hardware_read_can(p_self->can_inverter, &mex);
         unpack_message_can1(&o, mex.id, mex.full_word, mex.message_size, timer_time_now());
         switch (mex.id) {
             case CAN_ID_INVERTERFL1:
@@ -166,4 +319,81 @@ int8_t amk_update_status(struct AmkInverter_h* const restrict self)
         atomic_fetch_sub(&mex_inverter, 1);
     }
     return 0;
+}
+
+enum RUNNING_STATUS amk_rtd_procedure(struct AmkInverter_h* const restrict self)
+{
+    AMK_H_T_CONV(self, p_self);
+    if(p_self->engine_status == SYSTEM_OFF){
+        EmergencyNode_raise(p_self->amk_emergency, FAILED_RTD_AMK);
+    }
+
+    if (EmergencyNode_is_emergency_state(p_self->amk_emergency)) {
+        amk_disable_inverter(p_self);
+        p_self->engine_status = SYSTEM_OFF;
+        return p_self->engine_status;
+    }
+
+    switch (p_self->engine_status) {
+        case SYSTEM_OFF:
+            if (amk_inverter_on(p_self) && !rtd_input_request(p_self))
+            {
+                amk_activate_hv(p_self);
+                p_self->enter_precharge_phase = timer_time_now();
+                if (amk_inverter_hv_status(p_self))
+                {
+                    p_self->engine_status = SYSTEM_PRECAHRGE;
+                }
+            }
+            else
+            {
+                amk_shut_down_power(p_self);
+                if(rtd_input_request(p_self))
+                {
+                    EmergencyNode_raise(p_self->amk_emergency, FAILED_RTD_AMK);
+                }
+            }
+            break;
+        case SYSTEM_PRECAHRGE:
+            if (!amk_inverter_on(p_self) || !amk_inverter_hv_status(p_self) ||
+                    rtd_input_request(p_self))
+            {
+                EmergencyNode_raise(p_self->amk_emergency, FAILED_RTD_AMK);
+                amk_shut_down_power(p_self);
+                p_self->engine_status = SYSTEM_OFF;
+            }
+            else if (precharge_ended())
+            {
+                amk_activate_control(p_self);
+                p_self->engine_status = TS_READY;
+            }
+            break;
+        case TS_READY:
+            if (!amk_inverter_hv_status(p_self) || !precharge_ended() || !amk_inverter_on(p_self))
+            {
+                amk_shut_down_power(p_self);
+                EmergencyNode_raise(p_self->amk_emergency, FAILED_RTD_AMK);
+                p_self->engine_status = SYSTEM_OFF;
+                break;
+            }
+            if (rtd_input_request(p_self))
+            {
+                p_self->engine_status = RUNNING;
+            }
+            break;
+        case RUNNING:
+            if (!amk_inverter_on(p_self) || !amk_inverter_hv_status(p_self) || !precharge_ended())
+            {
+                amk_shut_down_power(p_self);
+                EmergencyNode_raise(p_self->amk_emergency, FAILED_RTD_AMK);
+                p_self->engine_status = SYSTEM_OFF;
+            }
+            else if (!rtd_input_on)
+            {
+                amk_disable_inverter(p_self);
+                p_self->engine_status= TS_READY;
+            }
+            break;
+        }
+    return p_self->engine_status;
 }

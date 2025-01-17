@@ -17,7 +17,7 @@
 
 struct Giei_h
 {
-    uint8_t private_data[88];
+    uint8_t private_data[136];
 };
 
 int8_t giei_init(struct Giei_h* const restrict self);
