@@ -4,12 +4,12 @@
 #include "engine_common.h"
 #include "amk/amk.h"
 
-#if !defined(EngineType)
-#define EngineType struct InvalidEngineType
+#if !defined(InverterType)
+#define InverterType struct InvalidInverterType
 #endif
 
-#if !defined (engine_module_init)
-#define engine_module_init() engine_module_init_not_defined()
+#if !defined (inverter_module_init)
+#define inverter_module_init(inverter) engine_module_init_not_defined(inverter)
 #endif
 
 

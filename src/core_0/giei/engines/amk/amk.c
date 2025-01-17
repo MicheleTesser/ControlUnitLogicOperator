@@ -1,7 +1,9 @@
 #include "./amk.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdatomic.h>
 
 
 //private
@@ -55,63 +57,113 @@ enum AMK_MEX_IDS{
     SETPOINT,
 };
 
-struct AMKEngine_t{
-    uint16_t AMK_Control;
-    int16_t AMK_TargetVelocity; //INFO: unit: rpm Speed setpoint
-    int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
-    int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
-    uint16_t mex_ids[3];
+struct AMKInverter_t{
+    struct{
+        struct AMK_Actual_Values_1 amk_values_1;
+        struct AMK_Actual_Values_2 amk_values_2;
+        int16_t AMK_TargetVelocity; //INFO: unit: rpm Speed setpoint
+        int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
+        int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
+    }engines[NUM_OF_EGINES];
 };
 
 union AMKConv{
-    struct AmkEngine_h* hidden;
-    struct AMKEngine_t* clear;
+    struct AmkInverter_h* hidden;
+    struct AMKInverter_t* clear;
 };
 
 #define AMK_H_T_CONV(h_ptr, t_ptr_name)\
     union AMKConv __a_conv##t_ptr_name__ = {h_ptr};\
-    struct AMKEngine_t* t_ptr_name = __a_conv##t_ptr_name__.clear;
+    struct AMKInverter_t* t_ptr_name = __a_conv##t_ptr_name__.clear;
 
 #ifdef DEBUG
-const uint8_t __debug_amk_size__[(sizeof(struct AmkEngine_h) == sizeof(struct AMKEngine_t))? 1 : -1];
+const uint8_t __debug_amk_size__[(sizeof(struct AmkInverter_h) == sizeof(struct AMKInverter_t))? 1 : -1];
 #endif /* ifdef DEBUG */
+
+static atomic_ulong mex_inverter;
+
+static inline void inverter_mex_recv(void)
+{
+    atomic_fetch_add(&mex_inverter, 1);
+}
+
 
 //public
 
-int8_t amk_module_init(struct AmkEngine_h* self, const enum ENGINES engine)
+int8_t amk_module_init(struct AmkInverter_h* const restrict self)
 {
     AMK_H_T_CONV(self, p_self);
     memset(p_self, 0, sizeof(*p_self));
-    switch (engine) {
-        case FRONT_LEFT:
-            p_self->mex_ids[STATUS_1] = CAN_ID_INVERTERFL1;
-            p_self->mex_ids[STATUS_2] = CAN_ID_INVERTERFL2;
-            p_self->mex_ids[SETPOINT] = CAN_ID_VCUINVFL;
-            break;
-        case FRONT_RIGHT:
-            p_self->mex_ids[STATUS_1] = CAN_ID_INVERTERFR1;
-            p_self->mex_ids[STATUS_2] = CAN_ID_INVERTERFR2;
-            p_self->mex_ids[SETPOINT] = CAN_ID_VCUINVFR;
-            break;
-        case REAR_LEFT:
-            p_self->mex_ids[STATUS_1] = CAN_ID_INVERTERRL1;
-            p_self->mex_ids[STATUS_2] = CAN_ID_INVERTERRL2;
-            p_self->mex_ids[SETPOINT] = CAN_ID_VCUINVRL;
-            break;
-        case REAR_RIGHT:
-            p_self->mex_ids[STATUS_1] = CAN_ID_INVERTERRR1;
-            p_self->mex_ids[STATUS_2] = CAN_ID_INVERTERRR2;
-            p_self->mex_ids[SETPOINT] = CAN_ID_VCUINVRR;
-            break;
-        default:
-            return -1;
+    if(hardware_interrupt_attach_fun(INTERRUPT_0_, inverter_mex_recv) <0 || 
+            hardware_init_can(CAN_INVERTER, _1_MBYTE_S_))
+    {
+        return -1;
     }
     return 0;
 }
 
-int8_t amk_update_status(struct AmkEngine_h* self)
+
+#define STATUS_WORD_1(values_1,mex)\
+        values_1.AMK_status.bSystemReady = mex.SystemReady;\
+        values_1.AMK_status.AMK_bQuitDcOn = mex.HVOnAck;\
+        values_1.AMK_status.AMK_bDcOn = mex.HVOn;\
+        values_1.AMK_status.AMK_bInverterOn = mex.InverterOn;\
+        values_1.AMK_status.AMK_bQuitInverterOn = mex.InverterOnAck;\
+        values_1.AMK_status.AMK_bDerating = mex.Derating;\
+        values_1.AMK_status.AMK_bError = mex.Error;\
+        values_1.AMK_status.AMK_bWarn = mex.Warning;\
+        \
+        values_1.AMK_ActualVelocity = mex.ActualVelocity;\
+        values_1.AMK_MagnetizingCurrent = mex.MagCurr;\
+        values_1.AMK_TorqueCurrent = mex.Voltage;
+
+#define STATUS_WORD_2(values_2,mex)\
+    values_2.AMK_TempIGBT = mex.TempIGBT;\
+    values_2.AMK_TempMotor = mex.TempIGBT;\
+    values_2.AMK_ErrorInfo = mex.ErrorInfo;\
+    values_2.AMK_TempInverter = mex.TempInv;
+
+
+int8_t amk_update_status(struct AmkInverter_h* const restrict self)
 {
+    CanMessage mex;
+    can_obj_can1_h_t o;
     AMK_H_T_CONV(self, p_self);
-    p_self->mex_ids[0] = 0; //INFO: only to remove warning
+
+    if (atomic_load(&mex_inverter))
+    {
+        hardware_read_can(CAN_INVERTER, &mex);
+        unpack_message_can1(&o, mex.id, mex.full_word, mex.message_size, timer_time_now());
+        switch (mex.id) {
+            case CAN_ID_INVERTERFL1:
+                STATUS_WORD_1(p_self->engines[FRONT_LEFT].amk_values_1, o.can_0x283_InverterFL1);
+                break;
+            case CAN_ID_INVERTERFL2:
+                STATUS_WORD_2(p_self->engines[FRONT_LEFT].amk_values_2, o.can_0x285_InverterFL2);
+                break;
+
+            case CAN_ID_INVERTERFR1:
+                STATUS_WORD_1(p_self->engines[FRONT_RIGHT].amk_values_1, o.can_0x284_InverterFR1);
+                break;
+            case CAN_ID_INVERTERFR2:
+                STATUS_WORD_2(p_self->engines[FRONT_RIGHT].amk_values_2, o.can_0x286_InverterFR2);
+                break;
+
+            case CAN_ID_INVERTERRL1:
+                STATUS_WORD_1(p_self->engines[REAR_LEFT].amk_values_1, o.can_0x287_InverterRL1);
+                break;
+            case CAN_ID_INVERTERRL2:
+                STATUS_WORD_2(p_self->engines[REAR_LEFT].amk_values_2, o.can_0x289_InverterRL2);
+                break;
+
+            case CAN_ID_INVERTERRR1:
+                STATUS_WORD_1(p_self->engines[REAR_RIGHT].amk_values_1, o.can_0x288_InverterRR1);
+                break;
+            case CAN_ID_INVERTERRR2:
+                STATUS_WORD_2(p_self->engines[REAR_RIGHT].amk_values_2, o.can_0x28a_InverterRR2);
+                break;
+        }
+        atomic_fetch_sub(&mex_inverter, 1);
+    }
     return 0;
 }

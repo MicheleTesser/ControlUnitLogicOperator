@@ -6,16 +6,16 @@
 
 //INFO: doc/amk_datasheet.pdf page 61
 
-struct AmkEngine_h{
+struct AmkInverter_h{
     uint8_t private_data[14];
 };
 
-int8_t amk_module_init(struct AmkEngine_h* const restrict self, const enum ENGINES engine);
-int8_t amk_update_status(struct AmkEngine_h* const restrict self);
+int8_t amk_module_init(struct AmkInverter_h* const restrict self);
+int8_t amk_update_status(struct AmkInverter_h* const restrict self);
 
-#define EngineType struct AmkEngine_h
+#define EngineType struct AmkInverter_h
 
-#define engine_module_init(engine_ptr, engine) amk_module_init(engine_ptr, engine)
+#define inverter_module_init(inverter) amk_module_init(inverter)
 
 
 #endif // !__AMK_POWER_SYSTEM__

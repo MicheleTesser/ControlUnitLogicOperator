@@ -1,10 +1,10 @@
 #include "giei.h"
-#include "engines/amk/amk.h"
 #include "engines/engine_common.h"
+#include "engines/engines.h"
 #include <stdint.h>
 
 struct Giei_t{
-    EngineType engines[NUM_OF_EGINES];
+    EngineType inverter;
 };
 
 union Giei_conv{
@@ -20,11 +20,7 @@ int8_t giei_init(struct Giei_h* const restrict self)
 {
     union Giei_conv g_conv = {self};
     struct Giei_t* p_self = g_conv.clear;
-    for (enum ENGINES engine =0; engine<NUM_OF_EGINES; engine++) {
-        if (engine_module_init(&p_self->engines[engine], engine) < 0) {
-            return -1;
-        }
-    }
+    inverter_module_init(&p_self->inverter);
 
     return 0;
 }
