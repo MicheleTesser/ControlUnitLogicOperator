@@ -4,6 +4,5 @@
 #include <stdint.h>
 
 void main_1(void);
-uint8_t init_done_1(void);
 
 #endif // !__CULO_CORE_1__
