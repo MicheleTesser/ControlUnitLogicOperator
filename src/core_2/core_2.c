@@ -9,7 +9,7 @@ void main_0(void)
 
     //setup
 
-    core_status_core_ready(2);
+    core_status_core_ready(CORE_2);
     while (core_status_ready_state()) {}
 
     //loop

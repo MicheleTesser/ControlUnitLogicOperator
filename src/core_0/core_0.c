@@ -10,7 +10,7 @@ void main_0(void)
 
     //setup
 
-    core_status_core_ready(0);
+    core_status_core_ready(CORE_0);
     while (core_status_ready_state()) {}
 
     //loop
