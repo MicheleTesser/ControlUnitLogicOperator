@@ -1,8 +1,8 @@
 #include "./amk.h"
-#include "../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
-#include "../../../../../lib/raceup_board/raceup_board.h"
-#include "../../../../../emergency_module/emergency_module.h"
-#include "../../../IO_id_0/IO_id_0.h"
+#include "../../../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
+#include "../../../../../../../lib/raceup_board/raceup_board.h"
+#include "../../../../../../emergency_module/emergency_module.h"
+#include "../../../../IO_id_0/IO_id_0.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdatomic.h>

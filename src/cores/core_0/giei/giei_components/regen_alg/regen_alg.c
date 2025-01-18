@@ -1,5 +1,5 @@
 #include "./regen_alg.h"
-#include "../../lib/rigen_fun_simulink22_ert_rtw/rigen_fun_simulink22.h"
+#include "../../../../../lib/rigen_fun_simulink22_ert_rtw/rigen_fun_simulink22.h"
 
 void regen_alg_init(void)
 {

@@ -2,7 +2,7 @@
 #define __AMK_POWER_SYSTEM__
 
 #include <stdint.h>
-#include "../../../../../driver_input/driver_input.h"
+#include "../../../../../../driver_input/driver_input.h"
 #include "../engine_common.h"
 
 //INFO: doc/amk_datasheet.pdf page 61

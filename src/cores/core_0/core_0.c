@@ -1,6 +1,7 @@
 #include "core_0.h"
-#include "giei/giei.h"
 #include "../core_status/core_status.h"
+#include "../../driver_input/driver_input.h"
+#include "giei/giei.h"
 #include <stdint.h>
 
 //public

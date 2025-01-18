@@ -1,6 +1,6 @@
 #include "torque_vec_alg.h"
-#include "../engine_common.h"
-#include "../../../lib/TV/Torque_Vectoring_2024_forsecontiu.h"
+#include "../engines/engine_common.h"
+#include "../../../../../lib/TV/Torque_Vectoring_2024_forsecontiu.h"
 
 
 void tv_alg_init(void)

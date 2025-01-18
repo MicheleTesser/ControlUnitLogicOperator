@@ -11,9 +11,8 @@
  */
 
 #include <stdint.h>
-#include <string.h>
-
-#include "./engines/engines.h"
+#include "../../../driver_input/driver_input.h"
+#include "./giei_components/engines/engine_common.h"
 
 struct Giei_h
 {

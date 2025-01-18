@@ -3,14 +3,16 @@
 #include "../../../emergency_module/emergency_module.h"
 #include "../../../driver_input/driver_input.h"
 #include "../../../imu/imu.h"
-#include "torque_vec_alg/torque_vec_alg.h"
-#include "rege_alg/regen_alg.h"
-#include "power_control/power_control.h"
-#include "engines/engine_common.h"
-#include "giei_hv/giei_hv.h"
+#include "giei_components/torque_vec_alg/torque_vec_alg.h"
+#include "giei_components/regen_alg/regen_alg.h"
+#include "giei_components/power_control/power_control.h"
+#include "giei_components/giei_hv/giei_hv.h"
+#include "giei_components/maps/maps.h"
+#include "giei_components/engines/engines.h"
 #include "math_saturated/saturated.h"
-#include "maps/maps.h"
+
 #include <stdint.h>
+#include <string.h>
 
 //private
 
