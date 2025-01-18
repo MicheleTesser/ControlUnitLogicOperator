@@ -1,7 +1,7 @@
 #include "./amk.h"
-#include "../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
-#include "../../../../lib/raceup_board/raceup_board.h"
-#include "../../../../emergency_module/emergency_module.h"
+#include "../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
+#include "../../../../../lib/raceup_board/raceup_board.h"
+#include "../../../../../emergency_module/emergency_module.h"
 #include "../../../IO_id_0/IO_id_0.h"
 #include <stdint.h>
 #include <string.h>
@@ -88,12 +88,12 @@ const uint8_t __debug_amk_size__[(sizeof(struct AmkInverter_h) == sizeof(struct 
 static atomic_ulong mex_inverter;
 static uint8_t rtd_input_on;
 
-static inline void inverter_mex_recv(void)
+static inline void inverter_mex_recv(void) INTERRUP_ATTRIBUTE
 {
     atomic_fetch_add(&mex_inverter, 1);
 }
 
-static inline void toggle_active_rtd_input(void)
+static inline void toggle_active_rtd_input(void) TRAP_ATTRIBUTE
 {
     rtd_input_on ^=1;
 }
@@ -237,7 +237,7 @@ int8_t amk_module_init(struct AmkInverter_h* const restrict self,
     AMK_H_T_CONV(self, p_self);
     memset(p_self, 0, sizeof(*p_self));
     p_self->engine_status =SYSTEM_OFF;
-    p_self->amk_emergency = EmergencyNode_init(1); //TODO: set the correct amount
+    p_self->amk_emergency = EmergencyNode_new(1); //TODO: set the correct amount
     p_self->driver_input = p_driver_input;
     if (!p_self->amk_emergency) {
         EmergencyNode_free(p_self->amk_emergency);

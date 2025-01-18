@@ -43,7 +43,7 @@ static void solved_module_exception_state(void) TRAP_ATTRIBUTE
 //public
 
 
-struct EmergencyNode* EmergencyNode_init(const uint8_t num_exception)
+struct EmergencyNode* EmergencyNode_new(const uint8_t num_exception)
 {
     if (!num_exception)
     {

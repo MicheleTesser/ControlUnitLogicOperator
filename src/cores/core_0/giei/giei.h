@@ -20,8 +20,14 @@ struct Giei_h
     uint8_t private_data[136];
 };
 
-int8_t giei_init(struct Giei_h* const restrict self);
-enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict self);
+int8_t 
+giei_init(
+        struct Giei_h* const restrict self __attribute__((__nonnull__)),
+        const struct DriverInput_h* const driver
+        );
+
+enum RUNNING_STATUS 
+GIEI_check_running_condition(struct Giei_h* const restrict self __attribute__((__nonnull__)));
 
 
 
