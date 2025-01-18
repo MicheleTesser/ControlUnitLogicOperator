@@ -10,8 +10,11 @@
 typedef void (*trap_fun) (void);
 
 enum TRAP_SLOT{
-    __0__,
-    __1__,
+    TRAP__0__,
+    TRAP__1__,
+    TRAP__2__,
+    TRAP__3__,
+    TRAP__4__,
 };
 
 extern int8_t hardware_init_trap(void);

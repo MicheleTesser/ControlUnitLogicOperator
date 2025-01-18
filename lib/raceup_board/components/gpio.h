@@ -5,9 +5,10 @@
 
 enum GPIO_PIN{
     GPIO_0,
-    GPIO_1,
-    GPIO_2,
-    GPIO_3,
+    GPIO_RTD_BUTTON,
+    GPIO_RTD_SOUND,
+    AIR_PRECHARGE_INIT,
+    AIR_PRECHARGE_DONE,
     GPIO_5,
     GPIO_6,
 };
