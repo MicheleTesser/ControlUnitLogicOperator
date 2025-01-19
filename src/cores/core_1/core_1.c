@@ -2,6 +2,7 @@
 #include "../core_status/core_status.h"
 #include "general_can/general_can.h"
 #include "cooling/colling.h"
+#include "log/log.h"
 #include <stdint.h>
 
 
@@ -10,8 +11,10 @@ void main_1(void)
     //setup
     GeneralCan_h can1;
     Cooling_h cooling;
+    Log_h log;
     
 
+    while (log_init(&log) <0){}
     while (general_can_init(&can1) <0) {}
     while (cooling_init(&cooling, &can1) <0) {}
 
@@ -22,5 +25,6 @@ void main_1(void)
     //loop
     for(;;){
         cooling_update_all(&cooling);
+        log_update_and_send(&log);
     }
 }
