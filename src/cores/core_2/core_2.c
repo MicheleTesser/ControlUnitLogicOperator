@@ -4,7 +4,7 @@
 
 //public
 
-void main_0(void)
+void main_2(void)
 {
 
     //setup
