@@ -6,7 +6,7 @@
 
 typedef struct LogEntry_h{
     const uint8_t data_size;
-    const uint8_t log_mode:1;
+    const uint8_t log_mode:2;
     const uint8_t data_signed:1;
     const uint8_t data_float:1;
     const int8_t* const name;
