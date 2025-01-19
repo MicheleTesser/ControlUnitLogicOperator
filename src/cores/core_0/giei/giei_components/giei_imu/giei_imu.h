@@ -8,9 +8,11 @@ typedef struct GieiImu_h{
 }GieiImu_h;
 
 enum IMU_AXIS{
-    AXES_X,
+    AXES_X=0,
     AXES_Y,
     AXES_Z,
+
+    __NUM_OF_AXIS__
 };
 
 int8_t giei_imu_init(GieiImu_h* const restrict self __attribute__((__nonnull__)));
