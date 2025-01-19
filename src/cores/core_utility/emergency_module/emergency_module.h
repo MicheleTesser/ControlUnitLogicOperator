@@ -1,7 +1,7 @@
 #ifndef __EMERGENCY_MODULE__
 #define __EMERGENCY_MODULE__
 
-#include "../lib/raceup_board/components/trap.h"
+#include "../../../lib/raceup_board/components/trap.h"
 #include <stdint.h>
 #include <assert.h>
 
