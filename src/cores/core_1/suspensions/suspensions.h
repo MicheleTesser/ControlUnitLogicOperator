@@ -1,0 +1,19 @@
+#ifndef __SUSPENSIONS__
+#define __SUSPENSIONS__
+
+#include <stdint.h>
+#include "../log/log.h"
+
+typedef struct Suspensions_h{
+    const uint8_t private_data[1];
+}Suspensions_h;
+
+int8_t
+suspensions_init(
+        Suspensions_h* const restrict self __attribute__((__nonnull__)),
+        Log_h* const restrict log __attribute__((__nonnull__)));
+
+int8_t
+suspensions_update(Suspensions_h* const restrict self);
+
+#endif // !__SUSPENSIONS__
