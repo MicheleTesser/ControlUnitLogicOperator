@@ -17,26 +17,19 @@ enum INPUT_TYPES{
 };
 
 enum DRIVER{
-    DRIVER_HUMAN =0,
+    DRIVER_HUMAN=0,
     DRIVER_EMBEDDED,
-
     __NUM_OF_DRIVERS__
 };
 
 int8_t 
-driver_input_init(DriverInput_h* const restrict self __attribute__((__nonnull__)),
-        const uint16_t human_mailbox_number,
-        const uint16_t dv_mailbox_number);
-
-int8_t 
-driver_input_update(DriverInput_h* const restrict self __attribute__((__nonnull__)));
+driver_input_init(DriverInput_h* const restrict self __attribute__((__nonnull__)));
 
 int8_t
-driver_input_change_driver(DriverInput_h* const restrict self __attribute__((__nonnull__)),
-        const enum DRIVER driver);
+driver_input_update(DriverInput_h* const restrict self __attribute__((__nonnull__)));
 
 float
-driver_get_amount(const DriverInput_h* const restrict self __attribute__((__nonnull__)),
+driver_input_get(const DriverInput_h* const restrict self __attribute__((__nonnull__)),
         const enum INPUT_TYPES driver_input);
 
 void 

@@ -13,7 +13,7 @@ enum GIEI_HV_INFO{
 };
 
 int8_t
-giei_hv_init(GieiHv_h* const restrict self __attribute__((__nonnull__)), const uint16_t mailbox);
+giei_hv_init(GieiHv_h* const restrict self __attribute__((__nonnull__)));
 
 int8_t
 giei_hv_computeBatteryPackTension(GieiHv_h* const restrict self __attribute__((__nonnull__)),

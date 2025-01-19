@@ -2,7 +2,6 @@
 #include "../../../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../../../emergency_module/emergency_module.h"
-#include "../../../../IO_id_0/IO_id_0.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdatomic.h>
@@ -225,7 +224,7 @@ static uint8_t amk_activate_control(const struct AMKInverter_t* const restrict s
 
 static inline uint8_t rtd_input_request(const struct AMKInverter_t* const restrict self)
 {
-    const float brake = driver_get_amount(self->driver_input, BRAKE);
+    const float brake = driver_input_get(self->driver_input, BRAKE);
     return gpio_read_state(GPIO_RTD_BUTTON) && brake > 20;
 }
 
@@ -247,8 +246,8 @@ int8_t amk_module_init(struct AmkInverter_h* const restrict self,
     if (!p_self->can_inverter) {
         return -1;
     }
-    if(hardware_interrupt_attach_fun(INTERRUPT_INVERTER_MEX, inverter_mex_recv) <0 || 
-            hardware_trap_attach_fun(TRAP__4__, toggle_active_rtd_input) <0)
+    if(hardware_interrupt_attach_fun(INTERRUPT_CAN_INVERTER, inverter_mex_recv) <0 || 
+            hardware_trap_attach_fun(TRAP_INPUT_RTD_TOGGLE, toggle_active_rtd_input) <0)
     {
         return -1;
     }

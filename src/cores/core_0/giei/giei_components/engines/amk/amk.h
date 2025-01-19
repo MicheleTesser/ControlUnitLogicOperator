@@ -2,7 +2,7 @@
 #define __AMK_POWER_SYSTEM__
 
 #include <stdint.h>
-#include "../../../../../../driver_input/driver_input.h"
+#include "../../../../driver_input/driver_input.h"
 #include "../engine_common.h"
 
 //INFO: doc/amk_datasheet.pdf page 61
@@ -22,15 +22,15 @@ enum RUNNING_STATUS
 amk_rtd_procedure(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
 
 float
-amk_get_info(AmkInverter_h* const restrict self __attribute__((__nonnull__)),
+amk_get_info(const AmkInverter_h* const restrict self __attribute__((__nonnull__)),
         const enum ENGINES engine, const enum ENGINE_INFO info);
 
 float
-amk_max_pos_torque(AmkInverter_h* const restrict self __attribute__((__nonnull__)),
+amk_max_pos_torque(const AmkInverter_h* const restrict self __attribute__((__nonnull__)),
         const float limit_max_pos_torque);
 
 float
-amk_max_neg_torque(AmkInverter_h* const restrict self __attribute__((__nonnull__)),
+amk_max_neg_torque(const AmkInverter_h* const restrict self __attribute__((__nonnull__)),
         const float limit_max_neg_torque);
 
 int8_t

@@ -1,14 +1,9 @@
 #include "giei.h"
+#include "../mission/mission.h"
 #include "../../../lib/raceup_board/raceup_board.h"
-#include "../../../emergency_module/emergency_module.h"
-#include "../../../driver_input/driver_input.h"
-#include "../../../imu/imu.h"
-#include "giei_components/torque_vec_alg/torque_vec_alg.h"
-#include "giei_components/regen_alg/regen_alg.h"
-#include "giei_components/power_control/power_control.h"
-#include "giei_components/giei_hv/giei_hv.h"
-#include "giei_components/maps/maps.h"
-#include "giei_components/engines/engines.h"
+#include "../driver_input/driver_input.h"
+#include "giei_components/giei_components.h"
+#include "giei_components/giei_imu/giei_imu.h"
 #include "math_saturated/saturated.h"
 
 #include <stdint.h>
@@ -23,16 +18,21 @@ struct Giei_t{
     time_var_microseconds rtd_sound_start;
     enum RUNNING_STATUS running_status;
     const DriverInput_h* driver_input;
+    Mission_h* mission;
     DrivingMaps_h driving_maps;
-    Imu_h imu;
+    GieiImu_h imu;
     GieiHv_h hv;
-    const EmergencyNode* giei_emergency;
     uint8_t entered_rtd : 1;
 };
 
 union Giei_conv{
-    struct Giei_h* hidden;
-    struct Giei_t* clear;
+    struct Giei_h* const hidden;
+    struct Giei_t* const clear;
+};
+
+union Giei_conv_const{
+    const struct Giei_h* const hidden;
+    const struct Giei_t* const clear;
 };
 
 #define GIEI_H_T_CONV(h_ptr, t_ptr_name)\
@@ -83,19 +83,17 @@ static void update_torque_NM_vectors_no_tv(
 
 //public
 
-int8_t giei_init(Giei_h* const restrict self, const DriverInput_h* const p_driver)
+int8_t giei_init(Giei_h* const restrict self,
+        const DriverInput_h* const p_driver,
+        Mission_h* const mission)
 {
     int8_t err=0;
     GIEI_H_T_CONV(self, p_self);
     p_self->driver_input = p_driver;
+    p_self->mission = mission;
     if(inverter_module_init(&p_self->inverter, p_self->driver_input) <0)
     {
         goto amk_fail;
-    }
-    p_self->giei_emergency = EmergencyNode_new(); //TODO: set the proper number
-    if (p_self->giei_emergency)
-    {
-        goto emergency_node_fail;
     }
     
     if (driving_maps_init(&p_self->driving_maps) < 0)
@@ -103,7 +101,7 @@ int8_t giei_init(Giei_h* const restrict self, const DriverInput_h* const p_drive
         goto driving_maps_fail;
     }
 
-    if (imu_init(&p_self->imu) < 0) { //TODO: set the proper mailbox
+    if (giei_imu_init(&p_self->imu) < 0) { //TODO: set the proper mailbox
         goto imu_fail;
     }
 
@@ -121,8 +119,6 @@ giei_hv_fail:
 imu_fail:
     err--;
 driving_maps_fail:
-    err--;
-emergency_node_fail:
     engine_destroy(&p_self->inverter);
     err--;
 amk_fail:
@@ -141,6 +137,15 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
         gpio_set_high(GPIO_RTD_BUTTON);
     }
     rt = engine_rtd_procedure(&p_self->inverter);
+
+    if (rt > SYSTEM_OFF)
+    {
+        mission_lock(p_self->mission);
+    }
+    else
+    {
+        mission_unlock(p_self->mission);
+    }
     if (rt == RUNNING && !p_self->entered_rtd)
     {
         p_self->entered_rtd =1;
@@ -159,17 +164,20 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
 
 }
 
-int8_t GIEI_input(struct Giei_h* const restrict self, const float throttle, const float regen)
+int8_t GIEI_compute_power(struct Giei_h* const restrict self)
 {
-    GIEI_H_T_CONV(self, p_self);
+    const union Giei_conv conv = {self};
+    struct Giei_t* const restrict p_self = conv.clear;
 
+    const float throttle = driver_input_get(p_self->driver_input, THROTTLE);
+    const float regen = driver_input_get(p_self->driver_input, REGEN);
     const float limit_power = driving_map_get_parameter(&p_self->driving_maps, POWER_KW);
-    const float driver_regen = driver_get_amount(p_self->driver_input, REGEN);
-    const float driver_throttle = driver_get_amount(p_self->driver_input, THROTTLE);
-    const float driver_sterring_angle = driver_get_amount(p_self->driver_input, STEERING_ANGLE);
-    const float imu_acc_x = imu_get_data(&p_self->imu, IMU_ACCELERATION, AXES_X);
-    const float imu_acc_y = imu_get_data(&p_self->imu, IMU_ACCELERATION, AXES_Y);
-    const float imu_acc_z = imu_get_data(&p_self->imu, IMU_ACCELERATION, AXES_Z);
+    const float driver_regen = driver_input_get(p_self->driver_input, REGEN);
+    const float driver_throttle = driver_input_get(p_self->driver_input, THROTTLE);
+    const float driver_sterring_angle = driver_input_get(p_self->driver_input, STEERING_ANGLE);
+    const float imu_acc_x = giei_imu_get_acc(&p_self->imu, AXES_X);
+    const float imu_acc_y = giei_imu_get_acc(&p_self->imu, AXES_Y);
+    const float imu_acc_z = giei_imu_get_acc(&p_self->imu, AXES_Z);
     const float giei_max_pos_torque =
         driving_map_get_parameter(&p_self->driving_maps, MAX_POS_TORQUE);
 

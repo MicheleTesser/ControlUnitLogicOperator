@@ -13,12 +13,6 @@ typedef struct{
     uint8_t message_size;
 }CanMessage;
 
-enum CAN_MODULES{
-    CAN_INVERTER,
-    CAN_GENERAL,
-    CAN_DV,
-};
-
 enum CAN_FREQUENCY{
     _1_MBYTE_S_ = 1000000L,
     _500_KBYTE_S_ = 500000L,
@@ -30,6 +24,19 @@ enum CAN_FREQUENCY{
     _5_KBYTE_S_ = 5000L,
 };
 
+enum CAN_MODULES{
+    CAN_INVERTER,
+    CAN_GENERAL,
+    CAN_DV,
+};
+
+enum CAN_MAILBOXES{
+    CORE_0_DRIVER_HUMAN,
+    CORE_0_DRIVER_DV,
+    CORE_0_IMU,
+    CORE_0_HV,
+};
+
 struct CanNode;
 struct CanMailbox;
 
@@ -39,7 +46,7 @@ extern int8_t hardware_write_can(struct CanNode* const restrict self, const CanM
 
 extern int8_t hardware_set_mailbox_can(struct CanNode* const restrict self,
         const uint16_t id, const uint16_t mailbox);
-extern struct CanMailbox* hardware_get_mailbox(const uint16_t mailbox);
+extern struct CanMailbox* hardware_get_mailbox(const enum CAN_MAILBOXES mailbox);
 extern struct int8_t hardware_mailbox_read(const struct CanMailbox* const restrict self,
         uint64_t* const o_buffer);
 extern void hardware_free_mailbox_can(struct CanMailbox* const* const restrict self);

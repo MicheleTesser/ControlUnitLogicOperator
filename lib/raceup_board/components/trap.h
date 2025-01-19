@@ -14,7 +14,7 @@ enum TRAP_SLOT{
     TRAP__1__,
     TRAP__2__,
     TRAP__3__,
-    TRAP__4__,
+    TRAP_INPUT_RTD_TOGGLE,
 };
 
 extern int8_t hardware_init_trap(void);

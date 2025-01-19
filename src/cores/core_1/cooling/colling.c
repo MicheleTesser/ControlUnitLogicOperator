@@ -4,13 +4,15 @@
 #include <stdint.h>
 #include <string.h>
 
+#define MAX_MAILBOX_FOR_DEVICE 4
+
 typedef struct Cooling_t{
     const GeneralCan_h* can;
     struct CoolingDeviceData{
         CoolingDevice_h raw_device;
         uint16_t set_mex_id;
         uint8_t mailbox_num;
-        struct CanMailbox** can_mailbox; 
+        struct CanMailbox* can_mailbox[MAX_MAILBOX_FOR_DEVICE]; 
     }devices[__NUM_OF_COOLING_DEVICES__];
 }Cooling_t;
 

@@ -1,5 +1,5 @@
 #include "driver_input.h"
-#include "../lib/raceup_board/raceup_board.h"
+#include "../../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -34,9 +34,7 @@ static inline index_tye compute_data_index(const struct DriverInput_t* const res
 
 //public
 
-int8_t driver_input_init(struct DriverInput_h* const restrict self,
-        const uint16_t human_mailbox_number,
-        const uint16_t dv_mailbox_number)
+int8_t driver_input_init(struct DriverInput_h* const restrict self)
 {
     union Conv{
         struct DriverInput_h* const restrict hidden;
@@ -45,8 +43,8 @@ int8_t driver_input_init(struct DriverInput_h* const restrict self,
     union Conv d_conv = {self};
     struct DriverInput_t* const p_self = d_conv.clear;
     memset(p_self, 0, sizeof(*p_self));
-    p_self->drivers_mailboxes[DRIVER_HUMAN] = hardware_get_mailbox(human_mailbox_number);
-    p_self->drivers_mailboxes[DRIVER_EMBEDDED] = hardware_get_mailbox(dv_mailbox_number);
+    p_self->drivers_mailboxes[DRIVER_HUMAN] = hardware_get_mailbox(CORE_0_DRIVER_HUMAN);
+    p_self->drivers_mailboxes[DRIVER_EMBEDDED] = hardware_get_mailbox(CORE_0_DRIVER_DV);
     p_self->current_driver = DRIVER_HUMAN;
 
     return 0;

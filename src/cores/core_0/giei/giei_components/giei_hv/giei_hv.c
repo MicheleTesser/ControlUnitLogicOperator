@@ -1,12 +1,13 @@
 #include "giei_hv.h"
-#include "../../../../../hv/hv.h"
+#include "../../../../../lib/raceup_board/components/can.h"
 #include <stdint.h>
 #include <string.h>
 
 struct GieiHv_t{
-    struct BasicHv_h basic_hv;
+    struct CanMailbox* lem_mailbox;
     uint32_t battery_pack_tension;
     float total_power;
+    float lem_current;
 };
 
 union GieiHv_conv{
@@ -22,13 +23,13 @@ union GieiHv_const_conv{
 
 int8_t
 giei_hv_init(
-        struct GieiHv_h* const restrict self __attribute__((__nonnull__)),
-        const uint16_t mailbox)
+        struct GieiHv_h* const restrict self __attribute__((__nonnull__)))
 {
     memset(self, 0, sizeof(*self));
     union GieiHv_conv conv = {self};
     struct GieiHv_t* p_self = conv.clear;
-    if(basic_hv_init(&p_self->basic_hv, mailbox)<0){
+    p_self->lem_mailbox = hardware_get_mailbox(CORE_0_HV);
+    if (!p_self->lem_mailbox) {
         return -1;
     }
     return 0;
@@ -49,7 +50,6 @@ giei_hv_computeBatteryPackTension(
 {
     union GieiHv_conv conv = {self};
     struct GieiHv_t* p_self = conv.clear;
-    const float lem_current = basic_hv_get_info(&p_self->basic_hv, HV_LEM_CURRENT);
     uint8_t active_motors = 0;
     float sum = 0.0f;
     uint8_t max = 0;
@@ -79,7 +79,7 @@ giei_hv_computeBatteryPackTension(
     }
     else {
         p_self->battery_pack_tension = (sum / active_motors);
-        p_self->total_power = p_self->battery_pack_tension * lem_current;
+        p_self->total_power = p_self->battery_pack_tension * p_self->lem_current;
     }
     return send_tension_bms(p_self->battery_pack_tension);
 }
