@@ -25,10 +25,10 @@ void main_1(void)
     while (log_init(&log) <0){}
     while (general_can_init(&can1) <0) {}
     while (cooling_init(&cooling, &can1, &log) <0) {}
-    while (car_batteries_init(&batteries, &log)) {}
-    while (core_1_driver_input_init(&core_1_driver_input, &log)) {}
-    while (core_1_imu_init(&core_1_imu, &log)) {}
-    while (suspensions_init(&suspensions, &log)) {}
+    while (car_batteries_init(&batteries, &log) <0) {}
+    while (core_1_driver_input_init(&core_1_driver_input, &log) <0) {}
+    while (core_1_imu_init(&core_1_imu, &log)<0) {}
+    while (suspensions_init(&suspensions, &log)<0) {}
 
 
     core_status_core_ready(CORE_1);
