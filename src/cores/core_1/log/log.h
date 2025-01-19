@@ -7,8 +7,7 @@
 typedef struct LogEntry_h{
     const uint8_t data_size;
     const uint8_t log_mode:2;
-    const uint8_t data_signed:1;
-    const uint8_t data_float:1;
+    const uint8_t data_mode: 2;
     const int8_t* const name;
     const void* const data_ptr;
 }LogEntry_h;
@@ -16,6 +15,12 @@ typedef struct LogEntry_h{
 enum LOG_MODE{
     LOG_SD = (1<<0),
     LOG_TELEMETRY = (1<<1),
+};
+
+enum DATA_MODE{
+    DATA_UNSIGNED=0,
+    DATA_SIGNED,
+    DATA_FLOATED,
 };
 
 typedef struct Log_h{
