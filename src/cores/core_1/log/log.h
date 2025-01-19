@@ -2,7 +2,6 @@
 #define __CAR_LOG__
 
 #include <stdint.h>
-// #include "entry/entry.h"
 
 typedef struct LogEntry_h{
     const uint8_t data_size;
