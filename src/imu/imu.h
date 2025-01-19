@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-struct Imu_h{
+typedef struct Imu_h{
     const uint8_t private_data[1];
-};
+}Imu_h;
 
 enum IMU_DATA{
     IMU_ACCELERATION,
@@ -18,10 +18,10 @@ enum IMU_AXIS{
 };
 
 int8_t 
-imu_init(struct Imu_h* const restrict self __attribute__((__nonnull__)), const uint16_t mailbox);
+imu_init(Imu_h* const restrict self __attribute__((__nonnull__)), const uint16_t mailbox);
 
 float
-imu_get_data(struct Imu_h* const restrict self __attribute__((__nonnull__)),
+imu_get_data(const Imu_h* const restrict self __attribute__((__nonnull__)),
         const enum IMU_DATA data_type, const enum IMU_AXIS axes);
 
 #endif // !__CAR_IMU__

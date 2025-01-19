@@ -14,19 +14,16 @@
 #include "../../../driver_input/driver_input.h"
 #include "./giei_components/engines/engine_common.h"
 
-struct Giei_h
-{
+typedef struct Giei_h{
     uint8_t private_data[136];
-};
+}Giei_h;
 
 int8_t 
-giei_init(
-        struct Giei_h* const restrict self __attribute__((__nonnull__)),
-        const struct DriverInput_h* const driver
-        );
+giei_init(Giei_h* const restrict self __attribute__((__nonnull__)),
+        const DriverInput_h* const driver);
 
 enum RUNNING_STATUS 
-GIEI_check_running_condition(struct Giei_h* const restrict self __attribute__((__nonnull__)));
+GIEI_check_running_condition(Giei_h* const restrict self __attribute__((__nonnull__)));
 
 
 

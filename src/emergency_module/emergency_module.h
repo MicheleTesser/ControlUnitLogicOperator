@@ -6,7 +6,7 @@
 #include <assert.h>
 
 
-struct EmergencyNode;
+typedef struct EmergencyNode EmergencyNode;
 
 struct EmergencyNode*
 EmergencyNode_new(const uint8_t num_exception);

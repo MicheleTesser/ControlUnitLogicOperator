@@ -22,11 +22,11 @@ struct Giei_t{
     EngineType inverter;
     time_var_microseconds rtd_sound_start;
     enum RUNNING_STATUS running_status;
-    const struct DriverInput_h* driver_input;
-    struct DrivingMaps_h driving_maps;
-    struct Imu_h imu;
-    struct GieiHv_h hv;
-    const struct EmergencyNode* giei_emergency;
+    const DriverInput_h* driver_input;
+    DrivingMaps_h driving_maps;
+    Imu_h imu;
+    GieiHv_h hv;
+    const EmergencyNode* giei_emergency;
     uint8_t entered_rtd : 1;
 };
 
@@ -83,7 +83,7 @@ static void update_torque_NM_vectors_no_tv(
 
 //public
 
-int8_t giei_init(struct Giei_h* const restrict self, const struct DriverInput_h* const p_driver)
+int8_t giei_init(Giei_h* const restrict self, const DriverInput_h* const p_driver)
 {
     int8_t err=0;
     GIEI_H_T_CONV(self, p_self);

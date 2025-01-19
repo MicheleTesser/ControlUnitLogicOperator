@@ -9,8 +9,8 @@
 void main_0(void)
 {
     //setup
-    struct Giei_h giei;
-    struct DriverInput_h driver;
+    Giei_h giei;
+    DriverInput_h driver;
 
     while (driver_input_init(&driver,,) <0) {}
     while (giei_init(&giei,&driver) <0) {}
