@@ -66,7 +66,7 @@ int8_t driver_input_change_driver(struct DriverInput_h* const restrict self,
     return -1;
 }
 
-float driver_get_amount(const struct DriverInput_h* const restrict self,
+float driver_input_get(const struct DriverInput_h* const restrict self,
         const enum INPUT_TYPES driver_input)
 {
     union Conv{

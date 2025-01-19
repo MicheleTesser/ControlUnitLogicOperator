@@ -9,9 +9,9 @@ typedef struct DriverInput_h{
 
 enum INPUT_TYPES{
     THROTTLE =0,
-    BRAKE =1,
-    STEERING_ANGLE = 2,
-    REGEN =3,
+    BRAKE,
+    STEERING_ANGLE,
+    REGEN,
 
     __NUM_OF_INPUT_TYPES__
 };
@@ -19,6 +19,7 @@ enum INPUT_TYPES{
 enum DRIVER{
     DRIVER_HUMAN=0,
     DRIVER_EMBEDDED,
+
     __NUM_OF_DRIVERS__
 };
 
