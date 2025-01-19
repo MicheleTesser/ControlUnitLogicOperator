@@ -4,6 +4,9 @@
 #include <stdint.h>
 
 enum GPIO_PIN{
+    CORE_0_ALIVE_BLINK,
+    CORE_1_ALIVE_BLINK,
+    CORE_2_ALIVE_BLINK,
     GPIO_0,
     GPIO_RTD_BUTTON,
     GPIO_RTD_SOUND,
