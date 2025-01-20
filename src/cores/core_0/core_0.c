@@ -7,15 +7,11 @@
 void main_0(void)
 {
     //setup
-    Giei_h giei;
-    DriverInput_h driver;
-    Mission_h mission;
     CoreAliveBlink_h alive_blink;
+    Core0Feature_h feature;
 
-    while (driver_input_init(&driver) <0) {}
-    while (mission_init(&mission, &driver)<0) {}
-    while (giei_init(&giei, &driver, &mission) <0) {}
     while (core_alive_blink_init(&alive_blink, CORE_0_ALIVE_BLINK) <0) {}
+    while (core_0_feature_init(&feature)) {}
 
     //core sync
     core_status_core_ready(CORE_0);
@@ -24,10 +20,6 @@ void main_0(void)
     //loop
     for(;;){
         core_alive_blink_update(&alive_blink);
-        mission_update(&mission);
-        driver_input_update(&driver);
-        if (GIEI_check_running_condition(&giei) == RUNNING) {
-            GIEI_compute_power(&giei);
-        }
+        core_0_feature_update(&feature);
     }
 }

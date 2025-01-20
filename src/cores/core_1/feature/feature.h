@@ -1,12 +1,16 @@
 #ifndef __CORE_1_FEATURE__
 #define __CORE_1_FEATURE__
 
-#include "cooling/colling.h"
-#include "batteries/batteries.h"
-#include "core_1_driver_input/core_1_driver_input.h"
-#include "general_can/general_can.h"
-#include "core_1_imu/core_1_imu.h"
-#include "suspensions/suspensions.h"
-#include "log/log.h"
+#include <stdint.h>
+
+typedef struct Core1Feature_h{
+    const uint8_t private_data[1];
+}Core1Feature_h;
+
+int8_t
+core_1_feature_init(Core1Feature_h* const restrict self __attribute__((__nonnull__)));
+
+int8_t
+core_1_feature_update(Core1Feature_h* const restrict self __attribute__((__nonnull__)));
 
 #endif // !__CORE_1_FEATURE__
