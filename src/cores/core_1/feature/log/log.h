@@ -31,7 +31,7 @@ log_init(Log_h* const restrict self __attribute__((__nonnull__)));
 
 int8_t
 log_add_entry(Log_h* const restrict self __attribute__((__nonnull__)),
-        const LogEntry_h entry);
+        const LogEntry_h* entry  __attribute__((__nonnull__)));
 
 int8_t
 log_update_and_send(Log_h* const restrict self __attribute__((__nonnull__)));
