@@ -2,7 +2,7 @@
 #define __COOLING__
 
 #include <stdint.h>
-#include "../general_can/general_can.h"
+#include "../../../../lib/raceup_board/components/can.h"
 #include "../log/log.h"
 
 typedef struct Cooling_h{
@@ -17,7 +17,7 @@ enum COOLING_DEVICES{
 };
 
 int8_t cooling_init(Cooling_h* const restrict self __attribute__((__nonnull__)),
-        const GeneralCan_h* const restrict can_bus __attribute__((__nonnull__)),
+        const struct CanNode* const restrict can_bus __attribute__((__nonnull__)),
         Log_h* const restrict log __attribute__((__nonnull__)));
 int8_t cooling_update_all(Cooling_h* const restrict self __attribute__((__nonnull__)));
 int8_t cooling_switch_device(Cooling_h* const restrict self __attribute__((__nonnull__)),

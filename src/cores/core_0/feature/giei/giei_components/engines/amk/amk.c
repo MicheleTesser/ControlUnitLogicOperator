@@ -165,7 +165,7 @@ static uint8_t amk_inverter_on(const struct AMKInverter_t* const restrict self)
 
 static inline uint8_t precharge_ended(void)
 {
-    return gpio_read_state(AIR_PRECHARGE_INIT) && gpio_read_state(AIR_PRECHARGE_DONE);
+    return gpio_read_state(GPIO_AIR_PRECHARGE_INIT) && gpio_read_state(GPIO_AIR_PRECHARGE_DONE);
 }
 
 static void amk_shut_down_power(struct AMKInverter_t* const restrict self)
