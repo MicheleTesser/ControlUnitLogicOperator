@@ -1,9 +1,6 @@
 #include "core_0.h"
 #include "../core_utility/core_utility.h"
-#include "driver_input/driver_input.h"
-#include "giei/giei.h"
-#include "giei/giei_components/engines/engine_common.h"
-#include "mission/mission.h"
+#include "feature/feature.h"
 
 //public
 

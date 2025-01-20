@@ -1,5 +1,5 @@
 #include "giei_hv.h"
-#include "../../../../../lib/raceup_board/components/can.h"
+#include "../../../../../../lib/raceup_board/components/can.h"
 #include <stdint.h>
 #include <string.h>
 

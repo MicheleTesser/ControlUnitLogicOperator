@@ -1,5 +1,5 @@
 #include "driver_input.h"
-#include "../../../lib/raceup_board/raceup_board.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 #include <string.h>
 

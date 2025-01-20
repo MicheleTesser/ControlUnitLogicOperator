@@ -1,6 +1,6 @@
 #include "giei.h"
 #include "../mission/mission.h"
-#include "../../../lib/raceup_board/raceup_board.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "giei_components/giei_components.h"
 #include "giei_components/giei_imu/giei_imu.h"

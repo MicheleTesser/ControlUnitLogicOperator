@@ -1,8 +1,6 @@
 #include "core_2.h"
 #include "../core_utility/core_utility.h"
-#include "DV/dv.h"
-#include "mission/mission.h"
-#include "dv_driver_input/dv_driver_input.h"
+#include "feature/feature.h"
 #include <stdint.h>
 
 //public

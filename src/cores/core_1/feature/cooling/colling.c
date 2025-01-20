@@ -1,6 +1,6 @@
 #include "colling.h"
 #include "cooling_device/cooling_device.h"
-#include "../../../lib/raceup_board/components/can.h"
+#include "../../../../lib/raceup_board/components/can.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -8,6 +8,7 @@
 
 typedef struct Cooling_t{
     const GeneralCan_h* can;
+    struct Log_h* log;
     struct CoolingDeviceData{
         CoolingDevice_h raw_device;
         uint16_t set_mex_id;
@@ -24,12 +25,15 @@ union Cooling_h_t_conv{
 
 //public
 
-int8_t cooling_init(Cooling_h* const restrict self, const GeneralCan_h* const restrict can_bus)
+int8_t cooling_init(Cooling_h* const restrict self __attribute__((__nonnull__)),
+        const GeneralCan_h* const restrict can_bus __attribute__((__nonnull__)),
+        Log_h* const restrict log __attribute__((__nonnull__)))
 {
     memset(self, 0, sizeof(*self));
     union Cooling_h_t_conv conv = {self};
     struct Cooling_t* const p_self = conv.clear;
     p_self->can = can_bus;
+    p_self->log = log;
     p_self->devices[FANS_RADIATOR].set_mex_id =; //TODO: not yet defined
     p_self->devices[PUMPS].set_mex_id =; //TODO: not yet defined
 

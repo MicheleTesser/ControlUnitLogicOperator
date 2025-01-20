@@ -1,7 +1,7 @@
 #include "dv.h"
-#include "../../core_utility/core_utility.h"
-#include "../../../lib/raceup_board/components/gpio.h"
-#include "mission/mission.h"
+#include "../../../core_utility/core_utility.h"
+#include "../../../../lib/raceup_board/components/gpio.h"
+#include "../mission/mission.h"
 #include "res/res.h"
 #include "asb/asb.h"
 #include "../dv_driver_input/dv_driver_input.h"
@@ -204,7 +204,7 @@ int8_t dv_update(Dv_h* const restrict self __attribute__((__nonnull__)))
     struct Dv_t* const p_self = conv.clear;
     dv_update_status(p_self);
     dv_update_led(p_self);
-    if (p_self->status == AS_DRIVING && dv_mission_get_current(&p_self->dv_mission) > MANUALY)
+    if (p_self->status == AS_DRIVING && dv_mission_get_current(p_self->dv_mission) > MANUALY)
     {
         dv_stw_alg_compute(0, 0); //TODO: not yet implemented
         return 0;
