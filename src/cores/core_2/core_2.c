@@ -11,10 +11,10 @@ void main_2(void)
     CoreAliveBlink_h alive_blink;
     Core2Feature_h feature;
 
-
     while (core_alive_blink_init(&alive_blink, CORE_2_ALIVE_BLINK) <0) {}
     while (core_2_feature_init(&feature)) {}
 
+    //cores sync
     core_status_core_ready(CORE_2);
     while (core_status_ready_state()) {}
 

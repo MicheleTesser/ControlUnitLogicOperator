@@ -13,7 +13,7 @@ void main_0(void)
     while (core_alive_blink_init(&alive_blink, CORE_0_ALIVE_BLINK) <0) {}
     while (core_0_feature_init(&feature)) {}
 
-    //core sync
+    //cores sync
     core_status_core_ready(CORE_0);
     while (core_status_ready_state()) {}
 
