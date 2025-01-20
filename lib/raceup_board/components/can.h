@@ -34,6 +34,8 @@ enum CAN_MAILBOXES{
     CORE_0_DRIVER_HUMAN,
     CORE_0_DRIVER_DV,
     CORE_0_IMU,
+    CORE_1_IMU,
+    CORE_2_IMU,
     CORE_0_HV,
 };
 

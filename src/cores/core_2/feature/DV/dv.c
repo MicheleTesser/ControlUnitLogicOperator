@@ -1,9 +1,11 @@
 #include "dv.h"
 #include "../../../core_utility/core_utility.h"
 #include "../../../../lib/raceup_board/components/gpio.h"
+#include "../../../core_utility/running_status/running_status.h"
 #include "../mission/mission.h"
 #include "res/res.h"
 #include "asb/asb.h"
+#include "speed/speed.h"
 #include "../dv_driver_input/dv_driver_input.h"
 #include "../mission/mission.h"
 #include "./steering_wheel_alg/stw_alg.h"
@@ -28,6 +30,7 @@ struct Dv_t{
     time_var_microseconds emergency_sound_last_time_on;
     DvRes_h dv_res;
     DvAsb_h dv_asb;
+    DvSpeed_h dv_speed;
     DvMission_h* dv_mission;
     DvDriverInput_h* dv_driver_input;
     struct EmergencyNode* emergency_node;
@@ -119,9 +122,9 @@ static int8_t dv_update_led(struct Dv_t* const restrict self)
 //INFO: Flowchart T 14.9.2
 static int8_t dv_update_status(struct Dv_t* const restrict self)
 {
-    float giei_speed = 0; //TODO: how to get it
-    float driver_brake = dv_driver_input_get_brake(self->dv_driver_input);
-    const enum RUNNING_STATUS giei_status; //TODO: how to get it
+    const float current_speed = dv_speed_get(&self->dv_speed);
+    const float driver_brake = dv_driver_input_get_brake(self->dv_driver_input);
+    const enum RUNNING_STATUS giei_status = global_running_status_get();
 
     if (EmergencyNode_is_emergency_state(self->emergency_node)) {
         self->status = AS_EMERGENCY;
@@ -155,8 +158,7 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
 
     
     else if (dv_mission_get_status(self->dv_mission) == MISSION_FINISHED &&
-            !giei_speed
-            && sdc_closed(self))
+            !current_speed && sdc_closed(self))
     {
         update_dv_status(self, AS_FINISHED);
     }
@@ -186,13 +188,16 @@ dv_class_init(Dv_h* const restrict self __attribute__((__nonnull__)),
     }
     if(asb_class_init(&p_self->dv_asb) <0)
     {
-        return -1;
+        return -2;
+    }
+    if (dv_speed_init(&p_self->dv_speed)<0) {
+        return -3;
     }
     p_self->dv_mission = mission;
     p_self->dv_driver_input = driver;
     p_self->emergency_node = EmergencyNode_new(__NUM_OF_DV_EMERGENCIES__); //TODO: not yet defined
     if (!p_self->emergency_node) {
-        return -1;
+        return -4;
     }
 
     return 0;
@@ -202,6 +207,10 @@ int8_t dv_update(Dv_h* const restrict self __attribute__((__nonnull__)))
 {
     union Dv_h_t_conv conv = {self};
     struct Dv_t* const p_self = conv.clear;
+
+    dv_speed_update(&p_self->dv_speed);
+    asb_update(&p_self->dv_asb);
+
     dv_update_status(p_self);
     dv_update_led(p_self);
     if (p_self->status == AS_DRIVING && dv_mission_get_current(p_self->dv_mission) > MANUALY)

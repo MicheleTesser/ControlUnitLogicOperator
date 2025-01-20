@@ -34,11 +34,26 @@ core_2_feature_update(Core0Feature_h* const restrict self __attribute__((__nonnu
 {
     union Core0Feature_h_t_conv conv = {self};
     struct Core0Feature_t* const restrict p_self = conv.clear;
+    enum RUNNING_STATUS status = SYSTEM_OFF;
 
-    if(mission_update(&p_self->mission) <0) return -1;
-    if(driver_input_update(&p_self->driver)<0) return -1;
-    if (GIEI_check_running_condition(&p_self->giei) == RUNNING) {
-        if(GIEI_compute_power(&p_self->giei)<0) return -1;
+    if(mission_update(&p_self->mission) <0)
+    {
+        return -1;
+    }
+    if(driver_input_update(&p_self->driver)<0)
+    {
+        return -2;
+    }
+    status = GIEI_check_running_condition(&p_self->giei);
+    if (status)
+    {
+        if(global_running_status_set(status)<0){
+            return -3;
+        }
+        if(GIEI_compute_power(&p_self->giei)<0)
+        {
+            return -4;
+        }
     }
 
     return 0;

@@ -3,6 +3,7 @@
 
 #define NUM_OF_EGINES 4
 
+#include "../../../../../core_utility/running_status/running_status.h"
 
 enum ENGINES {
     FRONT_LEFT = 0,     //INFO: Front Left: Status Values: [0x283,0x285] SetPoint: 0x184
@@ -15,13 +16,6 @@ enum ENGINES {
     for(enum ENGINES index_engine=FRONT_LEFT;index_engine<=REAR_RIGHT;index_engine++){\
         exp;\
     };
-
-enum RUNNING_STATUS{
-    SYSTEM_OFF = 0,
-    SYSTEM_PRECAHRGE =1,
-    TS_READY =2,
-    RUNNING =3,
-};
 
 enum ENGINE_INFO{
     ENGINE_VOLTAGE,
