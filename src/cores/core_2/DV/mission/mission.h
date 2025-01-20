@@ -1,0 +1,32 @@
+#ifndef __DV_MISSIONS__
+#define __DV_MISSIONS__
+#include <stdint.h>
+
+typedef struct DvMission_h{
+    const uint8_t private_data[1];
+}DvMission_h;
+
+enum MISSIONS{
+    NONE=0,
+    MANUALY,
+
+    DV_ACCELERATION,
+    DV_SKIDPAD,
+    DV_AUTOCROSS,
+    DV_TRACKDRIVE,
+    DV_EBS_TEST,
+    DV_INSPECTION,
+};
+
+enum MISSION_STATUS{
+    MISSION_NOT_RUNNING,
+    MISSION_RUNNING,
+    MISSION_FINISHED,
+};
+
+int8_t dv_mission_init(DvMission_h* const restrict self __attribute__((__nonnull__)));
+int8_t dv_mission_update(const DvMission_h* const restrict self __attribute__((__nonnull__)));
+enum MISSIONS dv_mission_get_current(const DvMission_h* const restrict self __attribute__((__nonnull__)));
+enum MISSION_STATUS dv_mission_get_status(const DvMission_h* const restrict self __attribute__((__nonnull__)));
+
+#endif // !__DV_MISSIONS__
