@@ -1,13 +1,6 @@
 #include "core_1.h"
 #include "../core_utility/core_utility.h"
-#include "batteries/batteries.h"
 #include "feature/feature.h"
-#include "core_1_driver_input/core_1_driver_input.h"
-#include "general_can/general_can.h"
-#include "cooling/colling.h"
-#include "core_1_imu/core_1_imu.h"
-#include "suspensions/suspensions.h"
-#include "log/log.h"
 #include <stdint.h>
 
 
