@@ -1,10 +1,11 @@
 #include "dv.h"
 #include "../../core_utility/core_utility.h"
 #include "../../../lib/raceup_board/components/gpio.h"
+#include "mission/mission.h"
 #include "res/res.h"
 #include "asb/asb.h"
 #include "../dv_driver_input/dv_driver_input.h"
-#include "mission/mission.h"
+#include "../mission/mission.h"
 #include "./steering_wheel_alg/stw_alg.h"
 #include <stdint.h>
 #include <string.h>
@@ -26,8 +27,8 @@ struct Dv_t{
     time_var_microseconds emergency_last_time_on;
     time_var_microseconds emergency_sound_last_time_on;
     DvRes_h dv_res;
-    DvMission_h dv_mission;
     DvAsb_h dv_asb;
+    DvMission_h* dv_mission;
     DvDriverInput_h* dv_driver_input;
     struct EmergencyNode* emergency_node;
 };
@@ -129,7 +130,7 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
 
     if (!ebs_on(&self->dv_asb.dv_ebs)) 
     {
-        if (dv_mission_get_current(&self->dv_mission) > MANUALY &&
+        if (dv_mission_get_current(self->dv_mission) > MANUALY &&
                 asb_consistency_check(&self->dv_asb)
                 && giei_status >= TS_READY)
         {
@@ -153,7 +154,7 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
     }
 
     
-    else if (dv_mission_get_status(&self->dv_mission) == MISSION_FINISHED &&
+    else if (dv_mission_get_status(self->dv_mission) == MISSION_FINISHED &&
             !giei_speed
             && sdc_closed(self))
     {
@@ -170,7 +171,8 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
 
 int8_t
 dv_class_init(Dv_h* const restrict self __attribute__((__nonnull__)),
-        DvDriverInput_h* const restrict driver)
+        DvMission_h* const restrict mission __attribute__((__nonnull__)),
+        DvDriverInput_h* const restrict driver __attribute__((__nonnull__)))
 {
     union Dv_h_t_conv conv = {self};
     struct Dv_t* const p_self = conv.clear;
@@ -182,14 +184,11 @@ dv_class_init(Dv_h* const restrict self __attribute__((__nonnull__)),
     {
         return -1;
     }
-    if (dv_mission_init(&p_self->dv_mission) <0)
-    {
-        return -1;
-    }
     if(asb_class_init(&p_self->dv_asb) <0)
     {
         return -1;
     }
+    p_self->dv_mission = mission;
     p_self->dv_driver_input = driver;
     p_self->emergency_node = EmergencyNode_new(__NUM_OF_DV_EMERGENCIES__); //TODO: not yet defined
     if (!p_self->emergency_node) {
