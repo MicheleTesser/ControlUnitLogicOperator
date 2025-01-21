@@ -11,7 +11,7 @@ typedef struct CoreAliveBlink_h{
 int8_t
 core_alive_blink_init(
         CoreAliveBlink_h* const restrict self __attribute__((__nonnull__)),
-        enum GPIO_PIN pin_led);
+        enum GPIO_PIN pin_led, const time_var_microseconds freq);
 
 int8_t
 core_alive_blink_update(CoreAliveBlink_h* const restrict self __attribute__((__nonnull__)));
