@@ -3,12 +3,14 @@
 
 #include <stdint.h>
 
+#define LOG_ENTRY_NAME_MAX_SIZE 32
+
 typedef struct LogEntry_h{
     const uint8_t data_size;
     const uint8_t log_mode:2;
     const uint8_t data_mode: 2;
-    const int8_t* const name;
     const void* const data_ptr;
+    const uint8_t name[LOG_ENTRY_NAME_MAX_SIZE];
 }LogEntry_h;
 
 enum LOG_MODE{

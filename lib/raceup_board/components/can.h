@@ -38,6 +38,8 @@ enum CAN_MAILBOXES_RECV{
     CORE_0_MAPS,
 
     CORE_1_IMU,
+    CORE_1_DRIVER,
+    CORE_1_REGEN,
 
     CORE_2_IMU,
 };
