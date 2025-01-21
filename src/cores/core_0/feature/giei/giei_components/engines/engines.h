@@ -12,6 +12,10 @@
 #define inverter_module_init(inverter,driver) engine_module_init_not_defined(inverter,driver)
 #endif
 
+#if !defined (inverter_update)
+#define inverter_update(inverter) engine_update_not_defined(inverter)
+#endif
+
 #if !defined (engine_rtd_procedure)
 #define engine_rtd_procedure(inverter) engine_rtd_procedure_not_defined(inverter)
 #endif

@@ -2,8 +2,11 @@
 #include "../mission/mission.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
+#include "../maps/maps.h"
+#include "../imu/imu.h"
 #include "giei_components/giei_components.h"
-#include "giei_components/giei_imu/giei_imu.h"
+#include "giei_components/hv/hv.h"
+#include "giei_components/speed_alg/speed_alg.h"
 #include "math_saturated/saturated.h"
 
 #include <stdint.h>
@@ -15,13 +18,13 @@
 
 struct Giei_t{
     EngineType inverter;
+    Hv_h hv;
     time_var_microseconds rtd_sound_start;
     enum RUNNING_STATUS running_status;
     const DriverInput_h* driver_input;
-    Mission_h* mission;
-    DrivingMaps_h driving_maps;
-    GieiImu_h imu;
-    GieiHv_h hv;
+    const DrivingMaps_h* driving_maps;
+    const Imu_h* imu;
+    const Mission_h* mission;
     uint8_t entered_rtd : 1;
 };
 
@@ -57,7 +60,7 @@ static void update_torque_NM_vectors_no_tv(
         const struct Giei_t* const restrict self,
         const float throttle, float posTorquesNM[NUM_OF_EGINES], const float actual_max_pos_torque)
 {
-    const float power_repartition = driving_map_get_parameter(&self->driving_maps, TORQUE_REPARTITION);
+    const float power_repartition = driving_map_get_parameter(self->driving_maps, TORQUE_REPARTITION);
     const float probability_of_success = power_repartition/ (1 - power_repartition);
     for (uint8_t i = 0; i < NUM_OF_EGINES; i++)
     {
@@ -83,49 +86,52 @@ static void update_torque_NM_vectors_no_tv(
 
 //public
 
-int8_t giei_init(Giei_h* const restrict self,
+int8_t
+giei_init(Giei_h* const restrict self,
         const DriverInput_h* const p_driver,
-        Mission_h* const mission)
+        const DrivingMaps_h* const p_maps,
+        const Imu_h* const p_imu,
+        Mission_h* const p_mission)
 {
-    int8_t err=0;
     GIEI_H_T_CONV(self, p_self);
-    p_self->driver_input = p_driver;
-    p_self->mission = mission;
+
+    if (hv_init(&p_self->hv)<0) {
+        return -1;
+    }
+
     if(inverter_module_init(&p_self->inverter, p_self->driver_input) <0)
     {
-        goto amk_fail;
-    }
-    
-    if (driving_maps_init(&p_self->driving_maps) < 0)
-    {
-        goto driving_maps_fail;
+        return -2;
     }
 
-    if (giei_imu_init(&p_self->imu) < 0) { //TODO: set the proper mailbox
-        goto imu_fail;
-    }
-
-    if (giei_hv_init(&p_self->hv) < 0) {
-        goto giei_hv_fail;
-    }
-
+    speed_alg_init();
     regen_alg_init();
     tv_alg_init();
 
-    return 0;
+    p_self->driver_input = p_driver;
+    p_self->driving_maps = p_maps;
+    p_self->imu = p_imu;
+    p_self->mission = p_mission;
 
-giei_hv_fail:
-    err--;
-imu_fail:
-    err--;
-driving_maps_fail:
-    engine_destroy(&p_self->inverter);
-    err--;
-amk_fail:
-    err--;
-    
-    return err;
+    return 0;
 }
+
+int8_t
+giei_update(Giei_h* const restrict self __attribute__((__nonnull__)))
+{
+    GIEI_H_T_CONV(self, p_self);
+
+    if (hv_update(&p_self->hv)) {
+        return -1;
+    }
+
+    if(inverter_update(&p_self->inverter)<0){
+        return -2;
+    }
+
+    return 0;
+}
+
 enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict self)
 {
     GIEI_H_T_CONV(self, p_self);
@@ -171,18 +177,18 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
 
     const float throttle = driver_input_get(p_self->driver_input, THROTTLE);
     const float regen = driver_input_get(p_self->driver_input, REGEN);
-    const float limit_power = driving_map_get_parameter(&p_self->driving_maps, POWER_KW);
+    const float limit_power = driving_map_get_parameter(p_self->driving_maps, POWER_KW);
     const float driver_regen = driver_input_get(p_self->driver_input, REGEN);
     const float driver_throttle = driver_input_get(p_self->driver_input, THROTTLE);
     const float driver_sterring_angle = driver_input_get(p_self->driver_input, STEERING_ANGLE);
-    const float imu_acc_x = giei_imu_get_acc(&p_self->imu, AXES_X);
-    const float imu_acc_y = giei_imu_get_acc(&p_self->imu, AXES_Y);
-    const float imu_acc_z = giei_imu_get_acc(&p_self->imu, AXES_Z);
+    const float imu_acc_x = imu_get_acc(p_self->imu, AXES_X);
+    const float imu_acc_y = imu_get_acc(p_self->imu, AXES_Y);
+    const float imu_acc_z = imu_get_acc(p_self->imu, AXES_Z);
     const float giei_max_pos_torque =
-        driving_map_get_parameter(&p_self->driving_maps, MAX_POS_TORQUE);
+        driving_map_get_parameter(p_self->driving_maps, MAX_POS_TORQUE);
 
     const float giei_max_neg_torque =
-        driving_map_get_parameter(&p_self->driving_maps, MAX_POS_TORQUE);
+        driving_map_get_parameter(p_self->driving_maps, MAX_POS_TORQUE);
 
     const float actual_max_pos_torque =
         engine_max_pos_torque(&p_self->inverter, giei_max_pos_torque);
@@ -203,7 +209,7 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
     engines_voltages[REAR_RIGHT] = engine_get_info(&p_self->inverter, REAR_RIGHT,ENGINE_VOLTAGE);
 
 
-    if (driving_map_get_parameter(&p_self->driving_maps, TV_ON))
+    if (driving_map_get_parameter(p_self->driving_maps, TV_ON))
     {
         struct TVInputArgs tv_input =
         {
@@ -215,7 +221,7 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
             .steering = driver_sterring_angle,
             .brakepressurefront = 0, //TODO: not yet implemented in the code
             .brakepressurerear = 0, //TODO: not yet implemented in the code
-            .voltage = giei_hv_get_info(&p_self->hv, HV_BATTERY_PACK_TENSION),
+            .voltage = hv_get_info(&p_self->hv, HV_BATTERY_PACK_TENSION),
             .rpm[0] = engine_get_info(&p_self->inverter, FRONT_LEFT, ENGINE_RPM),
             .rpm[1] = engine_get_info(&p_self->inverter, FRONT_RIGHT, ENGINE_RPM),
             .rpm[2] = engine_get_info(&p_self->inverter, REAR_LEFT, ENGINE_RPM),
@@ -228,11 +234,11 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
         update_torque_NM_vectors_no_tv(p_self,throttle, posTorquesNM, actual_max_pos_torque);
     }
 
-    giei_hv_computeBatteryPackTension(&p_self->hv, engines_voltages, NUM_OF_EGINES);
+    hv_computeBatteryPackTension(&p_self->hv, engines_voltages, NUM_OF_EGINES);
 
     if (throttle > 0 && regen >= 0)
     {
-        const float total_power = giei_hv_get_info(&p_self->hv, HV_TOTAL_POWER);
+        const float total_power = hv_get_info(&p_self->hv, HV_TOTAL_POWER);
         powerControl(total_power, limit_power, posTorquesNM);
     }
 

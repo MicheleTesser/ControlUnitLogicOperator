@@ -1,0 +1,33 @@
+#ifndef __GIEI_HV__
+#define __GIEI_HV__
+
+#include <stdint.h>
+
+typedef struct Hv_h{
+    const uint8_t private_data[1];
+}Hv_h;
+
+enum GIEI_HV_INFO{
+    HV_BATTERY_PACK_TENSION=0,
+    HV_TOTAL_POWER,
+
+    __NUM_OF_GIEI_HV_INFO__
+};
+
+int8_t
+hv_init(Hv_h* const restrict self __attribute__((__nonnull__)));
+
+int8_t
+hv_update(Hv_h* const restrict self __attribute__((__nonnull__)));
+
+int8_t
+hv_computeBatteryPackTension(Hv_h* const restrict self __attribute__((__nonnull__)),
+        const float* const engines_voltages,
+        const uint8_t num_of_voltages);
+
+float
+hv_get_info(const Hv_h* const restrict self __attribute__((__nonnull__)),
+        const enum GIEI_HV_INFO info);
+
+
+#endif // !__GIEI_HV__

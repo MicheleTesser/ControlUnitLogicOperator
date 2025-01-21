@@ -1,5 +1,4 @@
-#include "./giei_imu.h"
-#include "speed_alg/speed_alg.h"
+#include "imu.h"
 #include <string.h>
 
 struct GieiImu_t{

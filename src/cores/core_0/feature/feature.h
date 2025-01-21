@@ -13,4 +13,7 @@ core_0_feature_init(Core0Feature_h* const restrict self __attribute__((__nonnull
 int8_t
 core_0_feature_update(Core0Feature_h* const restrict self __attribute__((__nonnull__)));
 
+int8_t
+core_0_feature_compute_power(Core0Feature_h* const restrict self __attribute__((__nonnull__)));
+
 #endif // !__CORE_0_FEATURE__

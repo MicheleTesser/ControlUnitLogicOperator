@@ -2,6 +2,7 @@
 #define __GIEI_MAPS__
 
 #include <stdint.h>
+#include "../../../../lib/raceup_board/components/can.h"
 
 typedef struct DrivingMaps_h{
     const uint8_t private_data[1];
@@ -25,14 +26,13 @@ enum CAR_PARAMETERS{
 int8_t
 driving_maps_init(DrivingMaps_h* const restrict self __attribute__((__nonnull__)));
 
+int8_t
+driving_map_update(DrivingMaps_h* const restrict self __attribute__((__nonnull__)));
+
 float
 driving_map_get_parameter(const DrivingMaps_h* const restrict self __attribute__((__nonnull__)),
         const enum CAR_PARAMETERS param);
 
-int8_t
-driving_map_change(DrivingMaps_h* const restrict self,
-        const enum MAPS_TYPE map_type,
-        const uint8_t map);
 
 
 #endif // !__GIEI_MAPS__

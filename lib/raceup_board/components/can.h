@@ -30,27 +30,54 @@ enum CAN_MODULES{
     CAN_DV,
 };
 
-enum CAN_MAILBOXES{
+enum CAN_MAILBOXES_RECV{
     CORE_0_DRIVER_HUMAN,
     CORE_0_DRIVER_DV,
     CORE_0_IMU,
-    CORE_1_IMU,
-    CORE_2_IMU,
     CORE_0_HV,
+    CORE_0_MAPS,
+
+    CORE_1_IMU,
+
+    CORE_2_IMU,
+};
+
+enum CAN_MAILBOXES_SEND{
+    CORE_0_BMS_HV,
 };
 
 struct CanNode;
 struct CanMailbox;
 
-struct CanNode* hardware_init_can(const enum CAN_MODULES mod, const enum CAN_FREQUENCY baud_rate);
-extern int8_t hardware_read_can(struct CanNode* const restrict self, CanMessage* mex);
-extern int8_t hardware_write_can(struct CanNode* const restrict self, const CanMessage* restrict const mex);
+struct CanNode*
+hardware_init_can(const enum CAN_MODULES mod, const enum CAN_FREQUENCY baud_rate);
 
-extern int8_t hardware_set_mailbox_can(struct CanNode* const restrict self,
+extern int8_t
+hardware_read_can(struct CanNode* const restrict self __attribute__((__nonnull__)),
+        CanMessage* const restrict mex __attribute__((__nonnull__)));
+
+extern int8_t
+hardware_write_can(struct CanNode* const restrict self __attribute__((__nonnull__)),
+        const CanMessage* restrict const mex __attribute__((__nonnull__)));
+
+extern int8_t
+hardware_set_mailbox_can(struct CanNode* const restrict self __attribute__((__nonnull__)),
         const uint16_t id, const uint16_t mailbox);
-extern struct CanMailbox* hardware_get_mailbox(const enum CAN_MAILBOXES mailbox);
-extern struct int8_t hardware_mailbox_read(const struct CanMailbox* const restrict self,
-        uint64_t* const o_buffer);
-extern void hardware_free_mailbox_can(struct CanMailbox* const* const restrict self);
+
+extern struct CanMailbox*
+hardware_get_mailbox(const enum CAN_MAILBOXES_RECV mailbox);
+
+extern struct CanMailbox*
+hardware_get_mailbox_send(const enum CAN_MAILBOXES_SEND mailbox);
+
+extern uint64_t
+hardware_mailbox_read(const struct CanMailbox* const restrict self __attribute__((__nonnull__)));
+
+extern int8_t
+hardware_mailbox_send(struct CanMailbox* const restrict self __attribute__((__nonnull__)),
+        const uint64_t data);
+
+extern void
+hardware_free_mailbox_can(struct CanMailbox* const* const restrict self __attribute__((__nonnull__)));
 
 #endif // !__VIRTUAL_CAN__

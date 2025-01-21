@@ -16,7 +16,7 @@ amk_module_init(AmkInverter_h* const restrict self  __attribute__((__nonnull__))
         const struct DriverInput_h* const p_driver_input);
 
 int8_t
-amk_update_status(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
+amk_update(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
 
 enum RUNNING_STATUS
 amk_rtd_procedure(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
@@ -44,6 +44,7 @@ amk_destroy(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
 
 #define EngineType AmkInverter_h
 #define inverter_module_init(inverter,driver) amk_module_init(inverter,driver)
+#define inverter_update(inverter) amk_update(inverter)
 #define engine_rtd_procedure(inverter) amk_rtd_procedure(inverter);
 #define engine_get_info(inverter, engine, info) amk_get_info(inverter, engine, info)
 #define engine_max_pos_torque(engine, limit_max_pos_torque) \

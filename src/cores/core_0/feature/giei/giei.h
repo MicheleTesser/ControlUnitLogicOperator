@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include "../mission/mission.h"
 #include "../driver_input/driver_input.h"
+#include "../maps/maps.h"
+#include "../imu/imu.h"
 #include "./giei_components/engines/engine_common.h"
 
 typedef struct Giei_h{
@@ -20,9 +22,15 @@ typedef struct Giei_h{
 }Giei_h;
 
 int8_t 
-giei_init(Giei_h* const restrict self __attribute__((__nonnull__)),
-        const DriverInput_h* const driver __attribute__((__nonnull__)),
-        Mission_h* const restrict __attribute__((__nonnull__)));
+giei_init(Giei_h* const restrict self,
+        const DriverInput_h* const p_driver,
+        const DrivingMaps_h* const p_maps,
+        const Imu_h* const p_imu,
+        Mission_h* const p_mission);
+
+
+int8_t
+giei_update(Giei_h* const restrict self __attribute__((__nonnull__)));
 
 enum RUNNING_STATUS 
 GIEI_check_running_condition(Giei_h* const restrict self __attribute__((__nonnull__)));

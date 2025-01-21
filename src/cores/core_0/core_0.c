@@ -21,5 +21,6 @@ void main_0(void)
     for(;;){
         core_alive_blink_update(&alive_blink);
         core_0_feature_update(&feature);
+        core_0_feature_compute_power(&feature);
     }
 }
