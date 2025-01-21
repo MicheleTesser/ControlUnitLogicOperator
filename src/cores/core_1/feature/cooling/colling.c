@@ -1,20 +1,19 @@
 #include "colling.h"
-#include "cooling_device/cooling_device.h"
 #include "../../../../lib/raceup_board/components/can.h"
+#include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include <stdint.h>
 #include <string.h>
 
 #define MAX_MAILBOX_FOR_DEVICE 4
 
+struct CoolingDevice_t{
+    uint8_t enable:1;
+    uint8_t speed:7;
+};
+
 typedef struct Cooling_t{
-    const GeneralCan_h* can;
-    struct Log_h* log;
-    struct CoolingDeviceData{
-        CoolingDevice_h raw_device;
-        uint16_t set_mex_id;
-        uint8_t mailbox_num;
-        struct CanMailbox* can_mailbox[MAX_MAILBOX_FOR_DEVICE]; 
-    }devices[__NUM_OF_COOLING_DEVICES__];
+    struct CanMailbox* send_mailbox;
+    struct CoolingDevice_t devices[__NUM_OF_COOLING_DEVICES__];
 }Cooling_t;
 
 union Cooling_h_t_conv{
@@ -22,24 +21,68 @@ union Cooling_h_t_conv{
     struct Cooling_t* clear;
 };
 
+static int8_t update_status(struct Cooling_t* const restrict self)
+{
+    can_obj_can2_h_t o;
+    CanMessage mex;
+
+    mex.id = CAN_ID_PCU;
+    o.can_0x130_Pcu.fan_enable = self->devices[FANS_RADIATOR].enable;
+    o.can_0x130_Pcu.fan_speed = self->devices[FANS_RADIATOR].speed;
+
+    o.can_0x130_Pcu.pump_enable = self->devices[PUMPS].enable;
+    o.can_0x130_Pcu.pump_speed = self->devices[PUMPS].speed;
+    
+    mex.message_size = pack_message_can2(&o, mex.id, &mex.full_word);
+
+    return hardware_mailbox_send(self->send_mailbox, mex.full_word);
+}
 
 //public
 
 int8_t cooling_init(Cooling_h* const restrict self __attribute__((__nonnull__)),
-        const GeneralCan_h* const restrict can_bus __attribute__((__nonnull__)),
         Log_h* const restrict log __attribute__((__nonnull__)))
 {
-    memset(self, 0, sizeof(*self));
     union Cooling_h_t_conv conv = {self};
     struct Cooling_t* const p_self = conv.clear;
-    p_self->can = can_bus;
-    p_self->log = log;
-    p_self->devices[FANS_RADIATOR].set_mex_id =; //TODO: not yet defined
-    p_self->devices[PUMPS].set_mex_id =; //TODO: not yet defined
+    memset(p_self, 0, sizeof(*p_self));
+
+    p_self->send_mailbox = hardware_get_mailbox_send(CORE_1_FAN_PUMP);
+    if (!p_self->send_mailbox)
+    {
+        return -1;
+    }
+
+    {
+        struct LogEntry_h entry ={
+            .data_mode = DATA_UNSIGNED,
+            .data_ptr = &p_self->devices[FANS_RADIATOR],
+            .log_mode = LOG_SD | LOG_TELEMETRY,
+            .data_size = sizeof(p_self->devices[FANS_RADIATOR]),
+            .name = "temp fan speed/enable",
+        };
+        if (log_add_entry(log, &entry)<0)
+        {
+            return -2;
+        }
+    }
+
+    {
+        struct LogEntry_h entry ={
+            .data_mode = DATA_UNSIGNED,
+            .data_ptr = &p_self->devices[PUMPS],
+            .log_mode = LOG_SD | LOG_TELEMETRY,
+            .data_size = sizeof(p_self->devices[PUMPS]),
+            .name = "temp pump speed/enable",
+        };
+        if (log_add_entry(log, &entry)<0)
+        {
+            return -3;
+        }
+    }
 
     return 0;
 }
-
 
 int8_t cooling_switch_device(Cooling_h* const restrict self, const enum COOLING_DEVICES dev_id)
 {
@@ -51,5 +94,24 @@ int8_t cooling_switch_device(Cooling_h* const restrict self, const enum COOLING_
 #endif /* ifdef DEBUG */
     union Cooling_h_t_conv conv = {self};
     struct Cooling_t* const p_self = conv.clear;
-    return cooling_device_toggle(&p_self->devices[dev_id].raw_device);
+
+    p_self->devices[dev_id].enable ^= 1;
+    return update_status(p_self);
+}
+
+int8_t cooling_set_speed_device(Cooling_h* const restrict self __attribute__((__nonnull__)),
+        const enum COOLING_DEVICES dev_id, const float speed)
+{
+#ifdef DEBUG
+    if (dev_id==__NUM_OF_COOLING_DEVICES__)
+    {
+        return -1;
+    }
+#endif /* ifdef DEBUG */
+    union Cooling_h_t_conv conv = {self};
+    struct Cooling_t* const p_self = conv.clear;
+
+    p_self->devices[dev_id].speed = speed;
+    
+    return update_status(p_self);
 }

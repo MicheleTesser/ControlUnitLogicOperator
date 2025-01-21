@@ -17,9 +17,7 @@ enum COOLING_DEVICES{
 };
 
 int8_t cooling_init(Cooling_h* const restrict self __attribute__((__nonnull__)),
-        const struct CanNode* const restrict can_bus __attribute__((__nonnull__)),
         Log_h* const restrict log __attribute__((__nonnull__)));
-int8_t cooling_update_all(Cooling_h* const restrict self __attribute__((__nonnull__)));
 int8_t cooling_switch_device(Cooling_h* const restrict self __attribute__((__nonnull__)),
         const enum COOLING_DEVICES dev_id);
 int8_t cooling_set_speed_device(Cooling_h* const restrict self __attribute__((__nonnull__)),

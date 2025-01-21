@@ -44,8 +44,12 @@ enum CAN_MAILBOXES_RECV{
     CORE_2_IMU,
 };
 
+
+//INFO: maintain the order
 enum CAN_MAILBOXES_SEND{
     CORE_0_BMS_HV,
+
+    CORE_1_FAN_PUMP,
 };
 
 struct CanNode;
