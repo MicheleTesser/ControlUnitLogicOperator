@@ -35,7 +35,7 @@ core_alive_blink_update(CoreAliveBlink_h* const restrict self __attribute__((__n
     struct CoreAliveBlink_t* const restrict p_self = conv.clear;
     const time_var_microseconds curr_time = timer_time_now();
 
-    if ((p_self->last_time_toggle - curr_time) > p_self->freq ) {
+    if ((curr_time - p_self->last_time_toggle) > p_self->freq ) {
         p_self->last_time_toggle = curr_time;
         gpio_toggle(p_self->pin_led);
     }
