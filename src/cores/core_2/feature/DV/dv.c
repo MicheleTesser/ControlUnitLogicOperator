@@ -31,8 +31,8 @@ struct Dv_t{
     DvRes_h dv_res;
     DvAsb_h dv_asb;
     DvSpeed_h dv_speed;
-    DvMission_h* dv_mission;
-    DvDriverInput_h* dv_driver_input;
+    const DvMission_h* dv_mission;
+    const DvDriverInput_h* dv_driver_input;
     struct EmergencyNode* emergency_node;
 };
 
@@ -180,24 +180,27 @@ dv_class_init(Dv_h* const restrict self __attribute__((__nonnull__)),
     struct Dv_t* const p_self = conv.clear;
     memset(p_self, 0, sizeof(*p_self));
 
-    dv_stw_alg_init();
-
-    if(res_class_init(&p_self->dv_res))
+    if(dv_stw_alg_init()<0)
     {
         return -1;
     }
-    if(asb_class_init(&p_self->dv_asb) <0)
+
+    if(res_class_init(&p_self->dv_res)<0)
     {
         return -2;
     }
-    if (dv_speed_init(&p_self->dv_speed)<0) {
+    if(asb_class_init(&p_self->dv_asb) <0)
+    {
         return -3;
+    }
+    if (dv_speed_init(&p_self->dv_speed)<0) {
+        return -4;
     }
     p_self->dv_mission = mission;
     p_self->dv_driver_input = driver;
-    p_self->emergency_node = EmergencyNode_new(__NUM_OF_DV_EMERGENCIES__); //TODO: not yet defined
+    p_self->emergency_node = EmergencyNode_new(__NUM_OF_DV_EMERGENCIES__);
     if (!p_self->emergency_node) {
-        return -4;
+        return -5;
     }
 
     return 0;
@@ -208,15 +211,14 @@ int8_t dv_update(Dv_h* const restrict self __attribute__((__nonnull__)))
     union Dv_h_t_conv conv = {self};
     struct Dv_t* const p_self = conv.clear;
 
-    dv_speed_update(&p_self->dv_speed);
-    asb_update(&p_self->dv_asb);
+    if(dv_speed_update(&p_self->dv_speed)<0)return -1;
+    if(asb_update(&p_self->dv_asb)<0) return -2;
 
-    dv_update_status(p_self);
-    dv_update_led(p_self);
+    if(dv_update_status(p_self)<0)return -3;
+    if(dv_update_led(p_self)<0) return -4;
     if (p_self->status == AS_DRIVING && dv_mission_get_current(p_self->dv_mission) > MANUALY)
     {
         dv_stw_alg_compute(0, 0); //TODO: not yet implemented
-        return 0;
     }
-    return -1;
+    return 0;
 }
