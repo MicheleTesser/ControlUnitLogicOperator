@@ -24,6 +24,7 @@ core_alive_blink_init(
     memset(p_self, 0, sizeof(*p_self));
     p_self->pin_led = pin_led;
     p_self->last_time_toggle = timer_time_now();
+    p_self->freq = freq;
 
     return 0;
 }
