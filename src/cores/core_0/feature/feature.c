@@ -45,7 +45,7 @@ core_2_feature_update(Core0Feature_h* const restrict self __attribute__((__nonnu
     struct Core0Feature_t* const restrict p_self = conv.clear;
 
     if(driver_input_update(&p_self->driver)<0) return -1;
-    if (mission_update(&p_self->mission)<0) return -2;
+    if(mission_update(&p_self->mission)<0) return -2;
     if(driving_map_update(&p_self->maps) <0) return -3;
     if(imu_update(&p_self->imu) <0) return -4;
     if(giei_update(&p_self->giei)<0)return -6;
