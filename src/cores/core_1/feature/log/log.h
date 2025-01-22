@@ -2,13 +2,15 @@
 #define __CAR_LOG__
 
 #include <stdint.h>
+#include "log_obj_types.h"
 
 #define LOG_ENTRY_NAME_MAX_SIZE 32
 
 typedef struct LogEntry_h{
-    const uint8_t data_size;
     const uint8_t log_mode:2;
     const uint8_t data_mode: 2;
+    const uint32_t data_min;
+    const uint32_t data_max;
     const void* const data_ptr;
     const uint8_t name[LOG_ENTRY_NAME_MAX_SIZE];
 }LogEntry_h;
@@ -16,12 +18,6 @@ typedef struct LogEntry_h{
 enum LOG_MODE{
     LOG_SD = (1<<0),
     LOG_TELEMETRY = (1<<1),
-};
-
-enum DATA_MODE{
-    DATA_UNSIGNED=0,
-    DATA_SIGNED,
-    DATA_FLOATED,
 };
 
 typedef struct Log_h{
