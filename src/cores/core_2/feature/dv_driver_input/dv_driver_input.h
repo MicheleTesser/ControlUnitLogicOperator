@@ -15,6 +15,6 @@ int8_t
 dv_driver_input_update(DvDriverInput_h* const restrict self __attribute__((__nonnull__)));
 
 float
-dv_driver_input_get_brake(DvDriverInput_h* const restrict self __attribute__((__nonnull__)));
+dv_driver_input_get_brake(const DvDriverInput_h* const restrict self __attribute__((__nonnull__)));
 
 #endif // !__DV_DRIVVER_INPUT__

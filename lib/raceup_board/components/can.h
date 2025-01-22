@@ -44,6 +44,8 @@ enum CAN_MAILBOXES_RECV{
     CORE_1_SUSP_REAR,
 
     CORE_2_IMU,
+    CORE_2_DV_DRIVER_INPUT,
+    CORE_2_HUMAN_DRIVER_INPUT,
 };
 
 
@@ -78,8 +80,9 @@ hardware_get_mailbox(const enum CAN_MAILBOXES_RECV mailbox);
 extern struct CanMailbox*
 hardware_get_mailbox_send(const enum CAN_MAILBOXES_SEND mailbox);
 
-extern uint64_t
-hardware_mailbox_read(const struct CanMailbox* const restrict self __attribute__((__nonnull__)));
+extern int8_t
+hardware_mailbox_read(const struct CanMailbox* const restrict self __attribute__((__nonnull__)),
+        uint64_t* const restrict data __attribute__((__nonnull__)));
 
 extern int8_t
 hardware_mailbox_send(struct CanMailbox* const restrict self __attribute__((__nonnull__)),
