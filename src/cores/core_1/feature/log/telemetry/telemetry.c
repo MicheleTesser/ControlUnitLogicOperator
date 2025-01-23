@@ -7,9 +7,9 @@
 #include "../log_obj_types.h"
 
 struct TelemetryEntry{
-    const void* const restrict p_var;
-    const uint8_t* var_name;
-    const enum DATA_MODE var_type;
+    const void* p_var;
+    uint32_t json_cursor;
+    enum DATA_MODE var_type;
 };
 
 struct Json{
@@ -20,6 +20,8 @@ struct Json{
 struct LogTelemetry_t{
     struct Json json;
     struct TelemetryEntry* vars;
+    uint8_t num_entry;
+    uint8_t cap_entry;
 };
 
 union LogTelemetry_h_t_conv{
@@ -53,7 +55,7 @@ log_telemetry_init(LogTelemetry_h* const restrict self __attribute__((__nonnull_
 
 int8_t
 log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__((__nonnull__)),
-        const char* const restrict name, const void* const restrict var,
+        const char* name, const void* var,
         const enum DATA_MODE data_type, const DataRange data_range)
 {
     union LogTelemetry_h_t_conv conv = {self};
@@ -63,35 +65,9 @@ log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__((__non
     const char value_header[] = "\":";
     struct Json* json = &p_self->json;
     char str_var_value[data_range];
+    memset(str_var_value, ' ', data_range);
     const char termination[] ="}\0";
 
-    switch (data_type) {
-        case DATA_UNSIGNED:
-            if (data_range <= UINT8_MAX)
-            {
-                sprintf(str_var_value, "%uc", *(uint8_t *) var);
-            }
-            else if (data_range <= UINT32_MAX)
-            {
-                sprintf(str_var_value, "%ud", *(uint32_t *) var);
-            }
-            break;
-        case DATA_SIGNED:
-            if (data_range <= INT8_MAX)
-            {
-                sprintf(str_var_value, "%c", *(int8_t *) var);
-            }
-            else if (data_range <= INT32_MAX)
-            {
-                sprintf(str_var_value, "%d", *(int32_t *) var);
-            }
-            break;
-        case DATA_FLOATED:
-            sprintf(str_var_value, "%.6f", *(double *) var);
-            break;
-        default:
-            return -1;
-    }
     p_self->json.s_json = realloc(p_self->json.s_json,
             strlen(json->s_json) +
             strlen(var_header) +
@@ -99,12 +75,24 @@ log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__((__non
             strlen(value_header)+
             data_range);
 
+    if(p_self->num_entry>=p_self->cap_entry)
+    {
+        p_self->cap_entry*=2;
+        p_self->vars = realloc(p_self->vars, p_self->cap_entry * sizeof(*p_self->vars));
+    }
+
     push_in_json(json, var_header, strlen(var_header));
     push_in_json(json, name, name_len);
     push_in_json(json, value_header, strlen(value_header));
     push_in_json(json, str_var_value, data_range);
     push_in_json(json, termination, strlen(termination));
     json->json_cursor_offset-=strlen(termination);
+    
+    struct TelemetryEntry* const restrict entry = &p_self->vars[p_self->num_entry];
+    entry->p_var = var;
+    entry->var_type = data_type;
+    p_self->num_entry++;
+    entry->json_cursor = json->json_cursor_offset;
 
 
     return 0;
