@@ -13,6 +13,6 @@ car_batteries_init(CarBatteries_h* const restrict self __attribute__((__unused__
         Log_h* const restrict log __attribute__((__unused__)));
 
 int8_t
-    car_batteries_update(CarBatteries_h* const restrict self __attribute__((__unused__)));
+car_batteries_update(CarBatteries_h* const restrict self __attribute__((__unused__)));
 
 #endif // !__CAR_BATTERIES__
