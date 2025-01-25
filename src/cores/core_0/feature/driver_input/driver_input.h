@@ -17,7 +17,8 @@ enum INPUT_TYPES{
 };
 
 enum DRIVER{
-    DRIVER_HUMAN=0,
+    DRIVER_NONE=0,
+    DRIVER_HUMAN,
     DRIVER_EMBEDDED,
 
     __NUM_OF_DRIVERS__
