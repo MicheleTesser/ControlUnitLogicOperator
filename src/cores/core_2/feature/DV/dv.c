@@ -86,7 +86,7 @@ static int8_t dv_update_led(struct Dv_t* const restrict self)
             gpio_set_high(GPIO_ASSI_LIGHT_BLU);
             gpio_set_low(GPIO_ASSI_LIGHT_YELLOW);
             gpio_set_high(GPIO_AS_EMERGENCY_SOUND);
-            res_start_time(&self->dv_res);
+            res_start_time_go(&self->dv_res);
             break;
         case AS_DRIVING:
             gpio_set_high(GPIO_ASSI_LIGHT_BLU);

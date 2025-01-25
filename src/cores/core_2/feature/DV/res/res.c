@@ -1,0 +1,48 @@
+#include "res.h"
+#include "../../../../../lib/raceup_board/components/timer.h"
+
+#include <stdint.h>
+#include <string.h>
+
+struct DvRes_t{
+    time_var_microseconds start_go_timeout;
+    time_var_microseconds minimum_time_needed;
+};
+
+union DvRes_h_t_conv{
+    DvRes_h* const restrict hidden;
+    struct DvRes_t* const restrict clear;
+};
+
+union DvRes_h_t_conv_const{
+    const DvRes_h* const restrict hidden;
+    const struct DvRes_t* const restrict clear;
+};
+
+int8_t res_class_init(DvRes_h* const restrict self __attribute__((__nonnull__)))
+{
+    union DvRes_h_t_conv conv = {self};
+    struct DvRes_t* const restrict p_self = conv.clear;
+    memset(p_self, 0, sizeof(*p_self));
+
+    p_self->start_go_timeout = -1;
+    p_self->minimum_time_needed = 5 SECONDS; //INFO: T 14.9.3 of rules
+
+    return 0;
+}
+
+int8_t res_check_go(const DvRes_h* self __attribute__((__nonnull__)))
+{
+    union DvRes_h_t_conv_const conv = {self};
+    const struct DvRes_t* const restrict p_self = conv.clear;
+    return (timer_time_now() - p_self->start_go_timeout) >= p_self->minimum_time_needed;
+}
+
+int8_t res_start_time_go(DvRes_h* self __attribute__((__nonnull__)))
+{
+    union DvRes_h_t_conv conv = {self};
+    struct DvRes_t* const restrict p_self = conv.clear;
+
+    p_self->start_go_timeout = timer_time_now();
+    return 0;
+}

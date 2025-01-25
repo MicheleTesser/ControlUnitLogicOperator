@@ -9,6 +9,6 @@ typedef struct DvRes_h{
 
 int8_t res_class_init(DvRes_h* const restrict self __attribute__((__nonnull__)));
 int8_t res_check_go(const DvRes_h* self __attribute__((__nonnull__)));
-int8_t res_start_time(DvRes_h* self __attribute__((__nonnull__)));
+int8_t res_start_time_go(DvRes_h* self __attribute__((__nonnull__)));
 
 #endif // !__DV_RES__

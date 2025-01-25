@@ -76,16 +76,17 @@ suspensions_update(Suspensions_h* const restrict self)
     uint64_t mex;
     can_obj_can2_h_t o;
 
-    mex = hardware_mailbox_read(p_self->mailbox[M_FRONT]);
-    unpack_message_can2(&o, CAN_ID_SUSPFRONT, mex, 8, timer_time_now());
-    mex = hardware_mailbox_read(p_self->mailbox[M_REAR]);
-    unpack_message_can2(&o, CAN_ID_SUSPREAR, mex, 8, timer_time_now());
+    if(hardware_mailbox_read(p_self->mailbox[M_FRONT], &mex)>0){
+        unpack_message_can2(&o, CAN_ID_SUSPFRONT, mex, 8, timer_time_now());
+        p_self->susps_value[SUSP_FRONT_LEFT] = o.can_0x104_SuspFront.susp_fl;
+        p_self->susps_value[SUSP_FRONT_RIGHT] = o.can_0x104_SuspFront.susp_fr;
+    }
 
-    p_self->susps_value[SUSP_FRONT_LEFT] = o.can_0x104_SuspFront.susp_fl;
-    p_self->susps_value[SUSP_FRONT_RIGHT] = o.can_0x104_SuspFront.susp_fr;
-
-    p_self->susps_value[SUSP_REAR_LEFT] = o.can_0x102_SuspRear.susp_rl;
-    p_self->susps_value[SUSP_REAR_RIGHT] = o.can_0x102_SuspRear.susp_rr;
+    if(hardware_mailbox_read(p_self->mailbox[M_REAR],&mex)>0){
+        unpack_message_can2(&o, CAN_ID_SUSPREAR, mex, 8, timer_time_now());
+        p_self->susps_value[SUSP_REAR_LEFT] = o.can_0x102_SuspRear.susp_rl;
+        p_self->susps_value[SUSP_REAR_RIGHT] = o.can_0x102_SuspRear.susp_rr;
+    }
 
     return 0;
 }
