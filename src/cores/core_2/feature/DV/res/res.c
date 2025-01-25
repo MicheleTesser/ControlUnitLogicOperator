@@ -19,6 +19,7 @@ union DvRes_h_t_conv_const{
     const struct DvRes_t* const restrict clear;
 };
 
+//TODO: add mailbox res message
 int8_t res_class_init(DvRes_h* const restrict self __attribute__((__nonnull__)))
 {
     union DvRes_h_t_conv conv = {self};
