@@ -1,5 +1,5 @@
 #include "./emergency_module.h"
-#include "../lib/raceup_board/raceup_board.h"
+#include "../../../lib/raceup_board/raceup_board.h"
 #include <stdlib.h>
 #include <stdatomic.h>
 #include <stdint.h>
@@ -8,7 +8,6 @@
 
 #define EMERGENCY_RAISED_TRAP __0__
 #define EMERGENCY_SOLVED_TRAP __1__
-#define GPIO_SCS GPIO_0
 
 struct EmergencyNode{
     uint8_t emergency_state : 1;
@@ -19,13 +18,14 @@ struct EmergencyNode{
 static struct{
     atomic_flag lock;
     uint8_t excepion_counter;
+    Gpio_h gpio_scs;
 }EXCEPTION_COUNTER;
 
 static void raise_module_exception_state(void) TRAP_ATTRIBUTE
 {
     while (atomic_flag_test_and_set(&EXCEPTION_COUNTER.lock)){}
     EXCEPTION_COUNTER.excepion_counter++;
-    gpio_set_low(GPIO_SCS);
+    gpio_set_low(&EXCEPTION_COUNTER.gpio_scs);
     atomic_flag_clear(&EXCEPTION_COUNTER.lock);
 }
 
@@ -34,7 +34,7 @@ static void solved_module_exception_state(void) TRAP_ATTRIBUTE
     while (atomic_flag_test_and_set(&EXCEPTION_COUNTER.lock)){}
     EXCEPTION_COUNTER.excepion_counter--;
     if (!EXCEPTION_COUNTER.excepion_counter) {
-        gpio_set_high(GPIO_SCS);
+        gpio_set_high(&EXCEPTION_COUNTER.gpio_scs);
     }
     atomic_flag_clear(&EXCEPTION_COUNTER.lock);
 }
@@ -50,11 +50,15 @@ struct EmergencyNode* EmergencyNode_new(const uint8_t num_exception)
         return NULL;
     }
 
+    if (!EXCEPTION_COUNTER.gpio_scs && hardware_init_gpio(&EXCEPTION_COUNTER.gpio_scs, GPIO_SCS)<0)
+    {
+        return NULL;   
+    }
+
     const uint8_t exception_buffer_size = (num_exception/8) + !!(num_exception%8);
     struct EmergencyNode* const self = calloc(1, sizeof(*self) + exception_buffer_size);
     self->emergency_amount = num_exception;
 
-    hardware_init_gpio(GPIO_SCS);
     hardware_trap_attach_fun(EMERGENCY_RAISED_TRAP, raise_module_exception_state);
     hardware_trap_attach_fun(EMERGENCY_SOLVED_TRAP, solved_module_exception_state);
 

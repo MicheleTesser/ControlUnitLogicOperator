@@ -31,6 +31,11 @@ struct Dv_t{
     DvRes_h dv_res;
     DvAsb_h dv_asb;
     DvSpeed_h dv_speed;
+    GpioRead_h gpio_air_precharge_init;
+    GpioRead_h gpio_air_precharge_done;
+    Gpio_h gpio_emergency_sound;
+    Gpio_h gpio_ass_light_blue;
+    Gpio_h gpio_ass_light_yellow;
     const DvMission_h* dv_mission;
     const DvDriverInput_h* dv_driver_input;
     struct EmergencyNode* emergency_node;
@@ -51,8 +56,8 @@ union Dv_h_t_conv{
 
 static uint8_t sdc_closed(const struct Dv_t* const restrict self)
 {
-    return  gpio_read_state(GPIO_AIR_PRECHARGE_INIT) &&
-            gpio_read_state(GPIO_AIR_PRECHARGE_DONE) &&
+    return  gpio_read_state(&self->gpio_air_precharge_init) &&
+            gpio_read_state(&self->gpio_air_precharge_done) &&
             EmergencyNode_is_emergency_state(self->emergency_node);
 }
 
@@ -71,47 +76,51 @@ static void update_dv_status(struct Dv_t* const restrict self, const enum AS_STA
 
 static int8_t dv_update_led(struct Dv_t* const restrict self)
 {
+    Gpio_h* const restrict gpio_light_blue = &self->gpio_ass_light_blue;
+    Gpio_h* const restrict gpio_light_yellow = &self->gpio_ass_light_yellow;
+    Gpio_h* const restrict gpio_sound = &self->gpio_emergency_sound;
+
     if ((timer_time_now() - self->emergency_sound_last_time_on) > 8 SECONDS) {
-        gpio_set_high(GPIO_AS_EMERGENCY_SOUND);
+        gpio_set_high(gpio_sound);
         self->emergency_sound_last_time_on = timer_time_now();
     }
 
     switch (self->status) {
         case AS_OFF:
-            gpio_set_high(GPIO_ASSI_LIGHT_BLU);
-            gpio_set_high(GPIO_ASSI_LIGHT_YELLOW);
-            gpio_set_high(GPIO_AS_EMERGENCY_SOUND);
+            gpio_set_high(gpio_light_blue);
+            gpio_set_high(gpio_light_yellow);
+            gpio_set_high(gpio_sound);
             break;
         case AS_READY:
-            gpio_set_high(GPIO_ASSI_LIGHT_BLU);
-            gpio_set_low(GPIO_ASSI_LIGHT_YELLOW);
-            gpio_set_high(GPIO_AS_EMERGENCY_SOUND);
+            gpio_set_high(gpio_light_blue);
+            gpio_set_low(gpio_light_yellow);
+            gpio_set_high(gpio_sound);
             res_start_time_go(&self->dv_res);
             break;
         case AS_DRIVING:
-            gpio_set_high(GPIO_ASSI_LIGHT_BLU);
-            gpio_set_high(GPIO_AS_EMERGENCY_SOUND);
+            gpio_set_high(gpio_light_blue);
+            gpio_set_high(gpio_sound);
             if ((timer_time_now() - self->driving_last_time_on) > 100 MILLIS ) {
-                gpio_toggle(GPIO_ASSI_LIGHT_YELLOW);
+                gpio_toggle(gpio_light_yellow);
                 self->driving_last_time_on = timer_time_now();
             }
             break;
         case AS_EMERGENCY:
-            gpio_set_high(GPIO_ASSI_LIGHT_YELLOW);
+            gpio_set_high(gpio_light_yellow);
             if ((timer_time_now() - self->emergency_last_time_on) > 100 MILLIS ) {
-                gpio_toggle(GPIO_ASSI_LIGHT_BLU);
+                gpio_toggle(gpio_light_blue);
                 self->emergency_last_time_on = timer_time_now();
             }
             if (!self->sound_start) {
                 self->sound_start =1;
-                gpio_set_low(GPIO_AS_EMERGENCY_SOUND);
+                gpio_set_low(gpio_sound);
                 self->emergency_sound_last_time_on = timer_time_now();
             }
             break;
         case AS_FINISHED:
-            gpio_set_high(GPIO_AS_EMERGENCY_SOUND);
-            gpio_set_high(GPIO_ASSI_LIGHT_YELLOW);
-            gpio_set_low(GPIO_ASSI_LIGHT_BLU);
+            gpio_set_high(gpio_sound);
+            gpio_set_high(gpio_light_yellow);
+            gpio_set_low(gpio_light_blue);
             break;
     }
 
@@ -196,6 +205,34 @@ dv_class_init(Dv_h* const restrict self __attribute__((__nonnull__)),
     if (dv_speed_init(&p_self->dv_speed)<0) {
         return -4;
     }
+
+    if (hardware_init_gpio(&p_self->gpio_ass_light_yellow, GPIO_ASSI_LIGHT_YELLOW)<0)
+    {
+        return -5;
+    }
+
+    if (hardware_init_gpio(&p_self->gpio_ass_light_blue, GPIO_ASSI_LIGHT_BLU)<0)
+    {
+        return -6;
+    }
+
+    if (hardware_init_gpio(&p_self->gpio_emergency_sound, GPIO_AS_EMERGENCY_SOUND)<0)
+    {
+        return -6;
+    }
+
+    if (hardware_init_read_permission_gpio(&p_self->gpio_air_precharge_init,
+                GPIO_AIR_PRECHARGE_INIT)<0)
+    {
+        return -5;   
+    }
+
+    if (hardware_init_read_permission_gpio(&p_self->gpio_air_precharge_done,
+                GPIO_AIR_PRECHARGE_DONE)<0)
+    {
+        return -6;   
+    }
+
     p_self->dv_mission = mission;
     p_self->dv_driver_input = driver;
     p_self->emergency_node = EmergencyNode_new(__NUM_OF_DV_EMERGENCIES__);

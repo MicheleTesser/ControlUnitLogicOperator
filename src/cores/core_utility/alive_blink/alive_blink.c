@@ -3,7 +3,7 @@
 #include <string.h>
 
 struct CoreAliveBlink_t{
-    enum GPIO_PIN pin_led;
+    Gpio_h gpio_led;
     time_var_microseconds last_time_toggle;
     time_var_microseconds freq;
 };
@@ -22,7 +22,9 @@ core_alive_blink_init(
     struct CoreAliveBlink_t* const restrict p_self = conv.clear;
 
     memset(p_self, 0, sizeof(*p_self));
-    p_self->pin_led = pin_led;
+    if (hardware_init_gpio(&p_self->gpio_led, pin_led)<0) {
+        return -1;
+    }
     p_self->last_time_toggle = timer_time_now();
     p_self->freq = freq;
 
@@ -38,7 +40,7 @@ core_alive_blink_update(CoreAliveBlink_h* const restrict self __attribute__((__n
 
     if ((curr_time - p_self->last_time_toggle) > p_self->freq ) {
         p_self->last_time_toggle = curr_time;
-        gpio_toggle(p_self->pin_led);
+        gpio_toggle(&p_self->gpio_led);
     }
 
     return 0;

@@ -10,7 +10,7 @@ void main_1(void)
     CoreAliveBlink_h alive_blink;
     Core1Feature_h feature;
     
-    while (core_alive_blink_init(&alive_blink, CORE_1_ALIVE_BLINK, 300 MILLIS) <0);
+    while (core_alive_blink_init(&alive_blink, GPIO_CORE_1_ALIVE_BLINK, 300 MILLIS) <0);
     while (core_1_feature_init(&feature) <0);
 
     //cores sync
