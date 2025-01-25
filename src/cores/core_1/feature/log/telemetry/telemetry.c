@@ -55,7 +55,7 @@ log_telemetry_init(LogTelemetry_h* const restrict self __attribute__((__nonnull_
 
 int8_t
 log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__((__nonnull__)),
-        const char* name, const void* var,
+        const char* name, const void* const var,
         const enum DATA_MODE data_type, const DataRange data_range)
 {
     union LogTelemetry_h_t_conv conv = {self};

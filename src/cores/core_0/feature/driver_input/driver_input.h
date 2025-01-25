@@ -33,6 +33,9 @@ float
 driver_input_get(const DriverInput_h* const restrict self __attribute__((__nonnull__)),
         const enum INPUT_TYPES driver_input);
 
+int8_t driver_input_change_driver(struct DriverInput_h* const restrict self,
+        const enum DRIVER driver);
+
 void 
 driver_input_destroy(DriverInput_h* const restrict self __attribute__((__nonnull__)));
 

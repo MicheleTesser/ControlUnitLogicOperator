@@ -51,7 +51,7 @@ static inline int NMtoTorqueSetpoint(const float torqueNM)
     return (torqueNM/M_N)*1000;
 }
 
-static float torqueSetpointToNM(const int setpoint)
+static inline float torqueSetpointToNM(const int setpoint)
 {
     return (setpoint/1000.0)*M_N;
 }

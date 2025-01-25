@@ -18,7 +18,7 @@
 #include "./giei_components/engines/engine_common.h"
 
 typedef struct Giei_h{
-    uint8_t private_data[136];
+    const uint8_t private_data[136];
 }Giei_h;
 
 int8_t 
