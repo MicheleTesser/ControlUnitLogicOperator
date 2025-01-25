@@ -1,5 +1,5 @@
-#ifndef __VIRTUA_GPIO__
-#define __VIRTUA_GPIO__
+#ifndef __VIRTUAL_GPIO__
+#define __VIRTUAL_GPIO__
 
 #include <stdint.h>
 
@@ -46,4 +46,4 @@ extern int8_t gpio_set_high(Gpio_h* const restrict self __attribute__((__nonnull
 
 extern int8_t gpio_set_low(Gpio_h* const restrict self __attribute__((__nonnull__)));
 
-#endif // !__VIRTUA_GPIO__
+#endif // !__VIRTUAL_GPIO__
