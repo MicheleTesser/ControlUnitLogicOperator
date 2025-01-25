@@ -181,9 +181,9 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
 //public
 
 int8_t
-dv_class_init(Dv_h* const restrict self __attribute__((__nonnull__)),
-        DvMission_h* const restrict mission __attribute__((__nonnull__)),
-        DvDriverInput_h* const restrict driver __attribute__((__nonnull__)))
+dv_class_init(Dv_h* const restrict self ,
+        DvMission_h* const restrict mission ,
+        DvDriverInput_h* const restrict driver )
 {
     union Dv_h_t_conv conv = {self};
     struct Dv_t* const p_self = conv.clear;
@@ -243,7 +243,7 @@ dv_class_init(Dv_h* const restrict self __attribute__((__nonnull__)),
     return 0;
 }
 
-int8_t dv_update(Dv_h* const restrict self __attribute__((__nonnull__)))
+int8_t dv_update(Dv_h* const restrict self )
 {
     union Dv_h_t_conv conv = {self};
     struct Dv_t* const p_self = conv.clear;

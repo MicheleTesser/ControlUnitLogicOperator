@@ -24,14 +24,14 @@ enum CAR_PARAMETERS{
 };
 
 int8_t
-driving_maps_init(DrivingMaps_h* const restrict self __attribute__((__nonnull__)));
+driving_maps_init(DrivingMaps_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-driving_map_update(DrivingMaps_h* const restrict self __attribute__((__nonnull__)));
+driving_map_update(DrivingMaps_h* const restrict self )__attribute__((__nonnull__(1)));
 
 float
-driving_map_get_parameter(const DrivingMaps_h* const restrict self __attribute__((__nonnull__)),
-        const enum CAR_PARAMETERS param);
+driving_map_get_parameter(const DrivingMaps_h* const restrict self ,
+        const enum CAR_PARAMETERS param)__attribute__((__nonnull__(1)));
 
 
 

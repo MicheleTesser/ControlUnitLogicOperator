@@ -12,7 +12,7 @@ union DvAsb_h_t_conv
     struct DvAsb_t* const restrict clear;
 };
 
-int8_t asb_class_init(DvAsb_h* const restrict self __attribute__((__nonnull__)))
+int8_t asb_class_init(DvAsb_h* const restrict self )
 {
     union DvAsb_h_t_conv conv = {self};
     struct DvAsb_t* const restrict p_self = conv.clear;
@@ -26,7 +26,7 @@ int8_t asb_class_init(DvAsb_h* const restrict self __attribute__((__nonnull__)))
 
     return 0;
 }
-int8_t asb_update(DvAsb_h* const restrict self __attribute__((__nonnull__)))
+int8_t asb_update(DvAsb_h* const restrict self )
 {
     union DvAsb_h_t_conv conv = {self};
     struct DvAsb_t* const restrict p_self = conv.clear;
@@ -39,11 +39,8 @@ int8_t asb_update(DvAsb_h* const restrict self __attribute__((__nonnull__)))
     return 0;
 }
 
-int8_t asb_consistency_check(DvAsb_h* const restrict self __attribute__((__nonnull__)))
+int8_t asb_consistency_check(DvAsb_h* const restrict self )
 {
-    union DvAsb_h_t_conv conv = {self};
-    struct DvAsb_t* const restrict p_self __attribute__((__nonnull__)) = conv.clear;
-    
     //TODO: not yet defined
 
     return -1;

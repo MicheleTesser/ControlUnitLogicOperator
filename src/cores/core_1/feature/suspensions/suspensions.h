@@ -20,10 +20,10 @@ enum SUSP_ID{
 
 int8_t
 suspensions_init(
-        Suspensions_h* const restrict self __attribute__((__nonnull__)),
-        Log_h* const restrict log __attribute__((__nonnull__)));
+        Suspensions_h* const restrict self ,
+        Log_h* const restrict log )__attribute__((__nonnull__(1,2)));
 
 int8_t
-suspensions_update(Suspensions_h* const restrict self);
+suspensions_update(Suspensions_h* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__SUSPENSIONS__

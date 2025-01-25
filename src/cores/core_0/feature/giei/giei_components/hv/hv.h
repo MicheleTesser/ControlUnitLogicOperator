@@ -15,19 +15,19 @@ enum GIEI_HV_INFO{
 };
 
 int8_t
-hv_init(Hv_h* const restrict self __attribute__((__nonnull__)));
+hv_init(Hv_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-hv_update(Hv_h* const restrict self __attribute__((__nonnull__)));
+hv_update(Hv_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-hv_computeBatteryPackTension(Hv_h* const restrict self __attribute__((__nonnull__)),
+hv_computeBatteryPackTension(Hv_h* const restrict self ,
         const float* const engines_voltages,
-        const uint8_t num_of_voltages);
+        const uint8_t num_of_voltages)__attribute__((__nonnull__(1,2)));
 
 float
-hv_get_info(const Hv_h* const restrict self __attribute__((__nonnull__)),
-        const enum GIEI_HV_INFO info);
+hv_get_info(const Hv_h* const restrict self ,
+        const enum GIEI_HV_INFO info)__attribute__((__nonnull__(1)));
 
 
 #endif // !__GIEI_HV__

@@ -9,12 +9,12 @@ typedef struct DvDriverInput_h{
 
 
 int8_t
-dv_driver_input_init(DvDriverInput_h* const restrict self __attribute__((__nonnull__)));
+dv_driver_input_init(DvDriverInput_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-dv_driver_input_update(DvDriverInput_h* const restrict self __attribute__((__nonnull__)));
+dv_driver_input_update(DvDriverInput_h* const restrict self )__attribute__((__nonnull__(1)));
 
 float
-dv_driver_input_get_brake(const DvDriverInput_h* const restrict self __attribute__((__nonnull__)));
+dv_driver_input_get_brake(const DvDriverInput_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__DV_DRIVVER_INPUT__

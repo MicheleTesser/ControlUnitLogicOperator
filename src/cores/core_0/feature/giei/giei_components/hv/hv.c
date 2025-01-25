@@ -23,7 +23,7 @@ union GieiHv_const_conv{
 
 int8_t
 hv_init(
-        struct Hv_h* const restrict self __attribute__((__nonnull__)))
+        struct Hv_h* const restrict self )
 {
     union GieiHv_conv conv = {self};
     struct GieiHv_t* p_self = conv.clear;
@@ -42,7 +42,7 @@ hv_init(
 }
 
 int8_t
-hv_update(Hv_h* const restrict self __attribute__((__nonnull__)))
+hv_update(Hv_h* const restrict self )
 {
     union GieiHv_conv conv = {self};
     struct GieiHv_t* p_self = conv.clear;
@@ -64,8 +64,8 @@ hv_update(Hv_h* const restrict self __attribute__((__nonnull__)))
  */
 int8_t
 giei_hv_computeBatteryPackTension(
-        struct Hv_h* const restrict self __attribute__((__nonnull__)),
-        const float* const engines_voltages __attribute__((__nonnull__)),
+        struct Hv_h* const restrict self ,
+        const float* const engines_voltages ,
         const uint8_t num_of_voltages)
 {
     union GieiHv_conv conv = {self};
@@ -108,7 +108,7 @@ giei_hv_computeBatteryPackTension(
 }
 
 float
-giei_hv_get_info(const struct Hv_h* const restrict self __attribute__((__nonnull__)),
+giei_hv_get_info(const struct Hv_h* const restrict self ,
         const enum GIEI_HV_INFO info)
 {
     union GieiHv_const_conv conv = {self};

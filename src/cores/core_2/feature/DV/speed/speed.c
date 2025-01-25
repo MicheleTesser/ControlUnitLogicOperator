@@ -14,7 +14,7 @@ union DvSpeed_h_t_conv{
 };
 
 int8_t
-dv_speed_init(DvSpeed_h* const restrict self __attribute__((__nonnull__)))
+dv_speed_init(DvSpeed_h* const restrict self )
 {
     int8_t err=0;
     union DvSpeed_h_t_conv conv = {self};
@@ -41,7 +41,7 @@ imu_fail:
 }
 
 int8_t
-dv_speed_update(DvSpeed_h* const restrict self __attribute__((__nonnull__)))
+dv_speed_update(DvSpeed_h* const restrict self )
 {
     union DvSpeed_h_t_conv conv = {self};
     struct DvSpeed_t* const restrict p_self = conv.clear;
@@ -49,4 +49,4 @@ dv_speed_update(DvSpeed_h* const restrict self __attribute__((__nonnull__)))
 }
 
 float
-dv_speed_get(DvSpeed_h* const restrict self __attribute__((__nonnull__)));
+dv_speed_get(DvSpeed_h* const restrict self );

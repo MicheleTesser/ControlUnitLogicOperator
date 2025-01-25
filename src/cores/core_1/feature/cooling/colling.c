@@ -40,8 +40,8 @@ static int8_t update_status(struct Cooling_t* const restrict self)
 
 //public
 
-int8_t cooling_init(Cooling_h* const restrict self __attribute__((__nonnull__)),
-        Log_h* const restrict log __attribute__((__nonnull__)))
+int8_t cooling_init(Cooling_h* const restrict self ,
+        Log_h* const restrict log )
 {
     union Cooling_h_t_conv conv = {self};
     struct Cooling_t* const p_self = conv.clear;
@@ -99,7 +99,7 @@ int8_t cooling_switch_device(Cooling_h* const restrict self, const enum COOLING_
     return update_status(p_self);
 }
 
-int8_t cooling_set_speed_device(Cooling_h* const restrict self __attribute__((__nonnull__)),
+int8_t cooling_set_speed_device(Cooling_h* const restrict self ,
         const enum COOLING_DEVICES dev_id, const float speed)
 {
 #ifdef DEBUG

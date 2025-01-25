@@ -20,7 +20,7 @@ union Core2Feature_h_t_conv{
 };
 
 int8_t
-core_2_feature_init(Core2Feature_h* const restrict self __attribute__((__nonnull__)))
+core_2_feature_init(Core2Feature_h* const restrict self )
 {
     union Core2Feature_h_t_conv conv = {self};
     struct Core2Feature_t* const restrict p_self = conv.clear;
@@ -35,7 +35,7 @@ core_2_feature_init(Core2Feature_h* const restrict self __attribute__((__nonnull
 }
 
 int8_t
-core_2_feature_update(Core2Feature_h* const restrict self __attribute__((__nonnull__)))
+core_2_feature_update(Core2Feature_h* const restrict self )
 {
     union Core2Feature_h_t_conv conv = {self};
     struct Core2Feature_t* const restrict p_self = conv.clear;

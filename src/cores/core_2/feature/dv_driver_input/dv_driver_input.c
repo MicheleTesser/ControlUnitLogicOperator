@@ -22,7 +22,7 @@ union DvDriverInput_h_t_conv_const{
 };
 
 int8_t
-dv_driver_input_init(DvDriverInput_h* const restrict self __attribute__((__nonnull__)))
+dv_driver_input_init(DvDriverInput_h* const restrict self )
 {
     union DvDriverInput_h_t_conv conv = {self};
     struct DvDriverInput_t* const restrict p_self = conv.clear;
@@ -46,7 +46,7 @@ dv_driver_input_init(DvDriverInput_h* const restrict self __attribute__((__nonnu
 }
 
 int8_t
-dv_driver_input_update(DvDriverInput_h* const restrict self __attribute__((__nonnull__)))
+dv_driver_input_update(DvDriverInput_h* const restrict self )
 {
     union DvDriverInput_h_t_conv conv = {self};
     struct DvDriverInput_t* const restrict p_self = conv.clear;
@@ -78,7 +78,7 @@ dv_driver_input_update(DvDriverInput_h* const restrict self __attribute__((__non
 }
 
 float
-dv_driver_input_get_brake(const DvDriverInput_h* const restrict self __attribute__((__nonnull__)))
+dv_driver_input_get_brake(const DvDriverInput_h* const restrict self )
 {
     union DvDriverInput_h_t_conv_const conv = {self};
     const struct DvDriverInput_t* const restrict p_self = conv.clear;

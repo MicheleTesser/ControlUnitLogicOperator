@@ -129,7 +129,7 @@ giei_init(Giei_h* const restrict self,
 }
 
 int8_t
-giei_update(Giei_h* const restrict self __attribute__((__nonnull__)))
+giei_update(Giei_h* const restrict self )
 {
     GIEI_H_T_CONV(self, p_self);
 

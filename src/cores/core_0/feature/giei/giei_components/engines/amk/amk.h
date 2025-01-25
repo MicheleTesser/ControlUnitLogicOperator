@@ -12,34 +12,35 @@ typedef struct AmkInverter_h{
 }AmkInverter_h;
 
 int8_t 
-amk_module_init(AmkInverter_h* const restrict self  __attribute__((__nonnull__)),
-        const struct DriverInput_h* const p_driver_input);
+amk_module_init(AmkInverter_h* const restrict self  ,
+        const struct DriverInput_h* const p_driver_input)__attribute__((__nonnull__(1,2)));
 
 int8_t
-amk_update(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
+amk_update(AmkInverter_h* const restrict self )__attribute__((__nonnull__(1)));
 
 enum RUNNING_STATUS
-amk_rtd_procedure(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
+amk_rtd_procedure(AmkInverter_h* const restrict self )__attribute__((__nonnull__(1)));
 
 float
-amk_get_info(const AmkInverter_h* const restrict self __attribute__((__nonnull__)),
-        const enum ENGINES engine, const enum ENGINE_INFO info);
+amk_get_info(const AmkInverter_h* const restrict self ,
+        const enum ENGINES engine, const enum ENGINE_INFO info)__attribute__((__nonnull__(1)));
 
 float
-amk_max_pos_torque(const AmkInverter_h* const restrict self __attribute__((__nonnull__)),
-        const float limit_max_pos_torque);
+amk_max_pos_torque(const AmkInverter_h* const restrict self ,
+        const float limit_max_pos_torque)__attribute__((__nonnull__(1)));
 
 float
-amk_max_neg_torque(const AmkInverter_h* const restrict self __attribute__((__nonnull__)),
-        const float limit_max_neg_torque);
+amk_max_neg_torque(const AmkInverter_h* const restrict self ,
+        const float limit_max_neg_torque)__attribute__((__nonnull__(1)));
 
 int8_t
-amk_send_torque(const AmkInverter_h* const restrict self __attribute__((__nonnull__)),
-        const enum ENGINES engine, const float pos_torque, const float neg_torque);
+amk_send_torque(const AmkInverter_h* const restrict self ,
+        const enum ENGINES engine, const float pos_torque, const float neg_torque)
+    __attribute__((__nonnull__(1)));
 
 
 void
-amk_destroy(AmkInverter_h* const restrict self __attribute__((__nonnull__)));
+amk_destroy(AmkInverter_h* const restrict self )__attribute__((__nonnull__(1)));
 
 
 #define EngineType AmkInverter_h

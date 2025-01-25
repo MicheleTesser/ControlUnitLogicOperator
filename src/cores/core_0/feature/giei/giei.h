@@ -30,13 +30,13 @@ giei_init(Giei_h* const restrict self,
 
 
 int8_t
-giei_update(Giei_h* const restrict self __attribute__((__nonnull__)));
+giei_update(Giei_h* const restrict self )__attribute__((__nonnull__(1)));
 
 enum RUNNING_STATUS 
-GIEI_check_running_condition(Giei_h* const restrict self __attribute__((__nonnull__)));
+GIEI_check_running_condition(Giei_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-GIEI_compute_power(struct Giei_h* const restrict self __attribute__((__nonnull__)));
+GIEI_compute_power(struct Giei_h* const restrict self )__attribute__((__nonnull__(1)));
 
 
 

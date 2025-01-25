@@ -18,8 +18,8 @@ union Mission_h_t_conv
     struct Mission_t* const restrict clear;
 };
 
-int8_t mission_init(Mission_h* const restrict self __attribute__((__nonnull__)),
-        DriverInput_h* const driver __attribute__((__nonnull__)))
+int8_t mission_init(Mission_h* const restrict self ,
+        DriverInput_h* const driver )
 {
     union Mission_h_t_conv conv = {self};
     struct Mission_t* const restrict p_self = conv.clear;
@@ -37,7 +37,7 @@ int8_t mission_init(Mission_h* const restrict self __attribute__((__nonnull__)),
     return 0;
 }
 
-int8_t mission_update(Mission_h* const restrict self __attribute__((__nonnull__)))
+int8_t mission_update(Mission_h* const restrict self )
 {
     union Mission_h_t_conv conv = {self};
     struct Mission_t* const restrict p_self = conv.clear;
@@ -55,14 +55,14 @@ int8_t mission_update(Mission_h* const restrict self __attribute__((__nonnull__)
     return -1;
 
 }
-void mission_lock(Mission_h* const restrict self __attribute__((__nonnull__)))
+void mission_lock(Mission_h* const restrict self )
 {
     union Mission_h_t_conv conv = {self};
     struct Mission_t* const restrict p_self = conv.clear;
     p_self->lock_mission = 1;
 
 }
-void mission_unlock(Mission_h* const restrict self __attribute__((__nonnull__)))
+void mission_unlock(Mission_h* const restrict self )
 {
     union Mission_h_t_conv conv = {self};
     struct Mission_t* const restrict p_self = conv.clear;

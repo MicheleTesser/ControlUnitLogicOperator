@@ -7,8 +7,8 @@ typedef struct DvRes_h{
     const uint8_t private_data[1];
 }DvRes_h;
 
-int8_t res_class_init(DvRes_h* const restrict self __attribute__((__nonnull__)));
-int8_t res_check_go(const DvRes_h* self __attribute__((__nonnull__)));
-int8_t res_start_time_go(DvRes_h* self __attribute__((__nonnull__)));
+int8_t res_class_init(DvRes_h* const restrict self )__attribute__((__nonnull__(1)));
+int8_t res_check_go(const DvRes_h* self )__attribute__((__nonnull__(1)));
+int8_t res_start_time_go(DvRes_h* self )__attribute__((__nonnull__(1)));
 
 #endif // !__DV_RES__

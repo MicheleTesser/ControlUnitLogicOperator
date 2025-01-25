@@ -10,10 +10,10 @@ typedef struct Core1Imu_h{
 
 int8_t
 core_1_imu_init(
-        Core1Imu_h* const restrict self __attribute__((__nonnull__)),
-        Log_h* const restrict log __attribute__((__nonnull__)));
+        Core1Imu_h* const restrict self ,
+        Log_h* const restrict log )__attribute__((__nonnull__(1,2)));
 
 int8_t
-core_1_imu_update(Core1Imu_h* const restrict self __attribute__((__nonnull__)));
+core_1_imu_update(Core1Imu_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__CORE_1_IMU__

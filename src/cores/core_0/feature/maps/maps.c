@@ -113,7 +113,7 @@ static void init_repartition_maps(struct DrivingMaps_t* const restrict self)
 }
 
 int8_t
-driving_maps_init(DrivingMaps_h* const restrict self __attribute__((__nonnull__)))
+driving_maps_init(DrivingMaps_h* const restrict self )
 {
     union DrivingMaps_h_t_conv conv = {self};
     struct DrivingMaps_t* const restrict p_self = conv.clear;
@@ -134,22 +134,24 @@ driving_maps_init(DrivingMaps_h* const restrict self __attribute__((__nonnull__)
 }
 
 int8_t
-driving_map_update(DrivingMaps_h* const restrict self __attribute__((__nonnull__)))
+driving_map_update(DrivingMaps_h* const restrict self )
 {
     union DrivingMaps_h_t_conv conv = {self};
     struct DrivingMaps_t* const restrict p_self = conv.clear;
     can_obj_can2_h_t o;
-    const uint64_t mex_data = hardware_mailbox_read(p_self->map_mailbox);
-    unpack_message_can2(&o, CAN_ID_MAP, mex_data, 3, timer_time_now());
-    p_self->power_map.active = o.can_0x064_Map.power;
-    p_self->regen_map.active = o.can_0x064_Map.regen;
-    p_self->tv_repartition_map.active = o.can_0x064_Map.torque_rep;
+    uint64_t mex_data = 0;
+    if(!hardware_mailbox_read(p_self->map_mailbox,&mex_data)){
+        unpack_message_can2(&o, CAN_ID_MAP, mex_data, 3, timer_time_now());
+        p_self->power_map.active = o.can_0x064_Map.power;
+        p_self->regen_map.active = o.can_0x064_Map.regen;
+        p_self->tv_repartition_map.active = o.can_0x064_Map.torque_rep;
+    }
 
     return 0;
 }
 
 float
-driving_map_get_parameter(const DrivingMaps_h* const restrict self __attribute__((__nonnull__)),
+driving_map_get_parameter(const DrivingMaps_h* const restrict self ,
         const enum CAR_PARAMETERS param)
 {
     union DrivingMaps_h_t_conv_const conv = {self};

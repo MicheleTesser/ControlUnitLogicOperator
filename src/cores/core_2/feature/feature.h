@@ -1,9 +1,5 @@
 #ifndef __CORE_2_FEATURES__
 
-#include "DV/dv.h"
-#include "dv_driver_input/dv_driver_input.h"
-#include "mission/mission.h"
-
 #endif // !__CORE_2_FEATURES__
 
 #ifndef __CORE_2_FEATURE__
@@ -16,9 +12,9 @@ typedef struct Core2Feature_h{
 }Core2Feature_h;
 
 int8_t
-core_2_feature_init(Core2Feature_h* const restrict self __attribute__((__nonnull__)));
+core_2_feature_init(Core2Feature_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-core_2_feature_update(Core2Feature_h* const restrict self __attribute__((__nonnull__)));
+core_2_feature_update(Core2Feature_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__CORE_2_FEATURE__

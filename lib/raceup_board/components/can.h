@@ -65,16 +65,16 @@ struct CanNode*
 hardware_init_can(const enum CAN_MODULES mod, const enum CAN_FREQUENCY baud_rate);
 
 extern int8_t
-hardware_read_can(struct CanNode* const restrict self __attribute__((__nonnull__)),
-        CanMessage* const restrict mex __attribute__((__nonnull__)));
+hardware_read_can(struct CanNode* const restrict self ,
+        CanMessage* const restrict mex )__attribute__((__nonnull__(1,2)));
 
 extern int8_t
-hardware_write_can(struct CanNode* const restrict self __attribute__((__nonnull__)),
-        const CanMessage* restrict const mex __attribute__((__nonnull__)));
+hardware_write_can(struct CanNode* const restrict self ,
+        const CanMessage* restrict const mex )__attribute__((__nonnull__(1,2)));
 
 extern int8_t
-hardware_set_mailbox_can(struct CanNode* const restrict self __attribute__((__nonnull__)),
-        const uint16_t id, const uint16_t mailbox);
+hardware_set_mailbox_can(struct CanNode* const restrict self ,
+        const uint16_t id, const uint16_t mailbox)__attribute__((__nonnull__(1)));
 
 extern struct CanMailbox*
 hardware_get_mailbox(const enum CAN_MAILBOXES_RECV mailbox);
@@ -83,14 +83,15 @@ extern struct CanMailbox*
 hardware_get_mailbox_send(const enum CAN_MAILBOXES_SEND mailbox);
 
 extern int8_t
-hardware_mailbox_read(const struct CanMailbox* const restrict self __attribute__((__nonnull__)),
-        uint64_t* const restrict data __attribute__((__nonnull__)));
+hardware_mailbox_read(const struct CanMailbox* const restrict self ,
+        uint64_t* const restrict data )__attribute__((__nonnull__(1,2)));
 
 extern int8_t
-hardware_mailbox_send(struct CanMailbox* const restrict self __attribute__((__nonnull__)),
-        const uint64_t data);
+hardware_mailbox_send(struct CanMailbox* const restrict self ,
+        const uint64_t data)__attribute__((__nonnull__(1)));
 
 extern void
-hardware_free_mailbox_can(struct CanMailbox* const* const restrict self __attribute__((__nonnull__)));
+hardware_free_mailbox_can(struct CanMailbox* const* const restrict self )
+    __attribute__((__nonnull__(1)));
 
 #endif // !__VIRTUAL_CAN__

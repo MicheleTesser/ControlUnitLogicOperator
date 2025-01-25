@@ -37,7 +37,7 @@ static inline void push_in_json(struct Json* const restrict self,
 }
 
 int8_t
-log_telemetry_init(LogTelemetry_h* const restrict self __attribute__((__nonnull__)))
+log_telemetry_init(LogTelemetry_h* const restrict self )
 {
     union LogTelemetry_h_t_conv conv = {self};
     struct LogTelemetry_t* const restrict p_self = conv.clear;
@@ -54,7 +54,7 @@ log_telemetry_init(LogTelemetry_h* const restrict self __attribute__((__nonnull_
 }
 
 int8_t
-log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__((__nonnull__)),
+log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
         const char* name, const void* const var,
         const enum DATA_MODE data_type, const DataRange data_range)
 {

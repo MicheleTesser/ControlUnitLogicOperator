@@ -20,7 +20,7 @@ union DvRes_h_t_conv_const{
 };
 
 //TODO: add mailbox res message
-int8_t res_class_init(DvRes_h* const restrict self __attribute__((__nonnull__)))
+int8_t res_class_init(DvRes_h* const restrict self )
 {
     union DvRes_h_t_conv conv = {self};
     struct DvRes_t* const restrict p_self = conv.clear;
@@ -32,14 +32,14 @@ int8_t res_class_init(DvRes_h* const restrict self __attribute__((__nonnull__)))
     return 0;
 }
 
-int8_t res_check_go(const DvRes_h* self __attribute__((__nonnull__)))
+int8_t res_check_go(const DvRes_h* self )
 {
     union DvRes_h_t_conv_const conv = {self};
     const struct DvRes_t* const restrict p_self = conv.clear;
     return (timer_time_now() - p_self->start_go_timeout) >= p_self->minimum_time_needed;
 }
 
-int8_t res_start_time_go(DvRes_h* self __attribute__((__nonnull__)))
+int8_t res_start_time_go(DvRes_h* self )
 {
     union DvRes_h_t_conv conv = {self};
     struct DvRes_t* const restrict p_self = conv.clear;

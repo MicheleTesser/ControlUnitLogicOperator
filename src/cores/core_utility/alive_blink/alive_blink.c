@@ -15,7 +15,7 @@ union CoreAliveBlink_h_t_conv{
 
 int8_t
 core_alive_blink_init(
-        CoreAliveBlink_h* const restrict self __attribute__((__nonnull__)),
+        CoreAliveBlink_h* const restrict self,
         enum GPIO_PIN pin_led, const time_var_microseconds freq)
 {
     union CoreAliveBlink_h_t_conv conv = {self};
@@ -32,7 +32,7 @@ core_alive_blink_init(
 }
 
 int8_t
-core_alive_blink_update(CoreAliveBlink_h* const restrict self __attribute__((__nonnull__)))
+core_alive_blink_update(CoreAliveBlink_h* const restrict self )
 {
     union CoreAliveBlink_h_t_conv conv = {self};
     struct CoreAliveBlink_t* const restrict p_self = conv.clear;

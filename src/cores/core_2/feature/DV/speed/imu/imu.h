@@ -14,14 +14,14 @@ enum DV_IMU_DATA{
 };
 
 int8_t
-dv_imu_init(DvImu_h* const restrict self __attribute__((__nonnull__)),
-        const struct CanMailbox* const restrict mailbox);
+dv_imu_init(DvImu_h* const restrict self,
+        const struct CanMailbox* const restrict mailbox)__attribute__((__nonnull__(1,2)));
 
 int8_t
-dv_imu_update(DvImu_h* const restrict self __attribute__((__nonnull__)));
+dv_imu_update(DvImu_h* const restrict self)__attribute__((__nonnull__(1)));
 
 int8_t
-dv_imu_get(DvImu_h* const restrict self __attribute__((__nonnull__)),
-        const enum DV_IMU_DATA data);
+dv_imu_get(DvImu_h* const restrict self,
+        const enum DV_IMU_DATA data)__attribute__((__nonnull__(1)));
 
 #endif // !__CORE_2_IMU__

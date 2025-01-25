@@ -13,19 +13,19 @@ EmergencyNode_new(const uint8_t num_exception);
 
 void
 EmergencyNode_raise(
-        struct EmergencyNode* const restrict self __attribute__((__nonnull__)),
-        const uint8_t exeception);
+        struct EmergencyNode* const restrict self , 
+        const uint8_t exeception)__attribute__((__nonnull__(1)));
 
 void
 EmergencyNode_solve(
-        struct EmergencyNode* const restrict self __attribute__((__nonnull__)),
-        const uint8_t exeception);
+        struct EmergencyNode* const restrict self,
+        const uint8_t exeception)__attribute__((__nonnull__(1)));
 
 uint8_t
-EmergencyNode_is_emergency_state(
-        struct EmergencyNode* const restrict self __attribute__((__nonnull__)));
+EmergencyNode_is_emergency_state(struct EmergencyNode* const restrict self)
+    __attribute__((__nonnull__(1)));
 
 void
-EmergencyNode_free(struct EmergencyNode* const restrict self __attribute__((__nonnull__)));
+EmergencyNode_free(struct EmergencyNode* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__EMERGENCY_MODULE__

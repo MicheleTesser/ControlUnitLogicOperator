@@ -28,7 +28,7 @@ union Core1Feature_h_t_conv{
 };
 
 int8_t
-core_1_feature_init(Core1Feature_h* const restrict self __attribute__((__nonnull__)))
+core_1_feature_init(Core1Feature_h* const restrict self )
 {
     union Core1Feature_h_t_conv conv = {self};
     struct Core1Feature_t* const restrict p_self = conv.clear;
@@ -38,7 +38,7 @@ core_1_feature_init(Core1Feature_h* const restrict self __attribute__((__nonnull
     if(log_init(&p_self->log) <0) return -1;
     p_self->can_1 = hardware_init_can(CAN_GENERAL, _500_KBYTE_S_);
     if (!p_self->can_1) return -1;
-    if(cooling_init(&p_self->cooling, p_self->can_1, &p_self->log) <0) return -1;
+    if(cooling_init(&p_self->cooling, &p_self->log) <0) return -1;
     if(car_batteries_init(&p_self->batteries, &p_self->log) <0) return -1;
     if(core_1_driver_input_init(&p_self->core_1_driver_input, &p_self->log) <0) return -1;
     if(core_1_imu_init(&p_self->core_1_imu, &p_self->log)<0) return -1;
@@ -48,12 +48,11 @@ core_1_feature_init(Core1Feature_h* const restrict self __attribute__((__nonnull
 }
 
 int8_t
-core_1_feature_update(Core1Feature_h* const restrict self __attribute__((__nonnull__)))
+core_1_feature_update(Core1Feature_h* const restrict self )
 {
     union Core1Feature_h_t_conv conv = {self};
     struct Core1Feature_t* const restrict p_self = conv.clear;
 
-    if(cooling_update_all(&p_self->cooling)<0) return -1;
     if(car_batteries_update(&p_self->batteries)) return -1;
     if(core_1_driver_input_update(&p_self->core_1_driver_input)) return -1;
     if(core_1_imu_update(&p_self->core_1_imu)) return -1;

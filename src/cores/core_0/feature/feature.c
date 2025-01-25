@@ -23,7 +23,7 @@ union Core0Feature_h_t_conv{
 };
 
 int8_t
-core_0_feature_init(Core0Feature_h* const restrict self __attribute__((__nonnull__)))
+core_0_feature_init(Core0Feature_h* const restrict self )
 {
     union Core0Feature_h_t_conv conv = {self};
     struct Core0Feature_t* const restrict p_self = conv.clear;
@@ -39,7 +39,7 @@ core_0_feature_init(Core0Feature_h* const restrict self __attribute__((__nonnull
 }
 
 int8_t
-core_0_feature_update(Core0Feature_h* const restrict self __attribute__((__nonnull__)))
+core_0_feature_update(Core0Feature_h* const restrict self )
 {
     union Core0Feature_h_t_conv conv = {self};
     struct Core0Feature_t* const restrict p_self = conv.clear;
@@ -55,7 +55,7 @@ core_0_feature_update(Core0Feature_h* const restrict self __attribute__((__nonnu
 
 
 int8_t
-core_0_feature_compute_power(Core0Feature_h* const restrict self __attribute__((__nonnull__)))
+core_0_feature_compute_power(Core0Feature_h* const restrict self )
 {
     union Core0Feature_h_t_conv conv = {self};
     struct Core0Feature_t* const restrict p_self = conv.clear;

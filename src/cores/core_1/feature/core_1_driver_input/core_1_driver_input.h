@@ -10,8 +10,8 @@ typedef struct Core1DriverInput_h{
 
 int8_t
 core_1_driver_input_init(
-        Core1DriverInput_h* const restrict self __attribute__((__nonnull__)),
-        Log_h* const restrict log __attribute__((__nonnull__)));
+        Core1DriverInput_h* const restrict self ,
+        Log_h* const restrict log )__attribute__((__nonnull__(1,2)));
 
 int8_t
 core_1_driver_input_update(Core1DriverInput_h* const restrict self);

@@ -8,9 +8,9 @@ typedef struct Core1Feature_h{
 }Core1Feature_h;
 
 int8_t
-core_1_feature_init(Core1Feature_h* const restrict self __attribute__((__nonnull__)));
+core_1_feature_init(Core1Feature_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-core_1_feature_update(Core1Feature_h* const restrict self __attribute__((__nonnull__)));
+core_1_feature_update(Core1Feature_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__CORE_1_FEATURE__

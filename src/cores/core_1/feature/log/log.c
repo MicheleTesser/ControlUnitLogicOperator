@@ -14,7 +14,7 @@ union Log_h_t_conv{
 };
 
 int8_t
-log_init(Log_h* const restrict self __attribute__((__nonnull__)))
+log_init(Log_h* const restrict self )
 {
     union Log_h_t_conv conv = {self};
     struct Log_t* const restrict p_self = conv.clear;
@@ -34,8 +34,8 @@ log_init(Log_h* const restrict self __attribute__((__nonnull__)))
 }
 
 int8_t
-log_add_entry(Log_h* const restrict self __attribute__((__nonnull__)),
-        const LogEntry_h* entry  __attribute__((__nonnull__)));
+log_add_entry(Log_h* const restrict self ,
+        const LogEntry_h* entry  );
 
 int8_t
-log_update_and_send(Log_h* const restrict self __attribute__((__nonnull__)));
+log_update_and_send(Log_h* const restrict self );

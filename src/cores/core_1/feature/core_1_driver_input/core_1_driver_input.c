@@ -47,8 +47,8 @@ union Core1DriverInput_h_t_conv{
 
 int8_t
 core_1_driver_input_init(
-        Core1DriverInput_h* const restrict self __attribute__((__nonnull__)),
-        Log_h* const restrict log __attribute__((__nonnull__)))
+        Core1DriverInput_h* const restrict self ,
+        Log_h* const restrict log )
 {
     union Core1DriverInput_h_t_conv conv = {self};
     struct Core1DriverInput_t* const restrict p_self = conv.clear;

@@ -7,11 +7,11 @@ typedef struct LogSd_h{
 }LogSd_h;
 
 int8_t
-log_sd_init(LogSd_h* const restrict self __attribute__((__nonnull__)));
+log_sd_init(LogSd_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-log_sd_write(LogSd_h* const restrict self __attribute__((__nonnull__)),
-        const void* const restrict buffer __attribute__((__nonnull__)), 
-        const uint8_t buffer_size);
+log_sd_write(LogSd_h* const restrict self ,
+        const void* const restrict buffer , 
+        const uint8_t buffer_size)__attribute__((__nonnull__(1,2)));
 
 #endif // !__LOG_SD__

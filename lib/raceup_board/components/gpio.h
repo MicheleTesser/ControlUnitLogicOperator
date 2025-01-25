@@ -28,22 +28,22 @@ typedef struct Gpio_h{
 
 
 extern int8_t
-hardware_init_read_permission_gpio(GpioRead_h* const restrict self __attribute__((__nonnull__)), 
-        const enum GPIO_PIN id);
+hardware_init_read_permission_gpio(GpioRead_h* const restrict self ,
+        const enum GPIO_PIN id)__attribute__((__nonnull__(1))); 
 
 extern int8_t
-hardware_init_gpio(Gpio_h* const restrict self __attribute__((__nonnull__)), 
-        const enum GPIO_PIN id);
+hardware_init_gpio(Gpio_h* const restrict self , 
+        const enum GPIO_PIN id)__attribute__((__nonnull__(1)));
 
-extern int8_t gpio_set_pin_mode(Gpio_h* const restrict self __attribute__((__nonnull__)),
-        const uint8_t mode);
+extern int8_t gpio_set_pin_mode(Gpio_h* const restrict self,
+        const uint8_t mode)__attribute__((__nonnull__(1)));
 
-extern int8_t gpio_toggle(Gpio_h* const restrict self __attribute__((__nonnull__)));
+extern int8_t gpio_toggle(Gpio_h* const restrict self)__attribute__((__nonnull__(1)));
 
-extern int8_t gpio_read_state(const GpioRead_h* const restrict self __attribute__((__nonnull__)));
+extern int8_t gpio_read_state(const GpioRead_h* const restrict self)__attribute__((__nonnull__(1)));
 
-extern int8_t gpio_set_high(Gpio_h* const restrict self __attribute__((__nonnull__)));
+extern int8_t gpio_set_high(Gpio_h* const restrict self)__attribute__((__nonnull__(1)));
 
-extern int8_t gpio_set_low(Gpio_h* const restrict self __attribute__((__nonnull__)));
+extern int8_t gpio_set_low(Gpio_h* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__VIRTUAL_GPIO__

@@ -16,11 +16,11 @@ enum COOLING_DEVICES{
     __NUM_OF_COOLING_DEVICES__
 };
 
-int8_t cooling_init(Cooling_h* const restrict self __attribute__((__nonnull__)),
-        Log_h* const restrict log __attribute__((__nonnull__)));
-int8_t cooling_switch_device(Cooling_h* const restrict self __attribute__((__nonnull__)),
-        const enum COOLING_DEVICES dev_id);
-int8_t cooling_set_speed_device(Cooling_h* const restrict self __attribute__((__nonnull__)),
-        const enum COOLING_DEVICES dev_id, const float speed);
+int8_t cooling_init(Cooling_h* const restrict self ,
+        Log_h* const restrict log )__attribute__((__nonnull__(1,2)));
+int8_t cooling_switch_device(Cooling_h* const restrict self ,
+        const enum COOLING_DEVICES dev_id)__attribute__((__nonnull__(1)));
+int8_t cooling_set_speed_device(Cooling_h* const restrict self ,
+        const enum COOLING_DEVICES dev_id, const float speed)__attribute__((__nonnull__(1)));
 
 #endif // !__COOLING__

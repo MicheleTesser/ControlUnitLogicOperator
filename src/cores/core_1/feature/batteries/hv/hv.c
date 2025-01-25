@@ -25,7 +25,7 @@ union Hv_h_t_conv{
 };
 
 int8_t
-hv_init(Hv_h* const restrict self __attribute__((__nonnull__)),
+hv_init(Hv_h* const restrict self ,
        Log_h* const restrict log __attribute__((__unused__)))
 {
     union Hv_h_t_conv conv = {self};
@@ -88,7 +88,7 @@ hv_init(Hv_h* const restrict self __attribute__((__nonnull__)),
 }
 
 int8_t
-hv_update(Hv_h* const restrict self __attribute__((__nonnull__)))
+hv_update(Hv_h* const restrict self )
 {
     union Hv_h_t_conv conv = {self};
     struct Hv_t* const restrict p_self = conv.clear;

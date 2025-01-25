@@ -15,10 +15,10 @@ enum IMU_AXIS{
     __NUM_OF_AXIS__
 };
 
-int8_t imu_init(Imu_h* const restrict self __attribute__((__nonnull__)));
-int8_t imu_update(Imu_h* const restrict self __attribute__((__nonnull__)));
-int8_t imu_get_acc(const Imu_h* const restrict self __attribute__((__nonnull__)),
-        const enum IMU_AXIS axes);
-int8_t imu_get_speed(const Imu_h* const restrict self __attribute__((__nonnull__)));
+int8_t imu_init(Imu_h* const restrict self )__attribute__((__nonnull__(1)));
+int8_t imu_update(Imu_h* const restrict self )__attribute__((__nonnull__(1)));
+int8_t imu_get_acc(const Imu_h* const restrict self ,
+        const enum IMU_AXIS axes)__attribute__((__nonnull__(1)));
+int8_t imu_get_speed(const Imu_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__GIEI_IMU__

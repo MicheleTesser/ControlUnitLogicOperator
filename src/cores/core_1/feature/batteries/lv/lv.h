@@ -9,10 +9,10 @@ typedef struct Lv_h{
 }Lv_h;
 
 int8_t
-lv_init(Lv_h* const restrict self __attribute__((__nonnull__)),
-       Log_h* const restrict log __attribute__((__unused__)));
+lv_init(Lv_h* const restrict self ,
+       Log_h* const restrict log)__attribute__((__nonnull__(1,2)));
 
 int8_t
-lv_update(Lv_h* const restrict self __attribute__((__nonnull__)));
+lv_update(Lv_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__BATTERY_LV__

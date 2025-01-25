@@ -37,8 +37,8 @@ union Suspensions_h_t_conv {
 
 int8_t
 suspensions_init(
-        Suspensions_h* const restrict self __attribute__((__nonnull__)),
-        Log_h* const restrict log __attribute__((__nonnull__)))
+        Suspensions_h* const restrict self ,
+        Log_h* const restrict log )
 {
     union Suspensions_h_t_conv conv = {self};
     struct Suspensions_t* const restrict p_self = conv.clear;
