@@ -24,7 +24,7 @@ struct Giei_t{
     const DriverInput_h* driver_input;
     const DrivingMaps_h* driving_maps;
     const Imu_h* imu;
-    const Mission_h* mission;
+    Mission_h* mission;
     uint8_t entered_rtd : 1;
 };
 
@@ -178,7 +178,6 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
     const float throttle = driver_input_get(p_self->driver_input, THROTTLE);
     const float regen = driver_input_get(p_self->driver_input, REGEN);
     const float limit_power = driving_map_get_parameter(p_self->driving_maps, POWER_KW);
-    const float driver_regen = driver_input_get(p_self->driver_input, REGEN);
     const float driver_throttle = driver_input_get(p_self->driver_input, THROTTLE);
     const float driver_sterring_angle = driver_input_get(p_self->driver_input, STEERING_ANGLE);
     const float imu_acc_x = imu_get_acc(p_self->imu, AXES_X);
@@ -217,11 +216,7 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
             .ay = imu_acc_y,
             .yaw_r = imu_acc_z,
             .throttle = driver_throttle,
-            .regenpaddle = driver_regen,
             .steering = driver_sterring_angle,
-            .brakepressurefront = 0, //TODO: not yet implemented in the code
-            .brakepressurerear = 0, //TODO: not yet implemented in the code
-            .voltage = hv_get_info(&p_self->hv, HV_BATTERY_PACK_TENSION),
             .rpm[0] = engine_get_info(&p_self->inverter, FRONT_LEFT, ENGINE_RPM),
             .rpm[1] = engine_get_info(&p_self->inverter, FRONT_RIGHT, ENGINE_RPM),
             .rpm[2] = engine_get_info(&p_self->inverter, REAR_LEFT, ENGINE_RPM),

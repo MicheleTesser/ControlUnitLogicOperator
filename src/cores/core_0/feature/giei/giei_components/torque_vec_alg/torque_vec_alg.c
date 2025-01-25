@@ -17,9 +17,6 @@ void tv_alg_compute(const struct TVInputArgs* const restrict input,
     rtU.yaw_r = input->yaw_r; // rad/s
 
     rtU.throttle = input->throttle / 100.0; // 0 to 1
-    rtU.brakepressurefront = input->brakepressurefront;
-    rtU.brakepressurerear = input->brakepressurerear;
-    rtU.regenpaddle = input->regenpaddle / 100.0;
     rtU.steering = input->steering;
 
     rtU.rpm[0] = input->rpm[0]; // rpm
@@ -27,7 +24,6 @@ void tv_alg_compute(const struct TVInputArgs* const restrict input,
     rtU.rpm[2] = input->rpm[2]; // rpm
     rtU.rpm[3] = input->rpm[3]; // rpm
 
-    rtU.voltage = input->voltage; // V
 
     Torque_Vectoring_2024_forsecontiu_step();
 
