@@ -66,16 +66,6 @@ typedef struct EngineType{
     struct Inverter* data;
 }EngineType;
 
-int8_t engine_type_init(EngineType* const restrict self,
-    inverter_update update_f,
-    inverter_rtd_procedure rtd_f,
-    inverter_get_info get_info_f,
-    inverter_max_pos_torque max_pos_torque_f,
-    inverter_max_neg_torque max_neg_torque_f,
-    inverter_send_torque send_torque_f,
-    inverter_destroy destroy_f,
-    struct Inverter* data)__attribute__((__nonnull__(1,2,3,4,5,6,7,8,9)));
-
 #define inverter_update(self) self->update_f(self->data)
 #define engine_rtd_procedure(self) self->rtd_f(self->data)
 #define engine_get_info(self, engine, info) self->get_info_f(self->data, engine, info)
