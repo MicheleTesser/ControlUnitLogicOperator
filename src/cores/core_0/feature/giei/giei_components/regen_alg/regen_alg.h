@@ -1,6 +1,6 @@
 #ifndef __REGEN_ALG__
 #define __REGEN_ALG__
-#include "../engines/engine_common.h"
+#include "../../../engines/engines.h"
 #include <stdint.h>
 
 struct RegenAlgInput {
@@ -13,6 +13,6 @@ struct RegenAlgInput {
 
 void regen_alg_init(void);
 void regen_alg_compute(const struct RegenAlgInput* const restrict input,
-        float o_negTorquesNM[NUM_OF_EGINES]);
+        float o_negTorquesNM[__NUM_OF_ENGINES__]);
 
 #endif // !__REGEN_ALG__

@@ -1,7 +1,7 @@
 #include "./amk.h"
-#include "../../../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
-#include "../../../../../../../lib/raceup_board/raceup_board.h"
-#include "../../../../../../core_utility/emergency_module/emergency_module.h"
+#include "../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
+#include "../../../../../lib/raceup_board/raceup_board.h"
+#include "../../../../core_utility/emergency_module/emergency_module.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdatomic.h>
@@ -63,7 +63,7 @@ struct AMKInverter_t{
         int16_t AMK_TargetVelocity; //INFO: unit: rpm Speed setpoint
         int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
         int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
-    }engines[NUM_OF_EGINES];
+    }engines[__NUM_OF_ENGINES__];
     enum RUNNING_STATUS engine_status;
     time_var_microseconds enter_precharge_phase;
     struct GpioRead_h gpio_precharge_init;
@@ -75,7 +75,7 @@ struct AMKInverter_t{
 };
 
 union AMKConv{
-    struct AmkInverter_h* hidden;
+    AmkInverter_h* hidden;
     struct AMKInverter_t* clear;
 };
 
@@ -194,7 +194,7 @@ static uint8_t amk_activate_hv(const struct AMKInverter_t* const restrict self)
 static uint8_t amk_inverter_hv_status(const struct AMKInverter_t* const restrict self)
 {
     const uint8_t HV_TRAP = 50;
-    static uint8_t hvCounter[NUM_OF_EGINES];
+    static uint8_t hvCounter[__NUM_OF_ENGINES__];
     uint8_t res = 0;
 
     FOR_EACH_ENGINE({
@@ -236,8 +236,9 @@ static inline uint8_t rtd_input_request(const struct AMKInverter_t* const restri
 
 //public
 
-int8_t amk_module_init(struct AmkInverter_h* const restrict self,
-        const struct DriverInput_h* const p_driver_input)
+int8_t amk_module_init(AmkInverter_h* const restrict self,
+        const struct DriverInput_h* const p_driver_input,
+        struct EngineType* const restrict general_inverter)
 {
     AMK_H_T_CONV(self, p_self);
     memset(p_self, 0, sizeof(*p_self));
@@ -273,9 +274,16 @@ int8_t amk_module_init(struct AmkInverter_h* const restrict self,
     {
         return -5;
     }
-    return 0;
+    return engine_type_init(general_inverter,
+            amk_update,
+            amk_rtd_procedure,
+            amk_get_info,
+            amk_max_pos_torque,
+            amk_max_neg_torque,
+            amk_send_torque,
+            amk_destroy,
+            self);
 }
-
 
 #define STATUS_WORD_1(values_1,mex)\
         values_1.AMK_status.bSystemReady = mex.SystemReady;\
@@ -298,7 +306,7 @@ int8_t amk_module_init(struct AmkInverter_h* const restrict self,
     values_2.AMK_TempInverter = mex.TempInv;
 
 
-int8_t amk_update_status(struct AmkInverter_h* const restrict self)
+int8_t amk_update_status(AmkInverter_h* const restrict self)
 {
     CanMessage mex;
     can_obj_can1_h_t o;
@@ -342,7 +350,7 @@ int8_t amk_update_status(struct AmkInverter_h* const restrict self)
     return 0;
 }
 
-enum RUNNING_STATUS amk_rtd_procedure(struct AmkInverter_h* const restrict self)
+enum RUNNING_STATUS amk_rtd_procedure(AmkInverter_h* const restrict self)
 {
     AMK_H_T_CONV(self, p_self);
     if(p_self->engine_status == SYSTEM_OFF){

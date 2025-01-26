@@ -1,5 +1,7 @@
 #include "feature.h"
 #include "driver_input/driver_input.h"
+#include "engines/amk/amk.h"
+#include "engines/engines.h"
 #include "giei/giei.h"
 #include "imu/imu.h"
 #include "maps/maps.h"
@@ -13,6 +15,8 @@ struct Core0Feature_t{
     Mission_h mission;
     DrivingMaps_h maps;
     Imu_h imu;
+    AmkInverter_h amk;
+    EngineType inverter;
     Giei_h giei;
     enum RUNNING_STATUS old_running_status;
 };
@@ -32,8 +36,9 @@ core_0_feature_init(Core0Feature_h* const restrict self )
     if(mission_init(&p_self->mission, &p_self->driver)<0) return -2;
     if(driving_maps_init(&p_self->maps) <0) return -3;
     if(imu_init(&p_self->imu) <0) return -4;
-    if(giei_init(&p_self->giei, &p_self->driver, &p_self->maps,
-                &p_self->imu, &p_self->mission) <0) return -5;
+    if(amk_module_init(&p_self->amk, &p_self->driver, &p_self->inverter)) return -5;
+    if(giei_init(&p_self->giei, &p_self->inverter, &p_self->driver, &p_self->maps,
+                &p_self->imu, &p_self->mission) <0) return -6;
 
     return 0;
 }

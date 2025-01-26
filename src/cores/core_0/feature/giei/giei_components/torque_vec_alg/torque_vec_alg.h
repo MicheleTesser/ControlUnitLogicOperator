@@ -1,7 +1,7 @@
 #ifndef __CAR_TV_ALG__
 #define __CAR_TV_ALG__
 
-#include "../engines/engine_common.h"
+#include "../../../engines/engines.h"
 
 struct TVInputArgs{
   float ax;                           /* '<Root>/ax' */
@@ -15,6 +15,6 @@ struct TVInputArgs{
 
 void tv_alg_init(void);
 void tv_alg_compute(const struct TVInputArgs* const restrict input,
-        float o_posTorquesNM[NUM_OF_EGINES]);
+        float o_posTorquesNM[__NUM_OF_ENGINES__]);
 
 #endif // !__CAR_TV_ALG__
