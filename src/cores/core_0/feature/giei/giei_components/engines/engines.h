@@ -1,46 +1,61 @@
 #ifndef __GIEI_ENGINES__
 #define __GIEI_ENGINES__
 
+/*
+ * This header defines the interface for the EngineType abstraction.
+ * Users must define the following macros before including this file:
+ * 
+ * - EngineType: The structure representing the engine type.
+ * - inverter_module_init: Function to initialize the engine module.
+ * - inverter_update: Function to update the engine state.
+ * - engine_rtd_procedure: Function to perform RTD procedures.
+ * - engine_get_info: Function to retrieve engine information.
+ * - engine_max_pos_torque: Function to retrieve maximum positive torque.
+ * - engine_max_neg_torque: Function to retrieve maximum negative torque.
+ * - engine_send_torque: Function to send torque values.
+ * - engine_destroy: Function to clean up resources for the engine.
+ * 
+ * Failure to define these will result in a compile-time error.
+ */
+
+
 #include "amk/amk.h"
 #include "engine_common.h"
 
-#if !defined(InverterType)
-#define InverterType struct InvalidInverterType
+#if !defined(EngineType)
+#error "InverterType not found not found"
 #endif
 
 #if !defined (inverter_module_init)
-#define inverter_module_init(inverter,driver) engine_module_init_not_defined(inverter,driver)
+#error "inveter_module_inif function not found"
 #endif
 
 #if !defined (inverter_update)
-#define inverter_update(inverter) engine_update_not_defined(inverter)
+#error "inveter_update function not found"
 #endif
 
 #if !defined (engine_rtd_procedure)
-#define engine_rtd_procedure(inverter) engine_rtd_procedure_not_defined(inverter)
+#error "engine_rtd_procedure function not found"
 #endif
 
 #if !defined (engine_get_info)
-#define engine_get_info(inverter, engine, info) engine_get_info_not_defined(inverter, engine,info)
+#error "engine_get_info function not found"
 #endif
 
 #if !defined (engine_max_pos_torque)
-#define engine_max_pos_torque(engine, limit_max_pos_torque) \
-    engine_max_pos_torque_not_defined(engine, limit_max_pos_torque)
+#error "engine_mex_pos_torque function not found"
 #endif
 
 #if !defined (engine_max_neg_torque)
-#define engine_max_neg_torque(engine, limit_max_neg_torque) \
-    engine_max_neg_torque_not_defined(engine, limit_max_neg_torque)
+#error "engine_mex_neg_torque function not found"
 #endif
 
 #if !defined (engine_send_torque)
-#define engine_send_torque(engine, pos_torque, neg_torque) \
-    engine_send_torque_not_defined(engine, pos_torque, neg_torque)
+#error "engine_send_torque function not found"
 #endif
 
 #if !defined (engine_destroy)
-#define engine_destroy(inverter) engine_destroy(inverter)
+#error "engine_destroy function not found"
 #endif
 
 
