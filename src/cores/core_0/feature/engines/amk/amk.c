@@ -93,13 +93,6 @@ union AMKConv{
 const uint8_t __debug_amk_size__[(sizeof(struct AmkInverter_h) == sizeof(struct AMKInverter_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
-static uint8_t rtd_input_on;
-
-static inline void toggle_active_rtd_input(void) TRAP_ATTRIBUTE
-{
-    rtd_input_on ^=1;
-}
-
 #define POPULATE_MEX_ENGINE(amk_stop,engine)\
     engine.AMK_bReserved = 0;\
     engine.NegTorq = amk_stop->AMK_TorqueLimitNegative;\
@@ -300,7 +293,7 @@ static enum RUNNING_STATUS amk_rtd_procedure(AMKInverter_t* const restrict self)
                 EmergencyNode_raise(self->amk_emergency, FAILED_RTD_AMK);
                 self->engine_status = SYSTEM_OFF;
             }
-            else if (!rtd_input_on)
+            else if (driver_input_rtd_request(self->driver_input))
             {
                 amk_disable_inverter(self);
                 self->engine_status= TS_READY;
@@ -310,8 +303,9 @@ static enum RUNNING_STATUS amk_rtd_procedure(AMKInverter_t* const restrict self)
     return self->engine_status;
 }
 
-static int8_t amk_update(AMKInverter_t* const restrict self)
+static int8_t amk_update(AMKInverter_t* const restrict self __attribute__((__unused__)))
 {
+    return 0;
 }
 
 static float amk_get_info(const AMKInverter_t* const restrict self,
@@ -411,10 +405,6 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
         return -4;
     }
 
-    if(hardware_trap_attach_fun(TRAP_INPUT_RTD_TOGGLE, toggle_active_rtd_input) <0)
-    {
-        return -5;
-    }
     general_inverter->update_f=amk_update;
     general_inverter->rtd_f=amk_rtd_procedure;
     general_inverter->get_info_f=amk_get_info;

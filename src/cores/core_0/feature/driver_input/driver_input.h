@@ -17,10 +17,10 @@ enum INPUT_TYPES{
 };
 
 enum DRIVER{
-    DRIVER_NONE=0,
-    DRIVER_HUMAN,
+    DRIVER_HUMAN=0,
     DRIVER_EMBEDDED,
 
+    DRIVER_NONE,
     __NUM_OF_DRIVERS__
 };
 
@@ -34,10 +34,14 @@ float
 driver_input_get(const DriverInput_h* const restrict self ,
         const enum INPUT_TYPES driver_input)__attribute__((__nonnull__(1)));
 
+int8_t
+driver_input_rtd_request(const DriverInput_h* const restrict self)__attribute__((__nonnull__(1)));
+
 int8_t driver_input_change_driver(struct DriverInput_h* const restrict self,
         const enum DRIVER driver)__attribute__((__nonnull__(1)));
 
 void 
 driver_input_destroy(DriverInput_h* const restrict self )__attribute__((__nonnull__(1)));
+
 
 #endif // !__CORE_0_DRIVER_INPUT__
