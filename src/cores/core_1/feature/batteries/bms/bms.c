@@ -3,7 +3,7 @@
 #include "../../log/log.h"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../../lib/raceup_board/raceup_board.h"
-#include "hv.h"
+#include "bms.h"
 
 enum VOLTS{
     MAX=0,
@@ -13,27 +13,28 @@ enum VOLTS{
     __NUM_OF_VOLTS__
 };
 
-struct Hv_t{
+struct Bms_t{
     const struct CanMailbox* mailbox;
     uint16_t volts[__NUM_OF_VOLTS__];
     uint8_t soc;
 };
 
 union Hv_h_t_conv{
-    Hv_h* const restrict hidden;
-    struct Hv_t* const restrict clear;
+    Bms_h* const restrict hidden;
+    struct Bms_t* const restrict clear;
 };
 
 int8_t
-hv_init(Hv_h* const restrict self ,
-       Log_h* const restrict log __attribute__((__unused__)))
+bms_init(Bms_h* const restrict self ,
+        const uint16_t bms_id, const char* const restrict bms_name,
+        Log_h* const restrict log __attribute__((__unused__)))
 {
     union Hv_h_t_conv conv = {self};
-    struct Hv_t* const restrict p_self = conv.clear;
+    struct Bms_t* const restrict p_self = conv.clear;
 
     memset(p_self, 0, sizeof(*p_self));
 
-    p_self->mailbox = hardware_get_mailbox(CORE_1_BMS_HV);
+    p_self->mailbox = hardware_get_mailbox(bms_id);
     if (!p_self->mailbox) {
         return -1;
     }
@@ -60,7 +61,7 @@ hv_init(Hv_h* const restrict self ,
             .data_mode = DATA_UNSIGNED,
             .data_ptr = &p_self->volts[MIN],
             .log_mode = LOG_TELEMETRY| LOG_SD,
-            .name = "Bms hv Min Volt",
+            .name = "Bms bms Min Volt",
         };
         if(log_add_entry(log, &entry)<0)
         {
@@ -88,10 +89,10 @@ hv_init(Hv_h* const restrict self ,
 }
 
 int8_t
-hv_update(Hv_h* const restrict self )
+bms_update(Bms_h* const restrict self )
 {
     union Hv_h_t_conv conv = {self};
-    struct Hv_t* const restrict p_self = conv.clear;
+    struct Bms_t* const restrict p_self = conv.clear;
     can_obj_can2_h_t o;
     uint64_t data=0;
 
