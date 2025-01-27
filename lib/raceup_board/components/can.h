@@ -30,61 +30,65 @@ enum CAN_MODULES{
     CAN_DV,
 };
 
-enum CAN_MAILBOXES_RECV{
-    CORE_0_DRIVER_HUMAN,
-    CORE_0_DRIVER_DV,
-    CORE_0_IMU,
-    CORE_0_HV,
-    CORE_0_MAPS,
-    CORE_0_MISSIONS,
-
-    CORE_1_IMU,
-    CORE_1_DRIVER,
-    CORE_1_REGEN,
-    CORE_1_SUSP_FRONT,
-    CORE_1_SUSP_REAR,
-    CORE_1_BMS_HV,
-
-    CORE_2_IMU,
-    CORE_2_DV_DRIVER_INPUT,
-    CORE_2_HUMAN_DRIVER_INPUT,
-};
+// enum CAN_MAILBOXES_RECV{
+//     CORE_0_DRIVER_HUMAN,
+//     CORE_0_DRIVER_DV,
+//     CORE_0_IMU,
+//     CORE_0_HV,
+//     CORE_0_MAPS,
+//     CORE_0_MISSIONS,
+//
+//     CORE_1_IMU,
+//     CORE_1_DRIVER,
+//     CORE_1_REGEN,
+//     CORE_1_SUSP_FRONT,
+//     CORE_1_SUSP_REAR,
+//     CORE_1_BMS_HV,
+//
+//     CORE_2_IMU,
+//     CORE_2_DV_DRIVER_INPUT,
+//     CORE_2_HUMAN_DRIVER_INPUT,
+// };
 
 
 //INFO: maintain the order
-enum CAN_MAILBOXES_SEND{
-    CORE_0_BMS_HV,
-
-    CORE_1_FAN_PUMP,
-};
+// enum CAN_MAILBOXES_SEND{
+//     CORE_0_BMS_HV,
+//
+//     CORE_1_FAN_PUMP,
+// };
 
 struct CanNode;
 struct CanMailbox;
 
-struct CanNode*
+int8_t
 hardware_init_can(const enum CAN_MODULES mod, const enum CAN_FREQUENCY baud_rate);
+
+const struct CanNode*
+hardware_init_can_get_ref_node(const enum CAN_MODULES mod);
+
+void
+hardware_init_can_destroy_ref_node(const struct CanNode* const restrict self);
 
 extern int8_t
 hardware_read_can(struct CanNode* const restrict self ,
         CanMessage* const restrict mex )__attribute__((__nonnull__(1,2)));
 
 extern int8_t
-hardware_write_can(struct CanNode* const restrict self ,
+hardware_write_can(const struct CanNode* const restrict self ,
         const CanMessage* restrict const mex )__attribute__((__nonnull__(1,2)));
 
-extern int8_t
-hardware_set_mailbox_can(struct CanNode* const restrict self ,
-        const uint16_t id, const uint16_t mailbox)__attribute__((__nonnull__(1)));
+extern struct CanMailbox*
+hardware_get_mailbox(const struct CanNode* const restrict self,
+        const uint16_t mex_id, const uint16_t mex_size)__attribute__((__nonnull__(1)));
 
 extern struct CanMailbox*
-hardware_get_mailbox(const enum CAN_MAILBOXES_RECV mailbox);
-
-extern struct CanMailbox*
-hardware_get_mailbox_send(const enum CAN_MAILBOXES_SEND mailbox);
+hardware_get_mailbox_send(const struct CanNode* const restrict self,
+        const uint16_t mex_id, const uint16_t mex_size)__attribute__((__nonnull__(1)));
 
 extern int8_t
 hardware_mailbox_read(const struct CanMailbox* const restrict self ,
-        uint64_t* const restrict data )__attribute__((__nonnull__(1,2)));
+        CanMessage* const restrict o_mex)__attribute__((__nonnull__(1,2)));
 
 extern int8_t
 hardware_mailbox_send(struct CanMailbox* const restrict self ,
@@ -93,5 +97,12 @@ hardware_mailbox_send(struct CanMailbox* const restrict self ,
 extern void
 hardware_free_mailbox_can(struct CanMailbox* const* const restrict self )
     __attribute__((__nonnull__(1)));
+
+#define ACTION_ON_CAN_NODE(node,exp)\
+{\
+    const struct CanNode* const restrict can_node = hardware_init_can_get_ref_node(node);\
+    exp;\
+    hardware_init_can_destroy_ref_node(can_node);\
+}
 
 #endif // !__VIRTUAL_CAN__

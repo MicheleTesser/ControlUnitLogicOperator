@@ -78,8 +78,8 @@ typedef struct Inverter{
     struct GpioRead_h gpio_rtd_button;
     struct EmergencyNode* amk_emergency;
     const struct DriverInput_h* driver_input;
-    struct CanNode* can_inverter;
-    const struct CanMailbox *engine_mailbox[__NUM_OF_ENGINES__];
+    const struct CanNode* can_inverter;
+    const struct CanMailbox *engine_mailbox[__NUM_OF_ENGINES__ * 2];
 }AMKInverter_t;
 
 union AMKConv{
@@ -387,7 +387,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
         EmergencyNode_free(p_self->amk_emergency);
         return -1;
     }
-    p_self->can_inverter = hardware_init_can(CAN_INVERTER, _1_MBYTE_S_);
+    p_self->can_inverter = hardware_init_can_get_ref_node(CAN_INVERTER);
     if (!p_self->can_inverter) {
         return -2;
     }

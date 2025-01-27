@@ -47,7 +47,9 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     struct Cooling_t* const p_self = conv.clear;
     memset(p_self, 0, sizeof(*p_self));
 
-    p_self->send_mailbox = hardware_get_mailbox_send(CORE_1_FAN_PUMP);
+    ACTION_ON_CAN_NODE(CAN_GENERAL,{
+        p_self->send_mailbox = hardware_get_mailbox_send(can_node, CAN_ID_PCU,2);
+    })
     if (!p_self->send_mailbox)
     {
         return -1;
@@ -58,7 +60,8 @@ int8_t cooling_init(Cooling_h* const restrict self ,
             .data_mode = DATA_UNSIGNED,
             .data_ptr = &p_self->devices[FANS_RADIATOR],
             .log_mode = LOG_SD | LOG_TELEMETRY,
-            .data_size = sizeof(p_self->devices[FANS_RADIATOR]),
+            .data_min = 0,
+            .data_max = 100,
             .name = "temp fan speed/enable",
         };
         if (log_add_entry(log, &entry)<0)
@@ -72,7 +75,8 @@ int8_t cooling_init(Cooling_h* const restrict self ,
             .data_mode = DATA_UNSIGNED,
             .data_ptr = &p_self->devices[PUMPS],
             .log_mode = LOG_SD | LOG_TELEMETRY,
-            .data_size = sizeof(p_self->devices[PUMPS]),
+            .data_min = 0,
+            .data_max = 100,
             .name = "temp pump speed/enable",
         };
         if (log_add_entry(log, &entry)<0)

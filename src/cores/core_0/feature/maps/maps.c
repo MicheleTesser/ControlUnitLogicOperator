@@ -120,7 +120,10 @@ driving_maps_init(DrivingMaps_h* const restrict self )
 
     memset(p_self, 0, sizeof(*p_self));
 
-    p_self->map_mailbox = hardware_get_mailbox(CORE_0_MAPS);
+    ACTION_ON_CAN_NODE(CAN_GENERAL,{
+        p_self->map_mailbox = hardware_get_mailbox(can_node, CAN_ID_MAP, 3);
+    })
+
     if (!p_self->map_mailbox)
     {
         return -1;
@@ -139,9 +142,9 @@ driving_map_update(DrivingMaps_h* const restrict self )
     union DrivingMaps_h_t_conv conv = {self};
     struct DrivingMaps_t* const restrict p_self = conv.clear;
     can_obj_can2_h_t o;
-    uint64_t mex_data = 0;
-    if(!hardware_mailbox_read(p_self->map_mailbox,&mex_data)){
-        unpack_message_can2(&o, CAN_ID_MAP, mex_data, 3, timer_time_now());
+    CanMessage mex;
+    if(!hardware_mailbox_read(p_self->map_mailbox,&mex)){
+        unpack_message_can2(&o, CAN_ID_MAP, mex.full_word, mex.message_size, timer_time_now());
         p_self->power_map.active = o.can_0x064_Map.power;
         p_self->regen_map.active = o.can_0x064_Map.regen;
         p_self->tv_repartition_map.active = o.can_0x064_Map.torque_rep;

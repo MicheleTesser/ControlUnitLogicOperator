@@ -54,6 +54,7 @@ int8_t driver_input_init(struct DriverInput_h* const restrict self)
     };
     union Conv d_conv = {self};
     struct DriverInput_t* const p_self = d_conv.clear;
+
     memset(p_self, 0, sizeof(*p_self));
 
     if (hardware_init_read_permission_gpio(&p_self->gpio_rtd_button, GPIO_RTD_BUTTON)<0)
@@ -61,9 +62,11 @@ int8_t driver_input_init(struct DriverInput_h* const restrict self)
         return -1;
     }
 
-    p_self->drivers_mailboxes[DRIVER_HUMAN] = hardware_get_mailbox(CORE_0_DRIVER_HUMAN);
-    p_self->drivers_mailboxes[DRIVER_EMBEDDED] = hardware_get_mailbox(CORE_0_DRIVER_DV);
-    p_self->current_driver = DRIVER_NONE;
+    ACTION_ON_CAN_NODE(CAN_GENERAL,{
+        p_self->drivers_mailboxes[DRIVER_HUMAN] = hardware_get_mailbox(can_node, CAN_ID_DRIVER,4);
+        p_self->drivers_mailboxes[DRIVER_EMBEDDED] = hardware_get_mailbox(); //TODO: not yet defined
+        p_self->current_driver = DRIVER_NONE;
+    });
 
     return 0;
 }
@@ -90,15 +93,15 @@ driver_input_update(DriverInput_h* const restrict self )
     union DriverInput_h_t_conv conv = {self};
     struct DriverInput_t* const restrict p_self = conv.clear;
     can_obj_can2_h_t o2;
-    uint64_t data=0;
+    CanMessage mex;
     const struct CanMailbox* mailbox = NULL;
     index_tye index_input = 0;
 
     switch (p_self->current_driver) {
         case DRIVER_HUMAN:
             mailbox = p_self->drivers_mailboxes[DRIVER_HUMAN];
-            if (hardware_mailbox_read(mailbox, &data)>0) {
-                unpack_message_can2(&o2, CAN_ID_DRIVER, data, 4, timer_time_now());
+            if (hardware_mailbox_read(mailbox, &mex)>0) {
+                unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
                 index_input = compute_data_index(p_self, THROTTLE);
                 p_self->driver_data[index_input] = o2.can_0x053_Driver.throttle;
                 index_input = compute_data_index(p_self, BRAKE);

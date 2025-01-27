@@ -21,7 +21,7 @@ dv_speed_init(DvSpeed_h* const restrict self )
     struct DvSpeed_t* const restrict p_self = conv.clear;
 
     memset(p_self, 0, sizeof(*p_self));
-    struct CanMailbox* const dv_imu_mailbox = hardware_get_mailbox(CORE_2_IMU);
+    struct CanMailbox* const dv_imu_mailbox = hardware_get_mailbox(); //TODO: not yet defined
     if (!dv_imu_mailbox) {
         goto mailbox_fail;
     }

@@ -27,12 +27,12 @@ car_batteries_init(CarBatteries_h* const restrict self __attribute__((__unused__
     union CarBatteries_h_t_conv conv = {self};
     struct CarBatteries_t* const restrict p_self = conv.clear;
 
-    if (bms_init(&p_self->bms[BMS_LV], CAN_ID_BMSLV1, "BMS LV" , log))
+    if (bms_init(&p_self->bms[BMS_LV], CAN_ID_BMSLV1, 7, "BMS LV" , log))
     {
         return -1;
     }
 
-    if (bms_init(&p_self->bms[BMS_HV], CAN_ID_BMSHV1, "BMS HV" , log))
+    if (bms_init(&p_self->bms[BMS_HV], CAN_ID_BMSHV1, 7, "BMS HV" , log))
     {
         return -2;
     }

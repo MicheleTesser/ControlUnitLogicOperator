@@ -1,6 +1,8 @@
 #include "imu.h"
 #include <string.h>
 
+//TODO: imu can messages not yet defined
+
 struct Imu_t{
     float acc[__NUM_OF_AXIS__];
 };

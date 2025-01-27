@@ -1,5 +1,5 @@
 #include "./power_control.h"
-#include "../engines/engine_common.h"
+#include "../../../engines/engines.h"
 #include "../../math_saturated/saturated.h"
 #include <stdint.h>
 
@@ -30,7 +30,7 @@ static float PIDController(const float pi_error)
 
 //public
 void powerControl(const float total_power, const float power_limit, 
-        float posTorquesNM[NUM_OF_EGINES])
+        float posTorquesNM[__NUM_OF_ENGINES__])
 {
     float sTorque = 0;
     float power_error =2;
@@ -48,7 +48,7 @@ void powerControl(const float total_power, const float power_limit,
 
     if (reduction_factor > 0)
     {
-        for (uint8_t i = 0; (i < NUM_OF_EGINES); i++){
+        for (uint8_t i = 0; (i < __NUM_OF_ENGINES__); i++){
             posTorquesNM[i] = posTorquesNM[i] - (reduction_factor*posTorquesNM[i]);
         }
     }

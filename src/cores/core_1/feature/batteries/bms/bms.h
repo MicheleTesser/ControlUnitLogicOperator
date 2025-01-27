@@ -10,7 +10,8 @@ typedef struct Bms_h{
 
 int8_t
 bms_init(Bms_h* const restrict self __attribute__((__nonnull__)),
-        const uint16_t bms_mex_id, const char* const restrict bms_name,
+        const uint16_t bms_id, const uint8_t mex_size,
+        const char* const restrict bms_name,
         Log_h* const restrict log __attribute__((__unused__)));
 
 int8_t

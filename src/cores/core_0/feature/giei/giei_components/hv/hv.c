@@ -1,5 +1,6 @@
 #include "hv.h"
 #include "../../../../../../lib/raceup_board/components/can.h"
+#include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -29,15 +30,17 @@ hv_init(
     struct GieiHv_t* p_self = conv.clear;
 
     memset(p_self, 0, sizeof(*p_self));
-    p_self->lem_mailbox = hardware_get_mailbox(CORE_0_HV);
-    if (!p_self->lem_mailbox) {
+    ACTION_ON_CAN_NODE(CAN_GENERAL,{
+        p_self->lem_mailbox = hardware_get_mailbox(can_node, CAN_ID_BMSHV1,7);
+        if (!p_self->lem_mailbox) {
         return -1;
-    }
+        }
 
-    p_self->send_mailbox_bms_hv = hardware_get_mailbox_send(CORE_0_BMS_HV);
-    if (!p_self->send_mailbox_bms_hv) {
+        p_self->send_mailbox_bms_hv = hardware_get_mailbox_send(can_node, CAN_ID_INVVOLT, 2);
+        if (!p_self->send_mailbox_bms_hv) {
         hardware_free_mailbox_can(&p_self->lem_mailbox);
-    }
+        }
+    })
     return 0;
 }
 
@@ -46,13 +49,21 @@ hv_update(Hv_h* const restrict self )
 {
     union GieiHv_conv conv = {self};
     struct GieiHv_t* p_self = conv.clear;
-    const uint64_t lem_data = hardware_mailbox_read(p_self->lem_mailbox);
-    if (lem_data<0) {
-        return -1;
+    CanMessage mex; 
+    if(hardware_mailbox_read(p_self->lem_mailbox,&mex)>=0)
+    {
+        union {
+            uint32_t u32;
+            float f;
+        }conv;
+        conv .u32 = mex.full_word;
+        if (conv.f<0) {
+            return -1;
+        }
+        p_self->lem_current = conv.f;
     }
-    p_self->lem_current = lem_data;
+
     return 0;
-    
 }
 
 /*

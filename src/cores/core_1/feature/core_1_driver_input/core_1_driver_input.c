@@ -1,4 +1,5 @@
 #include "core_1_driver_input.h"
+#include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../lib/raceup_board/components/can.h"
 #include <stdint.h>
 #include <string.h>
@@ -35,7 +36,8 @@ union Core1DriverInput_h_t_conv{
     struct LogEntry_h entry= {\
         .data_mode = MODE,\
         .data_ptr = &DATA,\
-        .data_size = sizeof(DATA),\
+        .data_min = 0,\
+        .data_max = 100,\
         .log_mode = LOG_SD | LOG_TELEMETRY,\
         .name = NAME,\
     };\
@@ -74,18 +76,20 @@ core_1_driver_input_init(
             "driver input implausibility list");
 
 
-    p_self->driver_input_mailbox = hardware_get_mailbox(CORE_1_DRIVER);
-    if(!p_self->driver_input_mailbox)
-    {
+    ACTION_ON_CAN_NODE(CAN_GENERAL,{
+        p_self->driver_input_mailbox = hardware_get_mailbox(can_node, CAN_ID_DRIVER,4);
+        if(!p_self->driver_input_mailbox)
+        {
         return -1;
-    }
+        }
 
-    p_self->regen_stw_mailbox = hardware_get_mailbox(CORE_1_REGEN);
-    if(!p_self->regen_stw_mailbox)
-    {
+        p_self->regen_stw_mailbox = hardware_get_mailbox(can_node, CAN_ID_PADDLE, 1);
+        if(!p_self->regen_stw_mailbox)
+        {
         hardware_free_mailbox_can(&p_self->driver_input_mailbox);
         return -1;
-    }
+        }
+    })
 
 
     return 0;

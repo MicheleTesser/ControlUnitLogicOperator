@@ -27,7 +27,7 @@ int8_t mission_init(Mission_h* const restrict self ,
 
     p_self->p_driver = driver;
     p_self->m_type = DRIVER_NONE;
-    p_self->mission_mailbox = hardware_get_mailbox(CORE_0_MISSIONS);
+    p_self->mission_mailbox = hardware_get_mailbox(); //TODO: message not yet defined
     if (!p_self->mission_mailbox)
     {
         return -1;
@@ -41,13 +41,14 @@ int8_t mission_update(Mission_h* const restrict self )
 {
     union Mission_h_t_conv conv = {self};
     struct Mission_t* const restrict p_self = conv.clear;
-    uint64_t data=0;
+    CanMessage mex;
 
-    if (!p_self->lock_mission && hardware_mailbox_read(p_self->mission_mailbox, &data)>0 &&
-            p_self->m_type != data)
+    if (!p_self->lock_mission 
+            && hardware_mailbox_read(p_self->mission_mailbox, &mex)>0
+            && p_self->m_type != mex.full_word)
     {
         //TODO: unpack data
-        p_self->m_type = data;
+        p_self->m_type = mex.full_word;
         driver_input_change_driver(p_self->p_driver, p_self->m_type);
         return 0;
     }
