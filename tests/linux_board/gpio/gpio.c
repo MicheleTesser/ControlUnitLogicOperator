@@ -5,7 +5,6 @@
 #include <gpiod.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
-#include "../../../src/board_conf/id_conf.h"
 
 #ifndef CHIP_PATH
 #define CHIP_PATH "/dev/gpiochip1"
@@ -16,6 +15,15 @@ static struct {
     struct gpiod_line_request* line_request;
     enum gpiod_line_value init_values[gpio_pin_cnt];
 }lines;
+
+struct GpioRead_t{
+    enum GPIO_PIN gpio_id;
+};
+
+struct Gpio_t{
+    struct GpioRead_t read;
+    const uint8_t filler_data;
+};
 
 int8_t create_virtual_chip(void)
 {
@@ -107,56 +115,72 @@ error_setting_direction:
     return err;
 }
 
-int8_t hardware_init_gpio(const BoardComponentId id __attribute_maybe_unused__)
+int8_t
+hardware_init_read_permission_gpio(GpioRead_h* const restrict self,
+        const enum GPIO_PIN id)
 {
+    struct GpioRead_t * p_self = (struct GpioRead_t*) self;
+    p_self->gpio_id = id;
     return 0;
 }
 
-int8_t gpio_set_pin_mode(const BoardComponentId id __attribute_maybe_unused__, 
-        const uint8_t mode __attribute_maybe_unused__)
+int8_t
+hardware_init_gpio(Gpio_h* const restrict self , 
+        const enum GPIO_PIN id)
 {
+    struct Gpio_t* p_self = (struct Gpio_t*) self;
+    p_self->read.gpio_id=id;
     return 0;
 }
 
-int8_t gpio_toggle(const BoardComponentId id __attribute_maybe_unused__)
+int8_t gpio_toggle(Gpio_h* const restrict self)
 {
-    int8_t read = gpio_read_state(id);
+    int8_t read = gpio_read_state(&self->gpio_read_permission);
     if (read >= 0) {
         if (read) {
-            return gpio_set_high(id);
+            return gpio_set_high(self);
         }
-        return gpio_set_low(id);
+        return gpio_set_low(self);
     }
     return -1;
 }
 
-int8_t gpio_read_state(const BoardComponentId id )
+int8_t gpio_read_state(const GpioRead_h* const restrict self)
 {
-    int r =gpiod_line_request_get_value(lines.line_request, id);
+    struct GpioRead_t * p_self = (struct GpioRead_t*) self;
+    int r =gpiod_line_request_get_value(lines.line_request, p_self->gpio_id);
     if (r< 0) {
-        fprintf(stderr, "gpio %d read err\n", id);
+        fprintf(stderr, "gpio %d read err\n", p_self->gpio_id);
     }
     return r;
 }
 
-int8_t gpio_set_high(const BoardComponentId id __attribute_maybe_unused__)
+int8_t gpio_set_high(Gpio_h* const restrict self)
 {
-    lines.init_values[id] =GPIOD_LINE_VALUE_INACTIVE;
+    struct Gpio_t* p_self = (struct Gpio_t*) self;
+    lines.init_values[p_self->read.gpio_id] =GPIOD_LINE_VALUE_INACTIVE;
+    const enum GPIO_PIN id = p_self->read.gpio_id;
     if(gpiod_line_request_set_values(lines.line_request,lines.init_values) <0){
         fprintf(stderr, "gpio %d, set high error\n",id); 
         return -1;
     }
-    if (id == SCS) {
-        gpio_set_high(AIR_PRECHARGE_INIT);
-        gpio_set_high(AIR_PRECHARGE_DONE);
+    if (id == GPIO_SCS) {
+        struct Gpio_t air1 = {.read.gpio_id = GPIO_AIR_PRECHARGE_INIT};
+        gpio_set_high((struct Gpio_h*) &air1);
+        struct Gpio_t air2 = {.read.gpio_id = GPIO_AIR_PRECHARGE_DONE};
+        gpio_set_high((struct Gpio_h*) &air2);
     }
     return 0;
 }
 
-int8_t gpio_set_low(const BoardComponentId id __attribute_maybe_unused__)
+extern int8_t gpio_set_low(Gpio_h* const restrict self)
 {
+    struct Gpio_t* p_self = (struct Gpio_t*) self;
+    const enum GPIO_PIN id = p_self->read.gpio_id;
     lines.init_values[id] =GPIOD_LINE_VALUE_ACTIVE;
-    if (gpio_read_state(SCS) && (id == AIR_PRECHARGE_INIT || id == AIR_PRECHARGE_DONE)){
+    struct Gpio_t scs = {.read.gpio_id = GPIO_SCS};
+    if (gpio_read_state((GpioRead_h*)&scs.read) &&
+            (id == GPIO_AIR_PRECHARGE_INIT || id == GPIO_AIR_PRECHARGE_DONE)){
         return -2;
     }
     if(gpiod_line_request_set_values(lines.line_request,lines.init_values) <0){
