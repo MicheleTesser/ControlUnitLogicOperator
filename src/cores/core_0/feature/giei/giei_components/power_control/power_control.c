@@ -37,9 +37,9 @@ void powerControl(const float total_power, const float power_limit,
     float reduction_factor=0;
     float unsaturated_reduction = 0;
 
-    for (uint8_t i = 0; i <= REAR_RIGHT; i++){
-        sTorque+=posTorquesNM[i];
-    }
+    FOR_EACH_ENGINE({
+        sTorque+=posTorquesNM[index_engine];
+    })
 
     power_error = total_power - power_limit; //limited by BMS temp
 
