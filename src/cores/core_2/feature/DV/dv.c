@@ -36,7 +36,7 @@ struct Dv_t{
     Gpio_h gpio_emergency_sound;
     Gpio_h gpio_ass_light_blue;
     Gpio_h gpio_ass_light_yellow;
-    const DvMission_h* dv_mission;
+    DvMission_h* dv_mission;
     const DvDriverInput_h* dv_driver_input;
     struct EmergencyNode* emergency_node;
 };
@@ -150,22 +150,24 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
                 asb_consistency_check(&self->dv_asb)
                 && giei_status >= TS_READY)
         {
-            if (giei_status == RUNNING)
-            {
-                update_dv_status(self, AS_DRIVING);
-            }
-            else if(driver_brake > 50)
-            {
-                update_dv_status(self, AS_READY);
-            }
-            else
-            {
-                update_dv_status(self, AS_OFF);
-            }
+          dv_mission_lock(self->dv_mission);
+          if (giei_status == RUNNING)
+          {
+            update_dv_status(self, AS_DRIVING);
+          }
+          else if(driver_brake > 50)
+          {
+            update_dv_status(self, AS_READY);
+          }
+          else
+          {
+            update_dv_status(self, AS_OFF);
+          }
         }
         else
         {
-            update_dv_status(self, AS_OFF);
+          dv_mission_unlock(self->dv_mission);
+          update_dv_status(self, AS_OFF);
         }
     }
 

@@ -23,9 +23,9 @@ dv_speed_init(DvSpeed_h* const restrict self )
 
     memset(p_self, 0, sizeof(*p_self));
     struct CanMailbox* dv_imu_mailbox = NULL;
-    ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        dv_imu_mailbox = hardware_get_mailbox(can_node,,); //TODO: not yet defined
-    });
+    // ACTION_ON_CAN_NODE(CAN_GENERAL,{
+    //     dv_imu_mailbox = hardware_get_mailbox(can_node,,); //TODO: not yet defined
+    // });
     if (!dv_imu_mailbox) {
         goto mailbox_fail;
     }
@@ -53,4 +53,7 @@ dv_speed_update(DvSpeed_h* const restrict self )
 }
 
 float
-dv_speed_get(DvSpeed_h* const restrict self );
+dv_speed_get(DvSpeed_h* const restrict self __attribute__((__unused__)))
+{
+  return 0;
+}
