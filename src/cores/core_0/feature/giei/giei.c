@@ -17,12 +17,12 @@
 #define M_N                                 9.8f
 
 struct Giei_t{
-    EngineType* inverter;
     Hv_h hv;
     time_var_microseconds rtd_sound_start;
     Gpio_h gpio_rtd_sound;
     GpioRead_h gpio_rtd_button;
     enum RUNNING_STATUS running_status;
+    EngineType* inverter;
     const DriverInput_h* driver_input;
     const DrivingMaps_h* driving_maps;
     const Imu_h* imu;

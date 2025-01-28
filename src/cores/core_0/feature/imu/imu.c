@@ -17,6 +17,10 @@ union GieiImu_h_t_conv_const{
     const struct Imu_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_core_0_imu[(sizeof(Imu_h)) == sizeof(struct Imu_t)? 1:-1];
+#endif // DEBUG
+
 int8_t giei_imu_init(Imu_h* const restrict self)
 {
     union GieiImu_h_t_conv conv = {self};

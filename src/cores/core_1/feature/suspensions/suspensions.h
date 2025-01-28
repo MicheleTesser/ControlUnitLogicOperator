@@ -5,7 +5,7 @@
 #include "../log/log.h"
 
 typedef struct Suspensions_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[32];
 }Suspensions_h;
 
 enum SUSP_ID{

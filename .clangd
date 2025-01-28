@@ -7,7 +7,7 @@ CompileFlags:
     -Wextra,
     -Wno-gnu-folding-constant,
     -Wno-c23-extensions,
-    -Wno-empty-translation-unit
-    -ansi
+    -Wno-empty-translation-unit,
+    -DDEBUG,
   ]
 

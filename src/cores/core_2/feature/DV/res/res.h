@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct DvRes_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[16];
 }DvRes_h;
 
 int8_t res_class_init(DvRes_h* const restrict self )__attribute__((__nonnull__(1)));

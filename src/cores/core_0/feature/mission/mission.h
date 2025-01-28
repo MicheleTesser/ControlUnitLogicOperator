@@ -4,7 +4,7 @@
 #include "../driver_input/driver_input.h"
 
 typedef struct Mission_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[24];
 }Mission_h;
 
 int8_t mission_init(Mission_h* const restrict self ,

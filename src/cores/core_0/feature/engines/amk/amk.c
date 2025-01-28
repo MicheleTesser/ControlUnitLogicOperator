@@ -92,7 +92,7 @@ union AMKConv{
     AMKInverter_t* t_ptr_name = __a_conv##t_ptr_name__.clear;
 
 #ifdef DEBUG
-const uint8_t __debug_amk_size__[(sizeof(struct AmkInverter_h) == sizeof(struct AMKInverter_t))? 1 : -1];
+const uint8_t __debug_amk_size__[(sizeof(AmkInverter_h) == sizeof(AMKInverter_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
 #define POPULATE_MEX_ENGINE(amk_stop,engine)\

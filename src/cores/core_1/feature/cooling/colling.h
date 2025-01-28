@@ -6,7 +6,7 @@
 #include "../log/log.h"
 
 typedef struct Cooling_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[16];
 }Cooling_h;
 
 enum COOLING_DEVICES{

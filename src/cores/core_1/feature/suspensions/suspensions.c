@@ -36,6 +36,10 @@ union Suspensions_h_t_conv {
     }\
 }
 
+#ifdef DEBUG
+char __assert_size_alive_suspensions[(sizeof(Suspensions_h) == sizeof(struct Suspensions_t))? 1:-1];
+#endif // DEBUG
+
 int8_t
 suspensions_init(
         Suspensions_h* const restrict self ,

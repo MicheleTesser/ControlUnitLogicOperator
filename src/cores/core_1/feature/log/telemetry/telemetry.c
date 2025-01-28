@@ -29,6 +29,10 @@ union LogTelemetry_h_t_conv{
     struct LogTelemetry_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_telemetry[(sizeof(LogTelemetry_h) == sizeof(struct LogTelemetry_t))? 1:-1];
+#endif // DEBUG
+
 static inline void push_in_json(struct Json* const restrict self,
         const char* const restrict str, const uint32_t str_len)
 {

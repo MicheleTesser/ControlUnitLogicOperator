@@ -12,6 +12,10 @@ union DvAsb_h_t_conv
     struct DvAsb_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_alive_blink[(sizeof(DvAsb_h) == sizeof(struct DvAsb_t)? 1:-1];
+#endif // DEBUG
+
 int8_t asb_class_init(DvAsb_h* const restrict self )
 {
     union DvAsb_h_t_conv conv = {self};

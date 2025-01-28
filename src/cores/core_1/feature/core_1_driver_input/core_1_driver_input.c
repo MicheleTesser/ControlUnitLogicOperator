@@ -47,6 +47,10 @@ union Core1DriverInput_h_t_conv{
     }\
 }
 
+#ifdef DEBUG
+char __assert_size_core_1_driver_input[(sizeof(Core1DriverInput_h) == sizeof(struct Core1DriverInput_t))? 1:-1];
+#endif // DEBUG
+
 int8_t
 core_1_driver_input_init(
         Core1DriverInput_h* const restrict self ,

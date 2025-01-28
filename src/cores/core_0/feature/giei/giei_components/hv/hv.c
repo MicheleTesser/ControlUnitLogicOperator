@@ -21,6 +21,10 @@ union GieiHv_const_conv{
     const struct GieiHv_t* const  clear;
 };
 
+#ifdef DEBUG
+char __assert_size_GieiHv[(sizeof(Hv_h) == sizeof(struct GieiHv_t)? 1:-1];
+#endif // DEBUG
+
 
 int8_t
 hv_init(

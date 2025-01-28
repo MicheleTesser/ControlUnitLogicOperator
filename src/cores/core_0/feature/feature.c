@@ -26,6 +26,12 @@ union Core0Feature_h_t_conv{
     struct Core0Feature_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_core_0_feature[(sizeof(Core0Feature_h)) == sizeof(struct Core0Feature_t)? 1:-1];
+#endif // DEBUG
+
+//public
+
 int8_t
 core_0_feature_init(Core0Feature_h* const restrict self )
 {

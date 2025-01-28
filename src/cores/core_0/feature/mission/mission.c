@@ -18,6 +18,10 @@ union Mission_h_t_conv
     struct Mission_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_core_0_mission[(sizeof(Mission_h)) == sizeof(struct Mission_t)? 1:-1];
+#endif // DEBUG
+
 int8_t mission_init(Mission_h* const restrict self ,
         DriverInput_h* const driver )
 {

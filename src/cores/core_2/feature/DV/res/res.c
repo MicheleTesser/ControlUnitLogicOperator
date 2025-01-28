@@ -19,6 +19,10 @@ union DvRes_h_t_conv_const{
     const struct DvRes_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_res[(sizeof(DvRes_h) == sizeof(struct DvRes_t))? 1:-1];
+#endif // DEBUG
+
 //TODO: add mailbox res message
 int8_t res_class_init(DvRes_h* const restrict self )
 {

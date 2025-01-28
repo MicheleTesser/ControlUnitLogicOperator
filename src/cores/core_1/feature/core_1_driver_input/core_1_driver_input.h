@@ -5,7 +5,7 @@
 #include "../log/log.h"
 
 typedef struct Core1DriverInput_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[40];
 }Core1DriverInput_h;
 
 int8_t

@@ -5,7 +5,7 @@
 #include "../log/log.h"
 
 typedef struct CarBatteries_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[32];
 }CarBatteries_h;
 
 int8_t

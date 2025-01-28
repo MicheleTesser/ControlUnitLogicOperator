@@ -5,7 +5,7 @@
 #include "../../../../lib/raceup_board/components/can.h"
 
 typedef struct DrivingMaps_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[264];
 }DrivingMaps_h;
 
 enum MAPS_TYPE{

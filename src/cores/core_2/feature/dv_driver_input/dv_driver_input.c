@@ -21,6 +21,10 @@ union DvDriverInput_h_t_conv_const{
     const struct DvDriverInput_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_dv_driver_input[(sizeof(DvDriverInput_h) == sizeof(struct DvDriverInput_t)? 1:-1];
+#endif // DEBUG
+
 int8_t
 dv_driver_input_init(DvDriverInput_h* const restrict self )
 {

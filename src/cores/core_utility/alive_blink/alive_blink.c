@@ -13,10 +13,15 @@ union CoreAliveBlink_h_t_conv{
     struct CoreAliveBlink_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_alive_blink[(sizeof(CoreAliveBlink_h) == sizeof(struct CoreAliveBlink_t))? 1:-1];
+#endif // DEBUG
+//public
+
 int8_t
 core_alive_blink_init(
         CoreAliveBlink_h* const restrict self,
-        enum GPIO_PIN pin_led, const time_var_microseconds freq)
+        const enum GPIO_PIN pin_led, const time_var_microseconds freq)
 {
     union CoreAliveBlink_h_t_conv conv = {self};
     struct CoreAliveBlink_t* const restrict p_self = conv.clear;

@@ -52,6 +52,10 @@ union Dv_h_t_conv{
     struct Dv_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_dv[(sizeof(Dv_h) == sizeof(struct Dv_t))? 1:-1];
+#endif // DEBUG
+
 //INFO: check dbc of can3 in message DV_system_status
 
 static uint8_t sdc_closed(const struct Dv_t* const restrict self)

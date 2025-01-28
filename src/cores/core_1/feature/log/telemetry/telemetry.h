@@ -5,7 +5,7 @@
 #include "../log_obj_types.h"
 
 typedef struct LogTelemetry_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[32];
 }LogTelemetry_h;
 
 int8_t

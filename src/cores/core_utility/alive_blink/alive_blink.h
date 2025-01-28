@@ -5,13 +5,13 @@
 #include "../../../../lib/raceup_board/raceup_board.h"
 
 typedef struct CoreAliveBlink_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[24];
 }CoreAliveBlink_h;
 
 int8_t
 core_alive_blink_init(
         CoreAliveBlink_h* const restrict self ,
-        enum GPIO_PIN pin_led, const time_var_microseconds freq)__attribute__((__nonnull__(1)));
+        const enum GPIO_PIN pin_led, const time_var_microseconds freq)__attribute__((__nonnull__(1)));
 
 int8_t
 core_alive_blink_update(CoreAliveBlink_h* const restrict self)__attribute__((__nonnull__(1)));

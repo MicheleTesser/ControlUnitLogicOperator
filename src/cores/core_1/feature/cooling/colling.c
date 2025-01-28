@@ -21,6 +21,10 @@ union Cooling_h_t_conv{
     struct Cooling_t* clear;
 };
 
+#ifdef DEBUG
+char __assert_size_cooling[(sizeof(Cooling_h) == sizeof(struct Cooling_t))? 1:-1];
+#endif // DEBUG
+
 static int8_t update_status(struct Cooling_t* const restrict self)
 {
     can_obj_can2_h_t o;

@@ -45,6 +45,10 @@ union DrivingMaps_h_t_conv_const{
     const struct DrivingMaps_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_core_0_maps[(sizeof(DrivingMaps_h)) == sizeof(struct DrivingMaps_t)? 1:-1];
+#endif // DEBUG
+
 static inline void set_pow_map(struct DrivingMaps_t* const restrict self,
         const uint8_t map_i, const float kw, const float torque)
 {

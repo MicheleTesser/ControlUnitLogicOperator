@@ -20,6 +20,10 @@ union CarBatteries_h_t_conv{
     struct CarBatteries_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_core_1_batteries[(sizeof(CarBatteries_h) == sizeof(struct CarBatteries_t))? 1:-1];
+#endif // DEBUG
+
 int8_t
 car_batteries_init(CarBatteries_h* const restrict self __attribute__((__unused__)),
         Log_h* const restrict log __attribute__((__unused__)))

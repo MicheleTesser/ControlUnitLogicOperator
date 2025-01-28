@@ -13,6 +13,10 @@ union Log_h_t_conv{
     struct Log_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_log[(sizeof(Log_h) == sizeof(struct Log_t))? 1:-1];
+#endif // DEBUG
+
 int8_t
 log_init(Log_h* const restrict self )
 {

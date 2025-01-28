@@ -24,6 +24,10 @@ union Hv_h_t_conv{
     struct Bms_t* const restrict clear;
 };
 
+#ifdef DEBUG
+char __assert_size_core_1_bms[(sizeof(Bms_h) == sizeof(struct Bms_t))? 1:-1];
+#endif // DEBUG
+
 int8_t
 bms_init(Bms_h* const restrict self ,
         const uint16_t bms_id, const uint8_t mex_size,

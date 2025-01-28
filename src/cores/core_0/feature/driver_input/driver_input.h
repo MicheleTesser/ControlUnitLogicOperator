@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct DriverInput_h{
-    uint8_t private_data[32];
+    uint8_t private_data[72];
 }DriverInput_h;
 
 enum INPUT_TYPES{
