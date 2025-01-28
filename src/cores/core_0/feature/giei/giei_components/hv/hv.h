@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct Hv_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[32];
 }Hv_h;
 
 enum GIEI_HV_INFO{
