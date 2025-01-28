@@ -48,8 +48,8 @@ void powerControl(const float total_power, const float power_limit,
 
     if (reduction_factor > 0)
     {
-        for (uint8_t i = 0; (i < __NUM_OF_ENGINES__); i++){
-            posTorquesNM[i] = posTorquesNM[i] - (reduction_factor*posTorquesNM[i]);
-        }
+        FOR_EACH_ENGINE({
+            posTorquesNM[index_engine] -= (reduction_factor*posTorquesNM[index_engine]);
+        })
     }
 }
