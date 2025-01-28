@@ -15,16 +15,20 @@
 
 
 typedef  uint8_t BoardComponentId;
+#define NUM_OF_MAILBOX 256
 
 struct CanNode{
     uint8_t can_fd;
     atomic_flag taken;
     uint8_t init_done:1;
     uint8_t mex_to_read:1;
+    uint8_t read_mailbox[NUM_OF_MAILBOX];
+    uint8_t last_read_m;
+    uint8_t write_mailbox[NUM_OF_MAILBOX];
+    uint8_t last_write_m;
 };
 
 struct CanMailbox{
-    const struct CanNode* can_node;
     CanMessage mex;
     uint8_t mailbox_mode:1;
     atomic_bool action_flag_mailbox;
@@ -40,16 +44,41 @@ static struct{
     struct CanNode nodes[__NUM_OF_CAN_MODULES__];
 }BOARD_CAN_NODES;
 
-#define NUM_OF_MAILBOX 256
 static struct{
     struct CanMailbox mailbox_pool[NUM_OF_MAILBOX];
     uint16_t last_assigned;
 }MAILBOX_MANAGER;
 
-static int virtual_can_manager(void* args __attribute_maybe_unused__)
+static int read_mailbox_f(void* args )
 {
-    for (uint8_t i=0; i<MAILBOX_MANAGER.last_assigned; i= (i+1)%NUM_OF_MAILBOX) {
-           
+    struct CanNode * const restrict node = args;
+    for (;;) {
+        CanMessage mex={0};
+        hardware_read_can(node, &mex);
+        for (uint8_t i=0; i<node->last_read_m; i++)
+        {
+            struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->read_mailbox[i]];
+            if (m->mex.id == mex.id)
+            {
+                memcpy(&m->mex, &mex, sizeof(mex));
+                atomic_store(&m->action_flag_mailbox, 1);
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+static int write_mailbox_f(void* args)
+{
+    struct CanNode * const restrict node = args;
+    for (uint8_t i=0; i<node->last_write_m; i= (i+1)%node->last_write_m) {
+        struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->write_mailbox[i]];
+        if (atomic_load(&m->action_flag_mailbox))
+        {
+            hardware_write_can(node,&m->mex);
+            atomic_store(&m->action_flag_mailbox, 0);
+        }
     }
     return 0;
 }
@@ -59,7 +88,13 @@ static int virtual_can_manager(void* args __attribute_maybe_unused__)
 int8_t virtual_can_manager_init(void)
 {
     thrd_t thrd;
-    return thrd_create(&thrd, virtual_can_manager, NULL);
+    thrd_t thrd1;
+    thrd_t thrd2;
+    thrd_t thrd3;
+    return thrd_create(&thrd, write_mailbox_f, NULL);
+    return thrd_create(&thrd1, read_mailbox_f, &BOARD_CAN_NODES.nodes[0]);
+    return thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
+    return thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
 }
 
 
@@ -144,7 +179,7 @@ hardware_write_can(const struct CanNode* const restrict self ,
 }
 
 struct CanMailbox*
-hardware_get_mailbox(const struct CanNode* const restrict self,
+hardware_get_mailbox(struct CanNode* const restrict self,
         const uint16_t mex_id, const uint16_t mex_size)
 {
     struct CanMailbox* mailbox;
@@ -156,18 +191,18 @@ hardware_get_mailbox(const struct CanNode* const restrict self,
 
     mailbox = &MAILBOX_MANAGER.mailbox_pool[maillbox_index];
 
-    mailbox->can_node = self;
     mailbox->mex.id = mex_id;
     mailbox->mex.message_size = mex_size;
     mailbox->init_done=1;
     mailbox->mailbox_mode =MAILBOX_RECV;
 
+    self->read_mailbox[self->last_read_m++]=maillbox_index;
 
     return  mailbox;
 }
 
 struct CanMailbox*
-hardware_get_mailbox_send(const struct CanNode* const restrict self,
+hardware_get_mailbox_send(struct CanNode* const restrict self,
         const uint16_t mex_id, const uint16_t mex_size)
 {
     struct CanMailbox* mailbox;
@@ -179,11 +214,12 @@ hardware_get_mailbox_send(const struct CanNode* const restrict self,
 
     mailbox = &MAILBOX_MANAGER.mailbox_pool[maillbox_index];
 
-    mailbox->can_node = self;
     mailbox->mex.id = mex_id;
     mailbox->mex.message_size = mex_size;
     mailbox->init_done=1;
     mailbox->mailbox_mode =MAILBOX_SEND;
+
+    self->write_mailbox[self->last_write_m++]=maillbox_index;
 
     return mailbox;
 }

@@ -82,11 +82,11 @@ hardware_write_can(const struct CanNode* const restrict self ,
         const CanMessage* restrict const mex )__attribute__((__nonnull__(1,2)));
 
 extern struct CanMailbox*
-hardware_get_mailbox(const struct CanNode* const restrict self,
+hardware_get_mailbox(struct CanNode* const restrict self,
         const uint16_t mex_id, const uint16_t mex_size)__attribute__((__nonnull__(1)));
 
 extern struct CanMailbox*
-hardware_get_mailbox_send(const struct CanNode* const restrict self,
+hardware_get_mailbox_send(struct CanNode* const restrict self,
         const uint16_t mex_id, const uint16_t mex_size)__attribute__((__nonnull__(1)));
 
 extern int8_t
