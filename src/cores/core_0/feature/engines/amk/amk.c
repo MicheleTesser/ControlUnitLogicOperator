@@ -384,7 +384,6 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
     p_self->amk_emergency = EmergencyNode_new(__NUM_OF_AMK_EMERGENCY__);
     p_self->driver_input = p_driver_input;
     if (!p_self->amk_emergency) {
-        EmergencyNode_free(p_self->amk_emergency);
         return -1;
     }
     p_self->can_inverter = hardware_init_can_get_ref_node(CAN_INVERTER);

@@ -1,5 +1,5 @@
 #include "torque_vec_alg.h"
-#include "../engines/engine_common.h"
+#include "../../../engines/engines.h"
 #include "../../../../../../lib/TV/Torque_Vectoring_2024_forsecontiu.h"
 
 
@@ -9,7 +9,7 @@ void tv_alg_init(void)
 }
 
 void tv_alg_compute(const struct TVInputArgs* const restrict input,
-        float o_posTorquesNM[NUM_OF_EGINES])
+        float o_posTorquesNM[__NUM_OF_ENGINES__])
 {
     rtU.ax = input->ax; // m/s^2
     rtU.ay = input->ay; // m/s^2

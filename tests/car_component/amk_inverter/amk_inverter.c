@@ -1,7 +1,6 @@
 #include "amk_inverter.h"
 #include "../../linux_board/linux_board.h"
-#include "../src/board_conf/id_conf.h"
-#include "../src/GIEI/engine_common.h"
+#include "../src/cores/core_0/feature/engines/engines.h"
 #include "../src/lib/board_dbc/dbc/out_lib/can1/can1.h"
 
 #include <stdint.h>
@@ -102,7 +101,7 @@ static __attribute_maybe_unused__ void send_data_engine(const uint16_t can_id)
     mex.message_size = pack_message_can1(&o, can_id, &mex.full_word);
     uint8_t raise_interrupt_v = 1;
     write(INVERTER.pipe_interrupt, &raise_interrupt_v, sizeof(raise_interrupt_v));
-    hardware_write_can(CAN_MODULE_INVERTER, &mex);
+    // hardware_write_can(CAN_MODULE_INVERTER, &mex);
 }
 
 static int inverter_start(void* args __attribute_maybe_unused__)

@@ -7,7 +7,7 @@ void regen_alg_init(void)
 }
 
 void regen_alg_compute
-    (const struct RegenAlgInput* const restrict input,float o_negTorquesNM[NUM_OF_EGINES])
+    (const struct RegenAlgInput* const restrict input,float o_negTorquesNM[__NUM_OF_ENGINES__])
 {
     rigen_fun_simulink22_U.voltage = input->battery_pack_tension;
     rigen_fun_simulink22_U.rpmFL = input->front_left_velocity;

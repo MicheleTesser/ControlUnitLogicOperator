@@ -94,7 +94,7 @@ driver_input_update(DriverInput_h* const restrict self )
     struct DriverInput_t* const restrict p_self = conv.clear;
     can_obj_can2_h_t o2;
     CanMessage mex;
-    const struct CanMailbox* mailbox = NULL;
+    struct CanMailbox* mailbox = NULL;
     index_tye index_input = 0;
 
     switch (p_self->current_driver) {

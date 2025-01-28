@@ -9,7 +9,7 @@
 typedef void (*interrupt_fun) (void);
 
 enum INTERRUPT_SLOT{
-    INTERRUPT_CAN_INVERTER,
+    __NUM_OF_INTERRUPT__
 };
 
 extern int8_t hardware_init_interrupt(void);

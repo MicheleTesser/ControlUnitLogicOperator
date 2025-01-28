@@ -64,11 +64,15 @@ int8_t hardware_init_interrupt(void)
     return 0;
 }
 
-int8_t hardware_interrupt_attach_fun(const BoardComponentId fun_id,
+int8_t hardware_interrupt_attach_fun(const enum INTERRUPT_SLOT interrupt_id,
         const interrupt_fun fun)
 {
+    if (interrupt_id == __NUM_OF_INTERRUPT__)
+    {
+        return -1;
+    }
     wait_init();
-    interrupt_info.interrupt_table[fun_id] = fun;
+    interrupt_info.interrupt_table[interrupt_id] = fun;
     return 0;
 }
 
