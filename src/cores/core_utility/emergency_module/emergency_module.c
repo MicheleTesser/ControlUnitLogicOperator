@@ -7,7 +7,7 @@
 //private
 
 struct EmergencyNode{
-    uint8_t emergency_state : 1;
+    uint8_t* emergency_state;
     uint8_t emergency_amount;
     uint8_t emergency_buffer[];
 };
@@ -68,7 +68,7 @@ void EmergencyNode_raise(struct EmergencyNode* const restrict self, const uint8_
     const uint8_t exception_bit = exeception % 8;
     self->emergency_buffer[exception_byte] |= (1 << exception_bit);
     if (!self->emergency_state) {
-        self->emergency_state = 1;
+        self->emergency_state = &EXCEPTION_COUNTER.excepion_counter;
         hardware_raise_trap(EMERGENCY_RAISED_TRAP);
     }
 }
@@ -97,7 +97,7 @@ void EmergencyNode_solve(struct EmergencyNode* const restrict self, const uint8_
 
 uint8_t EmergencyNode_is_emergency_state(struct EmergencyNode* const restrict self)
 {
-    return self->emergency_state;
+    return *self->emergency_state;
 }
 
 void EmergencyNode_free(struct EmergencyNode* const restrict self)
