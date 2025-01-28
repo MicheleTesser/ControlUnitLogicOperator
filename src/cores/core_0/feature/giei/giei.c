@@ -7,7 +7,7 @@
 #include "giei_components/giei_components.h"
 #include "giei_components/hv/hv.h"
 #include "giei_components/speed_alg/speed_alg.h"
-#include "math_saturated/saturated.h"
+#include "../math_saturated/saturated.h"
 
 #include <stdint.h>
 #include <string.h>
