@@ -1,9 +1,11 @@
 #include "asb.h"
 #include "ebs/ebs.h"
+#include <stdint.h>
 #include <string.h>
 
 struct DvAsb_t{
     DvEbs_h dv_ebs;
+    const uint8_t filler[1];
 };
 
 union DvAsb_h_t_conv
@@ -13,7 +15,7 @@ union DvAsb_h_t_conv
 };
 
 #ifdef DEBUG
-char __assert_size_alive_blink[(sizeof(DvAsb_h) == sizeof(struct DvAsb_t)? 1:-1];
+char __assert_size_asb[(sizeof(DvAsb_h) == sizeof(struct DvAsb_t))? 1:-1];
 #endif // DEBUG
 
 int8_t asb_class_init(DvAsb_h* const restrict self )
@@ -43,7 +45,7 @@ int8_t asb_update(DvAsb_h* const restrict self )
     return 0;
 }
 
-int8_t asb_consistency_check(DvAsb_h* const restrict self )
+int8_t asb_consistency_check(DvAsb_h* const restrict self __attribute__((__unused__)))
 {
     //TODO: not yet defined
 

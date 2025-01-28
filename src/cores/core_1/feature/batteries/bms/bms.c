@@ -14,7 +14,7 @@ enum VOLTS{
 };
 
 struct Bms_t{
-    const struct CanMailbox* mailbox;
+    struct CanMailbox* mailbox;
     uint16_t volts[__NUM_OF_VOLTS__];
     uint8_t soc;
 };
@@ -31,8 +31,8 @@ char __assert_size_core_1_bms[(sizeof(Bms_h) == sizeof(struct Bms_t))? 1:-1];
 int8_t
 bms_init(Bms_h* const restrict self ,
         const uint16_t bms_id, const uint8_t mex_size,
-        const char* const restrict bms_name,
-        Log_h* const restrict log __attribute__((__unused__)))
+        const char* const restrict bms_name __attribute__((__unused__)),
+        Log_h* const restrict log)
 {
     union Hv_h_t_conv conv = {self};
     struct Bms_t* const restrict p_self = conv.clear;

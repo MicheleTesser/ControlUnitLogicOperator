@@ -10,10 +10,8 @@
 typedef void (*trap_fun) (void);
 
 enum TRAP_SLOT{
-    TRAP__0__,
-    TRAP__1__,
-    TRAP__2__,
-    TRAP__3__,
+    EMERGENCY_RAISED_TRAP,
+    EMERGENCY_SOLVED_TRAP,
     TRAP_INPUT_RTD_TOGGLE,
 };
 

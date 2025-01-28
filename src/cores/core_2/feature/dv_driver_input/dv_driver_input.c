@@ -22,7 +22,7 @@ union DvDriverInput_h_t_conv_const{
 };
 
 #ifdef DEBUG
-char __assert_size_dv_driver_input[(sizeof(DvDriverInput_h) == sizeof(struct DvDriverInput_t)? 1:-1];
+char __assert_size_dv_driver_input[(sizeof(DvDriverInput_h) == sizeof(struct DvDriverInput_t))? 1:-1];
 #endif // DEBUG
 
 int8_t
@@ -33,7 +33,9 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
 
     memset(p_self, 0, sizeof(*p_self));
 
-    p_self->dv_brake_mailbox = hardware_get_mailbox(); //TODO: not yet defined
+    ACTION_ON_CAN_NODE(CAN_DV,{
+        p_self->dv_brake_mailbox = hardware_get_mailbox(can_node, CAN_ID_DV_DRIVER,3);
+    })
     if (!p_self->dv_brake_mailbox)
     {
         return -1;

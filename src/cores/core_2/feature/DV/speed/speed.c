@@ -1,5 +1,6 @@
 #include "speed.h"
 #include "imu/imu.h"
+#include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -21,7 +22,10 @@ dv_speed_init(DvSpeed_h* const restrict self )
     struct DvSpeed_t* const restrict p_self = conv.clear;
 
     memset(p_self, 0, sizeof(*p_self));
-    struct CanMailbox* const dv_imu_mailbox = hardware_get_mailbox(); //TODO: not yet defined
+    struct CanMailbox* dv_imu_mailbox = NULL;
+    ACTION_ON_CAN_NODE(CAN_GENERAL,{
+        dv_imu_mailbox = hardware_get_mailbox(can_node,,); //TODO: not yet defined
+    });
     if (!dv_imu_mailbox) {
         goto mailbox_fail;
     }

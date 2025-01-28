@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../driver_input/driver_input.h"
 #include "../../../../lib/raceup_board/components/can.h"
+#include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 
 struct Mission_t{
     DriverInput_h* p_driver;
@@ -31,7 +32,9 @@ int8_t mission_init(Mission_h* const restrict self ,
 
     p_self->p_driver = driver;
     p_self->m_type = DRIVER_NONE;
-    p_self->mission_mailbox = hardware_get_mailbox(); //TODO: message not yet defined
+    ACTION_ON_CAN_NODE(CAN_GENERAL,{
+        p_self->mission_mailbox = hardware_get_mailbox(can_node, CAN_ID_CARMISSION, 1);
+    });
     if (!p_self->mission_mailbox)
     {
         return -1;

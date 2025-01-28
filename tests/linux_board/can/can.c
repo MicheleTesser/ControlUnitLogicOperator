@@ -15,7 +15,7 @@
 
 
 typedef  uint8_t BoardComponentId;
-#define NUM_OF_MAILBOX 256
+#define NUM_OF_MAILBOX 1024
 
 struct CanNode{
     uint8_t can_fd;

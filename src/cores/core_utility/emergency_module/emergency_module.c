@@ -6,9 +6,6 @@
 
 //private
 
-#define EMERGENCY_RAISED_TRAP __0__
-#define EMERGENCY_SOLVED_TRAP __1__
-
 struct EmergencyNode{
     uint8_t emergency_state : 1;
     uint8_t emergency_amount;
@@ -50,7 +47,7 @@ struct EmergencyNode* EmergencyNode_new(const uint8_t num_exception)
         return NULL;
     }
 
-    if (!EXCEPTION_COUNTER.gpio_scs && hardware_init_gpio(&EXCEPTION_COUNTER.gpio_scs, GPIO_SCS)<0)
+    if (hardware_init_gpio(&EXCEPTION_COUNTER.gpio_scs, GPIO_SCS)<0)
     {
         return NULL;   
     }

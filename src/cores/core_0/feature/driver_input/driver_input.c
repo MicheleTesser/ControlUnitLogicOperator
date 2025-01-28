@@ -1,5 +1,6 @@
 #include "driver_input.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 #include <string.h>
@@ -62,11 +63,15 @@ int8_t driver_input_init(struct DriverInput_h* const restrict self)
         return -1;
     }
 
+    p_self->current_driver = DRIVER_NONE;
+
     ACTION_ON_CAN_NODE(CAN_GENERAL,{
         p_self->drivers_mailboxes[DRIVER_HUMAN] = hardware_get_mailbox(can_node, CAN_ID_DRIVER,4);
-        p_self->drivers_mailboxes[DRIVER_EMBEDDED] = hardware_get_mailbox(); //TODO: not yet defined
-        p_self->current_driver = DRIVER_NONE;
     });
+    ACTION_ON_CAN_NODE(CAN_DV,{
+        p_self->drivers_mailboxes[DRIVER_EMBEDDED] =
+            hardware_get_mailbox(can_node, CAN_ID_DV_DRIVER,3);
+    })
 
     return 0;
 }
@@ -103,8 +108,16 @@ driver_input_update(DriverInput_h* const restrict self )
             if (hardware_mailbox_read(mailbox, &mex)>0) {
                 unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
                 index_input = compute_data_index(p_self, THROTTLE);
+                if (index_input<0)
+                {
+                    return -1;
+                }
                 p_self->driver_data[index_input] = o2.can_0x053_Driver.throttle;
                 index_input = compute_data_index(p_self, BRAKE);
+                if (index_input<0)
+                {
+                    return -1;
+                }
                 p_self->driver_data[index_input] = o2.can_0x053_Driver.brake;
             }
             break;
