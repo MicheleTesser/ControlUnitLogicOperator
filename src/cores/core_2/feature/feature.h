@@ -1,7 +1,3 @@
-#ifndef __CORE_2_FEATURES__
-
-#endif // !__CORE_2_FEATURES__
-
 #ifndef __CORE_2_FEATURE__
 #define __CORE_2_FEATURE__
 
