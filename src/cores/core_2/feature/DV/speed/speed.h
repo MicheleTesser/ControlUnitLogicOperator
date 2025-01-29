@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct DvSpeed_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[8];
 }DvSpeed_h;
 
 int8_t

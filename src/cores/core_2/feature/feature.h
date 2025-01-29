@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 typedef struct Core2Feature_h{
-    const uint8_t private_data[144];
+    const uint8_t private_data[152];
 }Core2Feature_h;
 
 int8_t

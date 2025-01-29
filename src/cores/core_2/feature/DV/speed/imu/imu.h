@@ -5,7 +5,7 @@
 #include "../../../../../../lib/raceup_board/components/can.h"
 
 typedef struct DvImu_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[8];
 }DvImu_h;
 
 enum DV_IMU_DATA{
@@ -14,8 +14,7 @@ enum DV_IMU_DATA{
 };
 
 int8_t
-dv_imu_init(DvImu_h* const restrict self,
-        const struct CanMailbox* const restrict mailbox)__attribute__((__nonnull__(1,2)));
+dv_imu_init(DvImu_h* const restrict self)__attribute__((__nonnull__(1)));
 
 int8_t
 dv_imu_update(DvImu_h* const restrict self)__attribute__((__nonnull__(1)));
