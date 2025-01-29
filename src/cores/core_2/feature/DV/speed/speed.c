@@ -14,7 +14,7 @@ union DvSpeed_h_t_conv{
 };
 
 #ifdef DEBUG
-  uint8_t __assert_size_dv_imu[(sizeof(DvSpeed_h) == sizeof(struct DvSpeed_t))? 1 : -1];
+  uint8_t __assert_size_dv_speed[(sizeof(DvSpeed_h) == sizeof(struct DvSpeed_t))? 1 : -1];
 #endif // DEBUG
 
 int8_t
