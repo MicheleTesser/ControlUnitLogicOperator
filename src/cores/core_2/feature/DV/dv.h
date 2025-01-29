@@ -6,7 +6,7 @@
 #include "../mission/mission.h"
 
 typedef struct Dv_h{
-    const uint8_t private_data[96];
+    const uint8_t private_data[112];
 }Dv_h;
 
 int8_t
