@@ -94,12 +94,12 @@ int8_t virtual_can_manager_init(void)
 {
     thrd_t thrd;
     thrd_t thrd1;
-    // thrd_t thrd2;
-    // thrd_t thrd3;
+    thrd_t thrd2;
+    thrd_t thrd3;
     return thrd_create(&thrd, write_mailbox_f, NULL);
     return thrd_create(&thrd1, read_mailbox_f, &BOARD_CAN_NODES.nodes[0]);
-    // return thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
-    // return thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
+    return thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
+    return thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
 }
 
 
