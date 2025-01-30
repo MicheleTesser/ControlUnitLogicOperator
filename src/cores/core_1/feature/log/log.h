@@ -7,12 +7,12 @@
 #define LOG_ENTRY_NAME_MAX_SIZE 32
 
 typedef struct LogEntry_h{
-    const uint8_t log_mode:2;
-    const enum DATA_MODE data_mode: 2;
-    const uint32_t data_min;
-    const uint32_t data_max;
-    const void* const data_ptr;
-    const char name[LOG_ENTRY_NAME_MAX_SIZE];
+    uint8_t log_mode:2;
+    enum DATA_MODE data_mode: 2;
+    uint32_t data_min;
+    uint32_t data_max;
+    const void* data_ptr;
+    char name[LOG_ENTRY_NAME_MAX_SIZE];
 }LogEntry_h;
 
 enum LOG_MODE{

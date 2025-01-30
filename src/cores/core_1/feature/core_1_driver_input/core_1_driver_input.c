@@ -100,4 +100,9 @@ core_1_driver_input_init(
 }
 
 int8_t
-core_1_driver_input_update(Core1DriverInput_h* const restrict self);
+core_1_driver_input_update(Core1DriverInput_h* const restrict self)
+{
+  union Core1DriverInput_h_t_conv conv = {self};
+  struct Core1DriverInput_t* const restrict p_self __attribute__((__unused__))= conv.clear;
+  return 0;
+}

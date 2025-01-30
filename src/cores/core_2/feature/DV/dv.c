@@ -292,6 +292,8 @@ int8_t dv_update(Dv_h* const restrict self )
 {
   union Dv_h_t_conv conv = {self};
   struct Dv_t* const p_self = conv.clear;
+  const uint8_t input_stw_alg= 1;
+  uint8_t output_stw_alg = 1;
 
   if(dv_speed_update(&p_self->dv_speed)<0)return -1;
   if(asb_update(&p_self->dv_asb)<0) return -2;
@@ -300,7 +302,7 @@ int8_t dv_update(Dv_h* const restrict self )
   if(dv_update_led(p_self)<0) return -4;
   if (p_self->status == AS_DRIVING && dv_mission_get_current(p_self->dv_mission) > MANUALY)
   {
-    dv_stw_alg_compute(0, 0); //TODO: not yet implemented
+    dv_stw_alg_compute(&input_stw_alg, &output_stw_alg); //TODO: not yet implemented
   }
   if (dv_send_dv_car_status(p_self)<0)
   {

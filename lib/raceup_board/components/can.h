@@ -103,7 +103,8 @@ hardware_free_mailbox_can(struct CanMailbox* const* restrict self )
 
 #define ACTION_ON_CAN_NODE(node,exp)\
 {\
-    struct CanNode* can_node = hardware_init_can_get_ref_node(node);\
+    struct CanNode* can_node = NULL;\
+    while (!can_node) can_node = hardware_init_can_get_ref_node(node);\
     exp;\
     hardware_init_can_destroy_ref_node(&can_node);\
 }
