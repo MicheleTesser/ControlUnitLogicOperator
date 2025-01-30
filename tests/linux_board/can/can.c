@@ -18,14 +18,14 @@ typedef  uint8_t BoardComponentId;
 #define NUM_OF_MAILBOX 1024
 
 struct CanNode{
-    uint8_t can_fd;
-    atomic_flag taken;
-    uint8_t init_done:1;
-    uint8_t mex_to_read:1;
-    uint8_t read_mailbox[NUM_OF_MAILBOX];
-    uint8_t last_read_m;
-    uint8_t write_mailbox[NUM_OF_MAILBOX];
-    uint8_t last_write_m;
+  uint8_t can_fd;
+  atomic_flag taken;
+  uint8_t init_done:1;
+  uint8_t mex_to_read:1;
+  uint8_t read_mailbox[NUM_OF_MAILBOX];
+  uint8_t last_read_m;
+  uint8_t write_mailbox[NUM_OF_MAILBOX];
+  uint8_t last_write_m;
 };
 
 struct CanMailbox{
@@ -52,8 +52,10 @@ static struct{
 static int read_mailbox_f(void* args )
 {
     struct CanNode * const restrict node = args;
+    while (!node->init_done) {}
     for (;;) {
         CanMessage mex={0};
+        printf("can node: %d\n", node->can_fd);
         hardware_read_can(node, &mex);
         for (uint8_t i=0; i<node->last_read_m; i++)
         {
@@ -71,16 +73,19 @@ static int read_mailbox_f(void* args )
 
 static int write_mailbox_f(void* args)
 {
-    struct CanNode * const restrict node = args;
-    for (uint8_t i=0; i<node->last_write_m; i= (i+1)%node->last_write_m) {
-        struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->write_mailbox[i]];
-        if (atomic_load(&m->action_flag_mailbox))
-        {
-            hardware_write_can(node,&m->mex);
-            atomic_store(&m->action_flag_mailbox, 0);
-        }
+  return 0;
+  struct CanNode * const restrict node = args;
+  while (!node->init_done) {}
+  printf("can node: %d\n", node->can_fd);
+  for (uint8_t i=0; i<node->last_write_m; i= (i+1)%node->last_write_m) {
+    struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->write_mailbox[i]];
+    if (atomic_load(&m->action_flag_mailbox))
+    {
+      hardware_write_can(node,&m->mex);
+      atomic_store(&m->action_flag_mailbox, 0);
     }
-    return 0;
+  }
+  return 0;
 }
 
 //public
@@ -89,12 +94,12 @@ int8_t virtual_can_manager_init(void)
 {
     thrd_t thrd;
     thrd_t thrd1;
-    thrd_t thrd2;
-    thrd_t thrd3;
+    // thrd_t thrd2;
+    // thrd_t thrd3;
     return thrd_create(&thrd, write_mailbox_f, NULL);
     return thrd_create(&thrd1, read_mailbox_f, &BOARD_CAN_NODES.nodes[0]);
-    return thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
-    return thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
+    // return thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
+    // return thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
 }
 
 
@@ -102,31 +107,31 @@ int8_t
 hardware_init_can(const enum CAN_MODULES mod,
         const enum CAN_FREQUENCY baud_rate __attribute__((__unused__)))
 {
-    uint8_t can_fd;
-    if (mod == __NUM_OF_CAN_MODULES__)
-    {
-        return -1;
-    }
-    while(atomic_flag_test_and_set(&BOARD_CAN_NODES.nodes[mod].taken));
-    switch (mod) {
-        case 0:
-            can_fd = can_init(CAN_INTERFACE_0);
-            break;
-        case 1:
-            can_fd = can_init(CAN_INTERFACE_1);
-            break;
-        case 2:
-            can_fd = can_init(CAN_INTERFACE_2);
-            break;
-        default:
-            atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
-            return -1;
-    }
-    BOARD_CAN_NODES.nodes[mod].can_fd = can_fd;
-    BOARD_CAN_NODES.nodes[mod].init_done =1;
+  uint8_t can_fd;
+  if (mod == __NUM_OF_CAN_MODULES__)
+  {
+    return -1;
+  }
+  while(atomic_flag_test_and_set(&BOARD_CAN_NODES.nodes[mod].taken));
+  switch (mod) {
+    case 0:
+      can_fd = can_init(CAN_INTERFACE_0);
+      break;
+    case 1:
+      can_fd = can_init(CAN_INTERFACE_1);
+      break;
+    case 2:
+      can_fd = can_init(CAN_INTERFACE_2);
+      break;
+    default:
+      atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
+      return -1;
+  }
+  BOARD_CAN_NODES.nodes[mod].can_fd = can_fd;
+  BOARD_CAN_NODES.nodes[mod].init_done =1;
 
-    atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
-    return 0;
+  atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
+  return 0;
 }
 
 struct CanNode*
@@ -174,7 +179,6 @@ hardware_write_can(const struct CanNode* const restrict self ,
     frame.len = mex->message_size;
     memcpy(frame.data, mex->buffer, mex->message_size);
     can_send_frame(can_node, &frame);
-    close(can_node);
     return 0;
 }
 
