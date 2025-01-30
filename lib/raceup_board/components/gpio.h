@@ -18,12 +18,12 @@ enum GPIO_PIN{
 };
 
 typedef struct GpioRead_h{
-    const uint8_t private_data[1];
+    const uint8_t private_data[4];
 }GpioRead_h;
 
 typedef struct Gpio_h{
     const GpioRead_h gpio_read_permission;
-    const uint8_t private_data[1];
+    const uint8_t private_data[4];
 }Gpio_h;
 
 

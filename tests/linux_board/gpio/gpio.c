@@ -20,10 +20,31 @@ struct GpioRead_t{
     enum GPIO_PIN gpio_id;
 };
 
+union GpioRead_h_t_conv{
+  GpioRead_h* const restrict hidden;
+  struct GpioRead_t* const restrict clear;
+};
+
 struct Gpio_t{
     struct GpioRead_t read;
     const uint8_t filler_data;
 };
+
+union Gpio_h_t_conv{
+  Gpio_h* const restrict hidden;
+  struct Gpio_t* const restrict clear;
+};
+
+#ifdef DEBUG
+
+uint8_t __static_size_check_gpio_read[(sizeof(GpioRead_h) == sizeof(struct GpioRead_t))?1:-1];
+uint8_t __static_size_check_gpio_read[(sizeof(Gpio_h) == sizeof(struct Gpio_t))?1:-1];
+
+#endif /* ifdef DEBUG
+
+uint8_t __static_size_check_gpio_read[(sizeof(GpioRead_h) == sizeof()]; */
+
+//public
 
 int8_t create_virtual_chip(void)
 {
@@ -119,7 +140,7 @@ int8_t
 hardware_init_read_permission_gpio(GpioRead_h* const restrict self,
         const enum GPIO_PIN id)
 {
-    struct GpioRead_t * p_self = (struct GpioRead_t*) self;
+    struct GpioRead_t* p_self = (struct GpioRead_t*) self;
     p_self->gpio_id = id;
     return 0;
 }

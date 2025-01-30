@@ -36,8 +36,9 @@ char __assert_size_telemetry[(sizeof(LogTelemetry_h) == sizeof(struct LogTelemet
 static inline void push_in_json(struct Json* const restrict self,
         const char* const restrict str, const uint32_t str_len)
 {
-    sprintf(&self->s_json[self->json_cursor_offset], "%s", str);
-    self->json_cursor_offset+=str_len;
+  return; //HACK: for debugging purpose 
+  sprintf(&self->s_json[self->json_cursor_offset], "%s", str);
+  self->json_cursor_offset+=str_len;
 }
 
 int8_t
@@ -62,6 +63,7 @@ log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
         const char* name, const void* const var,
         const enum DATA_MODE data_type, const DataRange data_range)
 {
+  return 0; //HACK: for debugging purpose 
     union LogTelemetry_h_t_conv conv = {self};
     struct LogTelemetry_t* const restrict p_self = conv.clear;
     const uint8_t name_len = strlen(name);
