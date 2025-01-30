@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "../driver_input/driver_input.h"
-#include "../../../../lib/raceup_board/components/can.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 
 struct Mission_t{
@@ -46,21 +46,22 @@ int8_t mission_init(Mission_h* const restrict self ,
 
 int8_t mission_update(Mission_h* const restrict self )
 {
-    union Mission_h_t_conv conv = {self};
-    struct Mission_t* const restrict p_self = conv.clear;
-    CanMessage mex;
+  union Mission_h_t_conv conv = {self};
+  struct Mission_t* const restrict p_self = conv.clear;
+  can_obj_can2_h_t o2;
+  CanMessage mex;
 
-    if (!p_self->lock_mission 
-            && hardware_mailbox_read(p_self->mission_mailbox, &mex)>0
-            && p_self->m_type != mex.full_word)
-    {
-        //TODO: unpack data
-        p_self->m_type = mex.full_word;
-        driver_input_change_driver(p_self->p_driver, p_self->m_type);
-        return 0;
-    }
+  if (!p_self->lock_mission 
+      && hardware_mailbox_read(p_self->mission_mailbox, &mex)>0
+      && p_self->m_type != mex.full_word)
+  {
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    p_self->m_type = o2.can_0x067_CarMission.Mission;
+    driver_input_change_driver(p_self->p_driver, p_self->m_type);
+    return 0;
+  }
 
-    return -1;
+  return -1;
 
 }
 void mission_lock(Mission_h* const restrict self )
