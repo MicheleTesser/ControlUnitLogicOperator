@@ -106,14 +106,14 @@ static void init_repartition_maps(struct DrivingMaps_t* const restrict self)
 {
     set_repartition_map(self, 0, 0.50f, 1);
     set_repartition_map(self, 1, 1.0f, 0);
-    set_repartition_map(self, 2, 0.82f, 18);
-    set_repartition_map(self, 3, 0.80f, 20);
-    set_repartition_map(self, 4, 0.78f, 22);
-    set_repartition_map(self, 5, 0.75f, 25);
-    set_repartition_map(self, 6, 0.70f, 30);
-    set_repartition_map(self, 7, 0.60f, 40);
-    set_repartition_map(self, 8, 0.50f, 50);
-    set_repartition_map(self, 9, 0.50f, 50);
+    set_repartition_map(self, 2, 0.82f, 0);
+    set_repartition_map(self, 3, 0.80f, 0);
+    set_repartition_map(self, 4, 0.78f, 0);
+    set_repartition_map(self, 5, 0.75f, 0);
+    set_repartition_map(self, 6, 0.70f, 0);
+    set_repartition_map(self, 7, 0.60f, 0);
+    set_repartition_map(self, 8, 0.50f, 0);
+    set_repartition_map(self, 9, 0.50f, 0);
 }
 
 int8_t
@@ -147,7 +147,7 @@ driving_map_update(DrivingMaps_h* const restrict self )
     struct DrivingMaps_t* const restrict p_self = conv.clear;
     can_obj_can2_h_t o;
     CanMessage mex;
-    if(!hardware_mailbox_read(p_self->map_mailbox,&mex)){
+    if(hardware_mailbox_read(p_self->map_mailbox,&mex)>=0){
         unpack_message_can2(&o, CAN_ID_MAP, mex.full_word, mex.message_size, timer_time_now());
         p_self->power_map.active = o.can_0x064_Map.power;
         p_self->regen_map.active = o.can_0x064_Map.regen;

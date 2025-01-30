@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/cdefs.h>
 #include <threads.h>
+#include <unistd.h>
 
 #define CAN_INTERFACE_0 "culo_can_0"
 #define CAN_INTERFACE_1 "culo_can_1"
@@ -18,6 +19,7 @@ typedef  uint8_t BoardComponentId;
 #define NUM_OF_MAILBOX 1024
 
 struct CanNode{
+  const char* can_interface;
   uint8_t can_fd;
   atomic_flag taken;
   uint8_t init_done:1;
@@ -51,24 +53,23 @@ static struct{
 
 static int read_mailbox_f(void* args )
 {
-    struct CanNode * const restrict node = args;
-    while (!node->init_done) {}
-    for (;;) {
-        CanMessage mex={0};
-        printf("can node: %d\n", node->can_fd);
-        hardware_read_can(node, &mex);
-        for (uint8_t i=0; i<node->last_read_m; i++)
-        {
-            struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->read_mailbox[i]];
-            if (m->mex.id == mex.id)
-            {
-                memcpy(&m->mex, &mex, sizeof(mex));
-                atomic_store(&m->action_flag_mailbox, 1);
-                break;
-            }
-        }
+  struct CanNode * const restrict node = args;
+  while (!node->init_done) {}
+  for (;;) {
+    CanMessage mex={0};
+    hardware_read_can(node, &mex);
+    for (uint8_t i=0; i<node->last_read_m; i++)
+    {
+      struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->read_mailbox[i]];
+      if (m->mex.id == mex.id)
+      {
+        memcpy(&m->mex, &mex, sizeof(mex));
+        atomic_store(&m->action_flag_mailbox, 1);
+        break;
+      }
     }
-    return 0;
+  }
+  return 0;
 }
 
 static int write_mailbox_f(void* args)
@@ -76,7 +77,6 @@ static int write_mailbox_f(void* args)
   return 0;
   struct CanNode * const restrict node = args;
   while (!node->init_done) {}
-  printf("can node: %d\n", node->can_fd);
   for (uint8_t i=0; i<node->last_write_m; i= (i+1)%node->last_write_m) {
     struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->write_mailbox[i]];
     if (atomic_load(&m->action_flag_mailbox))
@@ -96,10 +96,11 @@ int8_t virtual_can_manager_init(void)
     thrd_t thrd1;
     thrd_t thrd2;
     thrd_t thrd3;
-    return thrd_create(&thrd, write_mailbox_f, NULL);
-    return thrd_create(&thrd1, read_mailbox_f, &BOARD_CAN_NODES.nodes[0]);
-    return thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
-    return thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
+    thrd_create(&thrd, write_mailbox_f, NULL);
+    thrd_create(&thrd1, read_mailbox_f, &BOARD_CAN_NODES.nodes[0]);
+    thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
+    thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
+    return 0;
 }
 
 
@@ -108,6 +109,7 @@ hardware_init_can(const enum CAN_MODULES mod,
         const enum CAN_FREQUENCY baud_rate __attribute__((__unused__)))
 {
   uint8_t can_fd;
+  const char* can_interface=NULL;
   if (mod == __NUM_OF_CAN_MODULES__)
   {
     return -1;
@@ -115,18 +117,22 @@ hardware_init_can(const enum CAN_MODULES mod,
   while(atomic_flag_test_and_set(&BOARD_CAN_NODES.nodes[mod].taken));
   switch (mod) {
     case 0:
+      can_interface = CAN_INTERFACE_0;
       can_fd = can_init(CAN_INTERFACE_0);
       break;
     case 1:
+      can_interface = CAN_INTERFACE_1;
       can_fd = can_init(CAN_INTERFACE_1);
       break;
     case 2:
+      can_interface = CAN_INTERFACE_1;
       can_fd = can_init(CAN_INTERFACE_2);
       break;
     default:
       atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
       return -1;
   }
+  BOARD_CAN_NODES.nodes[mod].can_interface = can_interface;
   BOARD_CAN_NODES.nodes[mod].can_fd = can_fd;
   BOARD_CAN_NODES.nodes[mod].init_done =1;
 
@@ -154,12 +160,13 @@ hardware_init_can_destroy_ref_node(struct CanNode** restrict self)
 }
 
 int8_t
-hardware_read_can(struct CanNode* const restrict self ,
+hardware_read_can(struct CanNode* const restrict self __attribute_maybe_unused__,
         CanMessage* const restrict mex )
 {
     struct can_frame frame;
     memset(&frame, 0, sizeof(frame));
-    int can_node = self->can_fd;
+    int can_node = can_init(self->can_interface);
+    //HACK: using the fd in the CanNode create problems, i don't know why, this will do the trick for now
     can_recv_frame(can_node, &frame);
     mex->message_size = frame.len;
     mex->id = frame.can_id;

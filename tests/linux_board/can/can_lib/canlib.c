@@ -50,15 +50,15 @@ int can_send_frame(int socket, struct can_frame *frame) {
 
 // Receive a CAN frame
 int can_recv_frame(int socket, struct can_frame *frame) {
-    int nbytes;
+  int nbytes;
 
-again:
+  do{
     nbytes = read(socket, frame, sizeof(*frame));
-    if (nbytes < 0) {
-        if (errno == EINTR) {
-            goto again;
-        }     
+    if (nbytes < 0)
+    {
+      errno = EINTR;
     }
-    return nbytes;
+  }while (errno == EINTR);
+  return nbytes;
 }
 
