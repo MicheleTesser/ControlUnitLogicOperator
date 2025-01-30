@@ -33,6 +33,4 @@ float
 driving_map_get_parameter(const DrivingMaps_h* const restrict self ,
         const enum CAR_PARAMETERS param)__attribute__((__nonnull__(1)));
 
-
-
 #endif // !__GIEI_MAPS__
