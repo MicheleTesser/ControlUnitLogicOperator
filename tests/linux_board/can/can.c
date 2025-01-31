@@ -125,7 +125,7 @@ hardware_init_can(const enum CAN_MODULES mod,
       can_fd = can_init(CAN_INTERFACE_1);
       break;
     case 2:
-      can_interface = CAN_INTERFACE_1;
+      can_interface = CAN_INTERFACE_2;
       can_fd = can_init(CAN_INTERFACE_2);
       break;
     default:

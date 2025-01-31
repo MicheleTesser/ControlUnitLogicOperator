@@ -182,7 +182,7 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
     struct Giei_t* const restrict p_self = conv.clear;
 
     const float throttle = driver_input_get(p_self->driver_input, THROTTLE);
-    const float regen = driver_input_get(p_self->driver_input, REGEN);
+    const float regen = driver_input_get(p_self->driver_input, BRAKE);
     const float limit_power = driving_map_get_parameter(p_self->driving_maps, POWER_KW);
     const float driver_throttle = driver_input_get(p_self->driver_input, THROTTLE);
     const float driver_sterring_angle = driver_input_get(p_self->driver_input, STEERING_ANGLE);

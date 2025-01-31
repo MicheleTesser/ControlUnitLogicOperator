@@ -4,14 +4,13 @@
 #include <stdint.h>
 
 typedef struct DriverInput_h{
-    uint8_t private_data[72];
+    uint8_t private_data[64];
 }DriverInput_h;
 
 enum INPUT_TYPES{
     THROTTLE =0,
     BRAKE,
     STEERING_ANGLE,
-    REGEN,
 
     __NUM_OF_INPUT_TYPES__
 };
