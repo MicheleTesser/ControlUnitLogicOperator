@@ -91,12 +91,10 @@ static void update_dv_status(struct Dv_t* const restrict self, const enum AS_STA
   }
   if (status==AS_OFF)
   {
-    dv_mission_unlock(self->dv_mission);
     self->dv_car_status = DV_CAR_STATUS_OFF;
   }
   else
   {
-    dv_mission_lock(self->dv_mission);
     self->dv_car_status = DV_CAR_STATUS_READY;
   }
   self->status = status;

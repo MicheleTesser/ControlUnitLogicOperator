@@ -36,8 +36,4 @@ dv_mission_get_current(const DvMission_h* const restrict self )__attribute__((__
 enum MISSION_STATUS
 dv_mission_get_status(const DvMission_h* const restrict self )__attribute__((__nonnull__(1)));
 
-void dv_mission_lock(DvMission_h* const restrict self )__attribute__((__nonnull__(1)));
-
-void dv_mission_unlock(DvMission_h* const restrict self )__attribute__((__nonnull__(1)));
-
 #endif // !__DV_MISSIONS__

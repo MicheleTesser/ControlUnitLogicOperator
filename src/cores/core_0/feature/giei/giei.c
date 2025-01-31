@@ -1,5 +1,5 @@
 #include "giei.h"
-#include "../mission/mission.h"
+#include "../../../core_utility/mission_locker/mission_locker.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
@@ -21,12 +21,12 @@ struct Giei_t{
     time_var_microseconds rtd_sound_start;
     Gpio_h gpio_rtd_sound;
     GpioRead_h gpio_rtd_button;
+    MissionLocker_h mission_locker;
     enum RUNNING_STATUS running_status;
     EngineType* inverter;
     const DriverInput_h* driver_input;
     const DrivingMaps_h* driving_maps;
     const Imu_h* imu;
-    Mission_h* mission;
     uint8_t entered_rtd : 1;
 };
 
@@ -93,8 +93,7 @@ giei_init(Giei_h* const restrict self,
         EngineType* const restrict engine,
         const DriverInput_h* const p_driver,
         const DrivingMaps_h* const p_maps,
-        const Imu_h* const p_imu,
-        Mission_h* const p_mission)
+        const Imu_h* const p_imu)
 {
     GIEI_H_T_CONV(self, p_self);
 
@@ -112,6 +111,11 @@ giei_init(Giei_h* const restrict self,
         return -3;
     }
 
+    if (lock_mission_ref_get_mut(&p_self->mission_locker)<0)
+    {
+      return -4;
+    }
+
     speed_alg_init();
     regen_alg_init();
     tv_alg_init();
@@ -120,7 +124,6 @@ giei_init(Giei_h* const restrict self,
     p_self->driver_input = p_driver;
     p_self->driving_maps = p_maps;
     p_self->imu = p_imu;
-    p_self->mission = p_mission;
 
     return 0;
 }
@@ -154,11 +157,11 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
 
     if (rt > SYSTEM_OFF)
     {
-        mission_lock(p_self->mission);
+      lock_mission(&p_self->mission_locker);
     }
     else
     {
-        mission_unlock(p_self->mission);
+      unlock_mission(&p_self->mission_locker);
     }
     if (rt == RUNNING && !p_self->entered_rtd)
     {

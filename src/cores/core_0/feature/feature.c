@@ -5,14 +5,12 @@
 #include "giei/giei.h"
 #include "imu/imu.h"
 #include "maps/maps.h"
-#include "mission/mission.h"
 #include "../../core_utility/running_status/running_status.h"
 
 #include <stdint.h>
 
 struct Core0Feature_t{
     DriverInput_h driver;
-    Mission_h mission;
     DrivingMaps_h maps;
     Imu_h imu;
     AmkInverter_h amk;
@@ -39,12 +37,11 @@ core_0_feature_init(Core0Feature_h* const restrict self )
     struct Core0Feature_t* const restrict p_self = conv.clear;
 
     if(driver_input_init(&p_self->driver) <0) return -1;
-    if(mission_init(&p_self->mission, &p_self->driver)<0) return -2;
     if(driving_maps_init(&p_self->maps) <0) return -3;
     if(imu_init(&p_self->imu) <0) return -4;
     if(amk_module_init(&p_self->amk, &p_self->driver, &p_self->inverter)) return -5;
     if(giei_init(&p_self->giei, &p_self->inverter, &p_self->driver, &p_self->maps,
-                &p_self->imu, &p_self->mission) <0) return -6;
+                &p_self->imu) <0) return -6;
 
     return 0;
 }
@@ -56,7 +53,6 @@ core_0_feature_update(Core0Feature_h* const restrict self )
     struct Core0Feature_t* const restrict p_self = conv.clear;
 
     if(driver_input_update(&p_self->driver)<0) return -1;
-    if(mission_update(&p_self->mission)<0) return -2;
     if(driving_map_update(&p_self->maps) <0) return -3;
     if(imu_update(&p_self->imu) <0) return -4;
     if(giei_update(&p_self->giei)<0)return -5;

@@ -1,6 +1,7 @@
 #include "mission.h"
 #include <stdint.h>
 #include <string.h>
+#include "../../../core_utility/mission_locker/mission_locker.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
@@ -8,9 +9,9 @@
 struct DvMission_t{
   enum MISSIONS current_mission;
   enum MISSION_STATUS mission_status;
+  MissionLockerRead_h mission_locker;
   struct CanMailbox* mission_mailbox;
   struct CanMailbox* mission_status_mailbox;
-  uint8_t mission_lock:1;
 };
 
 union DvMission_h_t_conv{
@@ -45,6 +46,10 @@ dv_mission_init(DvMission_h* const restrict self )
     p_self->mission_status_mailbox = hardware_get_mailbox(can_node, CAN_ID_DV_MISSION, 1);
   })
 
+  if (lock_mission_ref_get(&p_self->mission_locker)<0)
+  {
+    return -1;
+  }
 
   return 0;
 }
@@ -58,7 +63,7 @@ dv_mission_update(DvMission_h* const restrict self )
   can_obj_can3_h_t o3;
   CanMessage mex;
 
-  if (!p_self->mission_lock && hardware_mailbox_read(p_self->mission_mailbox, &mex)>=0)
+  if (!is_mission_locked(&p_self->mission_locker) && hardware_mailbox_read(p_self->mission_mailbox, &mex)>=0)
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
     p_self->current_mission = o2.can_0x067_CarMission.Mission;
@@ -87,18 +92,4 @@ dv_mission_get_status(const DvMission_h* const restrict self )
   const union DvMission_h_t_conv_const conv = {self};
   const struct DvMission_t* const restrict p_self = conv.clear;
   return p_self->mission_status;
-}
-
-void dv_mission_lock(DvMission_h* const restrict self )
-{
-  union DvMission_h_t_conv conv = {self};
-  struct DvMission_t* const restrict p_self = conv.clear;
-  p_self->mission_lock=1;
-}
-
-void dv_mission_unlock(DvMission_h* const restrict self )
-{
-  union DvMission_h_t_conv conv = {self};
-  struct DvMission_t* const restrict p_self = conv.clear;
-  p_self->mission_lock=0;
 }

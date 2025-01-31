@@ -11,7 +11,6 @@
  */
 
 #include <stdint.h>
-#include "../mission/mission.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
 #include "../imu/imu.h"
@@ -26,8 +25,7 @@ giei_init(Giei_h* const restrict self,
         EngineType* const restrict engine,
         const DriverInput_h* const p_driver,
         const DrivingMaps_h* const p_maps,
-        const Imu_h* const p_imu,
-        Mission_h* const p_mission)__attribute__((__nonnull__(1,2,3,4,5,6)));
+        const Imu_h* const p_imu)__attribute__((__nonnull__(1,2,3,4,5)));
 
 
 int8_t
