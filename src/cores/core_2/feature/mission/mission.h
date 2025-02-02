@@ -16,6 +16,8 @@ enum MISSIONS{
     DV_TRACKDRIVE,
     DV_EBS_TEST,
     DV_INSPECTION,
+
+    __NUM_OF_MISSIONS__
 };
 
 enum MISSION_STATUS{

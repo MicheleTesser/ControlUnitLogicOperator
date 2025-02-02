@@ -1,5 +1,6 @@
 #include "mission_locker.h"
 #include <stdatomic.h>
+#include <stdint.h>
 #include <string.h>
 
 static struct{
@@ -8,11 +9,11 @@ static struct{
 }MISSION_LOCKER;
 
 struct MissionLockerRead_t{
-  const atomic_bool* mission_lock;
+  uint8_t filler;
 };
 
 struct MissionLocker_t{
-  atomic_bool* mission_lock;
+  uint8_t owner;
 };
 
 
@@ -35,16 +36,16 @@ int8_t lock_mission_ref_get(MissionLockerRead_h* const restrict self)
 {
   union MissionLockerRead_h_t_conv conv = {self};
   struct MissionLockerRead_t* p_self = conv.clear;
-  p_self->mission_lock = &MISSION_LOCKER.mission_lock;
-  return -1;
+  memset(p_self, 0, sizeof(*p_self));
+  return 0;
 }
 int8_t lock_mission_ref_get_mut(MissionLocker_h* const restrict self)
 {
   union MissionLocker_h_t_conv conv = {self};
   struct MissionLocker_t* const restrict p_self = conv.clear;
-  if (!atomic_exchange(&MISSION_LOCKER.taken, 1)) {
-  
-    p_self->mission_lock = &MISSION_LOCKER.mission_lock;
+  if (!atomic_exchange(&MISSION_LOCKER.taken, 1))
+  {
+    p_self->owner = 'a';
     return 0;
   }
   atomic_store(&MISSION_LOCKER.taken,0);
@@ -71,17 +72,22 @@ void lock_mission(MissionLocker_h* const restrict self)
 {
   union MissionLocker_h_t_conv conv = {self};
   struct MissionLocker_t* const restrict p_self = conv.clear;
-  atomic_store(p_self->mission_lock, 1);
+  if (p_self->owner=='a')
+  {
+    atomic_store(&MISSION_LOCKER.mission_lock, 1);
+  }
 }
 void unlock_mission(MissionLocker_h* const restrict self)
 {
   union MissionLocker_h_t_conv conv = {self};
   struct MissionLocker_t* const restrict p_self = conv.clear;
-  atomic_store(p_self->mission_lock, 1);
+  if (p_self->owner=='a') {
+    atomic_store(&MISSION_LOCKER.mission_lock, 1);
+  }
 }
 uint8_t is_mission_locked(const MissionLockerRead_h* const restrict self)
 {
   union MissionLockerRead_h_t_conv_const conv = {self};
-  const struct MissionLockerRead_t* p_self = conv.clear;
-  return atomic_load(p_self->mission_lock);
+  const struct MissionLockerRead_t* p_self __attribute__((__unused__)) = conv.clear;
+  return atomic_load(&MISSION_LOCKER.mission_lock);
 }

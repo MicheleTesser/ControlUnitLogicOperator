@@ -45,6 +45,7 @@ enum MAILBOX_MODE{
 static struct{
     struct CanNode nodes[__NUM_OF_CAN_MODULES__];
 }BOARD_CAN_NODES;
+static uint8_t run=1;
 
 static struct{
     struct CanMailbox mailbox_pool[NUM_OF_MAILBOX];
@@ -55,7 +56,8 @@ static int read_mailbox_f(void* args )
 {
   struct CanNode * const restrict node = args;
   while (!node->init_done) {}
-  for (;;) {
+  while(run)
+  {
     CanMessage mex={0};
     hardware_read_can(node, &mex);
     for (uint8_t i=0; i<node->last_read_m; i++)
@@ -76,8 +78,8 @@ static int write_mailbox_f(void* args)
 {
   return 0;
   struct CanNode * const restrict node = args;
-  while (!node->init_done) {}
-  for (uint8_t i=0; i<node->last_write_m; i= (i+1)%node->last_write_m) {
+  while (!node->init_done ) {}
+  for (uint8_t i=0; i<node->last_write_m && run; i= (i+1)%node->last_write_m) {
     struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->write_mailbox[i]];
     if (atomic_load(&m->action_flag_mailbox))
     {
@@ -90,19 +92,19 @@ static int write_mailbox_f(void* args)
 
 //public
 
+thrd_t thrd;
+thrd_t thrd1;
+thrd_t thrd2;
+thrd_t thrd3;
+
 int8_t virtual_can_manager_init(void)
 {
-    thrd_t thrd;
-    thrd_t thrd1;
-    thrd_t thrd2;
-    thrd_t thrd3;
     thrd_create(&thrd, write_mailbox_f, NULL);
     thrd_create(&thrd1, read_mailbox_f, &BOARD_CAN_NODES.nodes[0]);
     thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
     thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
     return 0;
 }
-
 
 int8_t
 hardware_init_can(const enum CAN_MODULES mod,
