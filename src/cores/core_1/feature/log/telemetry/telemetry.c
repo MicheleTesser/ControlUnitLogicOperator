@@ -103,3 +103,15 @@ log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
 
     return 0;
 }
+
+
+int8_t
+log_telemetry_destroy(LogTelemetry_h* const restrict self)
+{
+    union LogTelemetry_h_t_conv conv = {self};
+    struct LogTelemetry_t* const restrict p_self = conv.clear;
+
+    free(p_self->json.s_json);
+
+    return 0;
+}

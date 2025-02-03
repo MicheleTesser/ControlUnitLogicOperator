@@ -130,9 +130,10 @@ int main(void)
   {
     test_update_mission_with_lock(&mission, i);
   }
+  unlock_mission(&locker);
 
   run=0;
-  thrd_join(mission_thread,NULL);
+  thrd_join(mission_thread, NULL);
   lock_mission_ref_destroy_mut(&locker);
 end:
   print_SCORE();
