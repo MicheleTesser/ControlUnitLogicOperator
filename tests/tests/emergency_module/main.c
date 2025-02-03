@@ -9,11 +9,19 @@
 
 static inline int8_t check_nodes(EmergencyNode_h** nodes, uint8_t node_num)
 {
+  GpioRead_h gpio_scs = {0};
+  if (hardware_init_read_permission_gpio(&gpio_scs, GPIO_SCS) < 0) {
+    return -1;
+  }
   uint8_t status = EmergencyNode_is_emergency_state(*nodes);
   for (uint8_t i=0; i<node_num; i++) {
     if (EmergencyNode_is_emergency_state(nodes[i]) != status) {
       return -1;
     }
+  }
+  if (gpio_read_state(&gpio_scs)!= status)
+  {
+    FAILED("scs gpio and nodes status differ");
   }
   return status;
 }
@@ -86,15 +94,11 @@ int main(void)
 {
   EmergencyNode_h emergency_node_1 = {0};
   EmergencyNode_h emergency_node_2 = {0};
-  GpioRead_h gpio_scs = {0};
 
   if (create_virtual_chip() < 0) {
     goto end;
   }
 
-  if (hardware_init_read_permission_gpio(&gpio_scs, GPIO_SCS) < 0) {
-    goto end;
-  }
 
   if (hardware_init_trap()<0) {
     goto end;
