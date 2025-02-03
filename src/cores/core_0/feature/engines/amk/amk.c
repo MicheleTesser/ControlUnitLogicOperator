@@ -76,7 +76,7 @@ typedef struct Inverter{
     struct GpioRead_h gpio_precharge_init;
     struct GpioRead_h gpio_precharge_done;
     struct GpioRead_h gpio_rtd_button;
-    struct EmergencyNode* amk_emergency;
+    struct EmergencyNode_h amk_emergency;
     const struct DriverInput_h* driver_input;
     const struct CanNode* can_inverter;
     const struct CanMailbox *engine_mailbox[__NUM_OF_ENGINES__ * 2];
@@ -232,10 +232,10 @@ static inline uint8_t rtd_input_request(const AMKInverter_t* const restrict self
 static enum RUNNING_STATUS amk_rtd_procedure(AMKInverter_t* const restrict self)
 {
     if(self->engine_status == SYSTEM_OFF){
-        EmergencyNode_raise(self->amk_emergency, FAILED_RTD_AMK);
+        EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
     }
 
-    if (EmergencyNode_is_emergency_state(self->amk_emergency)) {
+    if (EmergencyNode_is_emergency_state(&self->amk_emergency)) {
         amk_disable_inverter(self);
         self->engine_status = SYSTEM_OFF;
         return self->engine_status;
@@ -257,7 +257,7 @@ static enum RUNNING_STATUS amk_rtd_procedure(AMKInverter_t* const restrict self)
                 amk_shut_down_power(self);
                 if(rtd_input_request(self))
                 {
-                    EmergencyNode_raise(self->amk_emergency, FAILED_RTD_AMK);
+                    EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
                 }
             }
             break;
@@ -265,7 +265,7 @@ static enum RUNNING_STATUS amk_rtd_procedure(AMKInverter_t* const restrict self)
             if (!amk_inverter_on(self) || !amk_inverter_hv_status(self) ||
                     rtd_input_request(self))
             {
-                EmergencyNode_raise(self->amk_emergency, FAILED_RTD_AMK);
+                EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
                 amk_shut_down_power(self);
                 self->engine_status = SYSTEM_OFF;
             }
@@ -279,7 +279,7 @@ static enum RUNNING_STATUS amk_rtd_procedure(AMKInverter_t* const restrict self)
             if (!amk_inverter_hv_status(self) || !precharge_ended(self) || !amk_inverter_on(self))
             {
                 amk_shut_down_power(self);
-                EmergencyNode_raise(self->amk_emergency, FAILED_RTD_AMK);
+                EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
                 self->engine_status = SYSTEM_OFF;
                 break;
             }
@@ -292,7 +292,7 @@ static enum RUNNING_STATUS amk_rtd_procedure(AMKInverter_t* const restrict self)
             if (!amk_inverter_on(self) || !amk_inverter_hv_status(self) || !precharge_ended(self))
             {
                 amk_shut_down_power(self);
-                EmergencyNode_raise(self->amk_emergency, FAILED_RTD_AMK);
+                EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
                 self->engine_status = SYSTEM_OFF;
             }
             else if (driver_input_rtd_request(self->driver_input))
@@ -381,10 +381,11 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
     AMK_H_T_CONV(self, p_self);
     memset(p_self, 0, sizeof(*p_self));
     p_self->engine_status =SYSTEM_OFF;
-    p_self->amk_emergency = EmergencyNode_new(__NUM_OF_AMK_EMERGENCY__);
     p_self->driver_input = p_driver_input;
-    if (!p_self->amk_emergency) {
-        return -1;
+
+    if (EmergencyNode_init(&p_self->amk_emergency))
+    {
+      return -1;
     }
     p_self->can_inverter = hardware_init_can_get_ref_node(CAN_INVERTER);
     if (!p_self->can_inverter) {

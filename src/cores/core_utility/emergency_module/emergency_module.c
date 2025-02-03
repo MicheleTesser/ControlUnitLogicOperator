@@ -3,19 +3,36 @@
 #include <stdlib.h>
 #include <stdatomic.h>
 #include <stdint.h>
+#include <string.h>
 
 //private
 
-struct EmergencyNode{
-  const uint8_t* emergency_state;
-  uint8_t emergency_amount;
-  uint8_t emergency_buffer[];
+#define NUM_EMERGENCY_BUFFER 8
+
+struct EmergencyNode_t
+{
+  uint8_t emergency_buffer[NUM_EMERGENCY_BUFFER];
+  uint8_t emergency_counter;
+  uint8_t *emergency_state;
+};
+
+union EmergencyNode_h_t_conv
+{
+  EmergencyNode_h* const restrict hidden;
+  struct EmergencyNode_t* const restrict clear;
+};
+
+union EmergencyNode_h_t_conv_const
+{
+  const EmergencyNode_h* const restrict hidden;
+  const struct EmergencyNode_t* const restrict clear;
 };
 
 static struct{
   atomic_flag lock;
-  uint8_t excepion_counter;
   Gpio_h gpio_scs;
+  uint8_t excepion_counter;
+  uint8_t init_done:1;
 }EXCEPTION_COUNTER;
 
 static void raise_module_exception_state(void) TRAP_ATTRIBUTE
@@ -37,71 +54,89 @@ static void solved_module_exception_state(void) TRAP_ATTRIBUTE
   atomic_flag_clear(&EXCEPTION_COUNTER.lock);
 }
 
+#ifdef DEBUG
+uint8_t __assert_size_emergency_node[(sizeof(EmergencyNode_h)==sizeof(struct EmergencyNode_t))?1:-1];
+#endif /* ifdef DEBUG */
 
 //public
 
-
-struct EmergencyNode* EmergencyNode_new(const uint8_t num_exception)
+int8_t EmergencyNode_class_init(void)
 {
-  if (!num_exception)
-  {
-    return NULL;
-  }
-
   if (hardware_init_gpio(&EXCEPTION_COUNTER.gpio_scs, GPIO_SCS)<0)
   {
-    return NULL;   
+    return -1;   
   }
+  EXCEPTION_COUNTER.init_done=1;
 
-  const uint8_t exception_buffer_size = (num_exception/8) + !!(num_exception%8);
-  struct EmergencyNode* const self = calloc(1, sizeof(*self) + exception_buffer_size);
-  self->emergency_amount = num_exception;
+  return 0;
+}
+
+int8_t
+EmergencyNode_init(EmergencyNode_h* const restrict self)
+{
+  union EmergencyNode_h_t_conv conv = {self};
+  struct EmergencyNode_t* const restrict p_self =conv.clear;
+
+  memset(p_self, 0, sizeof(*p_self));
 
   hardware_trap_attach_fun(EMERGENCY_RAISED_TRAP, raise_module_exception_state);
   hardware_trap_attach_fun(EMERGENCY_SOLVED_TRAP, solved_module_exception_state);
+  p_self->emergency_state = &EXCEPTION_COUNTER.excepion_counter;
 
-  return self;
+  return 0;
 }
 
-void EmergencyNode_raise(struct EmergencyNode* const restrict self, const uint8_t exeception)
+int8_t EmergencyNode_raise(struct EmergencyNode_h* const restrict self, const uint8_t exeception)
 {
   const uint8_t exception_byte = exeception/8;
   const uint8_t exception_bit = exeception % 8;
-  self->emergency_buffer[exception_byte] |= (1 << exception_bit);
-  if (!self->emergency_state) {
-    self->emergency_state = &EXCEPTION_COUNTER.excepion_counter;
+  union EmergencyNode_h_t_conv conv = {self};
+  struct EmergencyNode_t* const restrict p_self =conv.clear;
+
+  if (exeception >= NUM_EMERGENCY_BUFFER*8)
+  {
+    return -1;
+  }
+
+  p_self->emergency_buffer[exception_byte] |= 1 << exception_bit;
+  p_self->emergency_counter++;
+
+  if (!p_self->emergency_counter) {
     hardware_raise_trap(EMERGENCY_RAISED_TRAP);
   }
+
+  return 0;
 }
 
-void EmergencyNode_solve(struct EmergencyNode* const restrict self, const uint8_t exeception)
+int8_t EmergencyNode_solve(struct EmergencyNode_h* const restrict self, const uint8_t exeception)
 {
   const uint8_t exception_byte = exeception/8;
   const uint8_t exception_bit = 1 << (exeception % 8);
-  if (self->emergency_buffer[exception_byte] | exception_bit) {
-    self->emergency_buffer[exception_byte] ^= exception_bit;
+  union EmergencyNode_h_t_conv conv = {self};
+  struct EmergencyNode_t* const restrict p_self =conv.clear;
+
+  if (exeception >= NUM_EMERGENCY_BUFFER * 8)
+  {
+    return -1;
   }
 
-  if (self->emergency_state) {
-    for (uint8_t i=0; i<self->emergency_amount; i++)
-    {
-      if (self->emergency_buffer[i])
-      {
-        return;
-      }
-    }
-    self->emergency_state = 0;
+  if (p_self->emergency_buffer[exception_byte] &  exception_bit)
+  {
+    p_self->emergency_buffer[exception_byte] ^= exception_bit;
+    p_self->emergency_counter--;
+  }
+
+  if (!p_self->emergency_counter)
+  {
     hardware_raise_trap(EMERGENCY_SOLVED_TRAP);
   }
-
+  
+  return 0;
 }
 
-uint8_t EmergencyNode_is_emergency_state(struct EmergencyNode* const restrict self)
+int8_t EmergencyNode_is_emergency_state(const struct EmergencyNode_h* const restrict self)
 {
-  return *self->emergency_state;
-}
-
-void EmergencyNode_free(struct EmergencyNode* const restrict self)
-{
-  free(self);
+  const union EmergencyNode_h_t_conv_const conv = {self};
+  const struct EmergencyNode_t* const restrict p_self =conv.clear;
+  return *p_self->emergency_state;
 }

@@ -50,7 +50,7 @@ struct Dv_t{
   Gpio_h gpio_ass_light_yellow;
   DvMission_h* dv_mission;
   const DvDriverInput_h* dv_driver_input;
-  struct EmergencyNode* emergency_node;
+  struct EmergencyNode_h emergency_node;
   struct CanMailbox* send_car_dv_car_status_mailbox;
 };
 
@@ -75,7 +75,7 @@ static uint8_t sdc_closed(const struct Dv_t* const restrict self)
 {
   return  gpio_read_state(&self->gpio_air_precharge_init) &&
     gpio_read_state(&self->gpio_air_precharge_done) &&
-    EmergencyNode_is_emergency_state(self->emergency_node);
+    EmergencyNode_is_emergency_state(&self->emergency_node);
 }
 
 static void update_dv_status(struct Dv_t* const restrict self, const enum AS_STATUS status)
@@ -83,11 +83,11 @@ static void update_dv_status(struct Dv_t* const restrict self, const enum AS_STA
   if (status == AS_EMERGENCY)
   {
     self->dv_car_status = DV_CAR_STATUS_ERROR;
-    EmergencyNode_raise(self->emergency_node, EMERENGENCY_DV_EMERGENCY);
+    EmergencyNode_raise(&self->emergency_node, EMERENGENCY_DV_EMERGENCY);
   }
   else
   {
-    EmergencyNode_solve(self->emergency_node, EMERENGENCY_DV_EMERGENCY);
+    EmergencyNode_solve(&self->emergency_node, EMERENGENCY_DV_EMERGENCY);
   }
   if (status==AS_OFF)
   {
@@ -165,9 +165,9 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
   const float driver_brake = dv_driver_input_get_brake(self->dv_driver_input);
   const enum RUNNING_STATUS giei_status = global_running_status_get();
 
-  if (EmergencyNode_is_emergency_state(self->emergency_node)) {
+  if (EmergencyNode_is_emergency_state(&self->emergency_node)) {
     self->status = AS_EMERGENCY;
-    EmergencyNode_raise(self->emergency_node, EMERENGENCY_DV_EMERGENCY);
+    EmergencyNode_raise(&self->emergency_node, EMERENGENCY_DV_EMERGENCY);
   }
 
   if (!ebs_on(&self->dv_asb.dv_ebs)) 
@@ -270,6 +270,11 @@ dv_class_init(Dv_h* const restrict self ,
     return -6;   
   }
 
+  if (EmergencyNode_init(&p_self->emergency_node)<0)
+  {
+    return -7;
+  }
+
   ACTION_ON_CAN_NODE(CAN_DV,{
     p_self->send_car_dv_car_status_mailbox =
     hardware_get_mailbox_send(can_node, CAN_ID_DV_CARSTATUS, 1);
@@ -278,10 +283,6 @@ dv_class_init(Dv_h* const restrict self ,
   p_self->dv_car_status=DV_CAR_STATUS_OFF;
   p_self->dv_mission = mission;
   p_self->dv_driver_input = driver;
-  p_self->emergency_node = EmergencyNode_new(__NUM_OF_DV_EMERGENCIES__);
-  if (!p_self->emergency_node) {
-    return -5;
-  }
 
   return 0;
 }

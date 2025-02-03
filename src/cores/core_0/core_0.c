@@ -10,6 +10,7 @@ void main_0(void)
     CoreAliveBlink_h alive_blink;
     Core0Feature_h feature;
     
+    while (EmergencyNode_class_init()<0);
     while(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_)<0);
     while (core_alive_blink_init(&alive_blink, GPIO_CORE_0_ALIVE_BLINK, 200 MILLIS) <0);
     while (core_0_feature_init(&feature)<0);

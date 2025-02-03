@@ -6,26 +6,28 @@
 #include <assert.h>
 
 
-typedef struct EmergencyNode EmergencyNode;
+typedef struct EmergencyNode_h
+{
+  const uint8_t private_data[24];
+}EmergencyNode_h;
 
-struct EmergencyNode*
-EmergencyNode_new(const uint8_t num_exception);
+int8_t EmergencyNode_class_init(void);
 
-void
+int8_t
+EmergencyNode_init(EmergencyNode_h* const restrict self)__attribute__((__nonnull__(1)));
+
+int8_t
 EmergencyNode_raise(
-        struct EmergencyNode* const restrict self , 
+        struct EmergencyNode_h* const restrict self , 
         const uint8_t exeception)__attribute__((__nonnull__(1)));
 
-void
+int8_t
 EmergencyNode_solve(
-        struct EmergencyNode* const restrict self,
+        struct EmergencyNode_h* const restrict self,
         const uint8_t exeception)__attribute__((__nonnull__(1)));
 
-uint8_t
-EmergencyNode_is_emergency_state(struct EmergencyNode* const restrict self)
+int8_t
+EmergencyNode_is_emergency_state(const struct EmergencyNode_h* const restrict self)
     __attribute__((__nonnull__(1)));
-
-void
-EmergencyNode_free(struct EmergencyNode* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__EMERGENCY_MODULE__
