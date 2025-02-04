@@ -31,7 +31,7 @@ union Core1DriverInput_h_t_conv{
     struct Core1DriverInput_t* const restrict clear;
 };
 
-#define ADD_ENTRY_TO_LOG(LOG, MODE, DATA, NAME)\
+#define ADD_ENTRY_TO_LOG(LOG, MODE, DATA, NAME, POS)\
 {\
     struct LogEntry_h entry= {\
         .data_mode = MODE,\
@@ -41,7 +41,7 @@ union Core1DriverInput_h_t_conv{
         .log_mode = LOG_SD | LOG_TELEMETRY,\
         .name = NAME,\
     };\
-    if (log_add_entry(log, &entry)<0)\
+    if (log_add_entry(log, &entry,POS)<0)\
     {\
         return -1;\
     }\
@@ -62,22 +62,22 @@ core_1_driver_input_init(
     memset(p_self, 0, sizeof(*p_self));
 
     ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[THROTTLE],
-            "driver input throttle");
+            "driver input throttle",11);
 
     ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[BRAKE],
-            "driver input brake");
+            "driver input brake",12);
 
     ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[REGEN],
-            "driver input regen");
+            "driver input regen",13);
 
     ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[STERRING_WHEEL],
-            "driver input steering wheel");
+            "driver input steering wheel",14);
 
     ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[STERRING_WHEEL],
-            "driver input steering wheel");
+            "driver input steering wheel",15);
 
     ADD_ENTRY_TO_LOG(log, DATA_UNSIGNED, p_self->impl,
-            "driver input implausibility list");
+            "driver input implausibility list",16);
 
 
     ACTION_ON_CAN_NODE(CAN_GENERAL,{

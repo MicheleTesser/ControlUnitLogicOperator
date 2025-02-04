@@ -29,7 +29,7 @@ log_init(Log_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
 log_add_entry(Log_h* const restrict self ,
-        const LogEntry_h* entry  )__attribute__((__nonnull__(1,2)));
+        const LogEntry_h* entry, DataPosition position)__attribute__((__nonnull__(1,2)));
 
 int8_t
 log_update_and_send(Log_h* const restrict self )__attribute__((__nonnull__(1)));

@@ -55,7 +55,7 @@ bms_init(Bms_h* const restrict self ,
             .log_mode = LOG_TELEMETRY| LOG_SD,
             .name = "Bms Max Volt",
         };
-        if(log_add_entry(log, &entry)<0)
+        if(log_add_entry(log, &entry,6)<0)
         {
             return -1;
         }
@@ -70,7 +70,7 @@ bms_init(Bms_h* const restrict self ,
             .log_mode = LOG_TELEMETRY| LOG_SD,
             .name = "Bms bms Min Volt",
         };
-        if(log_add_entry(log, &entry)<0)
+        if(log_add_entry(log, &entry,7)<0)
         {
             return -2;
         }
@@ -86,7 +86,7 @@ bms_init(Bms_h* const restrict self ,
             .log_mode = LOG_TELEMETRY| LOG_SD,
             .name = "Bms sv soc",
         };
-        if(log_add_entry(log, &entry)<0)
+        if(log_add_entry(log, &entry,8)<0)
         {
             return -3;
         }

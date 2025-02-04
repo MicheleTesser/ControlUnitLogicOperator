@@ -21,7 +21,7 @@ union Suspensions_h_t_conv {
     struct Suspensions_t* const restrict clear;
 };
 
-#define UPDATE_LOG(LOG, DATA, NAME)\
+#define UPDATE_LOG(LOG, DATA, NAME, POS)\
 {\
     struct LogEntry_h entry ={\
         .data_ptr = &DATA,\
@@ -30,7 +30,7 @@ union Suspensions_h_t_conv {
         .log_mode = LOG_SD | LOG_TELEMETRY,\
         .data_mode = DATA_FLOATED,\
     };\
-    if (log_add_entry(log, &entry)<0)\
+    if (log_add_entry(log, &entry, POS)<0)\
     {\
         return -1;\
     }\
@@ -50,10 +50,10 @@ suspensions_init(
 
     memset(p_self, 0, sizeof(*p_self));
 
-    UPDATE_LOG(log, p_self->susps_value[SUSP_FRONT_LEFT] , "susps front left");
-    UPDATE_LOG(log, p_self->susps_value[SUSP_FRONT_RIGHT] , "susps front right");
-    UPDATE_LOG(log, p_self->susps_value[SUSP_REAR_LEFT] , "susps rear left");
-    UPDATE_LOG(log, p_self->susps_value[SUSP_REAR_RIGHT] , "susps rear right");
+    UPDATE_LOG(log, p_self->susps_value[SUSP_FRONT_LEFT] , "susps front left",1);
+    UPDATE_LOG(log, p_self->susps_value[SUSP_FRONT_RIGHT] , "susps front right",2);
+    UPDATE_LOG(log, p_self->susps_value[SUSP_REAR_LEFT] , "susps rear left",3);
+    UPDATE_LOG(log, p_self->susps_value[SUSP_REAR_RIGHT] , "susps rear right",4);
 
     ACTION_ON_CAN_NODE(CAN_GENERAL,{
         p_self->mailbox[M_FRONT] = hardware_get_mailbox(can_node, CAN_ID_SUSPFRONT,3);

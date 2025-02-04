@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 typedef uint32_t DataRange;
+typedef uint16_t DataPosition;
 
 enum DATA_MODE{
     DATA_UNSIGNED=0,

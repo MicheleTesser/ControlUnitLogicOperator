@@ -68,7 +68,7 @@ int8_t cooling_init(Cooling_h* const restrict self ,
             .data_max = 100,
             .name = "temp fan speed/enable",
         };
-        if (log_add_entry(log, &entry)<0)
+        if (log_add_entry(log, &entry,17)<0)
         {
             return -2;
         }
@@ -83,7 +83,7 @@ int8_t cooling_init(Cooling_h* const restrict self ,
             .data_max = 100,
             .name = "temp pump speed/enable",
         };
-        if (log_add_entry(log, &entry)<0)
+        if (log_add_entry(log, &entry,18)<0)
         {
             return -3;
         }
