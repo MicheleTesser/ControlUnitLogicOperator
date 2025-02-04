@@ -11,8 +11,8 @@ int log_var_a = 'a';
 float log_var_b = 12.5f;
 long log_var_c = 912;
 
-#define LOG_VAR(self, VAR, data_type, data_range, POS)\
-  log_telemetry_add_entry(&o_telemetry, #VAR, &log_var_a, data_type, data_range,POS)
+#define LOG_VAR(p_self, VAR, data_type, data_range, POS)\
+  log_telemetry_add_entry(p_self, #VAR, &log_var_a, data_type, data_range,POS)
 
 int main(void)
 {
