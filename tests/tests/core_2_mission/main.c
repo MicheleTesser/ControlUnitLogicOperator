@@ -52,7 +52,7 @@ static void test_update_mission(const DvMission_h* const restrict self, const en
   ACTION_ON_CAN_NODE(CAN_GENERAL,{
     hardware_write_can(can_node, &mex);
   })
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(1 MILLIS);
 
   mission = dv_mission_get_current(self);
   if (mission == expected)
@@ -78,7 +78,7 @@ static void test_update_mission_with_lock(const DvMission_h* const restrict self
   ACTION_ON_CAN_NODE(CAN_GENERAL,{
     hardware_write_can(can_node, &mex);
   })
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(1 MILLIS);
 
   mission = dv_mission_get_current(self);
   if (mission == __NUM_OF_MISSIONS__ -1)
@@ -97,14 +97,6 @@ int main(void)
   DvMission_h mission={0};
   thrd_t mission_thread=0;
 
-  if(create_virtual_chip() <0){
-    goto end;
-  }
-
-  if (virtual_can_manager_init()<0) {
-    goto end;
-  }
-
   if (hardware_init_can(CAN_GENERAL, _500_KBYTE_S_)<0)
   {
     goto end;
@@ -114,6 +106,15 @@ int main(void)
   {
     goto end;
   }
+
+  if(create_virtual_chip() <0){
+    goto end;
+  }
+
+  if (virtual_can_manager_init()<0) {
+    goto end;
+  }
+
 
   while (lock_mission_ref_get_mut(&locker)<0);
   thrd_create(&mission_thread, mission_loop, &mission);

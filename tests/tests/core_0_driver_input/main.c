@@ -153,7 +153,7 @@ static int test_steering_wheel(DriverInput_h* driver){
     hardware_write_can(can_node, &mex_c);
   })
 
-  sleep(1);
+  wait_milliseconds(1 MILLIS);
   stw = driver_input_get(driver, STEERING_ANGLE);
 
   if (stw == steering_value) {
@@ -180,7 +180,7 @@ static int test_throttle_dv(DriverInput_h* driver){
       hardware_write_can(can_node, &mex_c);
   });
 
-  sleep(1);
+  wait_milliseconds(1 MILLIS);
   throttle = driver_input_get(driver, THROTTLE);
 
   if (throttle == throttle_value) {
@@ -200,7 +200,7 @@ static int test_throttle_dv(DriverInput_h* driver){
   ACTION_ON_CAN_NODE(CAN_DV,{
       hardware_write_can(can_node, &mex_c);
   });
-  sleep(1);
+  wait_milliseconds(1 MILLIS);
 
   throttle = driver_input_get(driver, THROTTLE);
   if (throttle == throttle_value) {
@@ -226,7 +226,7 @@ static int test_brake_dv(DriverInput_h* driver){
   ACTION_ON_CAN_NODE(CAN_DV,{
     hardware_write_can(can_node, &mex_c);
   })
-  sleep(1);
+  wait_milliseconds(1 MILLIS);
   brake = driver_input_get(driver, BRAKE);
 
   if (brake == brk_value) {
@@ -247,7 +247,7 @@ static int test_brake_dv(DriverInput_h* driver){
     hardware_write_can(can_node, &mex_c);
   })
 
-  sleep(1);
+  wait_milliseconds(1 MILLIS);
   brake = driver_input_get(driver, BRAKE);
 
   if (brake == brk_value) {
@@ -274,7 +274,7 @@ static int test_steering_wheel_dv(DriverInput_h* driver){
   ACTION_ON_CAN_NODE(CAN_DV, {
     hardware_write_can(can_node, &mex_c);
   })
-  sleep(1);
+  wait_milliseconds(1 MILLIS);
 
   stw = driver_input_get(driver, STEERING_ANGLE);
 
@@ -295,7 +295,7 @@ static int test_steering_wheel_dv(DriverInput_h* driver){
     hardware_write_can(can_node, &mex_c);
   })
 
-  sleep(1);
+  wait_milliseconds(1 MILLIS);
   stw = driver_input_get(driver, STEERING_ANGLE);
 
   if (stw == steering_value) {

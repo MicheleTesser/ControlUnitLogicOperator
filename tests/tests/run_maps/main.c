@@ -66,7 +66,7 @@ static void check_power_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float KW, floa
       hardware_write_can(can_node, &mex);
   })
 
-  wait_milliseconds(2 MILLIS);
+  wait_milliseconds(1 MILLIS);
   get_data(maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
   if(data.power_kw == KW && data.torque_pos == TORQUE_POS){
@@ -89,7 +89,7 @@ static void check_regen_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REGEN_SC
       hardware_write_can(can_node, &mex);
   })
 
-  wait_milliseconds(2 MILLIS);
+  wait_milliseconds(1 MILLIS);
   get_data(maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
   if(data.regen_scale == REGEN_SCALE && data.torque_neg == TORQUE_NEG){
@@ -111,7 +111,7 @@ static void check_repartition_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float RE
   ACTION_ON_CAN_NODE(CAN_GENERAL,{
       hardware_write_can(can_node, &mex);
   })
-  wait_milliseconds(2 MILLIS);
+  wait_milliseconds(1 MILLIS);
   get_data(maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
   if(data.repartition == REPARTITION && data.tv_enable == TV_ON){
@@ -185,6 +185,10 @@ int main(void)
   DrivingMaps_h maps={0};
   thrd_t map_core={0};
 
+  if (hardware_init_can(CAN_GENERAL, _500_KBYTE_S_)<0) {
+    goto end;
+  }
+
   if(create_virtual_chip() <0){
     goto end;
   }
@@ -194,13 +198,10 @@ int main(void)
     goto end;
   }
 
-  if (hardware_init_can(CAN_GENERAL, _500_KBYTE_S_)<0) {
-    goto end;
-  }
 
   thrd_create(&map_core, core_map, &maps);
 
-  wait_milliseconds(5 MILLIS);
+  wait_milliseconds(1 MILLIS);
 
 
   test_default_active_maps(&maps);
