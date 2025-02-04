@@ -21,7 +21,7 @@ enum LOG_MODE{
 };
 
 typedef struct Log_h{
-    const uint8_t private_data[33];
+    const uint8_t private_data[41];
 }Log_h;
 
 int8_t

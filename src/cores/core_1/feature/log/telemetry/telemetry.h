@@ -5,7 +5,7 @@
 #include "../log_obj_types.h"
 
 typedef struct LogTelemetry_h{
-    const uint8_t private_data[32];
+    const uint8_t private_data[40];
 }LogTelemetry_h;
 
 
@@ -19,8 +19,6 @@ log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
 
 int8_t
 log_telemetry_lock_json(LogTelemetry_h* const restrict self)__attribute__((__nonnull__(1)));
-int8_t
-log_telemetry_unlock_json(LogTelemetry_h* const restrict self)__attribute__((__nonnull__(1)));
 
 int8_t
 log_telemetry_destroy(LogTelemetry_h* const restrict self)__attribute__((__nonnull__(1)));
