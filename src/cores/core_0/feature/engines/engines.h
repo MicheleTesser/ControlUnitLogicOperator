@@ -16,7 +16,7 @@ enum ENGINES {
 };
 
 #define FOR_EACH_ENGINE(exp) \
-    for(enum ENGINES index_engine=FRONT_LEFT;index_engine<=__NUM_OF_ENGINES__;index_engine++){\
+    for(enum ENGINES index_engine=FRONT_LEFT;index_engine<__NUM_OF_ENGINES__;index_engine++){\
         exp;\
     };
 

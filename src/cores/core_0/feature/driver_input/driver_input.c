@@ -13,6 +13,7 @@ struct DriverInput_t{
   struct CanMailbox* drivers_mailboxes[__NUM_OF_DRIVERS__ -1];
   enum DRIVER current_driver;
   GpioRead_h gpio_rtd_button;
+  uint8_t dv_rtd_input_request:1;
 };
 
 union DriverInput_h_t_conv{
@@ -25,16 +26,17 @@ union DriverInput_h_t_conv_const{
   const struct DriverInput_t* const restrict clear;
 };
 
-#ifdef DEBUG
-const uint8_t __assert_driver_input_size[sizeof(struct DriverInput_h) == sizeof(struct DriverInput_t)? 1 : -1];
-#endif /* ifdef DEBUG */
-
 union DriverInputConv{
   struct DriverInput_h* const hidden;
   struct DriverInput_t* const clear;
 };
 
-static inline index_tye compute_data_index(const struct DriverInput_t* const restrict self,
+#ifdef DEBUG
+const uint8_t __assert_driver_input_size[sizeof(DriverInput_h) == sizeof(struct DriverInput_t)? 1 : -1];
+#endif /* ifdef DEBUG */
+
+static inline index_tye
+compute_data_index(const struct DriverInput_t* const restrict self,
     const enum DRIVER driver, const enum INPUT_TYPES driver_input)
 {
   if (driver != __NUM_OF_DRIVERS__ && driver_input != __NUM_OF_INPUT_TYPES__)
@@ -46,7 +48,8 @@ static inline index_tye compute_data_index(const struct DriverInput_t* const res
 
 //public
 
-int8_t driver_input_init(struct DriverInput_h* const restrict self)
+int8_t
+driver_input_init(struct DriverInput_h* const restrict self)
 {
   union Conv{
     struct DriverInput_h* const restrict hidden;
@@ -75,7 +78,8 @@ int8_t driver_input_init(struct DriverInput_h* const restrict self)
   return 0;
 }
 
-int8_t driver_input_change_driver(struct DriverInput_h* const restrict self,
+int8_t
+driver_input_change_driver(struct DriverInput_h* const restrict self,
     const enum DRIVER driver)
 {
   union Conv{
@@ -91,14 +95,14 @@ int8_t driver_input_change_driver(struct DriverInput_h* const restrict self,
   return -1;
 }
 
-  int8_t
+int8_t
 driver_input_update(DriverInput_h* const restrict self )
 {
   union DriverInput_h_t_conv conv = {self};
   struct DriverInput_t* const restrict p_self = conv.clear;
-  can_obj_can2_h_t o2;
-  can_obj_can3_h_t o3;
-  CanMessage mex;
+  can_obj_can2_h_t o2={0};
+  can_obj_can3_h_t o3={0};
+  CanMessage mex={0};
   struct CanMailbox* mailbox = NULL;
   index_tye index_input = 0;
 
@@ -149,6 +153,8 @@ driver_input_update(DriverInput_h* const restrict self )
           return -1;
         }
         p_self->driver_data[index_input] = o3.can_0x07d_DV_Driver.Steering_angle;
+
+        //TODO: add message for dv rtd request
       }
       break;
     default:
@@ -157,7 +163,8 @@ driver_input_update(DriverInput_h* const restrict self )
   return 0;
 }
 
-float driver_input_get(const struct DriverInput_h* const restrict self,
+float
+driver_input_get(const struct DriverInput_h* const restrict self, 
     const enum INPUT_TYPES driver_input)
 {
   const union DriverInput_h_t_conv_const conv = {self};
@@ -171,7 +178,7 @@ float driver_input_get(const struct DriverInput_h* const restrict self,
   return -1;
 }
 
-  int8_t
+int8_t
 driver_input_rtd_request(const DriverInput_h* const restrict self)
 {
   const union DriverInput_h_t_conv_const conv = {self};
@@ -180,13 +187,14 @@ driver_input_rtd_request(const DriverInput_h* const restrict self)
     case DRIVER_HUMAN:
       return gpio_read_state(&p_self->gpio_rtd_button);
     case DRIVER_EMBEDDED:
-      //TODO: not yet defined
+      return p_self->dv_rtd_input_request;
     default:
       return -1;
   }
 }
 
-void driver_input_destroy(struct DriverInput_h* restrict self)
+void
+driver_input_destroy(struct DriverInput_h* restrict self)
 {
   union Conv{
     struct DriverInput_h* const restrict hidden;
