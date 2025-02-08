@@ -7,6 +7,7 @@
 #include <linux/can.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <threads.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -61,7 +62,10 @@ struct EmulationAmkInverter_t{
     struct AMK_Actual_Values_2 amk_data_2;
   }engines[4];
   int can_fd;
+  thrd_t t;
+  thrd_t update;
   uint8_t rf_signal:1;
+  uint8_t running:1;
 };
 
 union AmkInverter_h_t_conv{
@@ -93,7 +97,7 @@ car_amk_inverter_update(void* args)
   union AmkInverter_h_t_conv conv = {args};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
 
-  while (1)
+  while (p_self->running)
   {
     struct can_frame mex = {0};
     can_obj_can1_h_t o1 ={0};
@@ -177,7 +181,8 @@ static int inverter_start(void* args __attribute_maybe_unused__)
   time_var_microseconds start_precharge =0;
   time_var_microseconds t = 0;
 
-  while (1) {
+  while (p_self->running)
+  {
     uint8_t precharge_ready=1;
 
     FOR_EACH_ENGINE({
@@ -237,12 +242,11 @@ car_amk_inverter_class_init(struct EmulationAmkInverter_h* self, const char* can
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   p_self->can_fd = can_init(can_interface);
+  p_self->running=1;
 
   memset(self, 0, sizeof(*self));
-  thrd_t t;
-  thrd_t update;
-  thrd_create(&t, inverter_start, self);
-  thrd_create(&update, car_amk_inverter_update, self);
+  thrd_create(&p_self->t, inverter_start, self);
+  thrd_create(&p_self->update, car_amk_inverter_update, self);
 }
 
 void 
@@ -342,4 +346,15 @@ int8_t car_amk_inverter_toggle_rf(struct EmulationAmkInverter_h* self)
   p_self->rf_signal ^= 1;
 
   return 0;
+}
+
+void car_amk_inverter_stop(struct EmulationAmkInverter_h* self)
+{
+  union AmkInverter_h_t_conv conv = {self};
+  struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
+  
+  p_self->running=0;
+  shutdown(p_self->can_fd, SHUT_RDWR);
+
+  return;
 }

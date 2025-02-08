@@ -120,12 +120,6 @@ int main(void)
     goto end;
   }
 
-  if (virtual_can_manager_init()<0)
-  {
-    FAILED("failed init virtual can manager");
-    goto end;
-  }
-
   if (driver_input_init(&driver_input)<0)
   {
     FAILED("failed init driver input");
@@ -154,6 +148,10 @@ int main(void)
 
   run=0;
   thrd_join(core,NULL);
+  printf("stopping inverter\n");
+  car_amk_inverter_stop(&amk_inverter_emulation);
+  printf("stopping can module\n");
+  stop_thread_can();
 end:
   print_SCORE();
   return 0;

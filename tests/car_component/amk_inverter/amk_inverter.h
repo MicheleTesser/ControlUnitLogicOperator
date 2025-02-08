@@ -22,7 +22,7 @@ enum ENGINE_STATUS{
 };
 
 typedef struct EmulationAmkInverter_h{
-  const char private_date[80];
+  const char private_date[104];
 }EmulationAmkInverter_h;
 
 void
@@ -44,5 +44,7 @@ car_amk_inverter_set_engine_value(struct EmulationAmkInverter_h* self,
 
 int8_t
 car_amk_inverter_toggle_rf(struct EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
+
+void car_amk_inverter_stop(struct EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_AMK_INVERTER__

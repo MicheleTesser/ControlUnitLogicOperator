@@ -193,11 +193,6 @@ int main(void)
     goto end;
   }
 
-  if (virtual_can_manager_init()<0)
-  {
-    goto end;
-  }
-
 
   thrd_create(&map_core, core_map, &maps);
 

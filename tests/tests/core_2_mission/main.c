@@ -111,10 +111,6 @@ int main(void)
     goto end;
   }
 
-  if (virtual_can_manager_init()<0) {
-    goto end;
-  }
-
 
   while (lock_mission_ref_get_mut(&locker)<0);
   thrd_create(&mission_thread, mission_loop, &mission);

@@ -321,10 +321,6 @@ int main(void)
     goto end;
   }
 
-  if (virtual_can_manager_init()<0) {
-    goto end;
-  }
-
   thrd_create(&driver, driver_loop, &o_driver);
   sleep(3);
 

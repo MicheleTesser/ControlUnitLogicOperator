@@ -2,6 +2,6 @@
 #define __LINUX_BOARD_CAN__
 
 #include "./raceup_board/components/can.h"
-int8_t virtual_can_manager_init(void);
+void stop_thread_can(void);
 
 #endif // !__LINUX_BOARD_CAN__
