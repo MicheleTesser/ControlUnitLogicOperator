@@ -34,7 +34,8 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
     memset(p_self, 0, sizeof(*p_self));
 
     ACTION_ON_CAN_NODE(CAN_DV,{
-        p_self->dv_brake_mailbox = hardware_get_mailbox(can_node, CAN_ID_DV_DRIVER,3);
+        p_self->dv_brake_mailbox =
+        hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_DV_DRIVER,3);
     })
     if (!p_self->dv_brake_mailbox)
     {
@@ -42,7 +43,8 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
     }
 
     ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->human_brake_mailbox = hardware_get_mailbox(can_node, CAN_ID_DRIVER, 4);
+        p_self->human_brake_mailbox =
+          hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_DRIVER, 4);
     })
     if (!p_self->human_brake_mailbox)
     {

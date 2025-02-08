@@ -22,6 +22,7 @@ static inline int8_t check_nodes(EmergencyNode_h** nodes, uint8_t node_num)
   if (gpio_read_state(&gpio_scs)!= status)
   {
     FAILED("scs gpio and nodes status differ");
+    printf("scs: %d, status: %d\n", gpio_read_state(&gpio_scs), status);
   }
   return status;
 }
@@ -96,11 +97,6 @@ int main(void)
   EmergencyNode_h emergency_node_2 = {0};
 
   if (create_virtual_chip() < 0) {
-    goto end;
-  }
-
-
-  if (hardware_init_trap()<0) {
     goto end;
   }
 

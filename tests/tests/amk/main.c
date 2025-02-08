@@ -37,10 +37,53 @@ static void test_initial_status(EngineType* self)
   PASSED("initial rtd status is SYSTEM_OFF");
 }
 
+#define CHECK_STATUS_RTD(self, expected)\
+{\
+  enum RUNNING_STATUS status = engine_rtd_procedure(self);\
+  if (status != expected)\
+  {\
+    FAILED("after system ready status is not what expected");\
+    printf("expected: %d, given: %d\n",expected, status);\
+  }\
+  else\
+  {\
+    PASSED("after system ready status is SYSTEM_OFF");\
+  }\
+}
+
+static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inverter)
+{
+  car_amk_inverter_reset(inverter);
+  FOR_EACH_ENGINE({
+    car_amk_inverter_set_attribute(inverter, SYSTEM_READY, index_engine, 1);
+  });
+
+  printf("system ready but precharge not yet started: ");
+  CHECK_STATUS_RTD(self, SYSTEM_OFF);
+
+  FOR_EACH_ENGINE({
+    car_amk_inverter_set_attribute(inverter, START_PRECHARGE, index_engine, 1);
+  });
+
+  printf("system ready and precharge started: ");
+  CHECK_STATUS_RTD(self, SYSTEM_PRECAHRGE);
+
+  wait_milliseconds(1 SECONDS);
+
+  printf("still system ready and precharge after 1 second: ");
+  CHECK_STATUS_RTD(self, SYSTEM_PRECAHRGE);
+
+  wait_milliseconds(4 SECONDS);
+
+  printf("still system ready and precharge completed -> TS_READY: ");
+  CHECK_STATUS_RTD(self, TS_READY);
+
+}
+
 
 int main(void)
 {
-  struct AmkInverter amk_inverter_emulation = {0};
+  struct EmulationAmkInverter_h amk_inverter_emulation = {0};
   AmkInverter_h amk={0};
   EngineType engine = {0};
   DriverInput_h driver_input = {0};
@@ -62,12 +105,6 @@ int main(void)
   if (hardware_init_can(CAN_DV, _500_KBYTE_S_)<0)
   {
     FAILED("failed init can dv");
-    goto end;
-  }
-
-  if (hardware_init_trap()<0)
-  {
-    FAILED("failed init trap");
     goto end;
   }
 
@@ -96,7 +133,7 @@ int main(void)
   }
 
 
-  car_amk_inverter_class_init(&amk_inverter_emulation);
+  car_amk_inverter_class_init(&amk_inverter_emulation,"culo_can_0");
   if (amk_module_init(&amk, &driver_input, &engine)<0)
   {
     FAILED("failed init amk module");
@@ -113,6 +150,7 @@ int main(void)
   thrd_create(&core, core_update, &input);
 
   test_initial_status(&engine);
+  test_start_precharge(&engine, &amk_inverter_emulation);
 
   run=0;
   thrd_join(core,NULL);

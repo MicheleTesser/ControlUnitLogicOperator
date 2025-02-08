@@ -3,9 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <linux/can.h>
+#include <linux/can/raw.h>
 
 // Initialize CAN interface
-int can_init(const char *ifname) {
+int can_init_full(const char* const ifname, const uint16_t filter_id, const uint16_t mask_id)
+{
     int s;
     struct sockaddr_can addr;
     struct ifreq ifr;
@@ -30,6 +34,17 @@ int can_init(const char *ifname) {
     if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("Bind");
         return -1;
+    }
+    
+    struct can_filter filter={
+      .can_id = filter_id,
+      .can_mask = mask_id,
+    };
+
+    if(setsockopt(s, SOL_CAN_RAW, CAN_RAW_FILTER, &filter, sizeof(filter))<0)
+    {
+      perror("Setsocket error");
+      return -1;
     }
 
     return s;

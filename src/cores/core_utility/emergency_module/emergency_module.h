@@ -8,7 +8,7 @@
 
 typedef struct EmergencyNode_h
 {
-  const uint8_t private_data[24];
+  const uint8_t private_data[9];
 }EmergencyNode_h;
 
 int8_t EmergencyNode_class_init(void);

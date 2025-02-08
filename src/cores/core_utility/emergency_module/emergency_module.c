@@ -13,7 +13,6 @@ struct EmergencyNode_t
 {
   uint8_t emergency_buffer[NUM_EMERGENCY_BUFFER];
   uint8_t emergency_counter;
-  uint8_t *emergency_state;
 };
 
 union EmergencyNode_h_t_conv
@@ -35,7 +34,7 @@ static struct{
   uint8_t init_done:1;
 }EXCEPTION_COUNTER;
 
-static void raise_module_exception_state(void) TRAP_ATTRIBUTE
+static void raise_module_exception_state(void) 
 {
   while (atomic_flag_test_and_set(&EXCEPTION_COUNTER.lock));
   EXCEPTION_COUNTER.excepion_counter++;
@@ -43,7 +42,7 @@ static void raise_module_exception_state(void) TRAP_ATTRIBUTE
   atomic_flag_clear(&EXCEPTION_COUNTER.lock);
 }
 
-static void solved_module_exception_state(void) TRAP_ATTRIBUTE
+static void solved_module_exception_state(void)
 {
   while (atomic_flag_test_and_set(&EXCEPTION_COUNTER.lock));
   EXCEPTION_COUNTER.excepion_counter--;
@@ -52,6 +51,15 @@ static void solved_module_exception_state(void) TRAP_ATTRIBUTE
     gpio_set_high(&EXCEPTION_COUNTER.gpio_scs);
   }
   atomic_flag_clear(&EXCEPTION_COUNTER.lock);
+}
+
+static uint8_t read_globla_emergency_couner(void)
+{
+  while (atomic_flag_test_and_set(&EXCEPTION_COUNTER.lock));
+  const uint8_t res= EXCEPTION_COUNTER.excepion_counter;
+  atomic_flag_clear(&EXCEPTION_COUNTER.lock);
+
+  return res;
 }
 
 #ifdef DEBUG
@@ -79,10 +87,6 @@ EmergencyNode_init(EmergencyNode_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
-  hardware_trap_attach_fun(EMERGENCY_RAISED_TRAP, raise_module_exception_state);
-  hardware_trap_attach_fun(EMERGENCY_SOLVED_TRAP, solved_module_exception_state);
-  p_self->emergency_state = &EXCEPTION_COUNTER.excepion_counter;
-
   return 0;
 }
 
@@ -101,8 +105,8 @@ int8_t EmergencyNode_raise(struct EmergencyNode_h* const restrict self, const ui
   p_self->emergency_buffer[exception_byte] |= 1 << exception_bit;
   p_self->emergency_counter++;
 
-  if (!p_self->emergency_counter) {
-    hardware_raise_trap(EMERGENCY_RAISED_TRAP);
+  if (p_self->emergency_counter) {
+    raise_module_exception_state();
   }
 
   return 0;
@@ -128,7 +132,7 @@ int8_t EmergencyNode_solve(struct EmergencyNode_h* const restrict self, const ui
 
   if (!p_self->emergency_counter)
   {
-    hardware_raise_trap(EMERGENCY_SOLVED_TRAP);
+    solved_module_exception_state();
   }
   
   return 0;
@@ -138,5 +142,5 @@ int8_t EmergencyNode_is_emergency_state(const struct EmergencyNode_h* const rest
 {
   const union EmergencyNode_h_t_conv_const conv = {self};
   const struct EmergencyNode_t* const restrict p_self =conv.clear;
-  return *p_self->emergency_state;
+  return p_self->emergency_counter || read_globla_emergency_couner();
 }

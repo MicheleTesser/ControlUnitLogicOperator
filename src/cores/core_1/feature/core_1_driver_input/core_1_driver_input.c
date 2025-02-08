@@ -22,7 +22,6 @@ enum DRIVER_IMP{
 struct Core1DriverInput_t{
     float driver_input[__NUM_OF_DRIVER_INPUT__];
     struct CanMailbox* driver_input_mailbox;
-    struct CanMailbox* regen_stw_mailbox;
     uint8_t impl;
 };
 
@@ -81,16 +80,10 @@ core_1_driver_input_init(
 
 
     ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->driver_input_mailbox = hardware_get_mailbox(can_node, CAN_ID_DRIVER,4);
+        p_self->driver_input_mailbox =
+          hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_DRIVER,4);
         if(!p_self->driver_input_mailbox)
         {
-        return -1;
-        }
-
-        p_self->regen_stw_mailbox = hardware_get_mailbox(can_node, CAN_ID_PADDLE, 1);
-        if(!p_self->regen_stw_mailbox)
-        {
-        hardware_free_mailbox_can(&p_self->driver_input_mailbox);
         return -1;
         }
     })

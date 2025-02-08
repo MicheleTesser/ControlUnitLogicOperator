@@ -68,11 +68,12 @@ driver_input_init(struct DriverInput_h* const restrict self)
   p_self->current_driver = DRIVER_NONE;
 
   ACTION_ON_CAN_NODE(CAN_GENERAL,{
-      p_self->drivers_mailboxes[DRIVER_HUMAN] = hardware_get_mailbox(can_node, CAN_ID_DRIVER,4);
+      p_self->drivers_mailboxes[DRIVER_HUMAN] =
+        hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_DRIVER,4);
       });
   ACTION_ON_CAN_NODE(CAN_DV,{
       p_self->drivers_mailboxes[DRIVER_EMBEDDED] =
-      hardware_get_mailbox(can_node, CAN_ID_DV_DRIVER,3);
+      hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_DV_DRIVER,3);
       })
 
   return 0;
@@ -202,7 +203,8 @@ driver_input_destroy(struct DriverInput_h* restrict self)
   };
   union Conv d_conv = {self};
   struct DriverInput_t* const p_self = d_conv.clear;
-  for (uint8_t i=0; i < __NUM_OF_DRIVERS__; i++ ) {
+  for (uint8_t i=0; i < __NUM_OF_DRIVERS__; i++ )
+  {
     hardware_free_mailbox_can(&p_self->drivers_mailboxes[i]);
   }
 }

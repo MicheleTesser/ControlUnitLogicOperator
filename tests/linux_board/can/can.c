@@ -20,97 +20,75 @@ typedef  uint8_t BoardComponentId;
 
 struct CanNode{
   const char* can_interface;
-  uint8_t can_fd;
   atomic_flag taken;
   uint8_t init_done:1;
-  uint8_t mex_to_read:1;
-  uint8_t read_mailbox[NUM_OF_MAILBOX];
-  uint8_t last_read_m;
-  uint8_t write_mailbox[NUM_OF_MAILBOX];
-  uint8_t last_write_m;
+};
+
+struct FifoBuffer{
+  CanMessage buffer[32];
+  uint8_t head;
+  uint8_t tail;
+  uint16_t filter_id;
+  uint16_t filter_mask;
 };
 
 struct CanMailbox{
-    CanMessage mex;
-    uint8_t mailbox_mode:1;
-    atomic_bool action_flag_mailbox;
-    uint8_t init_done:1;
+  struct FifoBuffer fifo_buffer;
+  atomic_flag lock;
+  thrd_t thread;
+  int can_fd;
+  enum MAILBOX_TYPE type:2;
 };
 
 enum MAILBOX_MODE{
-    MAILBOX_RECV=0,
-    MAILBOX_SEND=1,
+  MAILBOX_RECV=0,
+  MAILBOX_SEND=1,
 };
 
 static struct{
-    struct CanNode nodes[__NUM_OF_CAN_MODULES__];
-}BOARD_CAN_NODES;
-static uint8_t run=1;
+  struct CanMailbox pool[NUM_OF_MAILBOX];
+  uint8_t last_assigned;
+}MAILBOX_POOL;
 
 static struct{
-    struct CanMailbox mailbox_pool[NUM_OF_MAILBOX];
-    uint16_t last_assigned;
-}MAILBOX_MANAGER;
+  struct CanNode nodes[__NUM_OF_CAN_MODULES__];
+}BOARD_CAN_NODES;
 
-static int read_mailbox_f(void* args )
+static int run_recv_mailbox(void* args)
 {
-  struct CanNode * const restrict node = args;
-  while (!node->init_done) {}
-  while(run)
+  struct CanMailbox* const restrict self = args;
+
+  while (1)
   {
-    CanMessage mex={0};
-    hardware_read_can(node, &mex);
-    for (uint8_t i=0; i<node->last_read_m; i++)
-    {
-      struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->read_mailbox[i]];
-      if (m->mex.id == mex.id)
-      {
-        memcpy(&m->mex, &mex, sizeof(mex));
-        atomic_store(&m->action_flag_mailbox, 1);
-        break;
-      }
-    }
-  }
-  return 0;
-}
+    struct can_frame frame = {0};
 
-static int write_mailbox_f(void* args)
-{
-  return 0;
-  struct CanNode * const restrict node = args;
-  while (!node->init_done ) {}
-  for (uint8_t i=0; i<node->last_write_m && run; i= (i+1)%node->last_write_m) {
-    struct CanMailbox* m = &MAILBOX_MANAGER.mailbox_pool[node->write_mailbox[i]];
-    if (atomic_load(&m->action_flag_mailbox))
+    can_recv_frame(self->can_fd, &frame);
+    while (atomic_flag_test_and_set(&self->lock));
+    switch (self->type)
     {
-      hardware_write_can(node,&m->mex);
-      atomic_store(&m->action_flag_mailbox, 0);
+      case RECV_MAILBOX:
+        self->fifo_buffer.buffer[0].id = frame.can_id;
+        memcpy(&self->fifo_buffer.buffer[0].full_word, frame.data, sizeof(frame.data));
+        break;
+      case SEND_MAILBOX:
+        break;
+      case FIFO_BUFFER:
+        //TODO: not yet defined
+        break;
     }
+    //TODO:
+    atomic_flag_clear(&self->lock);
   }
+
   return 0;
 }
 
 //public
 
-thrd_t thrd;
-thrd_t thrd1;
-thrd_t thrd2;
-thrd_t thrd3;
-
-int8_t virtual_can_manager_init(void)
-{
-    thrd_create(&thrd, write_mailbox_f, NULL);
-    thrd_create(&thrd1, read_mailbox_f, &BOARD_CAN_NODES.nodes[0]);
-    thrd_create(&thrd2, read_mailbox_f, &BOARD_CAN_NODES.nodes[1]);
-    thrd_create(&thrd3, read_mailbox_f, &BOARD_CAN_NODES.nodes[2]);
-    return 0;
-}
-
 int8_t
 hardware_init_can(const enum CAN_MODULES mod,
-        const enum CAN_FREQUENCY baud_rate __attribute__((__unused__)))
+    const enum CAN_FREQUENCY baud_rate __attribute__((__unused__)))
 {
-  uint8_t can_fd;
   const char* can_interface=NULL;
   if (mod == __NUM_OF_CAN_MODULES__)
   {
@@ -120,152 +98,149 @@ hardware_init_can(const enum CAN_MODULES mod,
   switch (mod) {
     case 0:
       can_interface = CAN_INTERFACE_0;
-      can_fd = can_init(CAN_INTERFACE_0);
       break;
     case 1:
       can_interface = CAN_INTERFACE_1;
-      can_fd = can_init(CAN_INTERFACE_1);
       break;
     case 2:
       can_interface = CAN_INTERFACE_2;
-      can_fd = can_init(CAN_INTERFACE_2);
       break;
     default:
       atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
       return -1;
   }
   BOARD_CAN_NODES.nodes[mod].can_interface = can_interface;
-  BOARD_CAN_NODES.nodes[mod].can_fd = can_fd;
   BOARD_CAN_NODES.nodes[mod].init_done =1;
 
   atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
   return 0;
 }
 
-struct CanNode*
+  struct CanNode*
 hardware_init_can_get_ref_node(const enum CAN_MODULES mod)
 {
-    struct CanNode* node =  &BOARD_CAN_NODES.nodes[mod];
-    while(atomic_flag_test_and_set(&node->taken));
-    if (!node->init_done) {
-        atomic_flag_clear(&node->taken);
-        return NULL;
-    }
-    return node;
+  struct CanNode* node =  &BOARD_CAN_NODES.nodes[mod];
+  while(atomic_flag_test_and_set(&node->taken));
+  if (!node->init_done) {
+    atomic_flag_clear(&node->taken);
+    return NULL;
+  }
+  return node;
 }
 
 void
 hardware_init_can_destroy_ref_node(struct CanNode** restrict self)
 {
-    atomic_flag_clear(&(*self)->taken);
-    self=NULL;
+  atomic_flag_clear(&(*self)->taken);
+  self=NULL;
 }
 
 int8_t
 hardware_read_can(struct CanNode* const restrict self __attribute_maybe_unused__,
-        CanMessage* const restrict mex )
+    CanMessage* const restrict mex )
 {
-    struct can_frame frame;
-    memset(&frame, 0, sizeof(frame));
-    int can_node = can_init(self->can_interface);
-    //HACK: using the fd in the CanNode create problems, i don't know why, this will do the trick for now
-    can_recv_frame(can_node, &frame);
-    mex->message_size = frame.len;
-    mex->id = frame.can_id;
-    memcpy(mex->buffer, frame.data, frame.len);
-    close(can_node);
-    return 0;
+  struct can_frame frame;
+  memset(&frame, 0, sizeof(frame));
+  int can_node = can_init(self->can_interface);
+  can_recv_frame(can_node, &frame);
+  mex->message_size = frame.len;
+  mex->id = frame.can_id;
+  memcpy(mex->buffer, frame.data, frame.len);
+  close(can_node);
+  return 0;
 }
 
 int8_t
 hardware_write_can(const struct CanNode* const restrict self ,
-        const CanMessage* restrict const mex )
+    const CanMessage* restrict const mex )
 {
-    struct can_frame frame;
-    memset(&frame, 0, sizeof(frame));
-    int can_node = self->can_fd;
-    frame.can_id = mex->id;
-    frame.len = mex->message_size;
-    memcpy(frame.data, mex->buffer, mex->message_size);
-    can_send_frame(can_node, &frame);
-    return 0;
+  struct can_frame frame;
+  memset(&frame, 0, sizeof(frame));
+  int can_node = can_init(self->can_interface);
+  frame.can_id = mex->id;
+  frame.len = mex->message_size;
+  memcpy(frame.data, mex->buffer, mex->message_size);
+  can_send_frame(can_node, &frame);
+  close(can_node);
+  return 0;
 }
 
 struct CanMailbox*
-hardware_get_mailbox(struct CanNode* const restrict self,
-        const uint16_t mex_id, const uint16_t mex_size)
+hardware_get_mailbox(struct CanNode* const restrict self, const enum MAILBOX_TYPE type,
+    const uint16_t filter_id, const uint16_t filter_mask, uint16_t mex_size)
 {
-    struct CanMailbox* mailbox;
-    uint8_t maillbox_index = MAILBOX_MANAGER.last_assigned++;
+  struct CanMailbox* mailbox;
+  uint16_t maillbox_index = MAILBOX_POOL.last_assigned++;
 
-    if (MAILBOX_MANAGER.last_assigned >= NUM_OF_MAILBOX) {
-        return NULL;
-    }
+  if (maillbox_index >= NUM_OF_MAILBOX) {
+    return NULL;
+  }
 
-    mailbox = &MAILBOX_MANAGER.mailbox_pool[maillbox_index];
+  mailbox = &MAILBOX_POOL.pool[maillbox_index];
 
-    mailbox->mex.id = mex_id;
-    mailbox->mex.message_size = mex_size;
-    mailbox->init_done=1;
-    mailbox->mailbox_mode =MAILBOX_RECV;
+  mailbox->type = type;
+  mailbox->fifo_buffer.filter_id = filter_id;
+  mailbox->fifo_buffer.buffer[0].message_size = mex_size; 
 
-    self->read_mailbox[self->last_read_m++]=maillbox_index;
+  switch (type)
+  {
+    case FIFO_BUFFER:
+      mailbox->fifo_buffer.filter_mask = filter_mask;
+      mailbox->can_fd = can_init_full(self->can_interface, filter_id, filter_mask);
+      thrd_create(&mailbox->thread, run_recv_mailbox, mailbox);
+      break;
+    case RECV_MAILBOX:
+      mailbox->can_fd = can_init_full(self->can_interface, filter_id, ~0);
+      thrd_create(&mailbox->thread, run_recv_mailbox, mailbox);
+      break;
+    case SEND_MAILBOX:
+      mailbox->can_fd = can_init(self->can_interface);
+      break;
+    default:
+      MAILBOX_POOL.last_assigned--;
+      return NULL;
+  }
 
-    return  mailbox;
-}
 
-struct CanMailbox*
-hardware_get_mailbox_send(struct CanNode* const restrict self,
-        const uint16_t mex_id, const uint16_t mex_size)
-{
-    struct CanMailbox* mailbox;
-    uint8_t maillbox_index = MAILBOX_MANAGER.last_assigned++;
-
-    if (MAILBOX_MANAGER.last_assigned >= NUM_OF_MAILBOX) {
-        return NULL;
-    }
-
-    mailbox = &MAILBOX_MANAGER.mailbox_pool[maillbox_index];
-
-    mailbox->mex.id = mex_id;
-    mailbox->mex.message_size = mex_size;
-    mailbox->init_done=1;
-    mailbox->mailbox_mode =MAILBOX_SEND;
-
-    self->write_mailbox[self->last_write_m++]=maillbox_index;
-
-    return mailbox;
+  return  mailbox;
 }
 
 int8_t
 hardware_mailbox_read(struct CanMailbox* const restrict self ,
-        CanMessage* const restrict o_mex)
+    CanMessage* const restrict o_mex)
 {
-    if (atomic_load(&self->action_flag_mailbox))
-    {
-        memcpy(o_mex, &self->mex, sizeof(*o_mex));
-        atomic_store(&self->action_flag_mailbox, 0);
-        return self->mex.message_size;   
-    }
-
+  if (self->type == SEND_MAILBOX)
+  {
     return -1;
+  }
+  while (atomic_flag_test_and_set(&self->lock));
+  memcpy(o_mex, &self->fifo_buffer.buffer[0], sizeof(*o_mex));
+  atomic_flag_clear(&self->lock);
+  return 0;
 }
 
 int8_t
 hardware_mailbox_send(struct CanMailbox* const restrict self,
-        const uint64_t data)
+    const uint64_t data)
 {
-    self->mex.full_word = data;
-    atomic_store(&self->action_flag_mailbox, 1);
-    return 0;
+  if (self->type!=SEND_MAILBOX)
+  {
+    return -1;
+  }
+  CanMessage* mex = &self->fifo_buffer.buffer[0];
+
+  mex->full_word = data;
+  struct can_frame frame = {
+    .can_id = mex->id,
+    .can_dlc = mex->message_size,
+  };
+  memcpy(frame.data, &data, sizeof(data));
+  return can_send_frame(self->can_fd, &frame);
 }
 
-void
-hardware_free_mailbox_can(struct CanMailbox* const* restrict self)
+extern void
+hardware_free_mailbox_can(struct CanMailbox** restrict self)
 {
-    struct CanMailbox* mailbox = *self;
-    mailbox->init_done=1;
-    printf("mailbox free index to set\n");
-    self = NULL;
-    return;
+  memset(*self, 0, sizeof(**self));
+  self=NULL;
 }

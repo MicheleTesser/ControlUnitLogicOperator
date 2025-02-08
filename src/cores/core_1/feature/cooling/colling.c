@@ -52,7 +52,8 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     memset(p_self, 0, sizeof(*p_self));
 
     ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->send_mailbox = hardware_get_mailbox_send(can_node, CAN_ID_PCU,2);
+        p_self->send_mailbox =
+          hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCU,2);
     })
     if (!p_self->send_mailbox)
     {

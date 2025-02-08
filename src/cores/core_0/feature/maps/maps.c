@@ -125,7 +125,8 @@ driving_maps_init(DrivingMaps_h* const restrict self )
     memset(p_self, 0, sizeof(*p_self));
 
     ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->map_mailbox = hardware_get_mailbox(can_node, CAN_ID_MAP, 3);
+        p_self->map_mailbox =
+          hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_MAP, 3);
     })
 
     if (!p_self->map_mailbox)

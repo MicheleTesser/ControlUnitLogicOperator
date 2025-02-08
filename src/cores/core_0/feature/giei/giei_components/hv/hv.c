@@ -35,12 +35,14 @@ hv_init(
 
     memset(p_self, 0, sizeof(*p_self));
     ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->lem_mailbox = hardware_get_mailbox(can_node, CAN_ID_BMSHV1,7);
+        p_self->lem_mailbox =
+          hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_BMSHV1,7);
         if (!p_self->lem_mailbox) {
         return -1;
         }
 
-        p_self->send_mailbox_bms_hv = hardware_get_mailbox_send(can_node, CAN_ID_INVVOLT, 2);
+        p_self->send_mailbox_bms_hv =
+          hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_INVVOLT, 2);
         if (!p_self->send_mailbox_bms_hv) {
         hardware_free_mailbox_can(&p_self->lem_mailbox);
         }
