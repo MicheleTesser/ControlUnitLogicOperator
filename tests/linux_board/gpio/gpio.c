@@ -138,7 +138,7 @@ error_setting_direction:
 
 int8_t
 hardware_init_read_permission_gpio(GpioRead_h* const restrict self,
-        const enum GPIO_PIN id)
+        const uint16_t id)
 {
     struct GpioRead_t* p_self = (struct GpioRead_t*) self;
     p_self->gpio_id = id;
@@ -147,7 +147,7 @@ hardware_init_read_permission_gpio(GpioRead_h* const restrict self,
 
 int8_t
 hardware_init_gpio(Gpio_h* const restrict self , 
-        const enum GPIO_PIN id)
+        const uint16_t id)
 {
     struct Gpio_t* p_self = (struct Gpio_t*) self;
     p_self->read.gpio_id=id;

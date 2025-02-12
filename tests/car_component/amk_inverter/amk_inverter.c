@@ -1,8 +1,8 @@
 #include "amk_inverter.h"
 #include "../../linux_board/linux_board.h"
-#include "../../linux_board/can/can_lib/canlib.h"
 #include "../src/cores/core_0/feature/engines/engines.h"
 #include "../src/lib/board_dbc/dbc/out_lib/can1/can1.h"
+#include "../external_gpio.h"
 
 #include <linux/can.h>
 #include <stdint.h>
@@ -62,13 +62,13 @@ struct EmulationAmkInverter_t{
     struct AMK_Actual_Values_1 amk_data_1;
     struct AMK_Actual_Values_2 amk_data_2;
   }engines[4];
-  int can_fd;
+  struct CanNode* CanNodeInverter;
   thrd_t t;
   thrd_t update;
-  uint8_t rf_signal:1;
   uint8_t running:1;
   Gpio_h air_1;
   Gpio_h air_2;
+  GpioRead_h rf_signal;
 };
 
 union AmkInverter_h_t_conv{
@@ -102,26 +102,25 @@ car_amk_inverter_update(void* args)
 
   while (p_self->running)
   {
-    struct can_frame mex = {0};
+    CanMessage mex = {0};
     can_obj_can1_h_t o1 ={0};
+    const uint8_t rf_signal = gpio_read_state(&p_self->rf_signal);
 
-    can_recv_frame(p_self->can_fd, &mex);
-    unpack_message_can1(&o1, mex.can_id,*(uint64_t *) mex.data, mex.can_dlc, 0);
-    switch (mex.can_id)
+    hardware_read_can(p_self->CanNodeInverter,&mex);
+    unpack_message_can1(&o1, mex.id,mex.full_word, mex.message_size, 0);
+    switch (mex.id)
     {
       case CAN_ID_VCUINVFL:
-        // printf("sys ready inv: %d\n", p_self->engines[0].amk_data_1.AMK_STATUS.AMK_bSystemReady);
-        // printf("mex hv: %d\n", o1.can_0x184_VCUInvFL.AMK_bDcOn);
-        UPDATE_DATA(p_self->engines[FRONT_LEFT].amk_data_1, o1.can_0x184_VCUInvFL,p_self->rf_signal);
+        UPDATE_DATA(p_self->engines[FRONT_LEFT].amk_data_1, o1.can_0x184_VCUInvFL,rf_signal);
         break;
       case CAN_ID_VCUINVFR:
-        UPDATE_DATA(p_self->engines[FRONT_RIGHT].amk_data_1, o1.can_0x185_VCUInvFR,p_self->rf_signal);
+        UPDATE_DATA(p_self->engines[FRONT_RIGHT].amk_data_1, o1.can_0x185_VCUInvFR,rf_signal);
         break;
       case CAN_ID_VCUINVRL:
-        UPDATE_DATA(p_self->engines[REAR_LEFT].amk_data_1, o1.can_0x188_VCUInvRL,p_self->rf_signal);
+        UPDATE_DATA(p_self->engines[REAR_LEFT].amk_data_1, o1.can_0x188_VCUInvRL,rf_signal);
         break;
       case CAN_ID_VCUINVRR:
-        UPDATE_DATA(p_self->engines[REAR_RIGHT].amk_data_1, o1.can_0x189_VCUInvRR,p_self->rf_signal);
+        UPDATE_DATA(p_self->engines[REAR_RIGHT].amk_data_1, o1.can_0x189_VCUInvRR,rf_signal);
         break;
     }
   }
@@ -154,7 +153,7 @@ send_data_engine(struct EmulationAmkInverter_h* self, const uint16_t can_id)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  struct can_frame mex = {0};
+  CanMessage mex = {0};
   can_obj_can1_h_t o = {0};
   uint64_t data=0;
 
@@ -174,10 +173,10 @@ send_data_engine(struct EmulationAmkInverter_h* self, const uint16_t can_id)
     default:
       return;
   }
-  mex.can_id = can_id;
-  mex.can_dlc = pack_message_can1(&o, can_id,&data);
-  memcpy(mex.data, &data, mex.can_dlc);
-  can_send_frame(p_self->can_fd, &mex);
+  mex.id= can_id;
+  mex.message_size = pack_message_can1(&o, can_id,&data);
+  memcpy(&mex.full_word, &data, mex.message_size);
+  hardware_write_can(p_self->CanNodeInverter, &mex);
 }
 
 static int inverter_start(void* args __attribute_maybe_unused__)
@@ -224,13 +223,13 @@ static int inverter_start(void* args __attribute_maybe_unused__)
       }
     }else
     {
-      // printf("closing hv\n");
       start_precharge=0;
       gpio_set_high(&p_self->air_1);
       gpio_set_high(&p_self->air_2);
     }
 
-    if (!p_self->rf_signal) {
+    if (!gpio_read_state(&p_self->rf_signal))
+    {
       FOR_EACH_ENGINE(engine){
           p_self->engines[engine].amk_data_1.AMK_STATUS.AMK_bEnable =0;
           p_self->engines[engine].amk_data_1.AMK_MagnetizingCurrent =0;
@@ -254,12 +253,12 @@ static int inverter_start(void* args __attribute_maybe_unused__)
 //public
 
 int8_t
-car_amk_inverter_class_init(struct EmulationAmkInverter_h* self, const char* can_interface)
+car_amk_inverter_class_init(struct EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   memset(self, 0, sizeof(*self));
-  p_self->can_fd = can_init(can_interface);
+  p_self->CanNodeInverter = hardware_init_can_get_ref_node_new(CAN_INVERTER);
   p_self->running=1;
   if(hardware_init_gpio(&p_self->air_1, GPIO_AIR_PRECHARGE_INIT)<0)
   {
@@ -267,6 +266,11 @@ car_amk_inverter_class_init(struct EmulationAmkInverter_h* self, const char* can
   }
 
   if(hardware_init_gpio(&p_self->air_2, GPIO_AIR_PRECHARGE_DONE)<0)
+  {
+    return -1;
+  }
+
+  if(hardware_init_read_permission_gpio(&p_self->rf_signal, GPIO_INVERTER_RF_SIGNAL)<0)
   {
     return -1;
   }
@@ -281,7 +285,6 @@ car_amk_inverter_reset(struct EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  p_self->rf_signal =0;
   FOR_EACH_ENGINE(engine){
     memset(&p_self->engines[engine].amk_data_1, 0,
         sizeof(p_self->engines[engine].amk_data_1));
@@ -327,7 +330,7 @@ car_amk_inverter_set_engine_value(struct EmulationAmkInverter_h* self,
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   struct amk_engines* p_engine = &p_self->engines[engine];
 
-  if (!p_self->rf_signal)
+  if (!gpio_read_state(&p_self->rf_signal))
   {
     return -1;
   }
@@ -371,23 +374,13 @@ car_amk_inverter_set_engine_value(struct EmulationAmkInverter_h* self,
 }
 
 
-int8_t car_amk_inverter_toggle_rf(struct EmulationAmkInverter_h* self)
-{
-  union AmkInverter_h_t_conv conv = {self};
-  struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-
-  p_self->rf_signal ^= 1;
-
-  return 0;
-}
-
 void car_amk_inverter_stop(struct EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   
   p_self->running=0;
-  shutdown(p_self->can_fd, SHUT_RDWR);
+  hardware_init_can_get_ref_node_destroy(p_self->CanNodeInverter);
 
   return;
 }

@@ -5,6 +5,7 @@
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/cdefs.h>
 #include <threads.h>
@@ -296,3 +297,36 @@ void stop_thread_can(void)
   }
 }
 
+
+//emulation
+
+struct CanNode*
+hardware_init_can_get_ref_node_new(const enum CAN_MODULES mod)
+{
+  struct CanNode* node = calloc(1, sizeof(*node));
+  const char* can_interface;
+  switch (mod) {
+    case 0:
+      can_interface = CAN_INTERFACE_0;
+      break;
+    case 1:
+      can_interface = CAN_INTERFACE_1;
+      break;
+    case 2:
+      can_interface = CAN_INTERFACE_2;
+      break;
+    default:
+      atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
+      return NULL;
+  }
+  node->can_interface = can_interface;
+  node->init_done =1;
+
+  return node;
+}
+
+void
+hardware_init_can_get_ref_node_destroy(struct CanNode* const restrict self)
+{
+  free(self);
+}

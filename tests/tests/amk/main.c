@@ -141,7 +141,7 @@ int main(void)
   }
 
 
-  if(car_amk_inverter_class_init(&amk_inverter_emulation,"culo_can_0")<0){
+  if(car_amk_inverter_class_init(&amk_inverter_emulation)<0){
     FAILED("amk emulator init failed");
     goto end;
   }

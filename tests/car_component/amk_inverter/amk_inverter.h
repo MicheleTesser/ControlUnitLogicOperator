@@ -25,8 +25,7 @@ typedef struct EmulationAmkInverter_h{
 }EmulationAmkInverter_h;
 
 int8_t
-car_amk_inverter_class_init(struct EmulationAmkInverter_h* self,
-    const char* can_interface)__attribute__((__nonnull__(1)));
+car_amk_inverter_class_init(struct EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
 
 void 
 car_amk_inverter_reset(struct EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
@@ -40,9 +39,6 @@ int8_t
 car_amk_inverter_set_engine_value(struct EmulationAmkInverter_h* self,
     const enum ENGINE_STATUS status, const uint8_t engine, 
     const float value)__attribute__((__nonnull__(1)));
-
-int8_t
-car_amk_inverter_toggle_rf(struct EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
 
 void car_amk_inverter_stop(struct EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
 
