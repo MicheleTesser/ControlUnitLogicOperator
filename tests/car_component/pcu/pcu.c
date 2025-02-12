@@ -5,8 +5,8 @@
 #include <string.h>
 
 struct Pcu_t{
-  Gpio_h inverter_on_gpio;
   struct CanNode* send_can_node_pcu_inv;
+  Gpio_h inverter_on_gpio;
 };
 
 union Pcu_h_t_conv{
