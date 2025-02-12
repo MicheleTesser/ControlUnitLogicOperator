@@ -13,43 +13,45 @@
 
 static float PIDController(const float pi_error)
 {
-    float pGain = pi_error * KP_PI;
-    float iGain = pi_error * KI_PI * T_SAMPLING_ECU;
-    float anti_wind_up =0;
+  float pGain = pi_error * KP_PI;
+  float iGain = pi_error * KI_PI * T_SAMPLING_ECU;
+  float anti_wind_up =0;
 
-    iGain+= anti_wind_up;
+  iGain+= anti_wind_up;
 
-    iGain = saturate_float(iGain, PI_UPPER_BOUND, 0);
+  iGain = saturate_float(iGain, PI_UPPER_BOUND, 0);
 
-    anti_wind_up = iGain;
+  anti_wind_up = iGain;
 
-    float pe_red = saturate_float(iGain + pGain, PI_UPPER_BOUND, 0);
+  float pe_red = saturate_float(iGain + pGain, PI_UPPER_BOUND, 0);
 
-    return pe_red/STANDARD_SPEED;
+  return pe_red/STANDARD_SPEED;
 }
 
 //public
 void powerControl(const float total_power, const float power_limit, 
-        float posTorquesNM[__NUM_OF_ENGINES__])
+    float posTorquesNM[__NUM_OF_ENGINES__])
 {
-    float sTorque = 0;
-    float power_error =2;
-    float reduction_factor=0;
-    float unsaturated_reduction = 0;
+  float sTorque = 0;
+  float power_error =2;
+  float reduction_factor=0;
+  float unsaturated_reduction = 0;
 
-    FOR_EACH_ENGINE({
-        sTorque+=posTorquesNM[index_engine];
-    })
+  FOR_EACH_ENGINE(engine)
+  {
+    sTorque+=posTorquesNM[engine];
+  }
 
-    power_error = total_power - power_limit; //limited by BMS temp
+  power_error = total_power - power_limit; //limited by BMS temp
 
-    unsaturated_reduction = PIDController(power_error);
-    reduction_factor = saturate_float(unsaturated_reduction, sTorque*(0.99f), 0)/sTorque;
+  unsaturated_reduction = PIDController(power_error);
+  reduction_factor = saturate_float(unsaturated_reduction, sTorque*(0.99f), 0)/sTorque;
 
-    if (reduction_factor > 0)
+  if (reduction_factor > 0)
+  {
+    FOR_EACH_ENGINE(engine)
     {
-        FOR_EACH_ENGINE({
-            posTorquesNM[index_engine] -= (reduction_factor*posTorquesNM[index_engine]);
-        })
+      posTorquesNM[engine] -= (reduction_factor*posTorquesNM[engine]);
     }
+  }
 }

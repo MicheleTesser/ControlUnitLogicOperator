@@ -8,7 +8,6 @@ enum INVERTER_ATTRIBUTE {
   WARNING,
   DERATRING,
   SYSTEM_READY,
-  START_PRECHARGE,
 };
 
 enum ENGINE_STATUS{
@@ -22,10 +21,10 @@ enum ENGINE_STATUS{
 };
 
 typedef struct EmulationAmkInverter_h{
-  const char private_date[104];
+  const char private_date[120];
 }EmulationAmkInverter_h;
 
-void
+int8_t
 car_amk_inverter_class_init(struct EmulationAmkInverter_h* self,
     const char* can_interface)__attribute__((__nonnull__(1)));
 

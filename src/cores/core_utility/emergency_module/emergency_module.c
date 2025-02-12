@@ -118,6 +118,7 @@ int8_t EmergencyNode_solve(struct EmergencyNode_h* const restrict self, const ui
   const uint8_t exception_bit = 1 << (exeception % 8);
   union EmergencyNode_h_t_conv conv = {self};
   struct EmergencyNode_t* const restrict p_self =conv.clear;
+  const uint8_t old_emergency_counter = p_self->emergency_counter;
 
   if (exeception >= NUM_EMERGENCY_BUFFER * 8)
   {
@@ -130,7 +131,7 @@ int8_t EmergencyNode_solve(struct EmergencyNode_h* const restrict self, const ui
     p_self->emergency_counter--;
   }
 
-  if (!p_self->emergency_counter)
+  if (!p_self->emergency_counter && old_emergency_counter)
   {
     solved_module_exception_state();
   }

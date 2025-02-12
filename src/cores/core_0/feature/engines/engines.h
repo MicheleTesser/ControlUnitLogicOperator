@@ -15,10 +15,8 @@ enum ENGINES {
     __NUM_OF_ENGINES__
 };
 
-#define FOR_EACH_ENGINE(exp) \
-    for(enum ENGINES index_engine=FRONT_LEFT;index_engine<__NUM_OF_ENGINES__;index_engine++){\
-        exp;\
-    };
+#define FOR_EACH_ENGINE(engine)\
+  for(enum ENGINES engine =0;engine<__NUM_OF_ENGINES__;engine++)
 
 enum ENGINE_INFO{
     ENGINE_VOLTAGE=0,

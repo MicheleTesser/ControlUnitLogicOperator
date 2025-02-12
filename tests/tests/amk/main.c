@@ -18,10 +18,15 @@ static int run=1;
 static int core_update(void* args)
 {
   struct ThInput* input = args;
+  time_var_microseconds t =0;
+
   while(run)
   {
-    driver_input_update(input->driver_input);
-    inverter_update(input->engine_input);
+    if ((timer_time_now() - t) > 1 SECONDS)
+    {
+      driver_input_update(input->driver_input);
+      inverter_update(input->engine_input);
+    }
   }
   return 0;
 }
@@ -42,28 +47,37 @@ static void test_initial_status(EngineType* self)
   enum RUNNING_STATUS status = engine_rtd_procedure(self);\
   if (status != expected)\
   {\
-    FAILED("after system ready status is not what expected");\
+    FAILED("status is not what expected");\
     printf("expected: %d, given: %d\n",expected, status);\
   }\
   else\
   {\
-    PASSED("after system ready status is SYSTEM_OFF");\
+    PASSED("correct status:");\
+    printf("expected: %d, given: %d\n",expected, status);\
   }\
 }
 
 static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inverter)
 {
+  Gpio_h ts={0};
+
   car_amk_inverter_reset(inverter);
-  FOR_EACH_ENGINE({
-    car_amk_inverter_set_attribute(inverter, SYSTEM_READY, index_engine, 1);
-  });
+  if (hardware_init_gpio(&ts, GPIO_TS_BUTTON)<0)
+  {
+    FAILED("ts gpio init failed");
+    return;
+  }
+
+  FOR_EACH_ENGINE(engine)
+  {
+    car_amk_inverter_set_attribute(inverter, SYSTEM_READY, engine, 1);
+  }
 
   printf("system ready but precharge not yet started: ");
   CHECK_STATUS_RTD(self, SYSTEM_OFF);
 
-  FOR_EACH_ENGINE({
-    car_amk_inverter_set_attribute(inverter, START_PRECHARGE, index_engine, 1);
-  });
+  gpio_set_low(&ts);
+  wait_milliseconds(100 MILLIS);
 
   printf("system ready and precharge started: ");
   CHECK_STATUS_RTD(self, SYSTEM_PRECAHRGE);
@@ -73,7 +87,7 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
   printf("still system ready and precharge after 1 second: ");
   CHECK_STATUS_RTD(self, SYSTEM_PRECAHRGE);
 
-  wait_milliseconds(4 SECONDS);
+  wait_milliseconds(6 SECONDS);
 
   printf("still system ready and precharge completed -> TS_READY: ");
   CHECK_STATUS_RTD(self, TS_READY);
@@ -127,7 +141,10 @@ int main(void)
   }
 
 
-  car_amk_inverter_class_init(&amk_inverter_emulation,"culo_can_0");
+  if(car_amk_inverter_class_init(&amk_inverter_emulation,"culo_can_0")<0){
+    FAILED("amk emulator init failed");
+    goto end;
+  }
   if (amk_module_init(&amk, &driver_input, &engine)<0)
   {
     FAILED("failed init amk module");

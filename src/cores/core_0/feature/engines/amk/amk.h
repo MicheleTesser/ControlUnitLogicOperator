@@ -7,7 +7,7 @@
 
 
 typedef struct AmkInverter_h{
-    const uint8_t private_data[216];
+    const uint8_t private_data[160];
 }AmkInverter_h;
 
 

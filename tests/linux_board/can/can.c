@@ -64,28 +64,31 @@ static int run_recv_mailbox(void* args)
   {
     struct can_frame frame = {0};
 
-    can_recv_frame(self->can_fd, &frame);
-    while (atomic_flag_test_and_set(&self->lock));
-    switch (self->type)
+    if(can_recv_frame(self->can_fd, &frame)>0)
     {
-      case RECV_MAILBOX:
-        self->fifo_buffer.buffer[0].id = frame.can_id;
-        memcpy(&self->fifo_buffer.buffer[0].full_word, frame.data, sizeof(frame.data));
-        break;
-      case FIFO_BUFFER:
-        struct FifoBuffer* fifo = &self->fifo_buffer;
-        const uint16_t next_buffer = (fifo->tail++)% NUM_OF_MAILBOX;
-        if (fifo->tail != fifo->head)
-        {
-          fifo->buffer[next_buffer].message_size = frame.can_dlc;
-          fifo->buffer[next_buffer].id = frame.can_id;
-          memcpy(fifo->buffer[next_buffer].buffer, frame.data, sizeof(frame.data));
-        }
-        break;
-      default:
-        break;
+      while (atomic_flag_test_and_set(&self->lock));
+      switch (self->type)
+      {
+        case RECV_MAILBOX:
+          self->fifo_buffer.buffer[0].id = frame.can_id;
+          memcpy(&self->fifo_buffer.buffer[0].full_word, frame.data, sizeof(frame.data));
+          break;
+        case FIFO_BUFFER:
+          struct FifoBuffer* fifo = &self->fifo_buffer;
+          const uint16_t next_buffer = (fifo->head +1)%NUM_OF_MAILBOX;
+          if (next_buffer != fifo->tail)
+          {
+            fifo->head = next_buffer;
+            fifo->buffer[fifo->head].message_size = frame.len;
+            fifo->buffer[fifo->head].id = frame.can_id;
+            memcpy(fifo->buffer[fifo->head].buffer, frame.data, sizeof(frame.data));
+          }
+          break;
+        default:
+          break;
+      }
+      atomic_flag_clear(&self->lock);
     }
-    atomic_flag_clear(&self->lock);
   }
 
   return 0;
@@ -194,6 +197,8 @@ hardware_get_mailbox(struct CanNode* const restrict self, const enum MAILBOX_TYP
   switch (type)
   {
     case FIFO_BUFFER:
+      mailbox->fifo_buffer.tail=0;
+      mailbox->fifo_buffer.head=1;
       mailbox->fifo_buffer.filter_mask = filter_mask;
       mailbox->can_fd = can_init_full(self->can_interface, filter_id, filter_mask);
       thrd_create(&mailbox->thread, run_recv_mailbox, mailbox);
@@ -223,19 +228,30 @@ hardware_mailbox_read(struct CanMailbox* const restrict self ,
   {
     return -1;
   }
+  while (atomic_flag_test_and_set(&self->lock));
   switch (self->type)
   {
     case RECV_MAILBOX:
       buffer_index=0;
       break;
     case FIFO_BUFFER:
-      buffer_index = (self->fifo_buffer.head++)%NUM_OF_MAILBOX;
+      struct FifoBuffer* fifo = &self->fifo_buffer;
+      if (fifo->tail == fifo->head)
+      {
+        atomic_flag_clear(&self->lock);
+        return -1;
+      }
+      buffer_index = fifo->tail;
+      fifo->tail = (fifo->tail +1) % NUM_OF_MAILBOX;
       break;
     default:
+      atomic_flag_clear(&self->lock);
       return -1;
   }
-  while (atomic_flag_test_and_set(&self->lock));
+  o_mex->id = self->fifo_buffer.buffer[buffer_index].id;
+  o_mex->message_size = self->fifo_buffer.buffer[buffer_index].message_size;
   memcpy(o_mex, &self->fifo_buffer.buffer[buffer_index], sizeof(*o_mex));
+
   atomic_flag_clear(&self->lock);
   return 0;
 }
@@ -276,7 +292,6 @@ void stop_thread_can(void)
       printf("closing mail: %d\n",i);
       mail->running=0;
       shutdown(mail->can_fd, SHUT_RDWR);
-      // thrd_join(mail->thread, NULL);
     }
   }
 }

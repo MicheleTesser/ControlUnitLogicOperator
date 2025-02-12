@@ -189,6 +189,8 @@ driver_input_rtd_request(const DriverInput_h* const restrict self)
       return gpio_read_state(&p_self->gpio_rtd_button);
     case DRIVER_EMBEDDED:
       return p_self->dv_rtd_input_request;
+    case DRIVER_NONE:
+      return 0;
     default:
       return -1;
   }
