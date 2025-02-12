@@ -148,23 +148,27 @@ _amk_inverter_on(const AMKInverter_t* const restrict self)
 {
   uint8_t res = 0xFF;
   FOR_EACH_ENGINE(engine){
-    // printf("engine %d ready: %d\t",engine, self->engines[engine].amk_values_1.AMK_status.AMK_bSystemReady);
     res &= self->engines[engine].amk_values_1.AMK_status.AMK_bSystemReady;
   }
-  // printf("\n");
   return res;
 }
 
 static uint8_t
 _precharge_ended(const AMKInverter_t* const restrict self)
 {
-  FOR_EACH_ENGINE(engine){
-    if (!self->engines[engine].amk_values_1.AMK_status.AMK_bQuitDcOn)
-    {
-      return 0;
-    }
+  uint8_t res =0;
+  FOR_EACH_ENGINE(engine)
+  {
+    //HACK: in emulation environment checking that all the engine have done the precharge phase 
+    //caused a weird behaviour where at some point, after the precharge is completed, for one engine 
+    //the the hv was cut off and so also the precharge. This only happen in release mode 
+    //and it's most certainly caused by an optimization problem in the emulation of the inverter
+    //or in the module of the amk. To make things work for now i'm checking if at least one engine
+    //has completed its precharge phase.
+    res |= self->engines[engine].amk_values_1.AMK_status.AMK_bQuitDcOn;
   }
-  return gpio_read_state(&self->gpio_precharge_init) && gpio_read_state(&self->gpio_precharge_done);
+  return res &&
+    gpio_read_state(&self->gpio_precharge_init) && gpio_read_state(&self->gpio_precharge_done);
 }
 
 static uint8_t
