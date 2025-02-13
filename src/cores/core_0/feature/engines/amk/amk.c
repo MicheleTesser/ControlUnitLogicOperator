@@ -264,7 +264,8 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
         memset(&setpoint, 0, sizeof(setpoint));
         self->engine_status = SYSTEM_OFF;
       }
-      else if (driver_input_rtd_request(self->driver_input))
+      else if (driver_input_rtd_request(self->driver_input) &&
+          driver_input_get(self->driver_input, BRAKE) > 20)
       {
         //INFO: RF message to PCU and wait until rf is active before going
         //into RUNNING status

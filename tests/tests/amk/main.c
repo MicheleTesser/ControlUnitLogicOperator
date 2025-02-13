@@ -12,7 +12,6 @@
 struct ThInput {
   DriverInput_h* driver_input;
   EngineType* engine_input;
-  Pcu_h* pcu;
 };
 
 static int run=1;
@@ -58,7 +57,7 @@ static void test_initial_status(EngineType* self)
   }\
 }
 
-static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inverter)
+static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inverter, Atc_h* atc)
 {
   Gpio_h ts={0};
   Gpio_h rf ={0};
@@ -100,7 +99,14 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
   printf("still system ready and precharge completed -> TS_READY: ");
   CHECK_STATUS_RTD(self, TS_READY);
 
-  printf("activating rf in manual mode from TS_READ -> RUNNING: ");
+  printf("activating rf with brake pedal at 5 percentage in manual mode from TS_READY -> TS_READY: ");
+  atc_pedals_steering_wheel(atc, ATC_BRAKE, 5);
+  gpio_set_low(&rf);
+  wait_milliseconds(500 MILLIS);
+  CHECK_STATUS_RTD(self, TS_READY);
+
+  printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
+  atc_pedals_steering_wheel(atc, ATC_BRAKE, 25);
   gpio_set_low(&rf);
   wait_milliseconds(500 MILLIS);
   CHECK_STATUS_RTD(self, RUNNING);
@@ -113,6 +119,7 @@ int main(void)
   struct EmulationAmkInverter_h amk_inverter_emulation = {0};
   AmkInverter_h amk={0};
   Pcu_h pcu = {0};
+  Atc_h atc ={0};
   EngineType engine = {0};
   DriverInput_h driver_input = {0};
   thrd_t core=0;
@@ -167,6 +174,13 @@ int main(void)
     goto end;
   }
 
+  if (atc_start(&atc)<0)
+  {
+    FAILED("failed init atc module");
+    goto end;
+    
+  }
+
   if (amk_module_init(&amk, &driver_input, &engine)<0)
   {
     FAILED("failed init amk module");
@@ -178,7 +192,6 @@ int main(void)
   struct ThInput input = {
     .engine_input = &engine,
     .driver_input = &driver_input,
-    .pcu = &pcu,
   };
 
 
@@ -186,7 +199,7 @@ int main(void)
   driver_input_change_driver(&driver_input, DRIVER_HUMAN);
 
   test_initial_status(&engine);
-  test_start_precharge(&engine, &amk_inverter_emulation);
+  test_start_precharge(&engine, &amk_inverter_emulation, &atc);
 
   run=0;
   thrd_join(core,NULL);
@@ -194,6 +207,8 @@ int main(void)
   car_amk_inverter_stop(&amk_inverter_emulation);
   printf("stopping pcu\n");
   pcu_stop(&pcu);
+  printf("stopping atc\n");
+  atc_stop(&atc);
   printf("stopping can module\n");
   stop_thread_can();
 end:
