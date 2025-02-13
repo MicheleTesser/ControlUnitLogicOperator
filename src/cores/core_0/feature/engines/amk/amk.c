@@ -1,5 +1,6 @@
 #include "./amk.h"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
+#include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../core_utility/emergency_module/emergency_module.h"
 #include "../../math_saturated/saturated.h"
@@ -73,16 +74,19 @@ typedef struct Inverter{
     int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
   }engines[__NUM_OF_ENGINES__];
   enum RUNNING_STATUS engine_status;
+  uint8_t hvCounter[__NUM_OF_ENGINES__];
   time_var_microseconds enter_precharge_phase;
   struct GpioRead_h gpio_precharge_init;
   struct GpioRead_h gpio_precharge_done;
   struct GpioRead_h gpio_rtd_button;
   struct GpioRead_h gpio_ts_button;
-  struct EmergencyNode_h amk_emergency;
-  uint8_t hvCounter[__NUM_OF_ENGINES__];
   const struct DriverInput_h* driver_input;
   struct CanNode* can_inverter;
   struct CanMailbox* engine_mailbox;
+  struct CanMailbox* mailbox_pcu_rf_signal_send;
+  struct CanMailbox* mailbox_pcu_rf_signal_read;
+  struct EmergencyNode_h amk_emergency;
+  uint8_t rf_status:1;
 }AMKInverter_t;
 
 union AMKConv{
@@ -200,6 +204,9 @@ static void
 _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 {
   struct AMK_Setpoints setpoint = {0};
+  can_obj_can2_h_t o2={0};
+  uint64_t data=0;
+
   if(self->engine_status == SYSTEM_OFF)
   {
     EmergencyNode_solve(&self->amk_emergency, FAILED_RTD_AMK);
@@ -259,12 +266,21 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       }
       else if (driver_input_rtd_request(self->driver_input))
       {
-        //TODO: implement RF message to PCU and wait until rf is active before going
+        //INFO: RF message to PCU and wait until rf is active before going
         //into RUNNING status
-        self->engine_status = RUNNING;
+        if (self->rf_status)
+        {
+          self->engine_status = RUNNING;
+        }
+        else
+        {
+          o2.can_0x133_PcuRf.rf_signal=1;
+        }
+        
       }
       break;
     case RUNNING:
+      o2.can_0x133_PcuRf.rf_signal=1;
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       setpoint.AMK_Control_fields.AMK_bInverterOn = 1;
       setpoint.AMK_Control_fields.AMK_bEnable = 1;
@@ -282,6 +298,8 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       break;
   }
 
+  pack_message_can2(&o2, CAN_ID_PCURF, &data);
+  hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
   FOR_EACH_ENGINE(engine)
   {
     _send_message_amk(self, engine, &setpoint);
@@ -339,6 +357,8 @@ amk_update(AMKInverter_t* const restrict self)
 {
   CanMessage mex = {0};
   can_obj_can1_h_t o1 ={0};
+  can_obj_can2_h_t o2 ={0};
+  int8_t err=0;
 
   _amk_update_rtd_procedure(self);
   if (!hardware_mailbox_read(self->engine_mailbox, &mex))
@@ -374,10 +394,27 @@ amk_update(AMKInverter_t* const restrict self)
         UPDATE_INFO_2(REAR_RIGHT, o1.can_0x28a_InverterRR2);
         break;
       default:
-        return -1;
+        err--;
+        break;
     }
   }
-  return 0;
+
+  memset(&mex, 0, sizeof(mex));
+  if (!hardware_mailbox_read(self->mailbox_pcu_rf_signal_read, &mex))
+  {
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    switch (mex.id)
+    {
+      case CAN_ID_PCURFACK:
+        self->rf_status = o2.can_0x134_PcuRfAck.rf_signalAck;
+        break;
+      default:
+        err--;
+        break;
+    }
+  
+  }
+  return err;
 }
 
   float
@@ -455,6 +492,7 @@ amk_module_init(AmkInverter_h* const restrict self,
   }
 
   if (hardware_init_read_permission_gpio(&p_self->gpio_precharge_init, GPIO_AIR_PRECHARGE_INIT)<0)
+ 
   {
     return -3;
   }
@@ -479,6 +517,18 @@ amk_module_init(AmkInverter_h* const restrict self,
   if (!p_self->engine_mailbox)
   {
     return -6;
+  }
+
+  ACTION_ON_CAN_NODE(CAN_GENERAL,p_node,
+    p_self->mailbox_pcu_rf_signal_send =
+      hardware_get_mailbox_single_mex(p_node, SEND_MAILBOX, CAN_ID_PCURF, 1);
+    p_self->mailbox_pcu_rf_signal_read =
+      hardware_get_mailbox_single_mex(p_node, RECV_MAILBOX, CAN_ID_PCURFACK, 1);
+  );
+
+  if (!p_self->mailbox_pcu_rf_signal_send)
+  {
+    return -7;
   }
 
   general_inverter->update_f=amk_update;

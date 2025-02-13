@@ -55,21 +55,21 @@ suspensions_init(
     UPDATE_LOG(log, p_self->susps_value[SUSP_REAR_LEFT] , "susps rear left",3);
     UPDATE_LOG(log, p_self->susps_value[SUSP_REAR_RIGHT] , "susps rear right",4);
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->mailbox[M_FRONT] =
-          hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_SUSPFRONT, 3);
-        if (!p_self->mailbox[M_FRONT])
-        {
-        return -2;
-        }
+    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
+      p_self->mailbox[M_FRONT] =
+        hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_SUSPFRONT, 3);
+      if (!p_self->mailbox[M_FRONT])
+      {
+      return -2;
+      }
 
-        p_self->mailbox[M_REAR] =
-          hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_SUSPREAR, 3);
-        if (!p_self->mailbox[M_REAR])
-        {
-        return -3;
-        }
-    })
+      p_self->mailbox[M_REAR] =
+        hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_SUSPREAR, 3);
+      if (!p_self->mailbox[M_REAR])
+      {
+      return -3;
+      }
+    )
 
 
     return 0;

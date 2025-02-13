@@ -45,9 +45,9 @@ core_1_imu_init(
 
   memset(p_self, 0, sizeof(*p_self));
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
     // p_self->imu_mailbox=hardware_get_mailbox(can_node, -1, -1);//TODO: not yet defined
-  })
+  )
 
   log_entry.data_max = 100; //TODO: define max 
   log_entry.data_min = 100; //TODO: define min 

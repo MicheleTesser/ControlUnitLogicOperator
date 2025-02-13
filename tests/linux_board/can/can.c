@@ -2,6 +2,7 @@
 #include "can_lib/canlib.h"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include <linux/can.h>
+#include <math.h>
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -254,6 +255,11 @@ hardware_mailbox_read(struct CanMailbox* const restrict self ,
   memcpy(o_mex, &self->fifo_buffer.buffer[buffer_index], sizeof(*o_mex));
 
   atomic_flag_clear(&self->lock);
+  //HACK: for a bug in the emulation some messages are wrong
+  if (!o_mex->id || o_mex->id > (pow(2, 11)-1))
+  {
+    return -1;
+  }
   return 0;
 }
 

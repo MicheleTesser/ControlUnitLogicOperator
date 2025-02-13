@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct Core0Feature_h{
-    const uint8_t private_data[688];
+    const uint8_t private_data[704];
 }Core0Feature_h;
 
 int8_t

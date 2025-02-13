@@ -34,19 +34,19 @@ hv_init(
     struct GieiHv_t* p_self = conv.clear;
 
     memset(p_self, 0, sizeof(*p_self));
-    ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->lem_mailbox =
-          hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_BMSHV1,7);
-        if (!p_self->lem_mailbox) {
-        return -1;
-        }
+    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
+      p_self->lem_mailbox =
+        hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_BMSHV1,7);
+      if (!p_self->lem_mailbox) {
+      return -1;
+      }
 
-        p_self->send_mailbox_bms_hv =
-          hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_INVVOLT, 2);
-        if (!p_self->send_mailbox_bms_hv) {
-        hardware_free_mailbox_can(&p_self->lem_mailbox);
-        }
-    })
+      p_self->send_mailbox_bms_hv =
+        hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_INVVOLT, 2);
+      if (!p_self->send_mailbox_bms_hv) {
+      hardware_free_mailbox_can(&p_self->lem_mailbox);
+      }
+    )
     return 0;
 }
 

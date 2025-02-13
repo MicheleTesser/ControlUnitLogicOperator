@@ -33,7 +33,7 @@ static int test_throttle(DriverInput_h* driver){
   mex.can_0x053_Driver.throttle = throttle_value;
   mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
   mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,{
       hardware_write_can(can_node, &mex_c);
   });
 
@@ -54,8 +54,8 @@ static int test_throttle(DriverInput_h* driver){
   mex.can_0x053_Driver.throttle = throttle_value;
   mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
   mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
-      hardware_write_can(can_node, &mex_c);
+  ACTION_ON_CAN_NODE(CAN_GENERAL,p_node,{
+      hardware_write_can(p_node, &mex_c);
   });
   wait_milliseconds(50 MILLIS);
 
@@ -81,7 +81,7 @@ static int test_brake(DriverInput_h* driver){
   mex.can_0x053_Driver.brake = brk_value;
   mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
   mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,{
     hardware_write_can(can_node, &mex_c);
   })
   wait_milliseconds(50 MILLIS);
@@ -101,9 +101,9 @@ static int test_brake(DriverInput_h* driver){
   mex.can_0x053_Driver.brake = brk_value;
   mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
   mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
     hardware_write_can(can_node, &mex_c);
-  })
+  )
 
   wait_milliseconds(50 MILLIS);
   brake = driver_input_get(driver, BRAKE);
@@ -129,9 +129,9 @@ static int test_steering_wheel(DriverInput_h* driver){
   mex.can_0x053_Driver.steering = steering_value;
   mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
   mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL, {
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node,
     hardware_write_can(can_node, &mex_c);
-  })
+  );
   wait_milliseconds(50 MILLIS);
 
   stw = driver_input_get(driver, STEERING_ANGLE);
@@ -149,9 +149,9 @@ static int test_steering_wheel(DriverInput_h* driver){
   mex.can_0x053_Driver.steering = steering_value;
   mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
   mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
     hardware_write_can(can_node, &mex_c);
-  })
+  );
 
   wait_milliseconds(1 MILLIS);
   stw = driver_input_get(driver, STEERING_ANGLE);
@@ -176,9 +176,9 @@ static int test_throttle_dv(DriverInput_h* driver){
   mex.can_0x07d_DV_Driver.Throttle= throttle_value;
   mex_c.id = CAN_ID_DV_DRIVER;
   mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV,{
-      hardware_write_can(can_node, &mex_c);
-  });
+  ACTION_ON_CAN_NODE(CAN_DV, can_node,
+    hardware_write_can(can_node, &mex_c);
+  );
 
   wait_milliseconds(1 MILLIS);
   throttle = driver_input_get(driver, THROTTLE);
@@ -197,9 +197,9 @@ static int test_throttle_dv(DriverInput_h* driver){
   mex.can_0x07d_DV_Driver.Throttle = throttle_value;
   mex_c.id = CAN_ID_DV_DRIVER;
   mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV,{
-      hardware_write_can(can_node, &mex_c);
-  });
+  ACTION_ON_CAN_NODE(CAN_DV, can_node,
+    hardware_write_can(can_node, &mex_c);
+  );
   wait_milliseconds(1 MILLIS);
 
   throttle = driver_input_get(driver, THROTTLE);
@@ -223,9 +223,9 @@ static int test_brake_dv(DriverInput_h* driver){
   mex.can_0x07d_DV_Driver.Brake = brk_value;
   mex_c.id = CAN_ID_DV_DRIVER;
   mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV,{
+  ACTION_ON_CAN_NODE(CAN_DV,can_node,
     hardware_write_can(can_node, &mex_c);
-  })
+  )
   wait_milliseconds(1 MILLIS);
   brake = driver_input_get(driver, BRAKE);
 
@@ -243,9 +243,9 @@ static int test_brake_dv(DriverInput_h* driver){
   mex.can_0x07d_DV_Driver.Brake = brk_value;
   mex_c.id = CAN_ID_DV_DRIVER;
   mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV,{
+  ACTION_ON_CAN_NODE(CAN_DV, can_node,
     hardware_write_can(can_node, &mex_c);
-  })
+  )
 
   wait_milliseconds(1 MILLIS);
   brake = driver_input_get(driver, BRAKE);
@@ -271,9 +271,9 @@ static int test_steering_wheel_dv(DriverInput_h* driver){
   mex.can_0x07d_DV_Driver.Steering_angle= steering_value;
   mex_c.id = CAN_ID_DV_DRIVER;
   mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV, {
+  ACTION_ON_CAN_NODE(CAN_DV, can_node,
     hardware_write_can(can_node, &mex_c);
-  })
+  )
   wait_milliseconds(1 MILLIS);
 
   stw = driver_input_get(driver, STEERING_ANGLE);
@@ -291,9 +291,9 @@ static int test_steering_wheel_dv(DriverInput_h* driver){
   mex.can_0x07d_DV_Driver.Steering_angle= steering_value;
   mex_c.id = CAN_ID_DV_DRIVER;
   mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV,{
+  ACTION_ON_CAN_NODE(CAN_DV, can_node,
     hardware_write_can(can_node, &mex_c);
-  })
+  );
 
   wait_milliseconds(1 MILLIS);
   stw = driver_input_get(driver, STEERING_ANGLE);

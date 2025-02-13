@@ -275,7 +275,7 @@ dv_class_init(Dv_h* const restrict self ,
     return -7;
   }
 
-  ACTION_ON_CAN_NODE(CAN_DV,{
+  ACTION_ON_CAN_NODE(CAN_DV,can_node,{
     p_self->send_car_dv_car_status_mailbox =
     hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_DV_CARSTATUS, 1);
   })

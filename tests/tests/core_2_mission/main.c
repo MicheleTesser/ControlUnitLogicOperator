@@ -49,9 +49,9 @@ static void test_update_mission(const DvMission_h* const restrict self, const en
   o2.can_0x067_CarMission.Mission = expected;
   mex.id = CAN_ID_CARMISSION;
   mex.message_size = pack_message_can2(&o2, mex.id, &mex.full_word);
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
     hardware_write_can(can_node, &mex);
-  })
+  );
   wait_milliseconds(1 MILLIS);
 
   mission = dv_mission_get_current(self);
@@ -75,9 +75,9 @@ static void test_update_mission_with_lock(const DvMission_h* const restrict self
   o2.can_0x067_CarMission.Mission = expected;
   mex.id = CAN_ID_CARMISSION;
   mex.message_size = pack_message_can2(&o2, mex.id, &mex.full_word);
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
     hardware_write_can(can_node, &mex);
-  })
+  );
   wait_milliseconds(1 MILLIS);
 
   mission = dv_mission_get_current(self);

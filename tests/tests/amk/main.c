@@ -12,6 +12,7 @@
 struct ThInput {
   DriverInput_h* driver_input;
   EngineType* engine_input;
+  Pcu_h* pcu;
 };
 
 static int run=1;
@@ -77,7 +78,7 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
   CHECK_STATUS_RTD(self, SYSTEM_OFF);
 
   gpio_set_low(&ts);
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(500 MILLIS);
 
   printf("system ready and precharge started: ");
   CHECK_STATUS_RTD(self, SYSTEM_PRECAHRGE);
@@ -99,6 +100,7 @@ int main(void)
 {
   struct EmulationAmkInverter_h amk_inverter_emulation = {0};
   AmkInverter_h amk={0};
+  Pcu_h pcu = {0};
   EngineType engine = {0};
   DriverInput_h driver_input = {0};
   thrd_t core=0;
@@ -151,10 +153,17 @@ int main(void)
     goto end;
   }
 
+  if (pcu_init(&pcu)<0)
+  {
+    FAILED("failed init pcu module");
+    goto end;
+  }
+
 
   struct ThInput input = {
     .engine_input = &engine,
     .driver_input = &driver_input,
+    .pcu = &pcu,
   };
 
 

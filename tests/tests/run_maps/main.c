@@ -62,9 +62,9 @@ static void check_power_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float KW, floa
   o.can_0x064_Map.power= MAP_NUM;
   mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
   mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
       hardware_write_can(can_node, &mex);
-  })
+  )
 
   wait_milliseconds(1 MILLIS);
   get_data(maps, &data);
@@ -85,9 +85,9 @@ static void check_regen_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REGEN_SC
   o.can_0x064_Map.regen= MAP_NUM;
   mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
   mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
       hardware_write_can(can_node, &mex);
-  })
+  )
 
   wait_milliseconds(1 MILLIS);
   get_data(maps, &data);
@@ -108,9 +108,9 @@ static void check_repartition_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float RE
   o.can_0x064_Map.torque_rep= MAP_NUM;
   mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
   mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,{
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
       hardware_write_can(can_node, &mex);
-  })
+  );
   wait_milliseconds(1 MILLIS);
   get_data(maps, &data);
   printf("checking test map :%d\t", MAP_NUM );

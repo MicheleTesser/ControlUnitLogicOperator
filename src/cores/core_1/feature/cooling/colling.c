@@ -31,11 +31,13 @@ static int8_t update_status(struct Cooling_t* const restrict self)
     CanMessage mex;
 
     mex.id = CAN_ID_PCU;
-    o.can_0x130_Pcu.fan_enable = self->devices[FANS_RADIATOR].enable;
-    o.can_0x130_Pcu.fan_speed = self->devices[FANS_RADIATOR].speed;
+    o.can_0x130_Pcu.fanrad_enable = self->devices[FANS_RADIATOR].enable;
+    o.can_0x130_Pcu.fanradl_speed = self->devices[FANS_RADIATOR].speed;
+    o.can_0x130_Pcu.fanradr_speed = self->devices[FANS_RADIATOR].speed;
 
     o.can_0x130_Pcu.pump_enable = self->devices[PUMPS].enable;
-    o.can_0x130_Pcu.pump_speed = self->devices[PUMPS].speed;
+    o.can_0x130_Pcu.pumpl_speed = self->devices[PUMPS].speed;
+    o.can_0x130_Pcu.pumpr_speed = self->devices[PUMPS].speed;
     
     mex.message_size = pack_message_can2(&o, mex.id, &mex.full_word);
 
@@ -51,10 +53,10 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     struct Cooling_t* const p_self = conv.clear;
     memset(p_self, 0, sizeof(*p_self));
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->send_mailbox =
-          hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCU,2);
-    })
+    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
+      p_self->send_mailbox =
+        hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCU,2);
+    )
     if (!p_self->send_mailbox)
     {
         return -1;

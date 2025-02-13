@@ -79,14 +79,14 @@ core_1_driver_input_init(
             "driver input implausibility list",16);
 
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL,{
-        p_self->driver_input_mailbox =
-          hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_DRIVER,4);
-        if(!p_self->driver_input_mailbox)
-        {
-        return -1;
-        }
-    })
+    ACTION_ON_CAN_NODE(CAN_GENERAL, can_node,
+      p_self->driver_input_mailbox =
+        hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_DRIVER,4);
+      if(!p_self->driver_input_mailbox)
+      {
+      return -1;
+      }
+    )
 
 
     return 0;
