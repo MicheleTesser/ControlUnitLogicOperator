@@ -61,11 +61,18 @@ static void test_initial_status(EngineType* self)
 static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inverter)
 {
   Gpio_h ts={0};
+  Gpio_h rf ={0};
 
   car_amk_inverter_reset(inverter);
   if (hardware_init_gpio(&ts, GPIO_TS_BUTTON)<0)
   {
     FAILED("ts gpio init failed");
+    return;
+  }
+
+  if (hardware_init_gpio(&rf, GPIO_RTD_BUTTON)<0)
+  {
+    FAILED("rf gpio init failed");
     return;
   }
 
@@ -92,6 +99,11 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
 
   printf("still system ready and precharge completed -> TS_READY: ");
   CHECK_STATUS_RTD(self, TS_READY);
+
+  printf("activating rf in manual mode from TS_READ -> RUNNING: ");
+  gpio_set_low(&rf);
+  wait_milliseconds(500 MILLIS);
+  CHECK_STATUS_RTD(self, RUNNING);
 
 }
 
@@ -142,22 +154,25 @@ int main(void)
     goto end;
   }
 
-
   if(car_amk_inverter_class_init(&amk_inverter_emulation)<0){
     FAILED("amk emulator init failed");
     goto end;
   }
+
+  //HACK: do not know why but if you init the amk_module before the pcu the pcu breaks and 
+  //the send mailbox for PCURFACK reset itself. Do not know why for now.
+  if (pcu_init(&pcu)<0)
+  {
+    FAILED("failed init pcu module");
+    goto end;
+  }
+
   if (amk_module_init(&amk, &driver_input, &engine)<0)
   {
     FAILED("failed init amk module");
     goto end;
   }
 
-  if (pcu_init(&pcu)<0)
-  {
-    FAILED("failed init pcu module");
-    goto end;
-  }
 
 
   struct ThInput input = {
@@ -168,6 +183,7 @@ int main(void)
 
 
   thrd_create(&core, core_update, &input);
+  driver_input_change_driver(&driver_input, DRIVER_HUMAN);
 
   test_initial_status(&engine);
   test_start_precharge(&engine, &amk_inverter_emulation);
@@ -176,6 +192,8 @@ int main(void)
   thrd_join(core,NULL);
   printf("stopping inverter\n");
   car_amk_inverter_stop(&amk_inverter_emulation);
+  printf("stopping pcu\n");
+  pcu_stop(&pcu);
   printf("stopping can module\n");
   stop_thread_can();
 end:

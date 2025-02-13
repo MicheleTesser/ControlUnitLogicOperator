@@ -51,7 +51,7 @@ enum MAILBOX_MODE{
 
 static struct{
   struct CanMailbox pool[NUM_OF_MAILBOX];
-  uint8_t last_assigned;
+  uint16_t last_assigned;
 }MAILBOX_POOL;
 
 static struct{
@@ -152,8 +152,7 @@ int8_t
 hardware_read_can(struct CanNode* const restrict self __attribute_maybe_unused__,
     CanMessage* const restrict mex )
 {
-  struct can_frame frame;
-  memset(&frame, 0, sizeof(frame));
+  struct can_frame frame={0};
   int can_node = can_init(self->can_interface);
   can_recv_frame(can_node, &frame);
   mex->message_size = frame.len;
@@ -167,8 +166,7 @@ int8_t
 hardware_write_can(const struct CanNode* const restrict self ,
     const CanMessage* restrict const mex )
 {
-  struct can_frame frame;
-  memset(&frame, 0, sizeof(frame));
+  struct can_frame frame={0};
   int can_node = can_init(self->can_interface);
   frame.can_id = mex->id;
   frame.len = mex->message_size;
@@ -195,6 +193,7 @@ hardware_get_mailbox(struct CanNode* const restrict self, const enum MAILBOX_TYP
   mailbox->fifo_buffer.filter_id = filter_id;
   mailbox->fifo_buffer.buffer[0].message_size = mex_size; 
   mailbox->running=1;
+  mailbox->can_fd = can_init_full(self->can_interface, filter_id, filter_mask);
 
   switch (type)
   {
@@ -202,15 +201,14 @@ hardware_get_mailbox(struct CanNode* const restrict self, const enum MAILBOX_TYP
       mailbox->fifo_buffer.tail=0;
       mailbox->fifo_buffer.head=1;
       mailbox->fifo_buffer.filter_mask = filter_mask;
-      mailbox->can_fd = can_init_full(self->can_interface, filter_id, filter_mask);
       thrd_create(&mailbox->thread, run_recv_mailbox, mailbox);
       break;
     case RECV_MAILBOX:
-      mailbox->can_fd = can_init_full(self->can_interface, filter_id, ~0);
       thrd_create(&mailbox->thread, run_recv_mailbox, mailbox);
       break;
     case SEND_MAILBOX:
-      mailbox->can_fd = can_init(self->can_interface);
+      mailbox->fifo_buffer.buffer[0].id = filter_id;
+      mailbox->fifo_buffer.buffer[0].message_size = mex_size;
       break;
     default:
       MAILBOX_POOL.last_assigned--;
@@ -264,16 +262,17 @@ hardware_mailbox_read(struct CanMailbox* const restrict self ,
 }
 
 int8_t
-hardware_mailbox_send(struct CanMailbox* const restrict self,
-    const uint64_t data)
+hardware_mailbox_send(struct CanMailbox* const restrict self, const uint64_t data)
 {
   if (self->type!=SEND_MAILBOX)
   {
+    // printf("invalid type for mailbox id: %d, given type:%d\n",self->fifo_buffer.filter_id, self->type);
+    // exit(1);
     return -1;
   }
   CanMessage* mex = &self->fifo_buffer.buffer[0];
 
-  mex->full_word = data;
+  // printf("type for mailbox id: %d, given type:%d\n",self->fifo_buffer.filter_id, self->type);
   struct can_frame frame = {
     .can_id = mex->id,
     .can_dlc = mex->message_size,
@@ -285,8 +284,8 @@ hardware_mailbox_send(struct CanMailbox* const restrict self,
 void
 hardware_free_mailbox_can(struct CanMailbox** restrict self)
 {
-  memset(*self, 0, sizeof(**self));
-  self=NULL;
+  // memset(*self, 0, sizeof(**self));
+  *self=NULL;
 }
 
 void stop_thread_can(void)

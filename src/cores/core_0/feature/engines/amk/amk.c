@@ -403,16 +403,7 @@ amk_update(AMKInverter_t* const restrict self)
   if (!hardware_mailbox_read(self->mailbox_pcu_rf_signal_read, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    switch (mex.id)
-    {
-      case CAN_ID_PCURFACK:
-        self->rf_status = o2.can_0x134_PcuRfAck.rf_signalAck;
-        break;
-      default:
-        err--;
-        break;
-    }
-  
+    self->rf_status = o2.can_0x134_PcuRfAck.rf_signalAck;
   }
   return err;
 }

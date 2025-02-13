@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct Pcu_h{
-  const uint8_t private_data[32];
+  const uint8_t private_data[40];
 }Pcu_h;
 
 int8_t
