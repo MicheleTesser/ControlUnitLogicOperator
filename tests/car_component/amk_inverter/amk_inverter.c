@@ -258,23 +258,29 @@ car_amk_inverter_class_init(struct EmulationAmkInverter_h* self)
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   memset(self, 0, sizeof(*self));
+
   p_self->CanNodeInverter = hardware_init_can_get_ref_node_new(CAN_INVERTER);
-  p_self->running=1;
-  if(hardware_init_gpio(&p_self->air_1, GPIO_AIR_PRECHARGE_INIT)<0)
+  if(!p_self->CanNodeInverter)
   {
     return -1;
+  }
+
+  if(hardware_init_gpio(&p_self->air_1, GPIO_AIR_PRECHARGE_INIT)<0)
+  {
+    return -2;
   }
 
   if(hardware_init_gpio(&p_self->air_2, GPIO_AIR_PRECHARGE_DONE)<0)
   {
-    return -1;
+    return -3;
   }
 
   if(hardware_init_read_permission_gpio(&p_self->rf_signal, GPIO_INVERTER_RF_SIGNAL)<0)
   {
-    return -1;
+    return -4;
   }
 
+  p_self->running=1;
   thrd_create(&p_self->t, inverter_start, self);
   thrd_create(&p_self->update, car_amk_inverter_update, self);
   return 0;
