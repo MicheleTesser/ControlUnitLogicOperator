@@ -322,7 +322,7 @@ _max_torque(const AMKInverter_t* const restrict self)
 //public
 
   enum RUNNING_STATUS
-amk_rtd_procedure(AMKInverter_t* const restrict self)
+amk_rtd_procedure(const AMKInverter_t* const restrict self)
 {
   return self->engine_status;
 }
@@ -456,14 +456,18 @@ amk_max_neg_torque(const AMKInverter_t* const restrict self, const float limit_m
 amk_send_torque(const AMKInverter_t* const restrict self,
     const enum ENGINES engine, const float pos_torque, const float neg_torque)
 {
-  struct AMK_Setpoints setpoint  ={
-    .AMK_Control_fields ={0},
-    .AMK_TargetVelocity = SPEED_LIMIT,
-    .AMK_TorqueLimitPositive = pos_torque,
-    .AMK_TorqueLimitNegative = neg_torque,
-  };
-  return _send_message_amk(self, engine, &setpoint);
+  if (amk_rtd_procedure(self) == RUNNING)
+  {
+    struct AMK_Setpoints setpoint  ={
+      .AMK_Control_fields ={0},
+      .AMK_TargetVelocity = SPEED_LIMIT,
+      .AMK_TorqueLimitPositive = pos_torque,
+      .AMK_TorqueLimitNegative = neg_torque,
+    };
+    return _send_message_amk(self, engine, &setpoint);
+  }
 
+  return -1;
 }
 
   void

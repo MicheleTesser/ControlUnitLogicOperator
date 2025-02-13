@@ -30,7 +30,7 @@ typedef int8_t
 (*inverter_update) (struct Inverter* const restrict self)__attribute__((__nonnull__(1)));
 
 typedef enum RUNNING_STATUS
-(*inverter_rtd_procedure)(struct Inverter* const restrict self )__attribute__((__nonnull__(1)));
+(*inverter_rtd_procedure)(const struct Inverter* const restrict self )__attribute__((__nonnull__(1)));
 
 typedef float
 (*inverter_get_info)(const struct Inverter* const restrict self ,
