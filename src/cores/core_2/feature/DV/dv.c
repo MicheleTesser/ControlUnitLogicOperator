@@ -38,6 +38,7 @@ struct Dv_t{
   enum DV_CAR_STATUS dv_car_status;
   uint8_t sound_start;
   time_var_microseconds driving_last_time_on;
+  EmergencyNode_h emergency_node;
   time_var_microseconds emergency_last_time_on;
   time_var_microseconds emergency_sound_last_time_on;
   DvRes_h dv_res;
@@ -50,7 +51,6 @@ struct Dv_t{
   Gpio_h gpio_ass_light_yellow;
   DvMission_h* dv_mission;
   const DvDriverInput_h* dv_driver_input;
-  EmergencyNode_h emergency_node;
   struct CanMailbox* send_car_dv_car_status_mailbox;
 };
 
