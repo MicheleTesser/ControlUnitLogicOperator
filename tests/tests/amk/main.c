@@ -111,6 +111,16 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
   wait_milliseconds(500 MILLIS);
   CHECK_STATUS_RTD(self, RUNNING);
 
+  printf("disabling rf in manual mode from RUNNING -> TS_READY: ");
+  gpio_set_high(&rf);
+  wait_milliseconds(500 MILLIS);
+  CHECK_STATUS_RTD(self, TS_READY);
+
+  printf("reactivating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
+  gpio_set_low(&rf);
+  wait_milliseconds(500 MILLIS);
+  CHECK_STATUS_RTD(self, RUNNING);
+
 }
 
 
