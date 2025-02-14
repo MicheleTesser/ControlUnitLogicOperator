@@ -85,7 +85,7 @@ typedef struct Inverter{
   struct CanMailbox* engine_mailbox;
   struct CanMailbox* mailbox_pcu_rf_signal_send;
   struct CanMailbox* mailbox_pcu_rf_signal_read;
-  struct EmergencyNode_h amk_emergency;
+  EmergencyNode_h amk_emergency;
   uint8_t rf_status:1;
 }AMKInverter_t;
 

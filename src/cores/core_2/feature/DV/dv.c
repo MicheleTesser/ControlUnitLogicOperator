@@ -50,7 +50,7 @@ struct Dv_t{
   Gpio_h gpio_ass_light_yellow;
   DvMission_h* dv_mission;
   const DvDriverInput_h* dv_driver_input;
-  struct EmergencyNode_h emergency_node;
+  EmergencyNode_h emergency_node;
   struct CanMailbox* send_car_dv_car_status_mailbox;
 };
 

@@ -5,6 +5,7 @@
 #include "./car_component/car_component.h"
 #include "src/cores/core_0/feature/engines/engines.h"
 #include "src/cores/core_0/feature/engines/amk/amk.h"
+#include "src/cores/core_utility/emergency_module/emergency_module.h"
 #include <sys/cdefs.h>
 #include <threads.h>
 #include <unistd.h>
@@ -61,6 +62,7 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
 {
   Gpio_h ts={0};
   Gpio_h rf ={0};
+  EmergencyNode_h read_emergecy;
 
   car_amk_inverter_reset(inverter);
   if (hardware_init_gpio(&ts, GPIO_TS_BUTTON)<0)
@@ -72,6 +74,12 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
   if (hardware_init_gpio(&rf, GPIO_RTD_BUTTON)<0)
   {
     FAILED("rf gpio init failed");
+    return;
+  }
+
+  if (EmergencyNode_init(&read_emergecy)<0)
+  {
+    FAILED("emergency node init failed");
     return;
   }
 
@@ -121,12 +129,39 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
   wait_milliseconds(500 MILLIS);
   CHECK_STATUS_RTD(self, RUNNING);
 
+  printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency ");
+  car_amk_inverter_emergency_shutdown(inverter);
+  wait_milliseconds(100 MILLIS);
+  CHECK_STATUS_RTD(self, SYSTEM_OFF);
+  wait_milliseconds(100 MILLIS);
+  if(EmergencyNode_is_emergency_state(&read_emergecy))
+  {
+    PASSED("emergency on recognized after shutdown hv with rf active");
+  }
+  else
+  {
+    FAILED("emergency on not recognized after shutdown hv with rf active");
+  }
+
+  printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved ");
+  gpio_set_high(&rf);
+  gpio_set_high(&ts);
+  wait_milliseconds(100 MILLIS);
+  CHECK_STATUS_RTD(self, SYSTEM_OFF);
+  if(!EmergencyNode_is_emergency_state(&read_emergecy))
+  {
+    PASSED("emergency resolved after shutdown hv with rf deactivated");
+  }
+  else
+  {
+    FAILED("emergency not resolved after shutdown hv with rf deactivated");
+  }
 }
 
 
 int main(void)
 {
-  struct EmulationAmkInverter_h amk_inverter_emulation = {0};
+  EmulationAmkInverter_h amk_inverter_emulation = {0};
   AmkInverter_h amk={0};
   Pcu_h pcu = {0};
   Atc_h atc ={0};

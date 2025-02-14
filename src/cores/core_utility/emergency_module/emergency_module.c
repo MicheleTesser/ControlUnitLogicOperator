@@ -90,7 +90,7 @@ EmergencyNode_init(EmergencyNode_h* const restrict self)
   return 0;
 }
 
-int8_t EmergencyNode_raise(struct EmergencyNode_h* const restrict self, const uint8_t exeception)
+int8_t EmergencyNode_raise(EmergencyNode_h* const restrict self, const uint8_t exeception)
 {
   const uint8_t exception_byte = exeception/8;
   const uint8_t exception_bit = exeception % 8;
@@ -112,7 +112,7 @@ int8_t EmergencyNode_raise(struct EmergencyNode_h* const restrict self, const ui
   return 0;
 }
 
-int8_t EmergencyNode_solve(struct EmergencyNode_h* const restrict self, const uint8_t exeception)
+int8_t EmergencyNode_solve(EmergencyNode_h* const restrict self, const uint8_t exeception)
 {
   const uint8_t exception_byte = exeception/8;
   const uint8_t exception_bit = 1 << (exeception % 8);
@@ -139,7 +139,7 @@ int8_t EmergencyNode_solve(struct EmergencyNode_h* const restrict self, const ui
   return 0;
 }
 
-int8_t EmergencyNode_is_emergency_state(const struct EmergencyNode_h* const restrict self)
+int8_t EmergencyNode_is_emergency_state(const EmergencyNode_h* const restrict self)
 {
   const union EmergencyNode_h_t_conv_const conv = {self};
   const struct EmergencyNode_t* const restrict p_self =conv.clear;
