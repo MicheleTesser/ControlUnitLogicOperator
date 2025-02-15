@@ -1,10 +1,12 @@
 #include "imu.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
 #include <string.h>
 
 //TODO: imu can messages not yet defined
 
 struct Imu_t{
     float acc[__NUM_OF_AXIS__];
+    struct CanMailbox* mailbox_imu;
 };
 
 union Imu_h_t_conv{
@@ -13,19 +15,31 @@ union Imu_h_t_conv{
 };
 
 union Imu_h_t_conv_const{
-    const Imu_h* const restrict hidden;
-    const struct Imu_t* const restrict clear;
+    const Imu_h* const hidden;
+    const struct Imu_t* const clear;
 };
 
 #ifdef DEBUG
 char __assert_size_core_0_imu[(sizeof(Imu_h)) == sizeof(struct Imu_t)? 1:-1];
 #endif // DEBUG
 
+//public
+
 int8_t imu_init(Imu_h* const restrict self)
 {
     union Imu_h_t_conv conv = {self};
     struct Imu_t* const restrict p_self = conv.clear;
+
     memset(p_self, 0, sizeof(*p_self));
+
+    ACTION_ON_CAN_NODE(CAN_GENERAL, can_node,{
+      //TODO: not yet defined
+      p_self->mailbox_imu = hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, 1, 8);
+    });
+    if (!p_self->mailbox_imu)
+    {
+      return -1;
+    }
 
     return 0;
 }

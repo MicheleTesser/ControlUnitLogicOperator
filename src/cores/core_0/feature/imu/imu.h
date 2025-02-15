@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct Imu_h{
-    const uint8_t private_data[12];
+    const uint8_t private_data[24];
 }Imu_h;
 
 enum IMU_AXIS{

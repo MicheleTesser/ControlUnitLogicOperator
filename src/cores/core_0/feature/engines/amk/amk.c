@@ -252,6 +252,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       }
       else if (_precharge_ended(self))
       {
+        printf("finished precharge\n");
         self->engine_status = TS_READY;
       }
       break;
@@ -300,6 +301,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
   }
 
   pack_message_can2(&o2, CAN_ID_PCURF, &data);
+
   hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
   FOR_EACH_ENGINE(engine)
   {

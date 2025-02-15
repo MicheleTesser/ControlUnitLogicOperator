@@ -3,6 +3,7 @@
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 //private
@@ -110,7 +111,8 @@ driver_input_update(DriverInput_h* const restrict self )
   switch (p_self->current_driver) {
     case DRIVER_HUMAN:
       mailbox = p_self->drivers_mailboxes[DRIVER_HUMAN];
-      if (hardware_mailbox_read(mailbox, &mex)>=0) {
+      if (!hardware_mailbox_read(mailbox, &mex))
+      {
         unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
         index_input = compute_data_index(p_self, DRIVER_HUMAN, THROTTLE);
         if (index_input<0)
@@ -124,6 +126,7 @@ driver_input_update(DriverInput_h* const restrict self )
           return -1;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.brake;
+        // printf("brake: %f\n",p_self->driver_data[index_input]);
         index_input = compute_data_index(p_self, DRIVER_HUMAN, STEERING_ANGLE);
         if (index_input<0)
         {

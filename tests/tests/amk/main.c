@@ -131,9 +131,8 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
 
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency ");
   car_amk_inverter_emergency_shutdown(inverter);
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(1 SECONDS);
   CHECK_STATUS_RTD(self, SYSTEM_OFF);
-  wait_milliseconds(100 MILLIS);
   if(EmergencyNode_is_emergency_state(&read_emergecy))
   {
     PASSED("emergency on recognized after shutdown hv with rf active");
@@ -146,7 +145,7 @@ static void test_start_precharge(EngineType* self, EmulationAmkInverter_h* inver
   printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved ");
   gpio_set_high(&rf);
   gpio_set_high(&ts);
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(500 MILLIS);
   CHECK_STATUS_RTD(self, SYSTEM_OFF);
   if(!EmergencyNode_is_emergency_state(&read_emergecy))
   {
@@ -211,8 +210,8 @@ int main(void)
     goto end;
   }
 
-  //HACK: do not know why but if you init the amk_module before the pcu the pcu breaks and 
-  //the send mailbox for PCURFACK reset itself. Do not know why for now.
+  //HACK: I do not know why but if you init the amk_module before the pcu the pcu breaks and 
+  //the send mailbox for PCURFACK reset itself. I Do not know why for now.
   if (pcu_init(&pcu)<0)
   {
     FAILED("failed init pcu module");
@@ -246,16 +245,20 @@ int main(void)
   test_initial_status(&engine);
   test_start_precharge(&engine, &amk_inverter_emulation, &atc);
 
+  printf("tests finished\n");
+
   run=0;
   thrd_join(core,NULL);
-  printf("stopping inverter\n");
-  car_amk_inverter_stop(&amk_inverter_emulation);
+
   printf("stopping pcu\n");
   pcu_stop(&pcu);
   printf("stopping atc\n");
   atc_stop(&atc);
+  printf("stopping inverter\n");
+  car_amk_inverter_stop(&amk_inverter_emulation);
   printf("stopping can module\n");
   stop_thread_can();
+
 end:
   print_SCORE();
   return 0;

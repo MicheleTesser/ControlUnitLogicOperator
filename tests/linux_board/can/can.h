@@ -11,5 +11,9 @@ void
 hardware_init_can_get_ref_node_destroy(struct CanNode* const restrict self)
   __attribute__((__nonnull__(1)));
 
+void
+hardware_init_can_debug_print_status(struct CanMailbox* const restrict self)
+  __attribute__((__nonnull__(1)));
+
 
 #endif // !__LINUX_BOARD_CAN__

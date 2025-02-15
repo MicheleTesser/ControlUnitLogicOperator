@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/cdefs.h>
 #include <sys/procfs.h>
 #include <threads.h>
 
@@ -43,6 +44,8 @@ char __assert_size_pcu[(sizeof(Pcu_h)==sizeof(struct Pcu_t))?1:-1];
 #endif /* ifdef DEBUG */
 
 static int8_t
+_pcu_update(struct Pcu_t* const restrict self)__attribute_maybe_unused__;
+static int8_t
 _pcu_update(struct Pcu_t* const restrict self)
 {
   CanMessage mex = {0};
@@ -68,18 +71,21 @@ _pcu_update(struct Pcu_t* const restrict self)
         return -1;
     }
   }
-  hardware_mailbox_send(self->send_can_node_pcu_inv, self->rf);
-
-  return 0;
+  return hardware_mailbox_send(self->send_can_node_pcu_inv, self->rf);
 }
 
 static int
 _pcu_start(void* args)
 {
   struct Pcu_t* self = args;
+  time_var_microseconds t =0;
+
   while (self->run)
   {
-    _pcu_update(self);
+    if ((timer_time_now() - t) > 50 MILLIS) {
+      _pcu_update(self);
+      t = timer_time_now();
+    }
   }
   return 0;
 }
@@ -106,7 +112,7 @@ pcu_init(struct Pcu_h* const restrict self)
   p_self->recv_can_node_pcu_inv = 
     hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_PCURF, 7);
   p_self->send_can_node_pcu_inv =
-    hardware_get_mailbox(can_node, SEND_MAILBOX, CAN_ID_PCURFACK, -1, 1);
+    hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCURFACK, 1);
   hardware_init_can_get_ref_node_destroy(can_node);
 
   if (!p_self->recv_can_node_pcu_inv)

@@ -2,6 +2,7 @@
 #include "../../linux_board/linux_board.h"
 #include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <threads.h>
 
 struct Atc_t{
@@ -30,7 +31,7 @@ _atc_start(void* arg)
 
   while (self->run)
   {
-    if ((timer_time_now() - last_sent) > 300 MILLIS)
+    if ((timer_time_now() - last_sent) > 50 MILLIS)
     {
       can_obj_can2_h_t o2 = {0};
       uint64_t data=0;
@@ -41,8 +42,8 @@ _atc_start(void* arg)
       o2.can_0x053_Driver.no_implausibility = 1;
       pack_message_can2(&o2, CAN_ID_DRIVER, &data);
       hardware_mailbox_send(self->send_vcu_mailbox, data);
+      last_sent = timer_time_now();
     }
-  
   }
   return 0;
 }
