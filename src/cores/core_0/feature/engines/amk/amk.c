@@ -206,6 +206,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
   struct AMK_Setpoints setpoint = {0};
   can_obj_can2_h_t o2={0};
   uint64_t data=0;
+  static time_var_microseconds t=0;
 
   if(self->engine_status == SYSTEM_OFF)
   {
@@ -300,13 +301,18 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       break;
   }
 
-  pack_message_can2(&o2, CAN_ID_PCURF, &data);
-
-  hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
-  FOR_EACH_ENGINE(engine)
+  if ((timer_time_now() - t) > 50 MILLIS)
   {
-    _send_message_amk(self, engine, &setpoint);
+    pack_message_can2(&o2, CAN_ID_PCURF, &data);
+
+    hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
+    FOR_EACH_ENGINE(engine)
+    {
+      _send_message_amk(self, engine, &setpoint);
+    }
+    t = timer_time_now();
   }
+
 }
 
   static float

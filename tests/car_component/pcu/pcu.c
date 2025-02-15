@@ -82,7 +82,8 @@ _pcu_start(void* args)
 
   while (self->run)
   {
-    if ((timer_time_now() - t) > 50 MILLIS) {
+    if ((timer_time_now() - t) > 50 MILLIS)
+    {
       _pcu_update(self);
       t = timer_time_now();
     }
