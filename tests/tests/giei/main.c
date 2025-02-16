@@ -131,11 +131,11 @@ static void test_giei_rtd(CoreInput* const input)
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("waiting 2 seconds sound still on\n");
-  wait_milliseconds(2 MILLIS);
+  wait_milliseconds(2 SECONDS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("waiting 2 seconds sound off\n");
-  wait_milliseconds(2 MILLIS);
+  wait_milliseconds(2 SECONDS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 0);
 
   printf("disabling rf in manual mode from RUNNING -> TS_READY\n");
@@ -143,14 +143,14 @@ static void test_giei_rtd(CoreInput* const input)
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, TS_READY, 0, 0);
 
-  printf("disabling rf in manual mode from TS_READY -> RUNNING \n");
+  printf("enabling rf in manual mode from TS_READY -> RUNNING \n");
   gpio_set_low(input->rf);
-  wait_milliseconds(500 MILLIS);
-  _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 0);
+  wait_milliseconds(1 SECONDS);
+  _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency\n");
   car_amk_inverter_emergency_shutdown(input->amk_emulation);
-  wait_milliseconds(1 SECONDS);
+  wait_milliseconds(3 SECONDS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 1, 0);
 
   printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved\n");

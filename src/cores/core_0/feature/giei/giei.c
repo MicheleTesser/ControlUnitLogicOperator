@@ -172,6 +172,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
     else if (rt != RUNNING)
     {
         p_self->entered_rtd =0;
+        p_self->rtd_sound_start=0;
         gpio_set_high(&p_self->gpio_rtd_sound);
     }
     p_self->running_status = rt;
