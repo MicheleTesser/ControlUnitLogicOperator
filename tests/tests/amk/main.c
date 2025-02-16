@@ -40,7 +40,7 @@ static int core_update(void* args)
 
   while(run)
   {
-    if ((timer_time_now() - t) > 1 SECONDS)
+    if ((timer_time_now() - t) > 50 MILLIS)
     {
       driver_input_update(input->driver_input);
       inverter_update(input->engine_input);
@@ -193,7 +193,7 @@ int main(void)
 
   //HACK: I do not know why but if you init the amk_module before the pcu the pcu breaks and 
   //the send mailbox for PCURFACK reset itself. I Do not know why for now.
-  INIT_PH(car_amk_inverter_class_init(&amk_inverter_emulation), "amk emulation");
+  INIT_PH(car_amk_inverter_start(&amk_inverter_emulation), "amk emulation");
   INIT_PH(pcu_init(&pcu), "pcu emulation");
   INIT_PH(atc_start(&atc), "atc emulation");
 

@@ -6,7 +6,6 @@
 
 #include <linux/can.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <threads.h>
@@ -61,77 +60,35 @@ struct EmulationAmkInverter_t{
   struct amk_engines{
     struct AMK_Actual_Values_1 amk_data_1;
     struct AMK_Actual_Values_2 amk_data_2;
-  }engines[4];
-  struct CanNode* CanNodeInverter;
-  thrd_t t;
-  thrd_t update;
-  uint8_t running:1;
-  Gpio_h air_1;
-  Gpio_h air_2;
-  GpioRead_h rf_signal;
+  }o_engines[4];
+  Gpio_h o_precharge_init;
+  Gpio_h o_precharge_done;
+  GpioRead_h o_rf;
+  thrd_t o_thread;
+  struct CanNode* p_can_node_inverter;
+  struct CanMailbox* p_recv_mailbox_vcu;
+  uint8_t o_running:1;
+  time_var_microseconds o_precharge_started_at;
+  time_var_microseconds o_last_sent_at;
 };
 
 union AmkInverter_h_t_conv{
-  EmulationAmkInverter_h* const restrict hidden;
-  struct EmulationAmkInverter_t* const restrict clear;
+  EmulationAmkInverter_h* const hidden;
+  struct EmulationAmkInverter_t* const clear;
+};
+
+union AmkInverter_h_t_conv_const{
+  const EmulationAmkInverter_h* const hidden;
+  const struct EmulationAmkInverter_t* const clear;
 };
 
 #ifdef DEBUG
 const char __assert_size_amk_inverter[(sizeof(EmulationAmkInverter_h)==sizeof(struct EmulationAmkInverter_t))?1:-1]; 
 #endif /* ifdef DEBUG */
 
-#define UPDATE_DATA(self, mex, rf_signal)\
-{\
-  self.AMK_STATUS.AMK_bDcOn = mex.AMK_bDcOn;\
-  self.AMK_STATUS.AMK_bInverterOn = mex.AMK_bInverterOn && self.AMK_STATUS.AMK_bQuitDcOn;\
-  self.AMK_STATUS.AMK_bQuitInverterOn = self.AMK_STATUS.AMK_bInverterOn;\
-  self.AMK_STATUS.AMK_bEnable = mex.AMK_bEnable && self.AMK_STATUS.AMK_bQuitInverterOn && rf_signal;\
-  if (mex.AMK_bErrorReset)\
-  {\
-    self.AMK_STATUS.AMK_bError = 0;\
-    self.AMK_STATUS.AMK_bWarn = 0;\
-    self.AMK_STATUS.AMK_bDerating = 0;\
-  }\
-}
-
-static int 
-car_amk_inverter_update(void* args)
-{
-  union AmkInverter_h_t_conv conv = {args};
-  struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-
-  while (p_self->running)
-  {
-    CanMessage mex = {0};
-    can_obj_can1_h_t o1 ={0};
-    const uint8_t rf_signal = gpio_read_state(&p_self->rf_signal);
-
-    hardware_read_can(p_self->CanNodeInverter,&mex);
-    unpack_message_can1(&o1, mex.id,mex.full_word, mex.message_size, 0);
-    switch (mex.id)
-    {
-      case CAN_ID_VCUINVFL:
-        UPDATE_DATA(p_self->engines[FRONT_LEFT].amk_data_1, o1.can_0x184_VCUInvFL,rf_signal);
-        break;
-      case CAN_ID_VCUINVFR:
-        UPDATE_DATA(p_self->engines[FRONT_RIGHT].amk_data_1, o1.can_0x185_VCUInvFR,rf_signal);
-        break;
-      case CAN_ID_VCUINVRL:
-        UPDATE_DATA(p_self->engines[REAR_LEFT].amk_data_1, o1.can_0x188_VCUInvRL,rf_signal);
-        break;
-      case CAN_ID_VCUINVRR:
-        UPDATE_DATA(p_self->engines[REAR_RIGHT].amk_data_1, o1.can_0x189_VCUInvRR,rf_signal);
-        break;
-    }
-  }
-  return 0;
-}
-
-//public
-
 #define POPULATE_MEX_ENGINE(self, mex, engine)\
 {\
-  struct AMK_Actual_Values_1* s_w = &self->engines[engine].amk_data_1;\
+  struct AMK_Actual_Values_1* s_w = &self->o_engines[engine].amk_data_1;\
   \
   mex.SystemReady = s_w->AMK_STATUS.AMK_bSystemReady;\
   mex.HVOn = s_w->AMK_STATUS.AMK_bDcOn;\
@@ -148,16 +105,14 @@ car_amk_inverter_update(void* args)
   mex.ActualVelocity = s_w->AMK_ActualVelocity;\
 }
 
-  static void
-send_data_engine(EmulationAmkInverter_h* self, const uint16_t can_id) 
+static void _send_data_engine(struct EmulationAmkInverter_t* const restrict p_self, const uint16_t can_id) 
 {
-  union AmkInverter_h_t_conv conv = {self};
-  struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   CanMessage mex = {0};
   can_obj_can1_h_t o = {0};
   uint64_t data=0;
 
-  switch (can_id) {
+  switch (can_id)
+  {
     case CAN_ID_INVERTERFL1:
       POPULATE_MEX_ENGINE(p_self, o.can_0x283_InverterFL1, FRONT_LEFT);
       break;
@@ -176,137 +131,196 @@ send_data_engine(EmulationAmkInverter_h* self, const uint16_t can_id)
   mex.id= can_id;
   mex.message_size = pack_message_can1(&o, can_id,&data);
   memcpy(&mex.full_word, &data, mex.message_size);
-  hardware_write_can(p_self->CanNodeInverter, &mex);
+  hardware_write_can(p_self->p_can_node_inverter, &mex);
 }
 
-static int inverter_start(void* args __attribute_maybe_unused__)
+static int _inverter_compute_internal_status(struct EmulationAmkInverter_t* const restrict p_self)
 {
-  EmulationAmkInverter_h* self= args;
-  union AmkInverter_h_t_conv conv = {self};
-  struct EmulationAmkInverter_t* const restrict p_self = conv.clear; 
-  time_var_microseconds start_precharge =0;
-  time_var_microseconds t = 0;
+  uint8_t precharge_ready=1;
 
-  while (p_self->running)
+  FOR_EACH_ENGINE(engine)
   {
-    uint8_t precharge_ready=1;
+    if (!p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bDcOn)
+    {
+      precharge_ready=0;
+      break;
+    }
+  }
 
+
+
+  if (precharge_ready)
+  {
+    gpio_set_low(&p_self->o_precharge_init);
+    if (!p_self->o_precharge_started_at)
+    {
+      p_self->o_precharge_started_at = timer_time_now();
+    }
+
+    ACTION_ON_FREQUENCY(p_self->o_precharge_started_at, 5 SECONDS)
+    {
+      p_self->o_precharge_started_at = timer_time_now();
+      FOR_EACH_ENGINE(engine)
+      {
+        struct AMK_Actual_Values_1* p_val = &p_self->o_engines[engine].amk_data_1;
+        p_val->AMK_STATUS.AMK_bQuitDcOn=1;
+        gpio_set_low(&p_self->o_precharge_done);
+      }
+    }
+  }
+  else
+  {
+    p_self->o_precharge_started_at =0;
+    gpio_set_high(&p_self->o_precharge_init);
+    gpio_set_high(&p_self->o_precharge_done);
+  }
+
+
+  return 0;
+}
+
+#define UPDATE_DATA(self, mex, rf_signal)\
+{\
+  self.AMK_STATUS.AMK_bDcOn = mex.AMK_bDcOn;\
+  self.AMK_STATUS.AMK_bInverterOn = mex.AMK_bInverterOn && self.AMK_STATUS.AMK_bQuitDcOn;\
+  self.AMK_STATUS.AMK_bQuitInverterOn = self.AMK_STATUS.AMK_bInverterOn;\
+  self.AMK_STATUS.AMK_bEnable = mex.AMK_bEnable && self.AMK_STATUS.AMK_bQuitInverterOn && rf_signal;\
+  if (mex.AMK_bErrorReset)\
+  {\
+    self.AMK_STATUS.AMK_bError = 0;\
+    self.AMK_STATUS.AMK_bWarn = 0;\
+    self.AMK_STATUS.AMK_bDerating = 0;\
+  }\
+}
+static void _amk_inverter_update_data(struct EmulationAmkInverter_t* const restrict p_self)
+{
+  CanMessage mex = {0};
+  can_obj_can1_h_t o1 ={0};
+  const uint8_t rf_signal = gpio_read_state(&p_self->o_rf);
+
+  if (!hardware_mailbox_read(p_self->p_recv_mailbox_vcu, &mex))
+  {
+    unpack_message_can1(&o1, mex.id,mex.full_word, mex.message_size, 0);
+    switch (mex.id)
+    {
+      case CAN_ID_VCUINVFL:
+        UPDATE_DATA(p_self->o_engines[FRONT_LEFT].amk_data_1, o1.can_0x184_VCUInvFL,rf_signal);
+        break;
+      case CAN_ID_VCUINVFR:
+        UPDATE_DATA(p_self->o_engines[FRONT_RIGHT].amk_data_1, o1.can_0x185_VCUInvFR,rf_signal);
+        break;
+      case CAN_ID_VCUINVRL:
+        UPDATE_DATA(p_self->o_engines[REAR_LEFT].amk_data_1, o1.can_0x188_VCUInvRL,rf_signal);
+        break;
+      case CAN_ID_VCUINVRR:
+        UPDATE_DATA(p_self->o_engines[REAR_RIGHT].amk_data_1, o1.can_0x189_VCUInvRR,rf_signal);
+        break;
+    }
+  }
+
+  if (!rf_signal)
+  {
     FOR_EACH_ENGINE(engine)
     {
-      if (!p_self->engines[engine].amk_data_1.AMK_STATUS.AMK_bDcOn)
-      {
-        precharge_ready=0;
-        break;
-      }
+      p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bEnable =0;
+      p_self->o_engines[engine].amk_data_1.AMK_MagnetizingCurrent =0;
+      p_self->o_engines[engine].amk_data_1.AMK_TorqueCurrent = 0;
+      p_self->o_engines[engine].amk_data_1.AMK_ActualVelocity =0;
     }
+  }
+}
 
+static int _car_amk_inverter_update(void* args)
+{
+  union AmkInverter_h_t_conv conv = {args};
+  struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
 
-
-    if (precharge_ready)
+  while (p_self->o_running)
+  {
+    _amk_inverter_update_data(p_self);
+    _inverter_compute_internal_status(p_self);
+    ACTION_ON_FREQUENCY(p_self->o_last_sent_at, 50 MILLIS)
     {
-      gpio_set_low(&p_self->air_1);
-      if (!start_precharge)
-      {
-        start_precharge = timer_time_now();
-      }
-
-      if ((timer_time_now() - start_precharge) > 5 SECONDS)
-      {
-        printf("precharge ended\n");
-        start_precharge = timer_time_now();
-        FOR_EACH_ENGINE(engine)
-        {
-          struct AMK_Actual_Values_1* p_val = &p_self->engines[engine].amk_data_1;
-          p_val->AMK_STATUS.AMK_bQuitDcOn=1;
-          gpio_set_low(&p_self->air_2);
-        }
-      }
-    }else
-    {
-      start_precharge=0;
-      gpio_set_high(&p_self->air_1);
-      gpio_set_high(&p_self->air_2);
-    }
-
-    if (!gpio_read_state(&p_self->rf_signal))
-    {
-      FOR_EACH_ENGINE(engine){
-          p_self->engines[engine].amk_data_1.AMK_STATUS.AMK_bEnable =0;
-          p_self->engines[engine].amk_data_1.AMK_MagnetizingCurrent =0;
-          p_self->engines[engine].amk_data_1.AMK_TorqueCurrent = 0;
-          p_self->engines[engine].amk_data_1.AMK_ActualVelocity =0;
-      }
-    }
-
-    if ((timer_time_now() - t) > 50 MILLIS)
-    {
-      send_data_engine(self, CAN_ID_INVERTERFR1);
-      send_data_engine(self, CAN_ID_INVERTERFL1);
-      send_data_engine(self, CAN_ID_INVERTERRL1);
-      send_data_engine(self, CAN_ID_INVERTERRR1);
-      t = timer_time_now();
+      _send_data_engine(p_self, CAN_ID_INVERTERFR1);
+      _send_data_engine(p_self, CAN_ID_INVERTERFL1);
+      _send_data_engine(p_self, CAN_ID_INVERTERRL1);
+      _send_data_engine(p_self, CAN_ID_INVERTERRR1);
     }
   }
   return 0;
 }
 
+
+
 //public
 
-int8_t
-car_amk_inverter_class_init(EmulationAmkInverter_h* self)
+int8_t car_amk_inverter_start(EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   memset(self, 0, sizeof(*self));
 
-  p_self->CanNodeInverter = hardware_init_can_get_ref_node_new(CAN_INVERTER);
-  if(!p_self->CanNodeInverter)
+  p_self->p_can_node_inverter = hardware_init_can_get_ref_node_new(CAN_INVERTER);
+  if(!p_self->p_can_node_inverter)
   {
     return -1;
   }
 
-  if(hardware_init_gpio(&p_self->air_1, GPIO_AIR_PRECHARGE_INIT)<0)
+  // FR: 389,       0000000110000101
+  // FL: 388,       0000000110000100
+  // RR: 393,       0000000110001001
+  // RL: 392,       0000000110001000
+  //
+  // filter id:384, 0000000110000000
+  // mask: 65520,   1111111111110000
+  const uint16_t filter_id = CAN_ID_VCUINVFL & CAN_ID_VCUINVFR & CAN_ID_VCUINVRL & CAN_ID_VCUINVRR;
+  const uint16_t filter_mask = (~0) ^ (15);
+
+
+
+  p_self->p_recv_mailbox_vcu =
+    hardware_get_mailbox(p_self->p_can_node_inverter, FIFO_BUFFER, filter_id, filter_mask , 8);
+
+  if(hardware_init_gpio(&p_self->o_precharge_init , GPIO_AIR_PRECHARGE_INIT)<0)
   {
     return -2;
   }
 
-  if(hardware_init_gpio(&p_self->air_2, GPIO_AIR_PRECHARGE_DONE)<0)
+  if(hardware_init_gpio(&p_self->o_precharge_done, GPIO_AIR_PRECHARGE_DONE)<0)
   {
     return -3;
   }
 
-  if(hardware_init_read_permission_gpio(&p_self->rf_signal, GPIO_INVERTER_RF_SIGNAL)<0)
+  if(hardware_init_read_permission_gpio(&p_self->o_rf, GPIO_INVERTER_RF_SIGNAL)<0)
   {
     return -4;
   }
 
-  p_self->running=1;
-  thrd_create(&p_self->t, inverter_start, self);
-  thrd_create(&p_self->update, car_amk_inverter_update, self);
+  p_self->o_running=1;
+  thrd_create(&p_self->o_thread, _car_amk_inverter_update, self);
   return 0;
 }
 
-void 
+  void 
 car_amk_inverter_reset(EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   FOR_EACH_ENGINE(engine){
-    memset(&p_self->engines[engine].amk_data_1, 0,
-        sizeof(p_self->engines[engine].amk_data_1));
-    memset(&p_self->engines[engine].amk_data_2, 0,
-        sizeof(p_self->engines[engine].amk_data_2));
+    memset(&p_self->o_engines[engine].amk_data_1, 0,
+        sizeof(p_self->o_engines[engine].amk_data_1));
+    memset(&p_self->o_engines[engine].amk_data_2, 0,
+        sizeof(p_self->o_engines[engine].amk_data_2));
   }
 }
 
-int8_t
-car_amk_inverter_set_attribute(EmulationAmkInverter_h* self,
+int8_t car_amk_inverter_set_attribute(EmulationAmkInverter_h* self,
     const enum INVERTER_ATTRIBUTE attribute, const uint8_t engine,
     const int64_t value)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  struct amk_engines* p_engine = &p_self->engines[engine];
+  struct amk_engines* p_engine = &p_self->o_engines[engine];
 
   switch (attribute)
   {
@@ -327,23 +341,22 @@ car_amk_inverter_set_attribute(EmulationAmkInverter_h* self,
   return 0;
 }
 
-int8_t
-car_amk_inverter_set_engine_value(EmulationAmkInverter_h* self,
+int8_t car_amk_inverter_set_engine_value(EmulationAmkInverter_h* self,
     const enum ENGINE_STATUS status, const uint8_t engine, 
     const float value)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  struct amk_engines* p_engine = &p_self->engines[engine];
+  struct amk_engines* p_engine = &p_self->o_engines[engine];
 
-  if (!gpio_read_state(&p_self->rf_signal))
+  if (!gpio_read_state(&p_self->o_rf))
   {
     return -1;
   }
 
   FOR_EACH_ENGINE(engine)
   {
-    if (!p_self->engines[engine].amk_data_1.AMK_STATUS.AMK_bEnable)
+    if (!p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bEnable)
     {
       return -2;
     }
@@ -379,23 +392,30 @@ car_amk_inverter_set_engine_value(EmulationAmkInverter_h* self,
   return 0;
 }
 
+enum PRECHARGE_STATUS car_amk_inverter_precharge_status(const EmulationAmkInverter_h* const restrict self)
+{
+  const union AmkInverter_h_t_conv_const conv = {self};
+  const struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
+  return 
+    (gpio_read_state(&p_self->o_precharge_init.gpio_read_permission) << 0) |
+    (gpio_read_state(&p_self->o_precharge_done.gpio_read_permission) << 1);
+}
 
 void car_amk_inverter_stop(EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  
-  p_self->running=0;
-  hardware_init_can_get_ref_node_destroy(p_self->CanNodeInverter);
+
+  p_self->o_running=0;
+  hardware_init_can_get_ref_node_destroy(p_self->p_can_node_inverter);
 
   return;
 }
 
-void
-car_amk_inverter_emergency_shutdown(EmulationAmkInverter_h* self)
+void car_amk_inverter_emergency_shutdown(EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  gpio_set_high(&p_self->air_1);
-  gpio_set_high(&p_self->air_2);
+  gpio_set_high(&p_self->o_precharge_init);
+  gpio_set_high(&p_self->o_precharge_done);
 }

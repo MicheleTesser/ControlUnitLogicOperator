@@ -56,15 +56,18 @@ _pcu_update(struct Pcu_t* const restrict self)
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
     switch (mex.id)
     {
-      case CAN_ID_PCURF:
-        self->rf = o2.can_0x133_PcuRf.rf_signal;
-        if (o2.can_0x133_PcuRf.rf_signal)
+      case CAN_ID_PCU:
+        if (o2.can_0x130_Pcu.mode == 1)
         {
-          gpio_set_low(&self->inverter_on_gpio);
-        }
-        else
-        {
-          gpio_set_high(&self->inverter_on_gpio);
+          self->rf = o2.can_0x130_Pcu.rf;
+          if (self->rf)
+          {
+            gpio_set_low(&self->inverter_on_gpio);
+          }
+          else
+          {
+            gpio_set_high(&self->inverter_on_gpio);
+          }
         }
         break;
       default:
@@ -82,10 +85,9 @@ _pcu_start(void* args)
 
   while (self->run)
   {
-    if ((timer_time_now() - t) > 50 MILLIS)
+    ACTION_ON_FREQUENCY(t, 50 MILLIS)
     {
       _pcu_update(self);
-      t = timer_time_now();
     }
   }
   return 0;
@@ -111,7 +113,7 @@ pcu_init(struct Pcu_h* const restrict self)
   }
 
   p_self->recv_can_node_pcu_inv = 
-    hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_PCURF, 7);
+    hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_PCU, 7);
   p_self->send_can_node_pcu_inv =
     hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCURFACK, 1);
   hardware_init_can_get_ref_node_destroy(can_node);

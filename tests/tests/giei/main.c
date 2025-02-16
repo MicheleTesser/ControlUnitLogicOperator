@@ -49,13 +49,18 @@ static int _core_thread_fun(void* arg)__attribute_maybe_unused__;
 static int _core_thread_fun(void* arg)
 {
   CoreInput* const core_input = arg;
+  time_var_microseconds last_update =0;
+
   while (*core_input->core_run)
   {
-    driver_input_update(core_input->driver);
-    driving_map_update(core_input->maps);
-    imu_update(core_input->imu);
-    inverter_update(core_input->engine);
-    giei_update(core_input->giei);
+    ACTION_ON_FREQUENCY(last_update, 50 MILLIS)
+    {
+      driver_input_update(core_input->driver);
+      driving_map_update(core_input->maps);
+      imu_update(core_input->imu);
+      inverter_update(core_input->engine);
+      giei_update(core_input->giei);
+    }
   }
   return 0;
 }
@@ -205,7 +210,7 @@ int main(void)
 
   //HACK: I do not know why but if you init the amk_module before the pcu the pcu breaks and 
   //the send mailbox for PCURFACK reset itself. I Do not know why for now.
-  INIT_PH(car_amk_inverter_class_init(&amk_inverter_emulation), "amk emulation");
+  INIT_PH(car_amk_inverter_start(&amk_inverter_emulation), "amk emulation");
   INIT_PH(pcu_init(&pcu), "pcu emulation");
   INIT_PH(atc_start(&atc), "atc emulation");
 
