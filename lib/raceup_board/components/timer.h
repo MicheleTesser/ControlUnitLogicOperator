@@ -17,4 +17,7 @@ extern uint8_t is_time_passed(
         const time_var_microseconds time_tick, 
         const time_var_microseconds amount_passed);
 
+#define ACTION_ON_FREQUENCY(time_var, freq)\
+  for(;(timer_time_now() - time_var) > freq; time_var = timer_time_now())
+
 #endif// !__VIRTUAL_TIMER__

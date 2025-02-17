@@ -54,7 +54,7 @@ atc_start(Atc_h* const restrict self)
   union Atc_h_t_conv conv = {self};
   struct Atc_t* const restrict p_self = conv.clear;
 
-  struct CanNode* node = hardware_init_can_get_ref_node_new(CAN_GENERAL);
+  struct CanNode* node = hardware_init_new_external_node(CAN_GENERAL);
 
   if (!node)
   {
@@ -66,7 +66,7 @@ atc_start(Atc_h* const restrict self)
   {
     return -2;
   }
-  hardware_init_can_get_ref_node_destroy(node);
+  hardware_init_new_external_node_destroy(node);
 
   p_self->run=1;
   thrd_create(&p_self->thread, _atc_start, p_self);

@@ -106,9 +106,9 @@ static int8_t dv_update_led(struct Dv_t* const restrict self)
   Gpio_h* const restrict gpio_light_yellow = &self->gpio_ass_light_yellow;
   Gpio_h* const restrict gpio_sound = &self->gpio_emergency_sound;
 
-  if ((timer_time_now() - self->emergency_sound_last_time_on) > 8 SECONDS) {
+  ACTION_ON_FREQUENCY(self->emergency_sound_last_time_on, 8 SECONDS)
+  {
     gpio_set_high(gpio_sound);
-    self->emergency_sound_last_time_on = timer_time_now();
   }
 
   switch (self->status)
@@ -127,16 +127,16 @@ static int8_t dv_update_led(struct Dv_t* const restrict self)
     case AS_DRIVING:
       gpio_set_high(gpio_light_blue);
       gpio_set_high(gpio_sound);
-      if ((timer_time_now() - self->driving_last_time_on) > 100 MILLIS ) {
+      ACTION_ON_FREQUENCY(self->driving_last_time_on, 100 MILLIS)
+      {
         gpio_toggle(gpio_light_yellow);
-        self->driving_last_time_on = timer_time_now();
       }
       break;
     case AS_EMERGENCY:
       gpio_set_high(gpio_light_yellow);
-      if ((timer_time_now() - self->emergency_last_time_on) > 100 MILLIS ) {
+      ACTION_ON_FREQUENCY(self->emergency_sound_last_time_on, 100 MILLIS)
+      {
         gpio_toggle(gpio_light_blue);
-        self->emergency_last_time_on = timer_time_now();
       }
       if (!self->sound_start) {
         self->sound_start =1;

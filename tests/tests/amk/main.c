@@ -40,7 +40,7 @@ static int core_update(void* args)
 
   while(run)
   {
-    if ((timer_time_now() - t) > 50 MILLIS)
+    ACTION_ON_FREQUENCY(t, 50 MILLIS)
     {
       driver_input_update(input->driver_input);
       inverter_update(input->engine_input);

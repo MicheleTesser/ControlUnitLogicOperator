@@ -31,13 +31,16 @@ static int8_t update_status(struct Cooling_t* const restrict self)
     CanMessage mex;
 
     mex.id = CAN_ID_PCU;
-    o.can_0x130_Pcu.fanrad_enable = self->devices[FANS_RADIATOR].enable;
-    o.can_0x130_Pcu.fanradl_speed = self->devices[FANS_RADIATOR].speed;
-    o.can_0x130_Pcu.fanradr_speed = self->devices[FANS_RADIATOR].speed;
+    o.can_0x130_Pcu.mode = 0;
+    o.can_0x130_Pcu.fanrad_enable_left = self->devices[FANS_RADIATOR].enable;
+    o.can_0x130_Pcu.fanrad_enable_right = self->devices[FANS_RADIATOR].enable;
+    o.can_0x130_Pcu.fanrad_speed_left = self->devices[FANS_RADIATOR].speed;
+    o.can_0x130_Pcu.fanrad_speed_left = self->devices[FANS_RADIATOR].speed;
 
-    o.can_0x130_Pcu.pump_enable = self->devices[PUMPS].enable;
-    o.can_0x130_Pcu.pumpl_speed = self->devices[PUMPS].speed;
-    o.can_0x130_Pcu.pumpr_speed = self->devices[PUMPS].speed;
+    o.can_0x130_Pcu.pump_enable_left = self->devices[PUMPS].enable;
+    o.can_0x130_Pcu.pump_enable_right = self->devices[PUMPS].enable;
+    o.can_0x130_Pcu.pump_speed_left = self->devices[PUMPS].speed;
+    o.can_0x130_Pcu.pump_speed_right = self->devices[PUMPS].speed;
     
     mex.message_size = pack_message_can2(&o, mex.id, &mex.full_word);
 

@@ -277,13 +277,15 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
         }
         else
         {
-          o2.can_0x133_PcuRf.rf_signal=1;
+          o2.can_0x130_Pcu.mode = 1;
+          o2.can_0x130_Pcu.rf = 1;
         }
         
       }
       break;
     case RUNNING:
-      o2.can_0x133_PcuRf.rf_signal=1;
+      o2.can_0x130_Pcu.mode = 1;
+      o2.can_0x130_Pcu.rf = 1;
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       setpoint.AMK_Control_fields.AMK_bInverterOn = 1;
       setpoint.AMK_Control_fields.AMK_bEnable = 1;
@@ -301,16 +303,15 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       break;
   }
 
-  if ((timer_time_now() - t) > 50 MILLIS)
+  ACTION_ON_FREQUENCY(t, 50 MILLIS)
   {
-    pack_message_can2(&o2, CAN_ID_PCURF, &data);
+    pack_message_can2(&o2, CAN_ID_PCU, &data);
 
     hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
     FOR_EACH_ENGINE(engine)
     {
       _send_message_amk(self, engine, &setpoint);
     }
-    t = timer_time_now();
   }
 
 }
@@ -516,6 +517,18 @@ amk_module_init(AmkInverter_h* const restrict self,
     return -5;
   }
 
+  /*
+    id 0: 643,      0000001010000011
+    id 1: 644,      0000001010000100
+    id 2: 645,      0000001010000101
+    id 3: 646,      0000001010000110
+    id 4: 647,      0000001010000111
+    id 5: 648,      0000001010001000
+    id 6: 649,      0000001010001001
+    id 7: 650,      0000001010001010
+    filter id:280,  0000001010000000
+    mask: fff0,     1111111111110000
+  */
   p_self->engine_mailbox =
     hardware_get_mailbox(p_self->can_inverter, FIFO_BUFFER, 0x280, 0xFFF0, 8);
   if (!p_self->engine_mailbox)
@@ -525,7 +538,7 @@ amk_module_init(AmkInverter_h* const restrict self,
 
   ACTION_ON_CAN_NODE(CAN_GENERAL,p_node,
     p_self->mailbox_pcu_rf_signal_send =
-      hardware_get_mailbox_single_mex(p_node, SEND_MAILBOX, CAN_ID_PCURF, 1);
+      hardware_get_mailbox_single_mex(p_node, SEND_MAILBOX, CAN_ID_PCU, 1);
     p_self->mailbox_pcu_rf_signal_read =
       hardware_get_mailbox_single_mex(p_node, RECV_MAILBOX, CAN_ID_PCURFACK, 1);
   );

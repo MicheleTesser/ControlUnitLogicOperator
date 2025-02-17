@@ -126,7 +126,6 @@ driver_input_update(DriverInput_h* const restrict self )
           return -1;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.brake;
-        // printf("brake: %f\n",p_self->driver_data[index_input]);
         index_input = compute_data_index(p_self, DRIVER_HUMAN, STEERING_ANGLE);
         if (index_input<0)
         {

@@ -200,7 +200,7 @@ static void _amk_inverter_update_data(struct EmulationAmkInverter_t* const restr
 
   if (!hardware_mailbox_read(p_self->p_recv_mailbox_vcu, &mex))
   {
-    unpack_message_can1(&o1, mex.id,mex.full_word, mex.message_size, 0);
+    // unpack_message_can1(&o1, mex.id,mex.full_word, mex.message_size, 0);
     switch (mex.id)
     {
       case CAN_ID_VCUINVFL:
@@ -260,7 +260,7 @@ int8_t car_amk_inverter_start(EmulationAmkInverter_h* self)
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   memset(self, 0, sizeof(*self));
 
-  p_self->p_can_node_inverter = hardware_init_can_get_ref_node_new(CAN_INVERTER);
+  p_self->p_can_node_inverter = hardware_init_new_external_node(CAN_INVERTER);
   if(!p_self->p_can_node_inverter)
   {
     return -1;
@@ -407,7 +407,7 @@ void car_amk_inverter_stop(EmulationAmkInverter_h* self)
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
 
   p_self->o_running=0;
-  hardware_init_can_get_ref_node_destroy(p_self->p_can_node_inverter);
+  hardware_init_new_external_node_destroy(p_self->p_can_node_inverter);
 
   return;
 }

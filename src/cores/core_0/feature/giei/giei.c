@@ -149,7 +149,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
     GIEI_H_T_CONV(self, p_self);
     enum RUNNING_STATUS rt = SYSTEM_OFF;
 
-    if ((timer_time_now() - p_self->rtd_sound_start) > 3 SECONDS)
+    ACTION_ON_FREQUENCY(p_self->rtd_sound_start, 3 SECONDS)
     {
         gpio_set_high(&p_self->gpio_rtd_sound);
     }

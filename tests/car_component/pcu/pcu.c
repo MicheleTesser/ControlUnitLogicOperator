@@ -106,7 +106,7 @@ pcu_init(struct Pcu_h* const restrict self)
     return -1;
   }
 
-  struct CanNode* can_node = hardware_init_can_get_ref_node_new(CAN_GENERAL);
+  struct CanNode* can_node = hardware_init_new_external_node(CAN_GENERAL);
   if (!can_node)
   {
     return -2;
@@ -116,7 +116,7 @@ pcu_init(struct Pcu_h* const restrict self)
     hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_PCU, 7);
   p_self->send_can_node_pcu_inv =
     hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCURFACK, 1);
-  hardware_init_can_get_ref_node_destroy(can_node);
+  hardware_init_new_external_node_destroy(can_node);
 
   if (!p_self->recv_can_node_pcu_inv)
   {
