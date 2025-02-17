@@ -75,7 +75,7 @@ typedef struct Inverter{
   }engines[__NUM_OF_ENGINES__];
   enum RUNNING_STATUS engine_status;
   uint8_t hvCounter[__NUM_OF_ENGINES__];
-  time_var_microseconds enter_precharge_phase;
+  time_var_microseconds u_last_send_info;
   struct GpioRead_h gpio_precharge_init;
   struct GpioRead_h gpio_precharge_done;
   struct GpioRead_h gpio_rtd_button;
@@ -206,7 +206,6 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
   struct AMK_Setpoints setpoint = {0};
   can_obj_can2_h_t o2={0};
   uint64_t data=0;
-  static time_var_microseconds t=0;
 
   if(self->engine_status == SYSTEM_OFF)
   {
@@ -303,7 +302,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       break;
   }
 
-  ACTION_ON_FREQUENCY(t, 50 MILLIS)
+  ACTION_ON_FREQUENCY(self->u_last_send_info, 50 MILLIS)
   {
     pack_message_can2(&o2, CAN_ID_PCU, &data);
 
