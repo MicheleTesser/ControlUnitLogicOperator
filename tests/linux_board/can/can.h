@@ -2,7 +2,9 @@
 #define __LINUX_BOARD_CAN__
 
 #include "./raceup_board/components/can.h"
-void stop_thread_can(void);
+
+void
+stop_thread_can(void);
 
 struct CanNode*
 hardware_init_new_external_node(const enum CAN_MODULES mod);

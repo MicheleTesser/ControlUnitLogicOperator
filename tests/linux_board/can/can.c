@@ -59,7 +59,7 @@ static struct{
   struct CanNode nodes[__NUM_OF_CAN_MODULES__];
 }BOARD_CAN_NODES;
 
-static int _run_recv_mailbox(void* args)
+static int _run_recv_mailbox_fifo_buffer(void* args)
 {
   struct CanMailbox* const restrict self = args;
 
@@ -70,27 +70,38 @@ static int _run_recv_mailbox(void* args)
     if(can_recv_frame(self->can_fd, &frame)>0)
     {
       while (atomic_flag_test_and_set(&self->lock));
-      switch (self->type)
+      struct FifoBuffer* fifo = &self->fifo_buffer;
+      const uint16_t next_buffer = (fifo->head +1)%NUM_OF_MAILBOX;
+      if (next_buffer != fifo->tail)
       {
-        case RECV_MAILBOX:
-          self->fifo_buffer.buffer[0].id = frame.can_id;
-          memcpy(&self->fifo_buffer.buffer[0].full_word, frame.data, sizeof(frame.data));
-          break;
-        case FIFO_BUFFER:
-          struct FifoBuffer* fifo = &self->fifo_buffer;
-          const uint16_t next_buffer = (fifo->head +1)%NUM_OF_MAILBOX;
-          if (next_buffer != fifo->tail)
-          {
-            fifo->head = next_buffer;
-            fifo->buffer[fifo->head].message_size = frame.len;
-            fifo->buffer[fifo->head].id = frame.can_id;
-            memcpy(&fifo->buffer[fifo->head].full_word, frame.data,
-                sizeof(fifo->buffer[fifo->head].full_word));
-          }
-          break;
-        default:
-          break;
+        memset(&fifo->buffer[next_buffer], 0, sizeof(fifo->buffer[next_buffer]));
+        fifo->buffer[next_buffer].message_size = frame.len;
+        fifo->buffer[next_buffer].id = frame.can_id;
+        memcpy(&fifo->buffer[next_buffer].full_word, frame.data, frame.can_dlc);
+        fifo->head = next_buffer;
       }
+      atomic_flag_clear(&self->lock);
+    }
+  }
+
+  return 0;
+}
+
+static int _run_recv_mailbox_single_mex(void* args)
+{
+  struct CanMailbox* const restrict self = args;
+
+  while (self->running)
+  {
+    struct can_frame frame = {0};
+
+    if(can_recv_frame(self->can_fd, &frame)>0)
+    {
+      while (atomic_flag_test_and_set(&self->lock));
+      self->fifo_buffer.buffer[0].id = frame.can_id;
+      self->fifo_buffer.buffer[0].message_size = frame.can_dlc;
+      self->fifo_buffer.buffer[0].full_word =0;
+      memcpy(&self->fifo_buffer.buffer[0].full_word, frame.data, frame.can_dlc);
       atomic_flag_clear(&self->lock);
     }
   }
@@ -202,10 +213,10 @@ struct CanMailbox* hardware_get_mailbox(struct CanNode* const restrict self,
       mailbox->fifo_buffer.tail=0;
       mailbox->fifo_buffer.head=1;
       mailbox->fifo_buffer.filter_mask = filter_mask;
-      thrd_create(&mailbox->thread, _run_recv_mailbox, mailbox);
+      thrd_create(&mailbox->thread, _run_recv_mailbox_fifo_buffer, mailbox);
       break;
     case RECV_MAILBOX:
-      thrd_create(&mailbox->thread, _run_recv_mailbox, mailbox);
+      thrd_create(&mailbox->thread, _run_recv_mailbox_single_mex, mailbox);
       break;
     case SEND_MAILBOX:
       break;
@@ -222,7 +233,6 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
     CanMessage* const restrict o_mex)
 {
   uint16_t buffer_index=0;
-  uint8_t size=0;
 
   if (self->type == SEND_MAILBOX)
   {
@@ -233,7 +243,6 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
   {
     case RECV_MAILBOX:
       buffer_index=0;
-      size = self->size;
       break;
     case FIFO_BUFFER:
       struct FifoBuffer* fifo = &self->fifo_buffer;
@@ -243,7 +252,6 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
         return -1;
       }
       buffer_index = fifo->tail;
-      size = self->fifo_buffer.buffer[buffer_index].message_size;
       fifo->tail = (fifo->tail +1) % NUM_OF_MAILBOX;
       break;
     default:
@@ -251,15 +259,10 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
       return -1;
   }
   o_mex->id = self->fifo_buffer.buffer[buffer_index].id;
-  o_mex->message_size = size;
+  o_mex->message_size = self->fifo_buffer.buffer[buffer_index].message_size;
   memcpy(&o_mex->full_word, &self->fifo_buffer.buffer[buffer_index].full_word, sizeof(o_mex->full_word));
 
   atomic_flag_clear(&self->lock);
-  //HACK: for a bug in the emulation some messages are wrong
-  if (!o_mex->id || o_mex->id > (pow(2, 11)-1))
-  {
-    return -1;
-  }
   return 0;
 }
 
@@ -279,7 +282,10 @@ int8_t hardware_mailbox_send(struct CanMailbox* const restrict self, const uint6
 
 void hardware_free_mailbox_can(struct CanMailbox** restrict self)
 {
+  printf("closing mail: %ld\n", (*self) - MAILBOX_POOL.pool);
+  shutdown((*self)->can_fd, SHUT_RDWR);
   memset(*self, 0, sizeof(**self));
+  (*self)->can_fd=-1;
   *self=NULL;
 }
 
@@ -290,10 +296,7 @@ void stop_thread_can(void)
     struct CanMailbox* mail = &MAILBOX_POOL.pool[i];
     if (mail->running)
     {
-      printf("closing mail: %d\n",i);
-      mail->running=0;
-      shutdown(mail->can_fd, SHUT_RDWR);
-      mail->can_fd=-1;
+      hardware_free_mailbox_can(&mail);
     }
   }
 }
@@ -330,7 +333,7 @@ void hardware_init_new_external_node_destroy(struct CanNode* const restrict self
   free(self);
 }
 
-void hardware_init_can_debug_print_status(struct CanMailbox* const restrict self)
+void hardware_can_debug_print_status(struct CanMailbox* const restrict self)
 {
   printf("mailbox: id: %d\t, mailbox type: %d\t, mailbox running: %d\n",
       self->can_fd,
