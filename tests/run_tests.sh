@@ -42,13 +42,20 @@ fi
 
 skip_tests=""
 
-case "$1" in
-  "-h") echo "usage ${0}:
+help ()
+{
+  echo "usage ${0}:
     -h        : print help
     -s args.. : skip a list of test 
     -t arg    : run a specific test
+    --all     : run all tests sequentially
     
     If no argument is passed all test are runned sequentially"
+}
+
+case "$1" in
+  "-h") 
+    help
     exit 0
   ;;
   "-s") 
@@ -75,7 +82,11 @@ case "$1" in
     fi
     exit 0
   ;;
-  *) echo "running all tests"
+  "--all") echo "running all tests"
+  ;;
+  *) 
+    help
+    exit 0
   ;;
 esac
 
