@@ -54,24 +54,17 @@ _pcu_update(struct Pcu_t* const restrict self)
   if (!hardware_mailbox_read(self->recv_can_node_pcu_inv, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
-    switch (mex.id)
+    if (o2.can_0x130_Pcu.mode == 1)
     {
-      case CAN_ID_PCU:
-        if (o2.can_0x130_Pcu.mode == 1)
-        {
-          self->rf = o2.can_0x130_Pcu.rf;
-          if (self->rf)
-          {
-            gpio_set_low(&self->inverter_on_gpio);
-          }
-          else
-          {
-            gpio_set_high(&self->inverter_on_gpio);
-          }
-        }
-        break;
-      default:
-        return -1;
+      self->rf = o2.can_0x130_Pcu.rf;
+      if (self->rf)
+      {
+        gpio_set_low(&self->inverter_on_gpio);
+      }
+      else
+      {
+        gpio_set_high(&self->inverter_on_gpio);
+      }
     }
   }
   return hardware_mailbox_send(self->send_can_node_pcu_inv, self->rf);

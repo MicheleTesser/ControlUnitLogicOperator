@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "../log_obj_types.h"
 
-typedef struct LogTelemetry_h{
+typedef struct __attribute__((aligned(8))) LogTelemetry_h{
     const uint8_t private_data[40];
 }LogTelemetry_h;
 

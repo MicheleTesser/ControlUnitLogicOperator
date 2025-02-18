@@ -54,12 +54,15 @@ int8_t cooling_init(Cooling_h* const restrict self ,
 {
     union Cooling_h_t_conv conv = {self};
     struct Cooling_t* const p_self = conv.clear;
+    struct CanNode* can_node = NULL;
+
     memset(p_self, 0, sizeof(*p_self));
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
+    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+    {
       p_self->send_mailbox =
         hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCU,2);
-    )
+    }
     if (!p_self->send_mailbox)
     {
         return -1;

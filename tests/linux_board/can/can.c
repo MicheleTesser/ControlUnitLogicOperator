@@ -1,8 +1,9 @@
 #include "can.h"
 #include "can_lib/canlib.h"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#include "raceup_board/components/timer.h"
+
 #include <linux/can.h>
-#include <math.h>
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,6 +21,7 @@
 
 typedef  uint8_t BoardComponentId;
 #define NUM_OF_MAILBOX 1024
+#define FIFO_BUFFER_SIZE 32
 
 struct CanNode{
   const char* can_interface;
@@ -28,7 +30,7 @@ struct CanNode{
 };
 
 struct FifoBuffer{
-  CanMessage buffer[32];
+  CanMessage buffer[FIFO_BUFFER_SIZE];
   uint8_t head;
   uint8_t tail;
   uint16_t filter_id;
@@ -71,10 +73,13 @@ static int _run_recv_mailbox_fifo_buffer(void* args)
     {
       while (atomic_flag_test_and_set(&self->lock));
       struct FifoBuffer* fifo = &self->fifo_buffer;
-      const uint16_t next_buffer = (fifo->head +1)%NUM_OF_MAILBOX;
+      const uint16_t next_buffer = (fifo->head +1)%FIFO_BUFFER_SIZE;
       if (next_buffer != fifo->tail)
       {
-        memset(&fifo->buffer[next_buffer], 0, sizeof(fifo->buffer[next_buffer]));
+        fifo->buffer[next_buffer].full_word = 0;
+        fifo->buffer[next_buffer].id = 0;
+        fifo->buffer[next_buffer].message_size = 0;
+
         fifo->buffer[next_buffer].message_size = frame.len;
         fifo->buffer[next_buffer].id = frame.can_id;
         memcpy(&fifo->buffer[next_buffer].full_word, frame.data, frame.can_dlc);
@@ -178,13 +183,19 @@ int8_t hardware_read_can(struct CanNode* const restrict self, CanMessage* const 
 int8_t hardware_write_can(const struct CanNode* const restrict self ,
     const CanMessage* restrict const mex )
 {
-  struct can_frame frame={0};
-  int can_node = can_init(self->can_interface);
-  frame.can_id = mex->id;
-  frame.len = mex->message_size;
+  const int can_node = can_init(self->can_interface);
+  struct can_frame frame={
+    .can_id = mex->id,
+    .can_dlc = mex->message_size,
+  };
+
   memcpy(frame.data, mex->buffer, mex->message_size);
-  can_send_frame(can_node, &frame);
+  if(can_send_frame(can_node, &frame)<0)
+  {
+    printf("sending mex with id %d failed\n", frame.can_id);
+  }
   close(can_node);
+
   return 0;
 }
 
@@ -201,8 +212,10 @@ struct CanMailbox* hardware_get_mailbox(struct CanNode* const restrict self,
 
   mailbox = &MAILBOX_POOL.pool[maillbox_index];
 
+  memset(mailbox, 0, sizeof(*mailbox));
   mailbox->type = type;
   mailbox->fifo_buffer.filter_id = filter_id;
+  mailbox->fifo_buffer.filter_mask = filter_mask;
   mailbox->size=mex_size;
   mailbox->running=1;
   mailbox->can_fd = can_init_full(self->can_interface, filter_id, filter_mask);
@@ -210,9 +223,6 @@ struct CanMailbox* hardware_get_mailbox(struct CanNode* const restrict self,
   switch (type)
   {
     case FIFO_BUFFER:
-      mailbox->fifo_buffer.tail=0;
-      mailbox->fifo_buffer.head=1;
-      mailbox->fifo_buffer.filter_mask = filter_mask;
       thrd_create(&mailbox->thread, _run_recv_mailbox_fifo_buffer, mailbox);
       break;
     case RECV_MAILBOX:
@@ -238,6 +248,7 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
   {
     return -1;
   }
+
   while (atomic_flag_test_and_set(&self->lock));
   switch (self->type)
   {
@@ -252,7 +263,7 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
         return -1;
       }
       buffer_index = fifo->tail;
-      fifo->tail = (fifo->tail +1) % NUM_OF_MAILBOX;
+      fifo->tail = (fifo->tail +1) % FIFO_BUFFER_SIZE;
       break;
     default:
       atomic_flag_clear(&self->lock);
@@ -260,7 +271,7 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
   }
   o_mex->id = self->fifo_buffer.buffer[buffer_index].id;
   o_mex->message_size = self->fifo_buffer.buffer[buffer_index].message_size;
-  memcpy(&o_mex->full_word, &self->fifo_buffer.buffer[buffer_index].full_word, sizeof(o_mex->full_word));
+  o_mex->full_word = self->fifo_buffer.buffer[buffer_index].full_word;
 
   atomic_flag_clear(&self->lock);
   return 0;
@@ -309,17 +320,16 @@ struct CanNode* hardware_init_new_external_node(const enum CAN_MODULES mod)
   struct CanNode* node = calloc(1, sizeof(*node));
   const char* can_interface;
   switch (mod) {
-    case 0:
+    case CAN_INVERTER:
       can_interface = CAN_INTERFACE_0;
       break;
-    case 1:
+    case CAN_GENERAL:
       can_interface = CAN_INTERFACE_1;
       break;
-    case 2:
+    case CAN_DV:
       can_interface = CAN_INTERFACE_2;
       break;
     default:
-      atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
       return NULL;
   }
   node->can_interface = can_interface;

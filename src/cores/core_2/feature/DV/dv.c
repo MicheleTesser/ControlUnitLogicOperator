@@ -224,6 +224,8 @@ dv_class_init(Dv_h* const restrict self ,
 {
   union Dv_h_t_conv conv = {self};
   struct Dv_t* const p_self = conv.clear;
+  struct CanNode* can_node;
+
   memset(p_self, 0, sizeof(*p_self));
 
   if(dv_stw_alg_init()<0)
@@ -275,10 +277,11 @@ dv_class_init(Dv_h* const restrict self ,
     return -7;
   }
 
-  ACTION_ON_CAN_NODE(CAN_DV,can_node,{
+  ACTION_ON_CAN_NODE(CAN_DV,can_node)
+  {
     p_self->send_car_dv_car_status_mailbox =
     hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_DV_CARSTATUS, 1);
-  })
+  }
 
   p_self->dv_car_status=DV_CAR_STATUS_OFF;
   p_self->dv_mission = mission;

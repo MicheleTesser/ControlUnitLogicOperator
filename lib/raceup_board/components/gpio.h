@@ -20,11 +20,11 @@ enum GPIO_PIN{
     __NUM_OF_GPIOS__
 };
 
-typedef struct GpioRead_h{
+typedef struct __attribute__((aligned(4))) GpioRead_h{
     const uint8_t private_data[4];
 }GpioRead_h;
 
-typedef struct Gpio_h{
+typedef struct __attribute__((aligned(4))) Gpio_h{
     const GpioRead_h gpio_read_permission;
     const uint8_t private_data[4];
 }Gpio_h;

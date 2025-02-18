@@ -30,22 +30,26 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
 {
     union DvDriverInput_h_t_conv conv = {self};
     struct DvDriverInput_t* const restrict p_self = conv.clear;
+    struct CanNode* can_node = NULL;
 
     memset(p_self, 0, sizeof(*p_self));
 
-    ACTION_ON_CAN_NODE(CAN_DV,can_node,
+    ACTION_ON_CAN_NODE(CAN_DV,can_node)
+    {
         p_self->dv_brake_mailbox =
         hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_DV_DRIVER,3);
-    )
+    }
     if (!p_self->dv_brake_mailbox)
     {
         return -1;
     }
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node, 
+    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+    {
         p_self->human_brake_mailbox =
           hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_DRIVER, 4);
-    )
+    }
+
     if (!p_self->human_brake_mailbox)
     {
         hardware_free_mailbox_can(&p_self->dv_brake_mailbox);

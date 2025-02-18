@@ -65,7 +65,7 @@ static int _core_thread_fun(void* arg)
   return 0;
 }
 
-static inline void _check_status_rtd(Giei_h* const self,
+static void _check_status_rtd(Giei_h* const self,
     const EmergencyNode_h* const emergency_read,
     const GpioRead_h* rtd_sound,
     const enum RUNNING_STATUS expected_running_status,
@@ -208,8 +208,6 @@ int main(void)
   INIT_PH(hardware_init_gpio(&rf, GPIO_RTD_BUTTON), "rf gpio");
   INIT_PH(hardware_init_read_permission_gpio(&rtd_sound_read, GPIO_RTD_SOUND), "rtd sound gpio");
 
-  //HACK: I do not know why but if you init the amk_module before the pcu the pcu breaks and 
-  //the send mailbox for PCURFACK reset itself. I Do not know why for now.
   INIT_PH(car_amk_inverter_start(&amk_inverter_emulation), "amk emulation");
   INIT_PH(pcu_init(&pcu), "pcu emulation");
   INIT_PH(atc_start(&atc), "atc emulation");

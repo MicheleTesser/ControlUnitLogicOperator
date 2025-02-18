@@ -6,6 +6,7 @@
 
 #include <linux/can.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <threads.h>
@@ -109,7 +110,6 @@ static void _send_data_engine(struct EmulationAmkInverter_t* const restrict p_se
 {
   CanMessage mex = {0};
   can_obj_can1_h_t o = {0};
-  uint64_t data=0;
 
   switch (can_id)
   {
@@ -129,8 +129,7 @@ static void _send_data_engine(struct EmulationAmkInverter_t* const restrict p_se
       return;
   }
   mex.id= can_id;
-  mex.message_size = pack_message_can1(&o, can_id,&data);
-  memcpy(&mex.full_word, &data, mex.message_size);
+  mex.message_size = pack_message_can1(&o, can_id,&mex.full_word);
   hardware_write_can(p_self->p_can_node_inverter, &mex);
 }
 
@@ -146,9 +145,6 @@ static int _inverter_compute_internal_status(struct EmulationAmkInverter_t* cons
       break;
     }
   }
-
-
-
   if (precharge_ready)
   {
     gpio_set_low(&p_self->o_precharge_init);
@@ -266,32 +262,37 @@ int8_t car_amk_inverter_start(EmulationAmkInverter_h* self)
     return -1;
   }
 
-  // FR: 389,       0000000110000101
   // FL: 388,       0000000110000100
-  // RR: 393,       0000000110001001
+  // FR: 389,       0000000110000101
   // RL: 392,       0000000110001000
+  // RR: 393,       0000000110001001
   //
   // filter id:384, 0000000110000000
   // mask: 65520,   1111111111110000
   const uint16_t filter_id = CAN_ID_VCUINVFL & CAN_ID_VCUINVFR & CAN_ID_VCUINVRL & CAN_ID_VCUINVRR;
-  const uint16_t filter_mask = (~0) ^ (15);
+  const uint16_t filter_mask = (~0) ^ 15;
 
+  printf("requesting mailbox amk inv\n");
   p_self->p_recv_mailbox_vcu =
     hardware_get_mailbox(p_self->p_can_node_inverter, FIFO_BUFFER, filter_id, filter_mask , 8);
 
-  if(hardware_init_gpio(&p_self->o_precharge_init , GPIO_AIR_PRECHARGE_INIT)<0)
-  {
+  if (!p_self->p_recv_mailbox_vcu) {
     return -2;
   }
 
-  if(hardware_init_gpio(&p_self->o_precharge_done, GPIO_AIR_PRECHARGE_DONE)<0)
+  if(hardware_init_gpio(&p_self->o_precharge_init , GPIO_AIR_PRECHARGE_INIT)<0)
   {
     return -3;
   }
 
-  if(hardware_init_read_permission_gpio(&p_self->o_rf, GPIO_INVERTER_RF_SIGNAL)<0)
+  if(hardware_init_gpio(&p_self->o_precharge_done, GPIO_AIR_PRECHARGE_DONE)<0)
   {
     return -4;
+  }
+
+  if(hardware_init_read_permission_gpio(&p_self->o_rf, GPIO_INVERTER_RF_SIGNAL)<0)
+  {
+    return -5;
   }
 
   p_self->o_running=1;

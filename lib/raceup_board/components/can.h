@@ -78,12 +78,8 @@ hardware_mailbox_send(struct CanMailbox* const restrict self ,
 extern void
 hardware_free_mailbox_can(struct CanMailbox** restrict self)__attribute__((__nonnull__(1)));
 
-#define ACTION_ON_CAN_NODE(node,p_node,exp)\
-{\
-  struct CanNode* p_node = NULL;\
+#define ACTION_ON_CAN_NODE(node,p_node)\
   for (p_node =NULL;!p_node;p_node = hardware_init_can_get_ref_node(node)){}\
-  exp;\
-  hardware_init_can_destroy_ref_node(&p_node);\
-}
+  for (uint8_t node_used=0;!node_used;(hardware_init_can_destroy_ref_node(&p_node), node_used=1))
 
 #endif // !__VIRTUAL_CAN__

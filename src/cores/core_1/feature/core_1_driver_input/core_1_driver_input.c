@@ -57,6 +57,7 @@ core_1_driver_input_init(
 {
     union Core1DriverInput_h_t_conv conv = {self};
     struct Core1DriverInput_t* const restrict p_self = conv.clear;
+    struct CanNode* can_node = NULL;
     
     memset(p_self, 0, sizeof(*p_self));
 
@@ -79,14 +80,15 @@ core_1_driver_input_init(
             "driver input implausibility list",16);
 
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL, can_node,
+    ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+    {
       p_self->driver_input_mailbox =
         hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_DRIVER,4);
       if(!p_self->driver_input_mailbox)
       {
       return -1;
       }
-    )
+    }
 
 
     return 0;

@@ -41,13 +41,15 @@ core_1_imu_init(
 {
   union Core1Imu_h_t_conv conv = {self};
   struct Core1Imu_t* const restrict p_self = conv.clear;
+  struct CanNode* can_node = NULL;
   LogEntry_h log_entry={0};
 
   memset(p_self, 0, sizeof(*p_self));
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
     // p_self->imu_mailbox=hardware_get_mailbox(can_node, -1, -1);//TODO: not yet defined
-  )
+  }
 
   log_entry.data_max = 100; //TODO: define max 
   log_entry.data_min = 100; //TODO: define min 

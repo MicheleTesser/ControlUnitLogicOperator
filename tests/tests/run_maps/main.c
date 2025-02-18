@@ -10,6 +10,13 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#define INIT_PH(init_exp, module_name)\
+  if ((init_exp)<0)\
+  {\
+    FAILED("failed init "module_name);\
+    goto end;\
+  }
+
 struct MapsData{
   float power_kw;
   float torque_pos;
@@ -19,8 +26,31 @@ struct MapsData{
   float tv_enable;
 };
 
+typedef struct CoreThread{
+  thrd_t thread_id;
+  uint8_t run;
+}CoreThread;
 
-static void get_data(DrivingMaps_h* maps, struct MapsData *data)
+typedef struct CoreInput{
+  DrivingMaps_h* maps;
+
+  volatile const uint8_t* const core_run;
+}CoreInput;
+
+
+static int _core_thread_fun(void* arg)__attribute_maybe_unused__;
+static int _core_thread_fun(void* arg)
+{
+  CoreInput* const core_input = arg;
+
+  while (*core_input->core_run)
+  {
+    driving_map_update(core_input->maps);
+  }
+  return 0;
+}
+
+static void _get_data(DrivingMaps_h* maps, struct MapsData *data)
 {
   data->power_kw=driving_map_get_parameter(maps, POWER_KW);
   data->torque_pos=driving_map_get_parameter(maps, MAX_POS_TORQUE);
@@ -30,10 +60,98 @@ static void get_data(DrivingMaps_h* maps, struct MapsData *data)
   data->tv_enable=driving_map_get_parameter(maps, TV_ON);
 }
 
+static void _print_map_status(struct MapsData* data)
+{
+  printf("power_kw: %f\t",data->power_kw);
+  printf("pos_torque : %f\t",data->torque_pos);
+  printf("neg_torque : %f\t",data->torque_neg);
+  printf("regen_scale : %f\t",data->regen_scale);
+  printf("tv_enable: %f\t",data->tv_enable);
+  printf("repartition : %f\n",data->repartition);
+}
+
+
+
+static void _check_power_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float KW, float TORQUE_POS)
+{
+  struct MapsData data={0};
+  can_obj_can2_h_t o={0};
+  CanMessage mex={0};
+  struct CanNode* can_node = NULL;
+
+  o.can_0x064_Map.power= MAP_NUM;
+  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
+  mex.id = CAN_ID_MAP;
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
+    hardware_write_can(can_node, &mex);
+  }
+
+  wait_milliseconds(1 MILLIS);
+  _get_data(maps, &data);
+  printf("checking test map :%d\t", MAP_NUM );
+  if(data.power_kw == KW && data.torque_pos == TORQUE_POS){
+    PASSED("Power Map setted correctly");
+  }else{
+    FAILED("Power Map setted wrongly");
+  }
+}
+
+static void _check_regen_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REGEN_SCALE, float TORQUE_NEG)
+{
+  struct MapsData data={0};
+  can_obj_can2_h_t o={0};
+  CanMessage mex={0};
+  struct CanNode* can_node = NULL;
+
+  o.can_0x064_Map.regen= MAP_NUM;
+  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
+  mex.id = CAN_ID_MAP;
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
+    hardware_write_can(can_node, &mex);
+  }
+
+  wait_milliseconds(1 MILLIS);
+  _get_data(maps, &data);
+  printf("checking test map :%d\t", MAP_NUM );
+  if(data.regen_scale == REGEN_SCALE && data.torque_neg == TORQUE_NEG){
+    PASSED("Regen Map setted correctly");
+  }else{
+    FAILED("Regen Map setted wrongly");
+  }
+}
+
+static void _check_repartition_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REPARTITION, float TV_ON)
+{
+  struct MapsData data={0};
+  can_obj_can2_h_t o={0};
+  CanMessage mex={0};
+  struct CanNode* can_node = NULL;
+
+  o.can_0x064_Map.torque_rep= MAP_NUM;
+  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
+  mex.id = CAN_ID_MAP;
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
+    hardware_write_can(can_node, &mex);
+  }
+  wait_milliseconds(1 MILLIS);
+  _get_data(maps, &data);
+  printf("checking test map :%d\t", MAP_NUM );
+  if(data.repartition == REPARTITION && data.tv_enable == TV_ON){
+    PASSED("Repartition Map setted correctly");
+  }else{
+    FAILED("Repartition Map setted wrongly");
+  }
+}
+
+//public
+
 static int test_default_active_maps(DrivingMaps_h* maps)
 {
   struct MapsData data={0};
-  get_data(maps, &data);
+  _get_data(maps, &data);
 
   struct MapsData expected_data = {
     .power_kw =77,
@@ -48,164 +166,95 @@ static int test_default_active_maps(DrivingMaps_h* maps)
     PASSED("default maps ok");
   }else{
     FAILED("wrong default maps");
+    printf("expected: ");
+    _print_map_status(&expected_data);
+    printf("given: ");
+    _print_map_status(&data);
   }
 
   return 0;
 }
 
-static void check_power_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float KW, float TORQUE_POS)
-{
-  struct MapsData data={0};
-  can_obj_can2_h_t o={0};
-  CanMessage mex={0};
-
-  o.can_0x064_Map.power= MAP_NUM;
-  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
-  mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
-      hardware_write_can(can_node, &mex);
-  )
-
-  wait_milliseconds(1 MILLIS);
-  get_data(maps, &data);
-  printf("checking test map :%d\t", MAP_NUM );
-  if(data.power_kw == KW && data.torque_pos == TORQUE_POS){
-    PASSED("Power Map setted correctly");
-  }else{
-    FAILED("Power Map setted wrongly");
-  }
-}
-
-static void check_regen_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REGEN_SCALE, float TORQUE_NEG)
-{
-  struct MapsData data={0};
-  can_obj_can2_h_t o={0};
-  CanMessage mex={0};
-
-  o.can_0x064_Map.regen= MAP_NUM;
-  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
-  mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
-      hardware_write_can(can_node, &mex);
-  )
-
-  wait_milliseconds(1 MILLIS);
-  get_data(maps, &data);
-  printf("checking test map :%d\t", MAP_NUM );
-  if(data.regen_scale == REGEN_SCALE && data.torque_neg == TORQUE_NEG){
-    PASSED("Regen Map setted correctly");
-  }else{
-    FAILED("Regen Map setted wrongly");
-  }
-}
-
-static void check_repartition_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REPARTITION, float TV_ON)
-{
-  struct MapsData data={0};
-  can_obj_can2_h_t o={0};
-  CanMessage mex={0};
-
-  o.can_0x064_Map.torque_rep= MAP_NUM;
-  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
-  mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node,
-      hardware_write_can(can_node, &mex);
-  );
-  wait_milliseconds(1 MILLIS);
-  get_data(maps, &data);
-  printf("checking test map :%d\t", MAP_NUM );
-  if(data.repartition == REPARTITION && data.tv_enable == TV_ON){
-    PASSED("Repartition Map setted correctly");
-  }else{
-    FAILED("Repartition Map setted wrongly");
-  }
-}
-
 static int test_change_power_map(DrivingMaps_h* maps)
 {
-  check_power_map(maps, 0, 77, 21);
-  check_power_map(maps, 1, 75, 20);
-  check_power_map(maps, 2, 70, 18);
-  check_power_map(maps, 3, 60, 16);
-  check_power_map(maps, 4, 50, 15);
-  check_power_map(maps, 5, 40, 15);
-  check_power_map(maps, 6, 35, 13);
-  check_power_map(maps, 7, 30, 13);
-  check_power_map(maps, 8, 15, 12);
-  check_power_map(maps, 9, 10, 10);
+  _check_power_map(maps, 0, 77, 21);
+  _check_power_map(maps, 1, 75, 20);
+  _check_power_map(maps, 2, 70, 18);
+  _check_power_map(maps, 3, 60, 16);
+  _check_power_map(maps, 4, 50, 15);
+  _check_power_map(maps, 5, 40, 15);
+  _check_power_map(maps, 6, 35, 13);
+  _check_power_map(maps, 7, 30, 13);
+  _check_power_map(maps, 8, 15, 12);
+  _check_power_map(maps, 9, 10, 10);
 
   return 0;
 }
 
 static int test_change_regen_map(DrivingMaps_h* maps)
 {
-  check_regen_map(maps, 0, 0, 0);
-  check_regen_map(maps, 1, 20, -8);
-  check_regen_map(maps, 2, 30, -10);
-  check_regen_map(maps, 3, 40, -12);
-  check_regen_map(maps, 4, 50, -15);
-  check_regen_map(maps, 5, 60, -17);
-  check_regen_map(maps, 6, 70, -18);
-  check_regen_map(maps, 7, 80, -19);
-  check_regen_map(maps, 8, 90, -20);
-  check_regen_map(maps, 9, 100, -21);
+  _check_regen_map(maps, 0, 0, 0);
+  _check_regen_map(maps, 1, 20, -8);
+  _check_regen_map(maps, 2, 30, -10);
+  _check_regen_map(maps, 3, 40, -12);
+  _check_regen_map(maps, 4, 50, -15);
+  _check_regen_map(maps, 5, 60, -17);
+  _check_regen_map(maps, 6, 70, -18);
+  _check_regen_map(maps, 7, 80, -19);
+  _check_regen_map(maps, 8, 90, -20);
+  _check_regen_map(maps, 9, 100, -21);
 
   return 0;
 }
 
 static int test_change_repartition_map(DrivingMaps_h* maps)
 {
-  check_repartition_map(maps, 0, 0.50, 1);
-  check_repartition_map(maps, 1, 1.0f, 0);
-  check_repartition_map(maps, 2, 0.82, 0);
-  check_repartition_map(maps, 3, 0.80, 0);
-  check_repartition_map(maps, 4, 0.78, 0);
-  check_repartition_map(maps, 5, 0.75, 0);
-  check_repartition_map(maps, 6, 0.70, 0);
-  check_repartition_map(maps, 7, 0.60, 0);
-  check_repartition_map(maps, 8, 0.50, 0);
-  check_repartition_map(maps, 9, 0.50, 0);
+  _check_repartition_map(maps, 0, 0.50, 1);
+  _check_repartition_map(maps, 1, 1.0f, 0);
+  _check_repartition_map(maps, 2, 0.82, 0);
+  _check_repartition_map(maps, 3, 0.80, 0);
+  _check_repartition_map(maps, 4, 0.78, 0);
+  _check_repartition_map(maps, 5, 0.75, 0);
+  _check_repartition_map(maps, 6, 0.70, 0);
+  _check_repartition_map(maps, 7, 0.60, 0);
+  _check_repartition_map(maps, 8, 0.50, 0);
+  _check_repartition_map(maps, 9, 0.50, 0);
 
-  return 0;
-}
-
-int run=1;
-int core_map(void* args)
-{
-  driving_maps_init(args);
-  while(run)
-  {
-    driving_map_update(args);
-  }
   return 0;
 }
 
 int main(void)
 {
+  CoreThread core_thread={.run=1};
   DrivingMaps_h maps={0};
-  thrd_t map_core={0};
 
-  if (hardware_init_can(CAN_GENERAL, _500_KBYTE_S_)<0) {
-    goto end;
-  }
+  CoreInput input __attribute_maybe_unused__= {
+    .maps = &maps,
 
-  if(create_virtual_chip() <0){
-    goto end;
-  }
+    .core_run = &core_thread.run,
+  };
 
+  INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
+  INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
+  INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
+  INIT_PH(create_virtual_chip(), "virtual chip gpio");
 
-  thrd_create(&map_core, core_map, &maps);
+  INIT_PH(driving_maps_init(&maps), "driver maps");
 
-  wait_milliseconds(1 MILLIS);
-
+  thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
   test_default_active_maps(&maps);
   test_change_power_map(&maps);
   test_change_regen_map(&maps);
   test_change_repartition_map(&maps);
 
-  run=0;
-  thrd_join(map_core,NULL);
+  printf("tests finished\n");
+
+  printf("stopping debug core\n");
+  core_thread.run=0;
+  thrd_join(core_thread.thread_id, NULL);
+  printf("stopping can module\n");
+  stop_thread_can();
 end:
   print_SCORE();
   return 0;

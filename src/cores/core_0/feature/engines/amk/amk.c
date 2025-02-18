@@ -5,7 +5,6 @@
 #include "../../../../core_utility/emergency_module/emergency_module.h"
 #include "../../math_saturated/saturated.h"
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdatomic.h>
 
@@ -252,13 +251,16 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       }
       else if (_precharge_ended(self))
       {
-        printf("finished precharge\n");
         self->engine_status = TS_READY;
       }
       break;
     case TS_READY:
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       setpoint.AMK_Control_fields.AMK_bInverterOn = 1;
+
+      o2.can_0x130_Pcu.mode = 1;
+      o2.can_0x130_Pcu.rf = 1;
+
       if (!_amk_inverter_hv_status(self) || !_precharge_ended(self) || !_amk_inverter_on(self))
       {
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
@@ -274,20 +276,15 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
         {
           self->engine_status = RUNNING;
         }
-        else
-        {
-          o2.can_0x130_Pcu.mode = 1;
-          o2.can_0x130_Pcu.rf = 1;
-        }
-        
       }
       break;
     case RUNNING:
-      o2.can_0x130_Pcu.mode = 1;
-      o2.can_0x130_Pcu.rf = 1;
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       setpoint.AMK_Control_fields.AMK_bInverterOn = 1;
       setpoint.AMK_Control_fields.AMK_bEnable = 1;
+
+      o2.can_0x130_Pcu.mode = 1;
+      o2.can_0x130_Pcu.rf = 1;
       if (!_amk_inverter_on(self) || !_amk_inverter_hv_status(self) || !_precharge_ended(self))
       {
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
@@ -305,7 +302,6 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
   ACTION_ON_FREQUENCY(self->u_last_send_info, 50 MILLIS)
   {
     pack_message_can2(&o2, CAN_ID_PCU, &data);
-
     hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
     FOR_EACH_ENGINE(engine)
     {
@@ -482,6 +478,8 @@ amk_module_init(AmkInverter_h* const restrict self,
     struct EngineType* const restrict general_inverter)
 {
   AMK_H_T_CONV(self, p_self);
+  struct CanNode* can_node = NULL;
+
   memset(p_self, 0, sizeof(*p_self));
   p_self->engine_status =SYSTEM_OFF;
   p_self->driver_input = p_driver_input;
@@ -535,12 +533,13 @@ amk_module_init(AmkInverter_h* const restrict self,
     return -6;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL,p_node,
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
     p_self->mailbox_pcu_rf_signal_send =
-      hardware_get_mailbox_single_mex(p_node, SEND_MAILBOX, CAN_ID_PCU, 1);
+      hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCU, 1);
     p_self->mailbox_pcu_rf_signal_read =
-      hardware_get_mailbox_single_mex(p_node, RECV_MAILBOX, CAN_ID_PCURFACK, 1);
-  );
+      hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_PCURFACK, 1);
+  }
 
   if (!p_self->mailbox_pcu_rf_signal_send)
   {

@@ -113,7 +113,6 @@ static void test_start_precharge(EngineType* self, TestInput* input)
 
   printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
   atc_pedals_steering_wheel(input->atc, ATC_BRAKE, 25);
-  gpio_set_low(input->rf);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, RUNNING);
 
@@ -191,8 +190,6 @@ int main(void)
   INIT_PH(hardware_init_gpio(&ts, GPIO_TS_BUTTON), "ts gpio");
   INIT_PH(hardware_init_gpio(&rf, GPIO_RTD_BUTTON), "rf gpio");
 
-  //HACK: I do not know why but if you init the amk_module before the pcu the pcu breaks and 
-  //the send mailbox for PCURFACK reset itself. I Do not know why for now.
   INIT_PH(car_amk_inverter_start(&amk_inverter_emulation), "amk emulation");
   INIT_PH(pcu_init(&pcu), "pcu emulation");
   INIT_PH(atc_start(&atc), "atc emulation");

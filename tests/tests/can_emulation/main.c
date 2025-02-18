@@ -35,9 +35,26 @@ static int _core_thread_fun(void* arg)
 
 //public
 
+void test_comunication_only_internal_mailbox(void)
+{
+  struct CanMailbox* int_mail_1 = NULL;
+  struct CanMailbox* int_mail_2 = NULL;
+  struct CanMailbox* int_mail_3 = NULL;
+  struct CanMailbox* int_mail_4 = NULL;
+
+  struct CanNode* p_node = NULL;
+  for (p_node =NULL;;
+      (!p_node?
+       (p_node = hardware_init_can_get_ref_node(CAN_INVERTER)):
+       (hardware_init_can_destroy_ref_node(&p_node)))
+      ){}\
+
+}
+
 int main(void)
 {
   CoreThread core_thread={.run=1};
+
   CoreInput input =
   {
     .core_run = &core_thread.run,
