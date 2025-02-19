@@ -1,24 +1,24 @@
 #include "hv.h"
-#include "../../../../../../lib/raceup_board/components/can.h"
+#include "../../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include <stdint.h>
 #include <string.h>
 
 struct GieiHv_t{
-    struct CanMailbox* lem_mailbox;
-    struct CanMailbox* send_mailbox_bms_hv;
-    float hv_public_data[__NUM_OF_GIEI_HV_INFO__];
-    float lem_current;
+  struct CanMailbox* lem_mailbox;
+  struct CanMailbox* send_mailbox_bms_hv;
+  float hv_public_data[__NUM_OF_GIEI_HV_INFO__];
+  float lem_current;
 };
 
 union GieiHv_conv{
-    struct Hv_h* const hidden;
-    struct GieiHv_t* const clear;
+  struct Hv_h* const hidden;
+  struct GieiHv_t* const clear;
 };
 
 union GieiHv_const_conv{
-    const struct Hv_h* const  hidden;
-    const struct GieiHv_t* const  clear;
+  const struct Hv_h* const  hidden;
+  const struct GieiHv_t* const  clear;
 };
 
 #ifdef DEBUG
@@ -26,75 +26,74 @@ char __assert_size_GieiHv[(sizeof(Hv_h) == sizeof(struct GieiHv_t))? 1:-1];
 #endif // DEBUG
 
 
-int8_t
-hv_init(
-        struct Hv_h* const restrict self )
+//public
+
+int8_t hv_init(struct Hv_h* const restrict self)
 {
-    union GieiHv_conv conv = {self};
-    struct GieiHv_t* p_self = conv.clear;
-    struct CanNode* can_node = NULL;
+  union GieiHv_conv conv = {self};
+  struct GieiHv_t* p_self = conv.clear;
+  struct CanNode* can_node = NULL;
 
-    memset(p_self, 0, sizeof(*p_self));
-    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  memset(p_self, 0, sizeof(*p_self));
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
+    p_self->lem_mailbox =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_LEM,
+          message_dlc_can2(CAN_ID_LEM));
+
+    if (!p_self->lem_mailbox)
     {
-      p_self->lem_mailbox =
-        hardware_get_mailbox_single_mex(
-            can_node,
-            RECV_MAILBOX,
-            CAN_ID_BMSHV1,
-            message_dlc_can2(CAN_ID_BMSHV1));
-
-      if (!p_self->lem_mailbox) {
       return -1;
-      }
-
-      p_self->send_mailbox_bms_hv =
-        hardware_get_mailbox_single_mex(
-            can_node,
-            SEND_MAILBOX,
-            CAN_ID_INVVOLT,
-            message_dlc_can2(CAN_ID_INVVOLT));
-
-      if (!p_self->send_mailbox_bms_hv) {
-      hardware_free_mailbox_can(&p_self->lem_mailbox);
-      }
     }
-    return 0;
-}
 
-int8_t
-hv_update(Hv_h* const restrict self )
-{
-    union GieiHv_conv conv = {self};
-    struct GieiHv_t* p_self = conv.clear;
-    CanMessage mex; 
-    if(hardware_mailbox_read(p_self->lem_mailbox,&mex)>=0)
+    p_self->send_mailbox_bms_hv =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          SEND_MAILBOX,
+          CAN_ID_INVVOLT,
+          message_dlc_can2(CAN_ID_INVVOLT));
+
+    if (!p_self->send_mailbox_bms_hv)
     {
-        union {
-            uint32_t u32;
-            float f;
-        }conv;
-        conv .u32 = mex.full_word;
-        if (conv.f<0) {
-            return -1;
-        }
-        p_self->lem_current = conv.f;
+      hardware_free_mailbox_can(&p_self->lem_mailbox);
     }
-
-    return 0;
+  }
+  return 0;
 }
 
-float
-hv_get_info(const struct Hv_h* const restrict self ,
-        const enum GIEI_HV_INFO info)
+int8_t hv_update(Hv_h* const restrict self)
 {
-    union GieiHv_const_conv conv = {self};
-    const struct GieiHv_t* const p_self = conv.clear;
+  union GieiHv_conv conv = {self};
+  struct GieiHv_t* p_self = conv.clear;
+  CanMessage mex; 
+  if(hardware_mailbox_read(p_self->lem_mailbox,&mex)>=0)
+  {
+    can_obj_can2_h_t o2= {0};
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
 
-    if (info!=__NUM_OF_GIEI_HV_INFO__) {
-        return p_self->hv_public_data[info];
-    }
-    return -1;
+    union {
+      uint32_t u32;
+      float f;
+    }conv;
+    conv.u32 = o2.can_0x3c2_Lem.current;
+    p_self->lem_current = conv.f;
+  }
+
+  return 0;
+}
+
+float hv_get_info(const struct Hv_h* const restrict self, const enum GIEI_HV_INFO info)
+{
+  union GieiHv_const_conv conv = {self};
+  const struct GieiHv_t* const p_self = conv.clear;
+
+  if (info!=__NUM_OF_GIEI_HV_INFO__) {
+    return p_self->hv_public_data[info];
+  }
+  return -1;
 }
 
 /*
@@ -105,7 +104,7 @@ hv_get_info(const struct Hv_h* const restrict self ,
  * BMS precharge needs a message with the tot voltage
  */
 int8_t hv_computeBatteryPackTension(struct Hv_h* const restrict self, 
-        const float* const engines_voltages, const uint8_t num_of_voltages)
+    const float* const engines_voltages, const uint8_t num_of_voltages)
 {
   union GieiHv_conv conv = {self};
   struct GieiHv_t* const restrict p_self = conv.clear;
