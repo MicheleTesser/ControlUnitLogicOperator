@@ -112,6 +112,7 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   _check_status_rtd(self, TS_READY);
 
   printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
+  wait_milliseconds(500 MILLIS);
   atc_pedals_steering_wheel(input->atc, ATC_BRAKE, 25);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, RUNNING);

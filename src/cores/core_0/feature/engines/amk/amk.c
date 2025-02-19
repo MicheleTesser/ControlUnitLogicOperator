@@ -5,6 +5,7 @@
 #include "../../../../core_utility/emergency_module/emergency_module.h"
 #include "../../math_saturated/saturated.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdatomic.h>
 
@@ -260,7 +261,6 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 
       o2.can_0x130_Pcu.mode = 1;
       o2.can_0x130_Pcu.rf = 1;
-
       if (!_amk_inverter_hv_status(self) || !_precharge_ended(self) || !_amk_inverter_on(self))
       {
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
@@ -299,7 +299,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       break;
   }
 
-  ACTION_ON_FREQUENCY(self->u_last_send_info, 50 MILLIS)
+  ACTION_ON_FREQUENCY(self->u_last_send_info, 10 MILLIS)
   {
     pack_message_can2(&o2, CAN_ID_PCU, &data);
     hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
@@ -536,9 +536,17 @@ amk_module_init(AmkInverter_h* const restrict self,
   ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
   {
     p_self->mailbox_pcu_rf_signal_send =
-      hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCU, 1);
+      hardware_get_mailbox_single_mex(can_node,
+          SEND_MAILBOX,
+          CAN_ID_PCU,
+          message_dlc_can2(CAN_ID_PCU));
+
     p_self->mailbox_pcu_rf_signal_read =
-      hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_PCURFACK, 1);
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_PCURFACK,
+          message_dlc_can2(CAN_ID_PCURFACK));
   }
 
   if (!p_self->mailbox_pcu_rf_signal_send)

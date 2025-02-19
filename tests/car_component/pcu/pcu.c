@@ -51,9 +51,9 @@ _pcu_update(struct Pcu_t* const restrict self)
   CanMessage mex = {0};
   can_obj_can2_h_t o2={0};
 
-  if (!hardware_mailbox_read(self->recv_can_node_pcu_inv, &mex))
+  if (!hardware_mailbox_read(self->recv_can_node_pcu_inv, &mex)
+      && unpack_message_can2(&o2, CAN_ID_PCU, mex.full_word, mex.message_size, 0)>=0)
   {
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
     if (o2.can_0x130_Pcu.mode == 1)
     {
       self->rf = o2.can_0x130_Pcu.rf;
@@ -106,9 +106,19 @@ pcu_init(struct Pcu_h* const restrict self)
   }
 
   p_self->recv_can_node_pcu_inv = 
-    hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_PCU, 7);
+    hardware_get_mailbox_single_mex(
+        can_node,
+        RECV_MAILBOX,
+        CAN_ID_PCU,
+        message_dlc_can2(CAN_ID_PCU));
+
   p_self->send_can_node_pcu_inv =
-    hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCURFACK, 1);
+    hardware_get_mailbox_single_mex(
+        can_node,
+        SEND_MAILBOX,
+        CAN_ID_PCURFACK,
+        message_dlc_can2(CAN_ID_PCURFACK));
+
   hardware_init_new_external_node_destroy(can_node);
 
   if (!p_self->recv_can_node_pcu_inv)

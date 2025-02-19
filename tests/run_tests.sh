@@ -36,8 +36,13 @@ run_test() {
 }
 
 if [ ! -d ./linux_board -o ! -d ./.dummy ]; then
-    echo run the script inside the test directory
+    echo "run the script inside the test directory"
     exit 2
+fi
+
+if [ ! -f /usr/lib/libgpiod.so ]; then
+  echo "libgpiod is not installed in your system"
+  exit 3
 fi
 
 skip_tests=""

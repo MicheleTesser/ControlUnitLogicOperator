@@ -42,13 +42,21 @@ dv_mission_init(DvMission_h* const restrict self )
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
   {
     p_self->mission_mailbox =
-    hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_CARMISSION, 1);
+    hardware_get_mailbox_single_mex(
+        can_node,
+        RECV_MAILBOX,
+        CAN_ID_CARMISSION,
+        message_dlc_can2(CAN_ID_CARMISSION));
   }
 
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
   {
     p_self->mission_status_mailbox =
-      hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_DV_MISSION, 1);
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_DV_MISSION,
+          message_dlc_can2(CAN_ID_DV_MISSION));
   }
 
   if (lock_mission_ref_get(&p_self->mission_locker)<0)

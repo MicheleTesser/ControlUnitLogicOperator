@@ -38,13 +38,23 @@ hv_init(
     ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
     {
       p_self->lem_mailbox =
-        hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_BMSHV1,7);
+        hardware_get_mailbox_single_mex(
+            can_node,
+            RECV_MAILBOX,
+            CAN_ID_BMSHV1,
+            message_dlc_can2(CAN_ID_BMSHV1));
+
       if (!p_self->lem_mailbox) {
       return -1;
       }
 
       p_self->send_mailbox_bms_hv =
-        hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_INVVOLT, 2);
+        hardware_get_mailbox_single_mex(
+            can_node,
+            SEND_MAILBOX,
+            CAN_ID_INVVOLT,
+            message_dlc_can2(CAN_ID_INVVOLT));
+
       if (!p_self->send_mailbox_bms_hv) {
       hardware_free_mailbox_can(&p_self->lem_mailbox);
       }

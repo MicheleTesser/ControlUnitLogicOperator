@@ -61,7 +61,13 @@ atc_start(Atc_h* const restrict self)
     return -1;
   }
 
-  p_self->send_vcu_mailbox = hardware_get_mailbox_single_mex(node, SEND_MAILBOX, CAN_ID_DRIVER, 4);
+  p_self->send_vcu_mailbox =
+    hardware_get_mailbox_single_mex(
+        node,
+        SEND_MAILBOX,
+        CAN_ID_DRIVER,
+        message_dlc_can2(CAN_ID_DRIVER));
+
   if (!p_self->send_vcu_mailbox)
   {
     return -2;

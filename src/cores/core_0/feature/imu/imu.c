@@ -36,7 +36,12 @@ int8_t imu_init(Imu_h* const restrict self)
     ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
     {
       //TODO: not yet defined
-      p_self->mailbox_imu = hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, 1, 8);
+      p_self->mailbox_imu =
+        hardware_get_mailbox_single_mex(
+            can_node,
+            RECV_MAILBOX,
+            1,
+            8);
     }
 
     if (!p_self->mailbox_imu)

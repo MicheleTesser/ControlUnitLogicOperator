@@ -280,7 +280,11 @@ dv_class_init(Dv_h* const restrict self ,
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
   {
     p_self->send_car_dv_car_status_mailbox =
-    hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_DV_CARSTATUS, 1);
+    hardware_get_mailbox_single_mex(
+        can_node,
+        SEND_MAILBOX,
+        CAN_ID_DV_CARSTATUS,
+        message_dlc_can3(CAN_ID_DV_CARSTATUS));
   }
 
   p_self->dv_car_status=DV_CAR_STATUS_OFF;

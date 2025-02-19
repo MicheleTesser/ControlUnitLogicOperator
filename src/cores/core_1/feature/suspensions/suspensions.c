@@ -59,14 +59,23 @@ suspensions_init(
     ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
     {
       p_self->mailbox[M_FRONT] =
-        hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_SUSPFRONT, 3);
+        hardware_get_mailbox_single_mex(
+            can_node,
+            RECV_MAILBOX,
+            CAN_ID_SUSPFRONT,
+            message_dlc_can2(CAN_ID_SUSPFRONT));
       if (!p_self->mailbox[M_FRONT])
       {
         return -2;
       }
 
       p_self->mailbox[M_REAR] =
-        hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_SUSPREAR, 3);
+        hardware_get_mailbox_single_mex(
+            can_node,
+            RECV_MAILBOX,
+            CAN_ID_SUSPREAR,
+            message_dlc_can2(CAN_ID_SUSPREAR));
+
       if (!p_self->mailbox[M_REAR])
       {
         return -3;

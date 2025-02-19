@@ -61,7 +61,11 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
     {
       p_self->send_mailbox =
-        hardware_get_mailbox_single_mex(can_node, SEND_MAILBOX, CAN_ID_PCU,2);
+        hardware_get_mailbox_single_mex(
+            can_node,
+            SEND_MAILBOX,
+            CAN_ID_PCU,
+            message_dlc_can2(CAN_ID_PCU));
     }
     if (!p_self->send_mailbox)
     {

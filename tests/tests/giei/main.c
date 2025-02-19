@@ -87,7 +87,7 @@ static void _check_status_rtd(Giei_h* const self,
     PASSED("correct status");
   }
   printf("expected_running_status: %d, given: %d\t",expected_running_status, status);
-  printf("expected_emergency_status: %d, given: %d\n",expected_emergency_status, emergency_status);
+  printf("expected_emergency_status: %d, given: %d\t",expected_emergency_status, emergency_status);
   printf("expected_rtd_sound_status: %d, given: %d\n",expected_rtd_sound_status, rtd_sound_status);
   printf("-------------------------------\n");
 }

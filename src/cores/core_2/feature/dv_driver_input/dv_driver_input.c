@@ -37,7 +37,11 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
     ACTION_ON_CAN_NODE(CAN_DV,can_node)
     {
         p_self->dv_brake_mailbox =
-        hardware_get_mailbox_single_mex(can_node,RECV_MAILBOX, CAN_ID_DV_DRIVER,3);
+        hardware_get_mailbox_single_mex(
+            can_node,
+            RECV_MAILBOX,
+            CAN_ID_DV_DRIVER,
+            message_dlc_can2(CAN_ID_DV_DRIVER));
     }
     if (!p_self->dv_brake_mailbox)
     {
