@@ -44,7 +44,7 @@ int _start_SteeringWheel(void* arg)
 
 //public
 
-int8_t SteeringWheel_start(struct SteeringWheel_h* const restrict self)
+int8_t steering_wheel_start(struct SteeringWheel_h* const restrict self)
 {
   union SteeringWheel_h_t_conv conv = {self};
   struct SteeringWheel_t* const p_self = conv.clear;
@@ -55,7 +55,7 @@ int8_t SteeringWheel_start(struct SteeringWheel_h* const restrict self)
   return 0;
 }
 
-int8_t SteeringWheel_stop(struct SteeringWheel_h* const restrict self)
+int8_t steering_wheel_stop(struct SteeringWheel_h* const restrict self)
 {
   union SteeringWheel_h_t_conv conv = {self};
   struct SteeringWheel_t* const p_self = conv.clear;
