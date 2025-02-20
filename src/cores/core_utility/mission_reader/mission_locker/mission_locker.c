@@ -82,7 +82,7 @@ void unlock_mission(MissionLocker_h* const restrict self)
   union MissionLocker_h_t_conv conv = {self};
   struct MissionLocker_t* const restrict p_self = conv.clear;
   if (p_self->owner=='a') {
-    atomic_store(&MISSION_LOCKER.mission_lock, 1);
+    atomic_store(&MISSION_LOCKER.mission_lock, 0);
   }
 }
 uint8_t is_mission_locked(const MissionLockerRead_h* const restrict self)

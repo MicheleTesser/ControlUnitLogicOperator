@@ -228,7 +228,6 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 
       if (_amk_inverter_on(self) && gpio_read_state(&self->gpio_ts_button) &&
           !driver_input_rtd_request(self->driver_input))
-
       {
         self->engine_status = SYSTEM_PRECAHRGE;
       }

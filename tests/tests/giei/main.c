@@ -97,18 +97,19 @@ static void _check_status_rtd(Giei_h* const self,
 static void test_giei_rtd(CoreInput* const input) __attribute_maybe_unused__;
 static void test_giei_rtd(CoreInput* const input)
 {
+  printf("initial giei status\n");
+  _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0,0);
+
+  printf("switching to human driver\n");
+  steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
+  wait_milliseconds(100 MILLIS);
+
   car_amk_inverter_reset(&input->external_boards->amk_inverter);
 
   FOR_EACH_ENGINE(engine)
   {
     car_amk_inverter_set_attribute(&input->external_boards->amk_inverter, SYSTEM_READY, engine, 1);
   }
-
-  printf("switching to human driver\n");
-  steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
-
-  printf("initial giei status\n");
-  _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0,0);
 
   printf("starting precharge: SYSTEM_OFF -> SYSTEM_PRECAHRGE\n");
   gpio_set_low(input->ts);
