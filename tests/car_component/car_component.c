@@ -3,9 +3,9 @@
 #include "atc/atc.h"
 #include "bms_hv/bms_hv.h"
 #include "pcu/pcu.h"
+#include "steering_wheel/steering_wheel.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 int8_t
 start_external_boards(ExternalBoards_t* const restrict self)
@@ -14,6 +14,7 @@ start_external_boards(ExternalBoards_t* const restrict self)
   if (pcu_init(&self->pcu)<0)return -2;
   if (atc_start(&self->atc)<0)return -3;
   if (bms_hv_start(&self->bms_hv)<0)return -4;
+  if (steering_wheel_start(&self->steering_wheel)<0)return -4;
 
   return 0;
 }
@@ -25,6 +26,7 @@ stop_external_boards(ExternalBoards_t* const restrict self)
   atc_stop(&self->atc);
   car_amk_inverter_stop(&self->amk_inverter);
   bms_hv_stop(&self->bms_hv);
+  steering_wheel_stop(&self->steering_wheel);
 
   return 0;
 }

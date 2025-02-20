@@ -5,6 +5,7 @@
 #include "pcu/pcu.h"
 #include "atc/atc.h"
 #include "bms_hv/bms_hv.h"
+#include "steering_wheel/steering_wheel.h"
 
 #include <stdint.h>
 
@@ -13,6 +14,7 @@ typedef struct ExternalBoards_t{
   Pcu_h pcu;
   Atc_h atc;
   EmulationAmkInverter_h amk_inverter;
+  SteeringWheel_h steering_wheel;
 }ExternalBoards_t;
 
 int8_t
