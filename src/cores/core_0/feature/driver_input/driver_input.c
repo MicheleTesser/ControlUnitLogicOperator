@@ -1,20 +1,23 @@
 #include "driver_input.h"
+#include "../../../core_utility/mission_reader/mission_reader.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/cdefs.h>
 
 //private
 
 typedef int16_t index_tye;
 struct DriverInput_t{
-  float driver_data[__NUM_OF_DRIVERS__ * __NUM_OF_INPUT_TYPES__];
-  struct CanMailbox* drivers_mailboxes[__NUM_OF_DRIVERS__ -1];
+  float driver_data[(__NUM_OF_DRIVERS__ - 1)  * __NUM_OF_INPUT_TYPES__];
   enum DRIVER current_driver;
   GpioRead_h gpio_rtd_button;
   uint8_t dv_rtd_input_request:1;
+  struct CanMailbox* p_drivers_mailboxes[__NUM_OF_DRIVERS__ -1];
+  CarMissionReader_h* p_car_mission;
 };
 
 union DriverInput_h_t_conv{
@@ -34,15 +37,16 @@ union DriverInputConv{
 
 #ifdef DEBUG
 const uint8_t __assert_driver_input_size[sizeof(DriverInput_h) == sizeof(struct DriverInput_t)? 1 : -1];
+const uint8_t __assert_driver_input_align[_Alignof(DriverInput_h) == _Alignof(struct DriverInput_t)? 1 : -1];
 #endif /* ifdef DEBUG */
 
 static inline index_tye
-compute_data_index(const struct DriverInput_t* const restrict self,
+compute_data_index(const struct DriverInput_t* const restrict self __attribute_maybe_unused__,
     const enum DRIVER driver, const enum INPUT_TYPES driver_input)
 {
-  if (driver != __NUM_OF_DRIVERS__ && driver_input != __NUM_OF_INPUT_TYPES__)
+  if (driver < __NUM_OF_DRIVERS__ && driver != DRIVER_NONE && driver_input < __NUM_OF_INPUT_TYPES__)
   {
-    return driver * sizeof(self->driver_data[0]) + driver_input;   
+    return (driver * (__NUM_OF_DRIVERS__ - 1)) + driver_input;   
   }
   return -1;
 }
@@ -50,7 +54,8 @@ compute_data_index(const struct DriverInput_t* const restrict self,
 //public
 
 int8_t
-driver_input_init(struct DriverInput_h* const restrict self)
+driver_input_init(struct DriverInput_h* const restrict self, 
+    CarMissionReader_h* const restrict p_car_mission)
 {
   union Conv{
     struct DriverInput_h* const restrict hidden;
@@ -71,7 +76,7 @@ driver_input_init(struct DriverInput_h* const restrict self)
 
   ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
   {
-    p_self->drivers_mailboxes[DRIVER_HUMAN] =
+    p_self->p_drivers_mailboxes[DRIVER_HUMAN] =
     hardware_get_mailbox_single_mex(
         can_node,
         RECV_MAILBOX,
@@ -80,7 +85,7 @@ driver_input_init(struct DriverInput_h* const restrict self)
   }
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
   {
-    p_self->drivers_mailboxes[DRIVER_EMBEDDED] =
+    p_self->p_drivers_mailboxes[DRIVER_EMBEDDED] =
     hardware_get_mailbox_single_mex(
         can_node,
         RECV_MAILBOX,
@@ -88,24 +93,9 @@ driver_input_init(struct DriverInput_h* const restrict self)
         message_dlc_can2(CAN_ID_DV_DRIVER));
   }
 
-  return 0;
-}
+  p_self->p_car_mission = p_car_mission;
 
-int8_t
-driver_input_change_driver(struct DriverInput_h* const restrict self,
-    const enum DRIVER driver)
-{
-  union Conv{
-    struct DriverInput_h* const restrict hidden;
-    struct DriverInput_t* const restrict clear;
-  };
-  union Conv d_conv = {self};
-  struct DriverInput_t* const p_self = d_conv.clear;
-  if (driver != __NUM_OF_DRIVERS__) {
-    p_self->current_driver = driver;
-    return 0;
-  }
-  return -1;
+  return 0;
 }
 
 int8_t
@@ -119,9 +109,29 @@ driver_input_update(DriverInput_h* const restrict self )
   struct CanMailbox* mailbox = NULL;
   index_tye index_input = 0;
 
-  switch (p_self->current_driver) {
+  switch (car_mission_reader_get_current_mission(p_self->p_car_mission))
+  {
+    case CAR_MISSIONS_NONE:
+      p_self->current_driver = DRIVER_NONE;
+      break;
+    case CAR_MISSIONS_HUMAN:
+      p_self->current_driver = DRIVER_HUMAN;
+      break;
+    case CAR_MISSIONS_DV_SKIDPAD:
+    case CAR_MISSIONS_DV_AUTOCROSS:
+    case CAR_MISSIONS_DV_TRACKDRIVE:
+    case CAR_MISSIONS_DV_EBS_TEST:
+    case CAR_MISSIONS_DV_INSPECTION:
+      p_self->current_driver = DRIVER_EMBEDDED;
+      break;
+    case __NUM_OF_CAR_MISSIONS__:
+      break;
+  }
+
+  switch (p_self->current_driver)
+  {
     case DRIVER_HUMAN:
-      mailbox = p_self->drivers_mailboxes[DRIVER_HUMAN];
+      mailbox = p_self->p_drivers_mailboxes[DRIVER_HUMAN];
       if (!hardware_mailbox_read(mailbox, &mex))
       {
         unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
@@ -131,12 +141,14 @@ driver_input_update(DriverInput_h* const restrict self )
           return -1;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.throttle;
+
         index_input = compute_data_index(p_self, DRIVER_HUMAN, BRAKE);
         if (index_input<0)
         {
           return -1;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.brake;
+
         index_input = compute_data_index(p_self, DRIVER_HUMAN, STEERING_ANGLE);
         if (index_input<0)
         {
@@ -146,7 +158,7 @@ driver_input_update(DriverInput_h* const restrict self )
       }
       break;
     case DRIVER_EMBEDDED:
-      mailbox = p_self->drivers_mailboxes[DRIVER_EMBEDDED];
+      mailbox = p_self->p_drivers_mailboxes[DRIVER_EMBEDDED];
       if (hardware_mailbox_read(mailbox, &mex)>=0) {
         unpack_message_can3(&o3, CAN_ID_DV_DRIVER, mex.full_word, mex.message_size, timer_time_now());
         index_input = compute_data_index(p_self,DRIVER_EMBEDDED, THROTTLE);
@@ -220,6 +232,6 @@ driver_input_destroy(struct DriverInput_h* restrict self)
   struct DriverInput_t* const p_self = d_conv.clear;
   for (uint8_t i=0; i < __NUM_OF_DRIVERS__; i++ )
   {
-    hardware_free_mailbox_can(&p_self->drivers_mailboxes[i]);
+    hardware_free_mailbox_can(&p_self->p_drivers_mailboxes[i]);
   }
 }

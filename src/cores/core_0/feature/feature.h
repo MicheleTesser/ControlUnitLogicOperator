@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-typedef struct Core0Feature_h{
-  const uint8_t private_data[712];
+typedef struct __attribute__((aligned(8))) Core0Feature_h{
+  const uint8_t private_data[728];
 }Core0Feature_h;
 
 int8_t

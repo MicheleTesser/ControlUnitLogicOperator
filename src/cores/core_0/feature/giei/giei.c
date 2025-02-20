@@ -1,5 +1,5 @@
 #include "giei.h"
-#include "../../../core_utility/mission_locker/mission_locker.h"
+#include "../../../core_utility/mission_reader/mission_locker/mission_locker.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
@@ -21,7 +21,7 @@ struct Giei_t{
     time_var_microseconds rtd_sound_start;
     Gpio_h gpio_rtd_sound;
     GpioRead_h gpio_rtd_button;
-    MissionLocker_h mission_locker;
+    MissionLocker_h o_mission_locker;
     enum RUNNING_STATUS running_status;
     EngineType* inverter;
     const DriverInput_h* driver_input;
@@ -46,6 +46,7 @@ union Giei_conv_const{
 
 #ifdef DEBUG
 const uint8_t giei_size_check[(sizeof(struct Giei_h) == sizeof(struct Giei_t))? 1 : -1];
+const uint8_t giei_align_check[(_Alignof(struct Giei_h) == _Alignof(struct Giei_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
 static inline int NMtoTorqueSetpoint(const float torqueNM)
@@ -111,7 +112,7 @@ giei_init(Giei_h* const restrict self,
         return -3;
     }
 
-    if (lock_mission_ref_get_mut(&p_self->mission_locker)<0)
+    if (lock_mission_ref_get_mut(&p_self->o_mission_locker)<0)
     {
       return -4;
     }
@@ -157,11 +158,11 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
 
     if (rt > SYSTEM_OFF)
     {
-      lock_mission(&p_self->mission_locker);
+      lock_mission(&p_self->o_mission_locker);
     }
     else
     {
-      unlock_mission(&p_self->mission_locker);
+      unlock_mission(&p_self->o_mission_locker);
     }
     if (rt == RUNNING && !p_self->entered_rtd)
     {

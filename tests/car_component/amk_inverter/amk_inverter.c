@@ -272,7 +272,6 @@ int8_t car_amk_inverter_start(EmulationAmkInverter_h* self)
   const uint16_t filter_id = CAN_ID_VCUINVFL & CAN_ID_VCUINVFR & CAN_ID_VCUINVRL & CAN_ID_VCUINVRR;
   const uint16_t filter_mask = (~0) ^ 15;
 
-  printf("requesting mailbox amk inv\n");
   p_self->p_recv_mailbox_vcu =
     hardware_get_mailbox(p_self->p_can_node_inverter, FIFO_BUFFER, filter_id, filter_mask , 8);
 

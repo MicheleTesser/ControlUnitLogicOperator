@@ -34,6 +34,7 @@ typedef struct CoreInput{
   DriverInput_h* driver;
   Imu_h* imu;
   EmergencyNode_h* emergency_node;
+  CarMissionReader_h* mission_reader;
   Gpio_h* ts;
   Gpio_h* rf;
   GpioRead_h* rtd_sound;
@@ -53,6 +54,7 @@ static int _core_thread_fun(void* arg)
   {
     ACTION_ON_FREQUENCY(last_update, 50 MILLIS)
     {
+      car_mission_reader_update(core_input->mission_reader);
       driver_input_update(core_input->driver);
       driving_map_update(core_input->maps);
       imu_update(core_input->imu);
@@ -103,7 +105,7 @@ static void test_giei_rtd(CoreInput* const input)
   }
 
   printf("switching to human driver\n");
-  driver_input_change_driver(input->driver, DRIVER_HUMAN);
+  steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
 
   printf("initial giei status\n");
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0,0);
@@ -174,6 +176,7 @@ int main(void)
   DrivingMaps_h maps = {0};
   Imu_h imu = {0};
   EmergencyNode_h emergency_read = {0};
+  CarMissionReader_h mission_reader = {0};
 
   CoreThread core_thread={.run=1};
   Gpio_h ts={0};
@@ -190,6 +193,7 @@ int main(void)
     .ts = &ts,
     .rf = &rf,
     .rtd_sound = &rtd_sound_read,
+    .mission_reader = &mission_reader,
 
     .core_run = &core_thread.run,
     .external_boards = &external_boards,
@@ -206,7 +210,8 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
-  INIT_PH(driver_input_init(&driver), "driver input");
+  INIT_PH(car_mission_reader_init(&mission_reader), "mission reader");
+  INIT_PH(driver_input_init(&driver, &mission_reader), "driver input");
   INIT_PH(driving_maps_init(&maps), "driver maps");
   INIT_PH(imu_init(&imu), "imu");
   INIT_PH(amk_module_init(&amk, &driver, &engines), "amk module");

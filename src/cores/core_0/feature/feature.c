@@ -16,6 +16,7 @@ struct Core0Feature_t{
   AmkInverter_h amk;
   EngineType inverter;
   Giei_h giei;
+  CarMissionReader_h o_car_mission_reader;
   enum RUNNING_STATUS old_running_status;
 };
 
@@ -26,6 +27,7 @@ union Core0Feature_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_core_0_feature[(sizeof(Core0Feature_h)) == sizeof(struct Core0Feature_t)? 1:-1];
+char __assert_align_core_0_feature[(_Alignof(Core0Feature_h)) == _Alignof(struct Core0Feature_t)? 1:-1];
 #endif // DEBUG
 
 //public
@@ -35,7 +37,8 @@ int8_t core_0_feature_init(Core0Feature_h* const restrict self )
   union Core0Feature_h_t_conv conv = {self};
   struct Core0Feature_t* const restrict p_self = conv.clear;
 
-  if(driver_input_init(&p_self->driver) <0) return -1;
+  if(car_mission_reader_init(&p_self->o_car_mission_reader)) return -1;
+  if(driver_input_init(&p_self->driver, &p_self->o_car_mission_reader) <0) return -2;
   if(driving_maps_init(&p_self->maps) <0) return -3;
   if(imu_init(&p_self->imu) <0) return -4;
   if(amk_module_init(&p_self->amk, &p_self->driver, &p_self->inverter)) return -5;

@@ -3,171 +3,142 @@
 #include "lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "linux_board/linux_board.h"
+#include "car_component/car_component.h"
 
+#include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
 #include <threads.h>
 #include <unistd.h>
 
-uint8_t run=1;
+#define INIT_PH(init_exp, module_name)\
+  if ((init_exp)<0)\
+  {\
+    FAILED("failed init "module_name);\
+    goto end;\
+  }
+
+struct ThInput {
+  DriverInput_h* driver_input;
+  CarMissionReader_h* mission_reader;
+
+  int8_t run;
+};
+
+typedef struct{
+  DriverInput_h* driver_input;
+  ExternalBoards_t* external_boards;
+}TestInput;
+
 static int driver_loop(void* args)
 {
-  while(driver_input_init(args)<0);
+  struct ThInput* input = args;
 
-  while(run)
+  while(input->run)
   {
-    driver_input_update(args);
+    car_mission_reader_update(input->mission_reader);
+    driver_input_update(input->driver_input);
   }
   return 0;
 }
 
-static int test_throttle(DriverInput_h* driver){
+static int test_throttle(TestInput* input){
   int8_t err=0;
   uint8_t throttle_value = 40;
-  can_obj_can2_h_t mex={0};
-  CanMessage mex_c={0};
   float throttle =0;
-  struct CanNode* can_node = NULL;
 
-  mex.can_0x053_Driver.no_implausibility =1;
-  mex.can_0x053_Driver.throttle = throttle_value;
-  mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
-  mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_THROTTLE, throttle_value);
 
   wait_milliseconds(50 MILLIS);
-  throttle = driver_input_get(driver, THROTTLE);
+  throttle = driver_input_get(input->driver_input, THROTTLE);
 
   if (throttle == throttle_value) {
     PASSED("throttle value setted correctly");
   }else{
     FAILED("throttle value set fail");
+    printf("expected: %d, gived: %f\n",throttle_value, throttle);
     err--;
   }
 
   throttle_value = 67;
-  memset(&mex, 0, sizeof(mex));
-  memset(&mex_c, 0, sizeof(mex_c));
-  mex.can_0x053_Driver.no_implausibility =1;
-  mex.can_0x053_Driver.throttle = throttle_value;
-  mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
-  mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_THROTTLE, throttle_value);
   wait_milliseconds(50 MILLIS);
 
-  throttle = driver_input_get(driver, THROTTLE);
+  throttle = driver_input_get(input->driver_input, THROTTLE);
   if (throttle == throttle_value) {
     PASSED("throttle value upadte correctly");
   }else{
-    FAILED("brake value update fail");
+    FAILED("throttle value update fail");
+    printf("expected: %d, gived: %f\n",throttle_value, throttle);
     err--;
   }
 
   return err;
 }
 
-static int test_brake(DriverInput_h* driver){
+static int test_brake(TestInput* input){
   int8_t err=0;
   uint8_t brk_value = 42;
-  can_obj_can2_h_t mex={0};
-  CanMessage mex_c={0};
   float brake =0;
-  struct CanNode* can_node = NULL;
 
-  mex.can_0x053_Driver.no_implausibility =1;
-  mex.can_0x053_Driver.brake = brk_value;
-  mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
-  mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, brk_value);
   wait_milliseconds(50 MILLIS);
-  brake = driver_input_get(driver, BRAKE);
+
+  brake = driver_input_get(input->driver_input, BRAKE);
 
   if (brake == brk_value) {
     PASSED("brake value setted correctly");
   }else{
     FAILED("brake value set fail");
+    printf("expected: %d, gived: %f\n",brk_value, brake);
     err--;
   }
 
   brk_value = 30;
-  memset(&mex, 0, sizeof(mex));
-  memset(&mex_c, 0, sizeof(mex_c));
-  mex.can_0x053_Driver.no_implausibility =1;
-  mex.can_0x053_Driver.brake = brk_value;
-  mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
-  mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
-
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, brk_value);
   wait_milliseconds(50 MILLIS);
-  brake = driver_input_get(driver, BRAKE);
+  brake = driver_input_get(input->driver_input, BRAKE);
 
   if (brake == brk_value) {
     PASSED("brake value upadte correctly");
   }else{
     FAILED("brake value update fail");
+    printf("expected: %d, gived: %f\n",brk_value, brake);
     err--;
   }
 
   return err;
 }
 
-static int test_steering_wheel(DriverInput_h* driver){
+static int test_steering_wheel(TestInput* input){
   int8_t err=0;
   uint8_t steering_value = 10;
-  can_obj_can2_h_t mex = {0};
-  CanMessage mex_c = {0};
   float stw =0;
-  struct CanNode* can_node = NULL;
 
-  mex.can_0x053_Driver.steering = steering_value;
-  mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
-  mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_STEERING_ANGLE, steering_value);
   wait_milliseconds(50 MILLIS);
 
-  stw = driver_input_get(driver, STEERING_ANGLE);
+  stw = driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
     PASSED("steering value setted correctly");
   }else{
     FAILED("steering value set fail");
+    printf("expected: %d, gived: %f\n",steering_value, stw);
     err--;
   }
 
   steering_value = 88;
-  memset(&mex, 0, sizeof(mex));
-  memset(&mex_c, 0, sizeof(mex_c));
-  mex.can_0x053_Driver.steering = steering_value;
-  mex_c.message_size = pack_message_can2(&mex, CAN_ID_DRIVER, &mex_c.full_word);
-  mex_c.id = CAN_ID_DRIVER;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
-
-  wait_milliseconds(1 MILLIS);
-  stw = driver_input_get(driver, STEERING_ANGLE);
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_STEERING_ANGLE, steering_value);
+  wait_milliseconds(50 MILLIS);
+  stw = driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
     PASSED("steering value upadte correctly");
   }else{
-    FAILED("brake value update fail");
+    FAILED("steering value update fail");
+    printf("expected: %d, gived: %f\n",steering_value, stw);
     err--;
   }
 
@@ -326,32 +297,60 @@ static int test_steering_wheel_dv(DriverInput_h* driver){
 
 int main(void)
 {
-  int8_t err=0;
-  thrd_t driver=0;
+  ExternalBoards_t external_boards = {0};
+
+  CarMissionReader_h mission_reader = {0};
   DriverInput_h o_driver={0};
 
-  hardware_init_can(CAN_GENERAL, _500_KBYTE_S_);
-  hardware_init_can(CAN_DV, _500_KBYTE_S_);
-  if(create_virtual_chip() <0){
-    err--;
-    goto end;
-  }
+  int8_t err=0;
+  thrd_t driver=0;
 
-  thrd_create(&driver, driver_loop, &o_driver);
-  sleep(3);
+  struct ThInput input = {
+    .driver_input = &o_driver,
+    .mission_reader = &mission_reader,
 
-  driver_input_change_driver(&o_driver, DRIVER_HUMAN);
-  test_throttle(&o_driver);
-  test_brake(&o_driver);
-  test_steering_wheel(&o_driver);
+    .run=1,
+  };
 
-  driver_input_change_driver(&o_driver, DRIVER_EMBEDDED);
+  TestInput t_input ={
+    .driver_input = &o_driver,
+    .external_boards = &external_boards,
+  };
+
+  INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
+  INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
+  INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
+  INIT_PH(create_virtual_chip(), "virtual chip gpio");
+
+  INIT_PH(start_external_boards(&external_boards), "external_boards");
+
+  INIT_PH(car_mission_reader_init(&mission_reader), "car mission reader");
+  INIT_PH(driver_input_init(&o_driver, &mission_reader), "driver input");
+
+  thrd_create(&driver, driver_loop, &input);
+
+  steering_wheel_select_mission(&external_boards.steering_wheel, CAR_MISSIONS_HUMAN);
+  wait_milliseconds(500 MILLIS);
+  test_throttle(&t_input);
+  test_brake(&t_input);
+  test_steering_wheel(&t_input);
+
+  steering_wheel_select_mission(&external_boards.steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
+  wait_milliseconds(500 MILLIS);
   test_throttle_dv(&o_driver);
   test_brake_dv(&o_driver);
   test_steering_wheel_dv(&o_driver);
 
+  printf("tests finished\n");
+
+  printf("stopping debug core\n");
+  input.run=0;
+  thrd_join(driver,NULL);
+
+  stop_external_boards(&external_boards);
+  stop_thread_can();
+
 end:
-  run=0;
   print_SCORE();
   return err;
 }

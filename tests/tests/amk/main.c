@@ -21,6 +21,8 @@
 struct ThInput {
   DriverInput_h* driver_input;
   EngineType* engine_input;
+  CarMissionReader_h* mission_reader;
+
   int8_t run;
 };
 
@@ -42,6 +44,7 @@ static int core_update(void* args)
   {
     ACTION_ON_FREQUENCY(t, 50 MILLIS)
     {
+      car_mission_reader_update(input->mission_reader);
       driver_input_update(input->driver_input);
       inverter_update(input->engine_input);
     }
@@ -78,7 +81,7 @@ static void test_initial_status(EngineType* self)
 
 static void test_start_precharge(EngineType* self, TestInput* input)
 {
-  driver_input_change_driver(input->driver_input, DRIVER_HUMAN);
+  steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
   car_amk_inverter_reset(&input->external_boards->amk_inverter);
 
   FOR_EACH_ENGINE(engine)
@@ -162,6 +165,7 @@ int main(void)
 
   DriverInput_h driver_input = {0};
   EngineType engine = {0};
+  CarMissionReader_h mission_reader = {0};
 
   AmkInverter_h amk={0};
   thrd_t core=0;
@@ -171,6 +175,8 @@ int main(void)
   struct ThInput input = {
     .engine_input = &engine,
     .driver_input = &driver_input,
+    .mission_reader = &mission_reader,
+
     .run=1,
   };
 
@@ -193,7 +199,8 @@ int main(void)
   
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
-  INIT_PH(driver_input_init(&driver_input), "driver input");
+  INIT_PH(car_mission_reader_init(&mission_reader), "car mission reader");
+  INIT_PH(driver_input_init(&driver_input, &mission_reader), "driver input");
   INIT_PH(EmergencyNode_init(&read_emergecy), "emergency instance");
   INIT_PH(amk_module_init(&amk, &driver_input, &engine), "amk module");
 
