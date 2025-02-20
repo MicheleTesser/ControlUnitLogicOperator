@@ -7,6 +7,7 @@ MAGENTA="\e[35m"
 ENDCOLOR="\e[0m"
 
 test_root=$(pwd)
+all_tests=$(/bin/ls -d ./tests/*/ 2>/dev/null )
 
 end_tests() {
     cd $test_root
@@ -51,11 +52,22 @@ help ()
 {
   echo "usage ${0}:
     -h        : print help
-    -s args.. : skip a list of test 
-    -t arg    : run a specific test
+    -s args.. : skip a list of tests 
+    -t arg..  : run a list of tests
     --all     : run all tests sequentially
     
     If no argument is passed all test are runned sequentially"
+}
+
+print_list()
+
+{
+  echo -n "["
+  for ARG in "$@"
+  do
+    echo -n " $ARG "
+  done
+  echo "]"
 }
 
 case "$1" in
@@ -64,27 +76,28 @@ case "$1" in
     exit 0
   ;;
   "-s") 
-    echo -n "skipping tests: ["
+    echo -n "skipping tests: "
     shift
     skip_tests=${@}
-    for ARG in "$@"
-    do
-      echo -n " $ARG "
-    done
-    echo "]"
+    print_list $skip_tests
   ;;
-  "-t") echo "single test"
+  "-t") echo -n "executing tests: "
+    shift
+    skip_tests=${@}
+    print_list $skip_tests
     ./setup_test_env.sh "init"
     cd ./tests/
-    shift
-    if [ $# -eq 1 ]; then
-      if [ -d ./$1  ]; then
-        run_test $1
+    for TEST_DIR in $skip_tests; do
+      curr=$(echo $TEST_DIR| cut -d'/' -f1)
+      if [[ -n $(echo "$all_tests" | grep -w "${curr}") ]]; then
+        run_test $TEST_DIR
       else
-        echo test not found
+        echo -e ${RED}test $(echo ${curr} | cut -d'/' -f1) not found $RED
       fi
-      end_tests
-    fi
+      cd $test_root/tests
+    done
+    end_tests
+
     exit 0
   ;;
   "--all") echo "running all tests"
