@@ -41,8 +41,7 @@ const uint8_t __assert_driver_input_align[_Alignof(DriverInput_h) == _Alignof(st
 #endif /* ifdef DEBUG */
 
 static inline index_tye
-compute_data_index(const struct DriverInput_t* const restrict self __attribute_maybe_unused__,
-    const enum DRIVER driver, const enum INPUT_TYPES driver_input)
+compute_data_index(const enum DRIVER driver, const enum INPUT_TYPES driver_input)
 {
   if (driver < __NUM_OF_DRIVERS__ && driver != DRIVER_NONE && driver_input < __NUM_OF_INPUT_TYPES__)
   {
@@ -135,21 +134,21 @@ driver_input_update(DriverInput_h* const restrict self )
       if (!hardware_mailbox_read(mailbox, &mex))
       {
         unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
-        index_input = compute_data_index(p_self, DRIVER_HUMAN, THROTTLE);
+        index_input = compute_data_index(DRIVER_HUMAN, THROTTLE);
         if (index_input<0)
         {
           return -1;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.throttle;
 
-        index_input = compute_data_index(p_self, DRIVER_HUMAN, BRAKE);
+        index_input = compute_data_index(DRIVER_HUMAN, BRAKE);
         if (index_input<0)
         {
           return -1;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.brake;
 
-        index_input = compute_data_index(p_self, DRIVER_HUMAN, STEERING_ANGLE);
+        index_input = compute_data_index(DRIVER_HUMAN, STEERING_ANGLE);
         if (index_input<0)
         {
           return -1;
@@ -161,19 +160,19 @@ driver_input_update(DriverInput_h* const restrict self )
       mailbox = p_self->p_drivers_mailboxes[DRIVER_EMBEDDED];
       if (hardware_mailbox_read(mailbox, &mex)>=0) {
         unpack_message_can3(&o3, CAN_ID_DV_DRIVER, mex.full_word, mex.message_size, timer_time_now());
-        index_input = compute_data_index(p_self,DRIVER_EMBEDDED, THROTTLE);
+        index_input = compute_data_index(DRIVER_EMBEDDED, THROTTLE);
         if (index_input<0)
         {
           return -1;
         }
         p_self->driver_data[index_input] = o3.can_0x07d_DV_Driver.Throttle;
-        index_input = compute_data_index(p_self,DRIVER_EMBEDDED, BRAKE);
+        index_input = compute_data_index(DRIVER_EMBEDDED, BRAKE);
         if (index_input<0)
         {
           return -1;
         }
         p_self->driver_data[index_input] = o3.can_0x07d_DV_Driver.Brake;
-        index_input = compute_data_index(p_self, DRIVER_EMBEDDED, STEERING_ANGLE);
+        index_input = compute_data_index(DRIVER_EMBEDDED, STEERING_ANGLE);
         if (index_input<0)
         {
           return -1;
@@ -195,7 +194,7 @@ driver_input_get(const struct DriverInput_h* const restrict self,
 {
   const union DriverInput_h_t_conv_const conv = {self};
   const struct DriverInput_t* const p_self = conv.clear;
-  const index_tye data_index = compute_data_index(p_self, p_self->current_driver, driver_input);
+  const index_tye data_index = compute_data_index(p_self->current_driver, driver_input);
 
   if (data_index != -1)
   {

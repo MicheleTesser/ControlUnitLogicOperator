@@ -184,7 +184,7 @@ int main(void)
   Gpio_h rf ={0};
   GpioRead_h rtd_sound_read = {0};
 
-  CoreInput input __attribute_maybe_unused__= {
+  CoreInput input = {
     .giei = &giei,
     .imu =&imu,
     .engine = &engines,
