@@ -138,6 +138,8 @@ pcu_stop(struct Pcu_h* const restrict self)
 {
   union Pcu_h_t_conv conv = {self};
   struct Pcu_t* const restrict p_self = conv.clear;
+
+  printf("stopping pcu\n");
   p_self->run=0;
   thrd_join(p_self->thread, NULL);
   hardware_free_mailbox_can(&p_self->recv_can_node_pcu_inv);

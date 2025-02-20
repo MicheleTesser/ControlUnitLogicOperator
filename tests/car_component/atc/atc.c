@@ -108,6 +108,8 @@ atc_stop(Atc_h* const restrict self)
 {
   union Atc_h_t_conv conv = {self};
   struct Atc_t* const restrict p_self = conv.clear;
+
+  printf("stopping atc\n");
   p_self->run=0;
   thrd_join(p_self->thread, NULL);
   hardware_free_mailbox_can(&p_self->send_vcu_mailbox);

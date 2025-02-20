@@ -1,11 +1,12 @@
 #include "score_lib/test_lib.h"
 #include "linux_board/linux_board.h"
-#include <stdint.h>
-#include <stdio.h>
 #include "./car_component/car_component.h"
 #include "src/cores/core_0/feature/engines/engines.h"
 #include "src/cores/core_0/feature/engines/amk/amk.h"
 #include "src/cores/core_utility/emergency_module/emergency_module.h"
+
+#include <stdint.h>
+#include <stdio.h>
 #include <sys/cdefs.h>
 #include <threads.h>
 #include <unistd.h>
@@ -20,25 +21,24 @@
 struct ThInput {
   DriverInput_h* driver_input;
   EngineType* engine_input;
+  int8_t run;
 };
 
 typedef struct{
+  ExternalBoards_t* external_boards;
   DriverInput_h* driver_input;
   EngineType* engine_input;
   EmergencyNode_h* emergency_node;
-  EmulationAmkInverter_h* inverter;
-  Atc_h* atc;
   Gpio_h* ts;
   Gpio_h* rf;
 }TestInput;
 
-static int run=1;
 static int core_update(void* args)
 {
   struct ThInput* input = args;
   time_var_microseconds t =0;
 
-  while(run)
+  while(input->run)
   {
     ACTION_ON_FREQUENCY(t, 50 MILLIS)
     {
@@ -79,11 +79,11 @@ static void test_initial_status(EngineType* self)
 static void test_start_precharge(EngineType* self, TestInput* input)
 {
   driver_input_change_driver(input->driver_input, DRIVER_HUMAN);
-  car_amk_inverter_reset(input->inverter);
+  car_amk_inverter_reset(&input->external_boards->amk_inverter);
 
   FOR_EACH_ENGINE(engine)
   {
-    car_amk_inverter_set_attribute(input->inverter, SYSTEM_READY, engine, 1);
+    car_amk_inverter_set_attribute(&input->external_boards->amk_inverter, SYSTEM_READY, engine, 1);
   }
 
   printf("system ready but precharge not yet started: ");
@@ -106,14 +106,14 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   _check_status_rtd(self, TS_READY);
 
   printf("activating rf with brake pedal at 5 percentage in manual mode from TS_READY -> TS_READY: ");
-  atc_pedals_steering_wheel(input->atc, ATC_BRAKE, 5);
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 5);
   gpio_set_low(input->rf);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, TS_READY);
 
   printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
   wait_milliseconds(500 MILLIS);
-  atc_pedals_steering_wheel(input->atc, ATC_BRAKE, 25);
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 25);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, RUNNING);
 
@@ -128,7 +128,7 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   _check_status_rtd(self, RUNNING);
 
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency ");
-  car_amk_inverter_emergency_shutdown(input->inverter);
+  car_amk_inverter_emergency_shutdown(&input->external_boards->amk_inverter);
   wait_milliseconds(1 SECONDS);
   _check_status_rtd(self, SYSTEM_OFF);
   if(EmergencyNode_is_emergency_state(input->emergency_node))
@@ -158,12 +158,12 @@ static void test_start_precharge(EngineType* self, TestInput* input)
 
 int main(void)
 {
-  EmulationAmkInverter_h amk_inverter_emulation = {0};
-  AmkInverter_h amk={0};
-  Pcu_h pcu = {0};
-  Atc_h atc ={0};
-  EngineType engine = {0};
+  ExternalBoards_t external_boards = {0};
+
   DriverInput_h driver_input = {0};
+  EngineType engine = {0};
+
+  AmkInverter_h amk={0};
   thrd_t core=0;
   Gpio_h ts={0};
   Gpio_h rf ={0};
@@ -171,16 +171,16 @@ int main(void)
   struct ThInput input = {
     .engine_input = &engine,
     .driver_input = &driver_input,
+    .run=1,
   };
 
   TestInput test_input = {
     .engine_input = &engine,
-    .inverter = &amk_inverter_emulation,
     .driver_input = &driver_input,
-    .atc = &atc,
     .rf = &rf,
     .ts = &ts,
     .emergency_node = &read_emergecy,
+    .external_boards = &external_boards,
   };
 
   INIT_PH(EmergencyNode_class_init(), "emergency module class init");
@@ -190,10 +190,8 @@ int main(void)
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
   INIT_PH(hardware_init_gpio(&ts, GPIO_TS_BUTTON), "ts gpio");
   INIT_PH(hardware_init_gpio(&rf, GPIO_RTD_BUTTON), "rf gpio");
-
-  INIT_PH(car_amk_inverter_start(&amk_inverter_emulation), "amk emulation");
-  INIT_PH(pcu_init(&pcu), "pcu emulation");
-  INIT_PH(atc_start(&atc), "atc emulation");
+  
+  INIT_PH(start_external_boards(&external_boards), "external_boards");
 
   INIT_PH(driver_input_init(&driver_input), "driver input");
   INIT_PH(EmergencyNode_init(&read_emergecy), "emergency instance");
@@ -206,16 +204,11 @@ int main(void)
 
   printf("tests finished\n");
 
-  run=0;
+  printf("stopping debug core\n");
+  input.run=0;
   thrd_join(core,NULL);
 
-  printf("stopping pcu\n");
-  pcu_stop(&pcu);
-  printf("stopping atc\n");
-  atc_stop(&atc);
-  printf("stopping inverter\n");
-  car_amk_inverter_stop(&amk_inverter_emulation);
-  printf("stopping can module\n");
+  stop_external_boards(&external_boards);
   stop_thread_can();
 
 end:

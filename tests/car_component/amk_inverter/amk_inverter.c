@@ -405,6 +405,7 @@ void car_amk_inverter_stop(EmulationAmkInverter_h* self)
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
 
+  printf("stopping amk inverter\n");
   p_self->o_running=0;
   hardware_init_new_external_node_destroy(p_self->p_can_node_inverter);
   hardware_free_mailbox_can(&p_self->p_recv_mailbox_vcu);

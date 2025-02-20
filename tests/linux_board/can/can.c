@@ -302,6 +302,8 @@ void hardware_free_mailbox_can(struct CanMailbox** restrict self)
 
 void stop_thread_can(void)
 {
+
+  printf("stopping can module\n");
   for (uint16_t i=0; i<NUM_OF_MAILBOX; i++)
   {
     struct CanMailbox* mail = &MAILBOX_POOL.pool[i];

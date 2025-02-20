@@ -37,6 +37,8 @@ static int _core_thread_fun(void* arg)
 
 int main(void)
 {
+  ExternalBoards_t external_boards = {0};
+
   CoreThread core_thread={.run=1};
   CoreInput input =
   {
@@ -48,6 +50,8 @@ int main(void)
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
 
+  INIT_PH(start_external_boards(&external_boards), "external_boards");
+
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
   printf("tests finished\n");
@@ -55,6 +59,9 @@ int main(void)
   printf("stopping debug core\n");
   core_thread.run=0;
   thrd_join(core_thread.thread_id, NULL);
+
+  stop_external_boards(&external_boards);
+  stop_thread_can();
 end:
   print_SCORE();
   return 0;
