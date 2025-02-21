@@ -44,4 +44,7 @@ car_mission_reader_update(CarMissionReader_h* const restrict self)__attribute__(
 enum CAR_MISSIONS
 car_mission_reader_get_current_mission(CarMissionReader_h* const restrict self)__attribute__((__nonnull__(1)));
 
+void
+car_mission_reader_destroy(CarMissionReader_h* const restrict self)__attribute__((__nonnull__(1)));
+
 #endif // !__CAR_MISSION_READER__

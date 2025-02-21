@@ -1,7 +1,5 @@
 #include "score_lib/test_lib.h"
 #include "src/cores/core_0/feature/driver_input/driver_input.h"
-#include "lib/board_dbc/dbc/out_lib/can2/can2.h"
-#include "lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "linux_board/linux_board.h"
 #include "car_component/car_component.h"
 
@@ -38,7 +36,7 @@ static int driver_loop(void* args)
   while(input->run)
   {
     car_mission_reader_update(input->mission_reader);
-    driver_input_update(input->driver_input);
+    giei_driver_input_update(input->driver_input);
   }
   return 0;
 }
@@ -51,7 +49,7 @@ static int test_throttle(TestInput* input){
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_THROTTLE, throttle_value);
 
   wait_milliseconds(50 MILLIS);
-  throttle = driver_input_get(input->driver_input, THROTTLE);
+  throttle = giei_driver_input_get(input->driver_input, THROTTLE);
 
   if (throttle == throttle_value) {
     PASSED("throttle value setted correctly");
@@ -65,7 +63,7 @@ static int test_throttle(TestInput* input){
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_THROTTLE, throttle_value);
   wait_milliseconds(50 MILLIS);
 
-  throttle = driver_input_get(input->driver_input, THROTTLE);
+  throttle = giei_driver_input_get(input->driver_input, THROTTLE);
   if (throttle == throttle_value) {
     PASSED("throttle value upadte correctly");
   }else{
@@ -85,7 +83,7 @@ static int test_brake(TestInput* input){
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, brk_value);
   wait_milliseconds(50 MILLIS);
 
-  brake = driver_input_get(input->driver_input, BRAKE);
+  brake = giei_driver_input_get(input->driver_input, BRAKE);
 
   if (brake == brk_value) {
     PASSED("brake value setted correctly");
@@ -98,7 +96,7 @@ static int test_brake(TestInput* input){
   brk_value = 30;
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, brk_value);
   wait_milliseconds(50 MILLIS);
-  brake = driver_input_get(input->driver_input, BRAKE);
+  brake = giei_driver_input_get(input->driver_input, BRAKE);
 
   if (brake == brk_value) {
     PASSED("brake value upadte correctly");
@@ -111,7 +109,8 @@ static int test_brake(TestInput* input){
   return err;
 }
 
-static int test_steering_wheel(TestInput* input){
+static int test_steering_wheel(TestInput* input)
+{
   int8_t err=0;
   uint8_t steering_value = 10;
   float stw =0;
@@ -119,7 +118,7 @@ static int test_steering_wheel(TestInput* input){
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_STEERING_ANGLE, steering_value);
   wait_milliseconds(50 MILLIS);
 
-  stw = driver_input_get(input->driver_input, STEERING_ANGLE);
+  stw = giei_driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
     PASSED("steering value setted correctly");
@@ -132,7 +131,7 @@ static int test_steering_wheel(TestInput* input){
   steering_value = 88;
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_STEERING_ANGLE, steering_value);
   wait_milliseconds(50 MILLIS);
-  stw = driver_input_get(input->driver_input, STEERING_ANGLE);
+  stw = giei_driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
     PASSED("steering value upadte correctly");
@@ -145,24 +144,19 @@ static int test_steering_wheel(TestInput* input){
   return err;
 }
 
-static int test_throttle_dv(DriverInput_h* driver){
+static int test_throttle_dv(TestInput* input)
+{
   int8_t err=0;
   uint8_t throttle_value = 40;
-  can_obj_can3_h_t mex={0};
-  CanMessage mex_c={0};
   float throttle =0;
-  struct CanNode* can_node = NULL;
 
-  mex.can_0x07d_DV_Driver.Throttle= throttle_value;
-  mex_c.id = CAN_ID_DV_DRIVER;
-  mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV, can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
+  embedded_system_set_dv_input(
+      &input->external_boards->embedded_system,
+      DV_INPUT_THROTTLE,
+      throttle_value);
 
-  wait_milliseconds(1 MILLIS);
-  throttle = driver_input_get(driver, THROTTLE);
+  wait_milliseconds(50 MILLIS);
+  throttle = giei_driver_input_get(input->driver_input, THROTTLE);
 
   if (throttle == throttle_value) {
     PASSED("dv throttle value setted correctly");
@@ -172,19 +166,14 @@ static int test_throttle_dv(DriverInput_h* driver){
   }
 
   throttle_value = 67;
-  memset(&mex, 0, sizeof(mex));
-  memset(&mex_c, 0, sizeof(mex_c));
 
-  mex.can_0x07d_DV_Driver.Throttle = throttle_value;
-  mex_c.id = CAN_ID_DV_DRIVER;
-  mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV, can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
-  wait_milliseconds(1 MILLIS);
+  embedded_system_set_dv_input(
+      &input->external_boards->embedded_system,
+      DV_INPUT_THROTTLE,
+      throttle_value);
+  wait_milliseconds(50 MILLIS);
 
-  throttle = driver_input_get(driver, THROTTLE);
+  throttle = giei_driver_input_get(input->driver_input, THROTTLE);
   if (throttle == throttle_value) {
     PASSED("dv throttle value upadte correctly");
   }else{
@@ -195,23 +184,19 @@ static int test_throttle_dv(DriverInput_h* driver){
   return err;
 }
 
-static int test_brake_dv(DriverInput_h* driver){
+static int test_brake_dv(TestInput* input)
+{
   int8_t err=0;
   uint8_t brk_value = 42;
-  can_obj_can3_h_t mex={0};
-  CanMessage mex_c={0};
   float brake =0;
-  struct CanNode* can_node = NULL;
 
-  mex.can_0x07d_DV_Driver.Brake = brk_value;
-  mex_c.id = CAN_ID_DV_DRIVER;
-  mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV,can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
-  wait_milliseconds(1 MILLIS);
-  brake = driver_input_get(driver, BRAKE);
+  embedded_system_set_dv_input(
+      &input->external_boards->embedded_system,
+      DV_INPUT_BRAKE,
+      brk_value);
+  wait_milliseconds(50 MILLIS);
+
+  brake = giei_driver_input_get(input->driver_input, BRAKE);
 
   if (brake == brk_value) {
     PASSED("dv brake value setted correctly");
@@ -221,19 +206,14 @@ static int test_brake_dv(DriverInput_h* driver){
   }
 
   brk_value = 30;
-  memset(&mex, 0, sizeof(mex));
-  memset(&mex_c, 0, sizeof(mex_c));
 
-  mex.can_0x07d_DV_Driver.Brake = brk_value;
-  mex_c.id = CAN_ID_DV_DRIVER;
-  mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV, can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
+  embedded_system_set_dv_input(
+      &input->external_boards->embedded_system,
+      DV_INPUT_BRAKE,
+      brk_value);
+  wait_milliseconds(50 MILLIS);
 
-  wait_milliseconds(1 MILLIS);
-  brake = driver_input_get(driver, BRAKE);
+  brake = giei_driver_input_get(input->driver_input, BRAKE);
 
   if (brake == brk_value) {
     PASSED("dv brake value upadte correctly");
@@ -245,24 +225,18 @@ static int test_brake_dv(DriverInput_h* driver){
   return err;
 }
 
-static int test_steering_wheel_dv(DriverInput_h* driver){
+static int test_steering_wheel_dv(TestInput* input){
   int8_t err=0;
   uint8_t steering_value = 10;
-  can_obj_can3_h_t mex = {0};
-  CanMessage mex_c = {0};
   float stw =0;
-  struct CanNode* can_node = NULL;
 
-  mex.can_0x07d_DV_Driver.Steering_angle= steering_value;
-  mex_c.id = CAN_ID_DV_DRIVER;
-  mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV, can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
-  wait_milliseconds(1 MILLIS);
+  embedded_system_set_dv_input(
+      &input->external_boards->embedded_system,
+      DV_INPUT_STEERING_ANGLE,
+      steering_value);
+  wait_milliseconds(50 MILLIS);
 
-  stw = driver_input_get(driver, STEERING_ANGLE);
+  stw = giei_driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
     PASSED("dv steering value setted correctly");
@@ -272,18 +246,14 @@ static int test_steering_wheel_dv(DriverInput_h* driver){
   }
 
   steering_value = 88;
-  memset(&mex, 0, sizeof(mex));
-  memset(&mex_c, 0, sizeof(mex_c));
-  mex.can_0x07d_DV_Driver.Steering_angle= steering_value;
-  mex_c.id = CAN_ID_DV_DRIVER;
-  mex_c.message_size = pack_message_can3(&mex, mex_c.id, &mex_c.full_word);
-  ACTION_ON_CAN_NODE(CAN_DV, can_node)
-  {
-    hardware_write_can(can_node, &mex_c);
-  }
 
-  wait_milliseconds(1 MILLIS);
-  stw = driver_input_get(driver, STEERING_ANGLE);
+  embedded_system_set_dv_input(
+      &input->external_boards->embedded_system,
+      DV_INPUT_STEERING_ANGLE,
+      steering_value);
+
+  wait_milliseconds(50 MILLIS);
+  stw = giei_driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
     PASSED("dv steering value upadte correctly");
@@ -337,9 +307,9 @@ int main(void)
 
   steering_wheel_select_mission(&external_boards.steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
   wait_milliseconds(500 MILLIS);
-  test_throttle_dv(&o_driver);
-  test_brake_dv(&o_driver);
-  test_steering_wheel_dv(&o_driver);
+  test_throttle_dv(&t_input);
+  test_brake_dv(&t_input);
+  test_steering_wheel_dv(&t_input);
 
   printf("tests finished\n");
 

@@ -45,7 +45,7 @@ static int core_update(void* args)
     ACTION_ON_FREQUENCY(t, 50 MILLIS)
     {
       car_mission_reader_update(input->mission_reader);
-      driver_input_update(input->driver_input);
+      giei_driver_input_update(input->driver_input);
       inverter_update(input->engine_input);
     }
   }

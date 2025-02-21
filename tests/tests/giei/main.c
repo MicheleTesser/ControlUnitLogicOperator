@@ -55,7 +55,7 @@ static int _core_thread_fun(void* arg)
     ACTION_ON_FREQUENCY(last_update, 50 MILLIS)
     {
       car_mission_reader_update(core_input->mission_reader);
-      driver_input_update(core_input->driver);
+      giei_driver_input_update(core_input->driver);
       driving_map_update(core_input->maps);
       imu_update(core_input->imu);
       inverter_update(core_input->engine);

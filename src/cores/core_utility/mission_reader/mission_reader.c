@@ -89,3 +89,13 @@ car_mission_reader_get_current_mission(CarMissionReader_h* const restrict self)
 
   return  p_self->current_mission;
 }
+
+void
+car_mission_reader_destroy(CarMissionReader_h* const restrict self)
+{
+  union CarMissionReader_h_t_conv conv = {self};
+  struct CarMissionReader_t* const p_self = conv.clear;
+
+  hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
+
+}

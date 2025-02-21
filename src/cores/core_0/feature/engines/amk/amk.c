@@ -228,13 +228,13 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
     case SYSTEM_OFF:
 
       if (_amk_inverter_on(self) && gpio_read_state(&self->gpio_ts_button) &&
-          !driver_input_rtd_request(self->driver_input))
+          !giei_driver_input_rtd_request(self->driver_input))
       {
         self->engine_status = SYSTEM_PRECAHRGE;
       }
       else
       {
-        if(driver_input_rtd_request(self->driver_input))
+        if(giei_driver_input_rtd_request(self->driver_input))
         {
           EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
         }
@@ -244,7 +244,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       if (!_amk_inverter_on(self) ||
           !gpio_read_state(&self->gpio_ts_button) ||
-          driver_input_rtd_request(self->driver_input))
+          giei_driver_input_rtd_request(self->driver_input))
       {
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
         memset(&setpoint, 0, sizeof(setpoint));
@@ -267,8 +267,8 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
         memset(&setpoint, 0, sizeof(setpoint));
         self->engine_status = SYSTEM_OFF;
       }
-      else if (driver_input_rtd_request(self->driver_input) &&
-          driver_input_get(self->driver_input, BRAKE) > 20)
+      else if (giei_driver_input_rtd_request(self->driver_input) &&
+          giei_driver_input_get(self->driver_input, BRAKE) > 20)
       {
         //INFO: RF message to PCU and wait until rf is active before going
         //into RUNNING status
@@ -291,7 +291,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
         memset(&setpoint, 0, sizeof(setpoint));
         self->engine_status = SYSTEM_OFF;
       }
-      else if (!driver_input_rtd_request(self->driver_input))
+      else if (!giei_driver_input_rtd_request(self->driver_input))
       {
         setpoint.AMK_Control_fields.AMK_bEnable = 0;
         self->engine_status= TS_READY;

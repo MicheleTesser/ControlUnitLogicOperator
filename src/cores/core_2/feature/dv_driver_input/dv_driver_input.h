@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct __attribute__((aligned(8))) DvDriverInput_h{
-    const uint8_t private_data[24];
+    const uint8_t private_data[40];
 }DvDriverInput_h;
 
 
