@@ -23,6 +23,7 @@ union Dummy_h_t_conv_const{
 
 #ifdef DEBUG
 char __assert_size_dummy[(sizeof(Dummy_h)==sizeof(struct Dummy_t))?+1:-1];
+char __assert_align_dummy[(_Alignof(Dummy_h)==_Alignof(struct Dummy_t))?+1:-1];
 #endif /* ifdef DEBUG */
 
 int _start_dummy(void* arg)

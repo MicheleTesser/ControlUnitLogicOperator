@@ -26,8 +26,7 @@ char __assert_size_dv_driver_input[(sizeof(DvDriverInput_h) == sizeof(struct DvD
 char __assert_align_dv_driver_input[(_Alignof(DvDriverInput_h) == _Alignof(struct DvDriverInput_t))? 1:-1];
 #endif // DEBUG
 
-int8_t
-dv_driver_input_init(DvDriverInput_h* const restrict self )
+int8_t dv_driver_input_init(DvDriverInput_h* const restrict self )
 {
     union DvDriverInput_h_t_conv conv = {self};
     struct DvDriverInput_t* const restrict p_self = conv.clear;
@@ -68,8 +67,7 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
     return 0;
 }
 
-int8_t
-dv_driver_input_update(DvDriverInput_h* const restrict self )
+int8_t dv_driver_input_update(DvDriverInput_h* const restrict self )
 {
     union DvDriverInput_h_t_conv conv = {self};
     struct DvDriverInput_t* const restrict p_self = conv.clear;
@@ -82,7 +80,7 @@ dv_driver_input_update(DvDriverInput_h* const restrict self )
     {
         unpack_message_can3(
                 &o3,
-                CAN_ID_DV_DRIVER,
+                mex.id,
                 mex.full_word,
                 mex.message_size,
                 timer_time_now());
@@ -90,14 +88,14 @@ dv_driver_input_update(DvDriverInput_h* const restrict self )
 
     if(!hardware_mailbox_read(p_self->human_brake_mailbox, &mex))
     {
-        unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
+        unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
     }
 
     new_brake = o2.can_0x053_Driver.brake;
-    if (o3.can_0x1f4_DV_driving_dynamics_1_time_stamp_rx == o2.can_0x053_Driver_time_stamp_rx &&
-        o3.can_0x1f4_DV_driving_dynamics_1.Brake_hydr_actual > o2.can_0x053_Driver.brake)
+    if (o3.can_0x07d_DV_Driver_time_stamp_rx == o2.can_0x053_Driver_time_stamp_rx &&
+        o3.can_0x07d_DV_Driver.Brake> o2.can_0x053_Driver.brake)
     {
-        new_brake = o3.can_0x1f4_DV_driving_dynamics_1.Brake_hydr_actual;
+        new_brake = o3.can_0x07d_DV_Driver.Brake;
     }
 
     p_self->brake = new_brake;
@@ -105,8 +103,7 @@ dv_driver_input_update(DvDriverInput_h* const restrict self )
     return 0;
 }
 
-float
-dv_driver_input_get_brake(const DvDriverInput_h* const restrict self )
+float dv_driver_input_get_brake(const DvDriverInput_h* const restrict self )
 {
     union DvDriverInput_h_t_conv_const conv = {self};
     const struct DvDriverInput_t* const restrict p_self = conv.clear;
