@@ -144,14 +144,14 @@ driver_input_update(DriverInput_h* const restrict self )
         index_input = compute_data_index(DRIVER_HUMAN, BRAKE);
         if (index_input<0)
         {
-          return -1;
+          return -2;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.brake;
 
         index_input = compute_data_index(DRIVER_HUMAN, STEERING_ANGLE);
         if (index_input<0)
         {
-          return -1;
+          return -3;
         }
         p_self->driver_data[index_input] = o2.can_0x053_Driver.steering;
       }
@@ -169,17 +169,15 @@ driver_input_update(DriverInput_h* const restrict self )
         index_input = compute_data_index(DRIVER_EMBEDDED, BRAKE);
         if (index_input<0)
         {
-          return -1;
+          return -2;
         }
         p_self->driver_data[index_input] = o3.can_0x07d_DV_Driver.Brake;
         index_input = compute_data_index(DRIVER_EMBEDDED, STEERING_ANGLE);
         if (index_input<0)
         {
-          return -1;
+          return -3;
         }
         p_self->driver_data[index_input] = o3.can_0x07d_DV_Driver.Steering_angle;
-
-        //TODO: add message for dv rtd request
       }
       break;
     default:

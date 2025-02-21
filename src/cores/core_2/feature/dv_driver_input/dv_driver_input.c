@@ -98,7 +98,7 @@ int8_t dv_driver_input_update(DvDriverInput_h* const restrict self )
         new_brake = o3.can_0x07d_DV_Driver.Brake;
     }
 
-    p_self->brake = new_brake;
+    p_self->brake = new_brake > 100.0f? 100.0f: new_brake;
 
     return 0;
 }

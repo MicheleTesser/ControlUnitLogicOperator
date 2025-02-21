@@ -83,6 +83,7 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
     return -1;
   }
 
+  p_self->running=1;
   thrd_create(&p_self->thread, _start_embedded_system, p_self);
   return 0;
 }

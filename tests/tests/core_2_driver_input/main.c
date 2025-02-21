@@ -22,6 +22,8 @@ typedef struct CoreThread{
 }CoreThread;
 
 typedef struct CoreInput{
+
+  DvDriverInput_h* dv_driver_input;
   volatile const uint8_t* const core_run;
 }CoreInput;
 
@@ -33,16 +35,64 @@ typedef struct{
 static int _core_thread_fun(void* arg)
 {
   CoreInput* core_input = arg;
+  time_var_microseconds t =0;
+
   while (*core_input->core_run)
   {
+    ACTION_ON_FREQUENCY(t, 1 MILLIS)
+    {
+      dv_driver_input_update(core_input->dv_driver_input);
+    }
   }
   return 0;
 }
 
+void _status_check(TestInput* input, const uint8_t brake, char * check_operation)
+{
+  printf("%s with expected brake %d:\t",check_operation, brake);
+  const uint8_t curr_brake = dv_driver_input_get_brake(input->dv_driver_input);
+  if (curr_brake == brake)
+  {
+    PASSED("consistent state brake");
+  }
+  else
+  {
+    FAILED("inconsistent state brake");
+    printf("given %d, expected: %d\n", curr_brake, brake);
+  }
+
+}
+
 //public
+
+#define UPDATE_AND_TEST(brake_value)\
+{\
+}
 
 void test_dv_driver_input(TestInput* t_input __attribute_maybe_unused__)
 {
+  _status_check(t_input, 0, "initial state");
+
+  for (uint8_t i=0; i<=100; i++)
+  {
+    embedded_system_set_dv_input(&t_input->external_boards->embedded_system, DV_INPUT_BRAKE, i);
+    wait_milliseconds(65 MILLIS);
+    _status_check(t_input, i, "update brake %");
+  }
+
+    embedded_system_set_dv_input(&t_input->external_boards->embedded_system, DV_INPUT_BRAKE, 110);
+    wait_milliseconds(65 MILLIS);
+    _status_check(t_input, 100, "overflow update brake");
+
+    embedded_system_set_dv_input(&t_input->external_boards->embedded_system, DV_INPUT_BRAKE, 24);
+    atc_pedals_steering_wheel(&t_input->external_boards->atc, ATC_BRAKE, 25);
+    wait_milliseconds(100 MILLIS);
+    _status_check(t_input, 25, "atc and embedded at the same time with atc bigger");
+
+    embedded_system_set_dv_input(&t_input->external_boards->embedded_system, DV_INPUT_BRAKE, 30);
+    atc_pedals_steering_wheel(&t_input->external_boards->atc, ATC_BRAKE, 25);
+    wait_milliseconds(100 MILLIS);
+    _status_check(t_input, 30, "atc and embedded at the same time with embedded bigger");
 }
 
 int main(void)
@@ -54,7 +104,10 @@ int main(void)
   CoreThread core_thread={.run=1};
   CoreInput input =
   {
+    .dv_driver_input = &driver_input,
+
     .core_run = &core_thread.run,
+    
   };
 
   TestInput t_input = {
