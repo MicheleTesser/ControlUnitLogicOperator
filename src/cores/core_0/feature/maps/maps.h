@@ -8,12 +8,6 @@ typedef struct DrivingMaps_h{
     const uint8_t private_data[264];
 }DrivingMaps_h;
 
-enum MAPS_TYPE{
-    MAPS_TYPE_POWER,
-    MAPS_TYPE_REGEN,
-    MAPS_TYPE_TV_REPARTITION,
-};
-
 enum CAR_PARAMETERS{
     MAX_POS_TORQUE,
     MAX_NEG_TORQUE,

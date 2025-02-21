@@ -9,9 +9,15 @@
 
 struct SteeringWheel_t{
   uint8_t u8_running;
+  struct{
+    uint8_t power;
+    uint8_t regen;
+    uint8_t torque_rep;
+  }Maps;
   thrd_t o_thread;
   enum CAR_MISSIONS o_current_mission;
   struct CanMailbox* p_mailbox_send_mission;
+  struct CanMailbox* p_mailbox_send_maps;
 };
 
 union SteeringWheel_h_t_conv{
@@ -35,14 +41,23 @@ int _start_SteeringWheel(void* arg)
   time_var_microseconds t_var =0;
   can_obj_can2_h_t o2 = {0};
   uint64_t mission_mex_payload = 0;
+  uint64_t map_mex_payload = 0;
 
   while (p_self->u8_running)
   {
     ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
       o2.can_0x067_CarMission.Mission = p_self->o_current_mission;
+
+      o2.can_0x064_Map.power = p_self->Maps.power;
+      o2.can_0x064_Map.regen = p_self->Maps.regen;
+      o2.can_0x064_Map.torque_rep = p_self->Maps.torque_rep;
+
       pack_message_can2(&o2, CAN_ID_CARMISSION, &mission_mex_payload);
+      pack_message_can2(&o2, CAN_ID_MAP, &map_mex_payload);
+
       hardware_mailbox_send(p_self->p_mailbox_send_mission, mission_mex_payload);
+      hardware_mailbox_send(p_self->p_mailbox_send_maps, map_mex_payload);
     }
   }
 
@@ -68,10 +83,21 @@ int8_t steering_wheel_start(struct SteeringWheel_h* const restrict self)
             SEND_MAILBOX,
             CAN_ID_CARMISSION,
             message_dlc_can2(CAN_ID_CARMISSION));
+      p_self->p_mailbox_send_maps =
+        hardware_get_mailbox_single_mex(
+            temp_can_node,
+            SEND_MAILBOX,
+            CAN_ID_MAP,
+            message_dlc_can2(CAN_ID_MAP));
   }
   if (!p_self->p_mailbox_send_mission)
   {
     return -1;
+  }
+
+  if (!p_self->p_mailbox_send_maps)
+  {
+    return -2;
   }
 
   p_self->u8_running = 1;
@@ -91,6 +117,31 @@ int8_t steering_wheel_select_mission(struct SteeringWheel_h* const restrict self
   }
 
   p_self->o_current_mission = mission;
+
+  return 0;
+}
+
+int8_t steering_wheel_select_map(struct SteeringWheel_h* const restrict self,
+    const enum MAPS_TYPE map_type, const uint8_t value)
+{
+  union SteeringWheel_h_t_conv conv = {self};
+  struct SteeringWheel_t* const p_self = conv.clear;
+
+  switch (map_type)
+  {
+    case MAPS_TYPE_POWER:
+      p_self->Maps.power = value;
+      break;
+    case MAPS_TYPE_REGEN:
+      p_self->Maps.regen = value;
+      break;
+    case MAPS_TYPE_TV_REPARTITION:
+      p_self->Maps.torque_rep = value;
+      break;
+    case __NUM_OF_INPUT_MAPS_TYPE__:
+    default:
+      return -1;
+  }
 
   return 0;
 }

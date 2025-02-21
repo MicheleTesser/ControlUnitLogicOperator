@@ -4,6 +4,12 @@
 #include <stdint.h>
 #include <string.h>
 
+enum MAPS_TYPE{
+    MAPS_TYPE_POWER=0,
+    MAPS_TYPE_REGEN,
+    MAPS_TYPE_TV_REPARTITION,
+};
+
 struct PowerMap{
   struct{
     float power_kw;

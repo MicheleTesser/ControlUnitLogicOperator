@@ -2,7 +2,9 @@
 #include "linux_board/linux_board.h"
 #include "lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "linux_board/linux_board.h"
+#include "./car_component/car_component.h"
 #include "src/cores/core_0/feature/maps/maps.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/cdefs.h>
@@ -37,15 +39,26 @@ typedef struct CoreInput{
   volatile const uint8_t* const core_run;
 }CoreInput;
 
+typedef struct{
+  DrivingMaps_h* maps;
+  ExternalBoards_t* ExternalBoards_t;
+
+}TestInput;
+
 
 static int _core_thread_fun(void* arg)__attribute_maybe_unused__;
 static int _core_thread_fun(void* arg)
 {
   CoreInput* const core_input = arg;
+  time_var_microseconds t=0;
+
 
   while (*core_input->core_run)
   {
-    driving_map_update(core_input->maps);
+    ACTION_ON_FREQUENCY(t, 1 MILLIS)
+    {
+      driving_map_update(core_input->maps);
+    }
   }
   return 0;
 }
@@ -72,23 +85,14 @@ static void _print_map_status(struct MapsData* data)
 
 
 
-static void _check_power_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float KW, float TORQUE_POS)
+static void _check_power_map(TestInput* t_input, uint8_t MAP_NUM, float KW, float TORQUE_POS)
 {
   struct MapsData data={0};
-  can_obj_can2_h_t o={0};
-  CanMessage mex={0};
-  struct CanNode* can_node = NULL;
 
-  o.can_0x064_Map.power= MAP_NUM;
-  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
-  mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex);
-  }
+  steering_wheel_select_map(&t_input->ExternalBoards_t->steering_wheel, MAPS_TYPE_POWER, MAP_NUM);
+  wait_milliseconds(50 MILLIS);
 
-  wait_milliseconds(1 MILLIS);
-  _get_data(maps, &data);
+  _get_data(t_input->maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
   if(data.power_kw == KW && data.torque_pos == TORQUE_POS){
     PASSED("Power Map setted correctly");
@@ -97,23 +101,15 @@ static void _check_power_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float KW, flo
   }
 }
 
-static void _check_regen_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REGEN_SCALE, float TORQUE_NEG)
+static void _check_regen_map(TestInput* t_input, uint8_t MAP_NUM, float REGEN_SCALE, float TORQUE_NEG)
 {
   struct MapsData data={0};
-  can_obj_can2_h_t o={0};
-  CanMessage mex={0};
-  struct CanNode* can_node = NULL;
 
-  o.can_0x064_Map.regen= MAP_NUM;
-  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
-  mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex);
-  }
+  steering_wheel_select_map(
+      &t_input->ExternalBoards_t->steering_wheel, MAPS_TYPE_REGEN, MAP_NUM);
+  wait_milliseconds(50 MILLIS);
 
-  wait_milliseconds(1 MILLIS);
-  _get_data(maps, &data);
+  _get_data(t_input->maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
   if(data.regen_scale == REGEN_SCALE && data.torque_neg == TORQUE_NEG){
     PASSED("Regen Map setted correctly");
@@ -122,22 +118,14 @@ static void _check_regen_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REGEN_S
   }
 }
 
-static void _check_repartition_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float REPARTITION, float TV_ON)
+static void _check_repartition_map(TestInput* t_input, uint8_t MAP_NUM, float REPARTITION, float TV_ON)
 {
   struct MapsData data={0};
-  can_obj_can2_h_t o={0};
-  CanMessage mex={0};
-  struct CanNode* can_node = NULL;
 
-  o.can_0x064_Map.torque_rep= MAP_NUM;
-  mex.message_size = pack_message_can2(&o, CAN_ID_MAP, &mex.full_word);
-  mex.id = CAN_ID_MAP;
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    hardware_write_can(can_node, &mex);
-  }
-  wait_milliseconds(1 MILLIS);
-  _get_data(maps, &data);
+  steering_wheel_select_map(&t_input->ExternalBoards_t->steering_wheel, MAPS_TYPE_TV_REPARTITION, MAP_NUM);
+  wait_milliseconds(50 MILLIS);
+
+  _get_data(t_input->maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
   if(data.repartition == REPARTITION && data.tv_enable == TV_ON){
     PASSED("Repartition Map setted correctly");
@@ -148,10 +136,10 @@ static void _check_repartition_map(DrivingMaps_h* maps, uint8_t MAP_NUM, float R
 
 //public
 
-static int test_default_active_maps(DrivingMaps_h* maps)
+static int test_default_active_maps(TestInput* t_input)
 {
   struct MapsData data={0};
-  _get_data(maps, &data);
+  _get_data(t_input->maps, &data);
 
   struct MapsData expected_data = {
     .power_kw =77,
@@ -175,58 +163,64 @@ static int test_default_active_maps(DrivingMaps_h* maps)
   return 0;
 }
 
-static int test_change_power_map(DrivingMaps_h* maps)
+static int test_change_power_map(TestInput* t_input)
 {
-  _check_power_map(maps, 0, 77, 21);
-  _check_power_map(maps, 1, 75, 20);
-  _check_power_map(maps, 2, 70, 18);
-  _check_power_map(maps, 3, 60, 16);
-  _check_power_map(maps, 4, 50, 15);
-  _check_power_map(maps, 5, 40, 15);
-  _check_power_map(maps, 6, 35, 13);
-  _check_power_map(maps, 7, 30, 13);
-  _check_power_map(maps, 8, 15, 12);
-  _check_power_map(maps, 9, 10, 10);
+  _check_power_map(t_input, 0, 77, 21);
+  _check_power_map(t_input, 1, 75, 20);
+  _check_power_map(t_input, 2, 70, 18);
+  _check_power_map(t_input, 3, 60, 16);
+  _check_power_map(t_input, 4, 50, 15);
+  _check_power_map(t_input, 5, 40, 15);
+  _check_power_map(t_input, 6, 35, 13);
+  _check_power_map(t_input, 7, 30, 13);
+  _check_power_map(t_input, 8, 15, 12);
+  _check_power_map(t_input, 9, 10, 10);
 
   return 0;
 }
 
-static int test_change_regen_map(DrivingMaps_h* maps)
+static int test_change_regen_map(TestInput* t_input)
 {
-  _check_regen_map(maps, 0, 0, 0);
-  _check_regen_map(maps, 1, 20, -8);
-  _check_regen_map(maps, 2, 30, -10);
-  _check_regen_map(maps, 3, 40, -12);
-  _check_regen_map(maps, 4, 50, -15);
-  _check_regen_map(maps, 5, 60, -17);
-  _check_regen_map(maps, 6, 70, -18);
-  _check_regen_map(maps, 7, 80, -19);
-  _check_regen_map(maps, 8, 90, -20);
-  _check_regen_map(maps, 9, 100, -21);
+  _check_regen_map(t_input, 0, 0, 0);
+  _check_regen_map(t_input, 1, 20, -8);
+  _check_regen_map(t_input, 2, 30, -10);
+  _check_regen_map(t_input, 3, 40, -12);
+  _check_regen_map(t_input, 4, 50, -15);
+  _check_regen_map(t_input, 5, 60, -17);
+  _check_regen_map(t_input, 6, 70, -18);
+  _check_regen_map(t_input, 7, 80, -19);
+  _check_regen_map(t_input, 8, 90, -20);
+  _check_regen_map(t_input, 9, 100, -21);
 
   return 0;
 }
 
-static int test_change_repartition_map(DrivingMaps_h* maps)
+static int test_change_repartition_map(TestInput* t_input)
 {
-  _check_repartition_map(maps, 0, 0.50, 1);
-  _check_repartition_map(maps, 1, 1.0f, 0);
-  _check_repartition_map(maps, 2, 0.82, 0);
-  _check_repartition_map(maps, 3, 0.80, 0);
-  _check_repartition_map(maps, 4, 0.78, 0);
-  _check_repartition_map(maps, 5, 0.75, 0);
-  _check_repartition_map(maps, 6, 0.70, 0);
-  _check_repartition_map(maps, 7, 0.60, 0);
-  _check_repartition_map(maps, 8, 0.50, 0);
-  _check_repartition_map(maps, 9, 0.50, 0);
+  _check_repartition_map(t_input, 0, 0.50, 1);
+  _check_repartition_map(t_input, 1, 1.0f, 0);
+  _check_repartition_map(t_input, 2, 0.82, 0);
+  _check_repartition_map(t_input, 3, 0.80, 0);
+  _check_repartition_map(t_input, 4, 0.78, 0);
+  _check_repartition_map(t_input, 5, 0.75, 0);
+  _check_repartition_map(t_input, 6, 0.70, 0);
+  _check_repartition_map(t_input, 7, 0.60, 0);
+  _check_repartition_map(t_input, 8, 0.50, 0);
+  _check_repartition_map(t_input, 9, 0.50, 0);
 
   return 0;
 }
 
 int main(void)
 {
+  ExternalBoards_t external_boards = {0};
   CoreThread core_thread={.run=1};
   DrivingMaps_h maps={0};
+  TestInput t_input = 
+  {
+    .ExternalBoards_t = &external_boards,
+    .maps = &maps,
+  };
 
   CoreInput input __attribute_maybe_unused__= {
     .maps = &maps,
@@ -239,22 +233,26 @@ int main(void)
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
 
+  INIT_PH(start_external_boards(&external_boards), "external_boards");
+
   INIT_PH(driving_maps_init(&maps), "driver maps");
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
-  test_default_active_maps(&maps);
-  test_change_power_map(&maps);
-  test_change_regen_map(&maps);
-  test_change_repartition_map(&maps);
+  test_default_active_maps(&t_input);
+  test_change_power_map(&t_input);
+  test_change_regen_map(&t_input);
+  test_change_repartition_map(&t_input);
 
   printf("tests finished\n");
 
   printf("stopping debug core\n");
   core_thread.run=0;
   thrd_join(core_thread.thread_id, NULL);
-  printf("stopping can module\n");
+
+  stop_external_boards(&external_boards);
   stop_thread_can();
+
 end:
   print_SCORE();
   return 0;
