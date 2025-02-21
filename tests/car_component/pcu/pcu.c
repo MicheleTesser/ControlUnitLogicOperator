@@ -41,6 +41,7 @@ union Pcu_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_pcu[(sizeof(Pcu_h)==sizeof(struct Pcu_t))?1:-1];
+char __assert_align_pcu[(_Alignof(Pcu_h)==_Alignof(struct Pcu_t))?1:-1];
 #endif /* ifdef DEBUG */
 
 static int8_t

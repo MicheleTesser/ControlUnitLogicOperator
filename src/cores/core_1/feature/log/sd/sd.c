@@ -13,6 +13,7 @@ union LogSd_h_t_conv{
 
 #ifdef DEBUG
 uint8_t __assert_log_sd_size[(sizeof(LogSd_h)==sizeof(struct LogSd_t))?1:-1];
+uint8_t __assert_log_sd_align[(_Alignof(LogSd_h)==_Alignof(struct LogSd_t))?1:-1];
 #endif /* ifdef DEBUG */
 
 int8_t

@@ -21,6 +21,7 @@ union Atc_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_atc[(sizeof(Atc_h)==sizeof(struct Atc_t))?1:-1];
+char __assert_align_atc[(sizeof(Atc_h)==sizeof(struct Atc_t))?1:-1];
 #endif /* ifdef DEBUG */
 
 static int

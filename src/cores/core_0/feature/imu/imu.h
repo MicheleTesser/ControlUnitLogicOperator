@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct Imu_h{
+typedef struct __attribute__((aligned(8))) Imu_h{
     const uint8_t private_data[24];
 }Imu_h;
 

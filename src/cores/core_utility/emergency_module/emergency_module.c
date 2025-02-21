@@ -64,6 +64,7 @@ static uint8_t read_globla_emergency_couner(void)
 
 #ifdef DEBUG
 uint8_t __assert_size_emergency_node[(sizeof(EmergencyNode_h)==sizeof(struct EmergencyNode_t))?1:-1];
+uint8_t __assert_align_emergency_node[(_Alignof(EmergencyNode_h)==_Alignof(struct EmergencyNode_t))?1:-1];
 #endif /* ifdef DEBUG */
 
 //public

@@ -21,6 +21,7 @@ union Imu_h_t_conv_const{
 
 #ifdef DEBUG
 char __assert_size_core_0_imu[(sizeof(Imu_h)) == sizeof(struct Imu_t)? 1:-1];
+char __assert_align_core_0_imu[(_Alignof(Imu_h)) == _Alignof(struct Imu_t)? 1:-1];
 #endif // DEBUG
 
 //public

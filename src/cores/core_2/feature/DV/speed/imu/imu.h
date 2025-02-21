@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "../../../../../../lib/raceup_board/components/can.h"
 
-typedef struct DvImu_h{
+typedef struct __attribute__((aligned(8))) DvImu_h{
     const uint8_t private_data[8];
 }DvImu_h;
 

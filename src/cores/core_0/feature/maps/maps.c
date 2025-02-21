@@ -53,6 +53,7 @@ union DrivingMaps_h_t_conv_const{
 
 #ifdef DEBUG
 char __assert_size_core_0_maps[(sizeof(DrivingMaps_h)) == sizeof(struct DrivingMaps_t)? 1:-1];
+char __assert_align_core_0_maps[(_Alignof(DrivingMaps_h)) == _Alignof(struct DrivingMaps_t)? 1:-1];
 #endif // DEBUG
 
 static inline void set_pow_map(struct DrivingMaps_t* const restrict self,

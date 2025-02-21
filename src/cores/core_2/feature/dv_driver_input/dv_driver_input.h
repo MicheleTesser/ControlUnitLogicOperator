@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct DvDriverInput_h{
+typedef struct __attribute__((aligned(8))) DvDriverInput_h{
     const uint8_t private_data[24];
 }DvDriverInput_h;
 

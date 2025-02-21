@@ -1,9 +1,10 @@
-#include <stdint.h>
-#include <string.h>
+#include "bms.h"
 #include "../../log/log.h"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../../lib/raceup_board/raceup_board.h"
-#include "bms.h"
+
+#include <stdint.h>
+#include <string.h>
 
 enum VOLTS{
     MAX=0,
@@ -26,6 +27,7 @@ union Hv_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_core_1_bms[(sizeof(Bms_h) == sizeof(struct Bms_t))? 1:-1];
+char __assert_align_core_1_bms[(_Alignof(Bms_h) == _Alignof(struct Bms_t))? 1:-1];
 #endif // DEBUG
 
 int8_t

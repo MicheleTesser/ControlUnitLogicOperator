@@ -37,6 +37,7 @@ union BmsHv_h_t_conv_const{
 
 #ifdef DEBUG
 char __assert_size_bms_hv[(sizeof(BmsHv_h)==sizeof(struct BmsHv_t))?+1:-1];
+char __assert_align_bms_hv[(_Alignof(BmsHv_h)==_Alignof(struct BmsHv_t))?+1:-1];
 #endif /* ifdef DEBUG */
 
 int _start_bms_hv(void* arg)

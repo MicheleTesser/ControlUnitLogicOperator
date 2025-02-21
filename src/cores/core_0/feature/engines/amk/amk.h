@@ -6,7 +6,7 @@
 #include "../engines.h"
 
 
-typedef struct AmkInverter_h{
+typedef struct __attribute__((aligned(8))) AmkInverter_h{
     const uint8_t private_data[176];
 }AmkInverter_h;
 

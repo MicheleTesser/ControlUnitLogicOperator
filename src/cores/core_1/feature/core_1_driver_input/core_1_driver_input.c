@@ -48,6 +48,7 @@ union Core1DriverInput_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_core_1_driver_input[(sizeof(Core1DriverInput_h) == sizeof(struct Core1DriverInput_t))? 1:-1];
+char __assert_align_core_1_driver_input[(_Alignof(Core1DriverInput_h) == _Alignof(struct Core1DriverInput_t))? 1:-1];
 #endif // DEBUG
 
 int8_t

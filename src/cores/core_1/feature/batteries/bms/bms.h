@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "../../log/log.h"
 
-typedef struct Bms_h{
+typedef struct __attribute__((aligned(8))) Bms_h{
     const uint8_t private_data[16];
 }Bms_h;
 

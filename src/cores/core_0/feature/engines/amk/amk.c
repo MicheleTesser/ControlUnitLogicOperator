@@ -100,6 +100,7 @@ union AMKConv{
 
 #ifdef DEBUG
 const uint8_t __debug_amk_size__[(sizeof(AmkInverter_h) == sizeof(AMKInverter_t))? 1 : -1];
+const uint8_t __debug_amk_align__[(_Alignof(AmkInverter_h) == _Alignof(AMKInverter_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
 #define POPULATE_MEX_ENGINE(amk_stop,engine)\

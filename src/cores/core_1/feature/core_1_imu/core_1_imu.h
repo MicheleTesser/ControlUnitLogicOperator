@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "../log/log.h"
 
-typedef struct Core1Imu_h{
+typedef struct __attribute__((aligned(8))) Core1Imu_h{
     const uint8_t private_data[40];
 }Core1Imu_h;
 

@@ -23,6 +23,7 @@ union Cooling_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_cooling[(sizeof(Cooling_h) == sizeof(struct Cooling_t))? 1:-1];
+char __assert_align_cooling[(_Alignof(Cooling_h) == _Alignof(struct Cooling_t))? 1:-1];
 #endif // DEBUG
 
 static int8_t update_status(struct Cooling_t* const restrict self)

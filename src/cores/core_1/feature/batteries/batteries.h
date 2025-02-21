@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "../log/log.h"
 
-typedef struct CarBatteries_h{
+typedef struct __attribute__((aligned(8))) CarBatteries_h{
     const uint8_t private_data[32];
 }CarBatteries_h;
 

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct DvSpeed_h{
+typedef struct __attribute__((aligned(8))) DvSpeed_h{
     const uint8_t private_data[8];
 }DvSpeed_h;
 

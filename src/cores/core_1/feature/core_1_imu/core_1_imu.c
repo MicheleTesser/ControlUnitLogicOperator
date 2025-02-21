@@ -32,6 +32,7 @@ union Core1Imu_h_t_conv {
 
 #ifdef DEBUG
 uint8_t __assert_size_core_1_imu[(sizeof(Core1Imu_h) == sizeof(struct Core1Imu_t))?1:-1];
+uint8_t __assert_align_core_1_imu[(_Alignof(Core1Imu_h) == _Alignof(struct Core1Imu_t))?1:-1];
 #endif /* ifdef DEBUG */
 
 int8_t

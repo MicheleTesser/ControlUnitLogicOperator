@@ -38,6 +38,7 @@ union Suspensions_h_t_conv {
 
 #ifdef DEBUG
 char __assert_size_alive_suspensions[(sizeof(Suspensions_h) == sizeof(struct Suspensions_t))? 1:-1];
+char __assert_align_alive_suspensions[(_Alignof(Suspensions_h) == _Alignof(struct Suspensions_t))? 1:-1];
 #endif // DEBUG
 
 int8_t

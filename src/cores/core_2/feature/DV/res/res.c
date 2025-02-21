@@ -21,6 +21,7 @@ union DvRes_h_t_conv_const{
 
 #ifdef DEBUG
 char __assert_size_res[(sizeof(DvRes_h) == sizeof(struct DvRes_t))? 1:-1];
+char __assert_align_res[(_Alignof(DvRes_h) == _Alignof(struct DvRes_t))? 1:-1];
 #endif // DEBUG
 
 //TODO: add mailbox res message

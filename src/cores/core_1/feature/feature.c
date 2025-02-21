@@ -26,6 +26,7 @@ union Core1Feature_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_core_1_feature[(sizeof(Core1Feature_h) == sizeof(struct Core1Feature_t))? 1:-1];
+char __assert_align_core_1_feature[(_Alignof(Core1Feature_h) == _Alignof(struct Core1Feature_t))? 1:-1];
 #endif // DEBUG
 
 int8_t

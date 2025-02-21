@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "../../../../lib/raceup_board/raceup_board.h"
 
-typedef struct CoreAliveBlink_h{
+typedef struct __attribute__((aligned(8))) CoreAliveBlink_h{
     const uint8_t private_data[24];
 }CoreAliveBlink_h;
 

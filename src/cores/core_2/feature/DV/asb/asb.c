@@ -16,6 +16,7 @@ union DvAsb_h_t_conv
 
 #ifdef DEBUG
 char __assert_size_asb[(sizeof(DvAsb_h) == sizeof(struct DvAsb_t))? 1:-1];
+char __assert_align_asb[(_Alignof(DvAsb_h) == _Alignof(struct DvAsb_t))? 1:-1];
 #endif // DEBUG
 
 int8_t asb_class_init(DvAsb_h* const restrict self )

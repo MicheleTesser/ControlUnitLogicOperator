@@ -22,6 +22,7 @@ union CarBatteries_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_core_1_batteries[(sizeof(CarBatteries_h) == sizeof(struct CarBatteries_t))? 1:-1];
+char __assert_align_core_1_batteries[(_Alignof(CarBatteries_h) == _Alignof(struct CarBatteries_t))? 1:-1];
 #endif // DEBUG
 
 int8_t

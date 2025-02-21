@@ -23,6 +23,7 @@ union DvDriverInput_h_t_conv_const{
 
 #ifdef DEBUG
 char __assert_size_dv_driver_input[(sizeof(DvDriverInput_h) == sizeof(struct DvDriverInput_t))? 1:-1];
+char __assert_align_dv_driver_input[(_Alignof(DvDriverInput_h) == _Alignof(struct DvDriverInput_t))? 1:-1];
 #endif // DEBUG
 
 int8_t

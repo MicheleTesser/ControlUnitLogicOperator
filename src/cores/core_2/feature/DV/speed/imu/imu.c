@@ -13,7 +13,8 @@ union DvImu_h_t_conv {
 };
 
 #ifdef DEBUG
-  uint8_t __assert_size_dv_imu[(sizeof(DvImu_h) == sizeof(struct DvImu_t))? 1 : -1];
+uint8_t __assert_size_dv_imu[(sizeof(DvImu_h) == sizeof(struct DvImu_t))? 1 : -1];
+uint8_t __assert_align_dv_imu[(_Alignof(DvImu_h) == _Alignof(struct DvImu_t))? 1 : -1];
 #endif // DEBUG
 
 int8_t

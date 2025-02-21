@@ -38,6 +38,9 @@ union Gpio_h_t_conv{
 #ifdef DEBUG
 uint8_t __static_size_check_gpio_read[(sizeof(GpioRead_h) == sizeof(struct GpioRead_t))?1:-1];
 uint8_t __static_size_check_gpio_mut[(sizeof(Gpio_h) == sizeof(struct Gpio_t))?1:-1];
+
+uint8_t __static_align_check_gpio_read[(_Alignof(GpioRead_h) == _Alignof(struct GpioRead_t))?1:-1];
+uint8_t __static_align_check_gpio_mut[(_Alignof(Gpio_h) == _Alignof(struct Gpio_t))?1:-1];
 #endif /* ifdef DEBUG*/
 
 //public

@@ -85,6 +85,7 @@ union AmkInverter_h_t_conv_const{
 
 #ifdef DEBUG
 const char __assert_size_amk_inverter[(sizeof(EmulationAmkInverter_h)==sizeof(struct EmulationAmkInverter_t))?1:-1]; 
+const char __assert_align_amk_inverter[(sizeof(EmulationAmkInverter_h)==sizeof(struct EmulationAmkInverter_t))?1:-1]; 
 #endif /* ifdef DEBUG */
 
 #define POPULATE_MEX_ENGINE(self, mex, engine)\

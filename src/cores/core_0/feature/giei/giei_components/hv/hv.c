@@ -23,6 +23,7 @@ union GieiHv_const_conv{
 
 #ifdef DEBUG
 char __assert_size_GieiHv[(sizeof(Hv_h) == sizeof(struct GieiHv_t))? 1:-1];
+char __assert_align_GieiHv[(sizeof(Hv_h) == sizeof(struct GieiHv_t))? 1:-1];
 #endif // DEBUG
 
 

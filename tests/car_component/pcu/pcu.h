@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct Pcu_h{
+typedef struct __attribute__((aligned(8))) Pcu_h{
   const uint8_t private_data[40];
 }Pcu_h;
 

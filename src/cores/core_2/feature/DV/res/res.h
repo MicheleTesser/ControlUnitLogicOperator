@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct DvRes_h{
+typedef struct __attribute__((aligned(8))) DvRes_h{
     const uint8_t private_data[16];
 }DvRes_h;
 

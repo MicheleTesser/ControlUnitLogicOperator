@@ -43,6 +43,7 @@ union LogTelemetry_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_telemetry[(sizeof(LogTelemetry_h) == sizeof(struct LogTelemetry_t))? 1:-1];
+char __assert_align_telemetry[(_Alignof(LogTelemetry_h) == _Alignof(struct LogTelemetry_t))? 1:-1];
 #endif // DEBUG
 
 static void free_tree(struct BstPos* root)
