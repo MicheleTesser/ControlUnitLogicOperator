@@ -42,7 +42,7 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
             can_node,
             RECV_MAILBOX,
             CAN_ID_DV_DRIVER,
-            message_dlc_can2(CAN_ID_DV_DRIVER));
+            message_dlc_can3(CAN_ID_DV_DRIVER));
     }
     if (!p_self->dv_brake_mailbox)
     {
@@ -52,13 +52,17 @@ dv_driver_input_init(DvDriverInput_h* const restrict self )
     ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
     {
         p_self->human_brake_mailbox =
-          hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, CAN_ID_DRIVER, 4);
+          hardware_get_mailbox_single_mex(
+              can_node,
+              RECV_MAILBOX,
+              CAN_ID_DRIVER,
+              message_dlc_can2(CAN_ID_DRIVER));
     }
 
     if (!p_self->human_brake_mailbox)
     {
         hardware_free_mailbox_can(&p_self->dv_brake_mailbox);
-        return -1;
+        return -2;
     }
 
     return 0;
@@ -78,15 +82,15 @@ dv_driver_input_update(DvDriverInput_h* const restrict self )
     {
         unpack_message_can3(
                 &o3,
-                CAN_ID_DV_DRIVING_DYNAMICS_1,
+                CAN_ID_DV_DRIVER,
                 mex.full_word,
-                8,
+                mex.message_size,
                 timer_time_now());
     }
 
     if(!hardware_mailbox_read(p_self->human_brake_mailbox, &mex))
     {
-        unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, 8, timer_time_now());
+        unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
     }
 
     new_brake = o2.can_0x053_Driver.brake;

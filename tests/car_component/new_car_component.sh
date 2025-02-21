@@ -23,9 +23,11 @@ mv $new_component/dummy.c $new_component/$new_component.c
 
 comp_h=$new_component/$new_component.h
 comp_c=$new_component/$new_component.c
+uppercase_comp=$(echo $new_component | tr a-z A-Z)
 
 sed -i "s/dummy/$new_component/g" $comp_h
 sed -i "s/Dummy/$new_component/g" $comp_h
+sed -i "s/DUMMMY/$uppercase_comp/g" $comp_h
 
 sed -i "s/dummy/$new_component/g" $comp_c
 sed -i "s/Dummy/$new_component/g" $comp_c
