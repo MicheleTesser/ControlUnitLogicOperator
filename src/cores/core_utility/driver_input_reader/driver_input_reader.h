@@ -2,7 +2,6 @@
 #define __DRIVER_INPUT_READER__
 
 #include <stdint.h>
-#include "../mission_reader/mission_reader.h"
 
 typedef struct __attribute__((aligned(8))){
   uint8_t private_data[40];
