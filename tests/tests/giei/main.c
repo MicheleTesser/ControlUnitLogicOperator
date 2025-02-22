@@ -207,7 +207,7 @@ int main(void)
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
   INIT_PH(hardware_init_gpio(&ts, GPIO_TS_BUTTON), "ts gpio");
   INIT_PH(hardware_init_gpio(&rf, GPIO_RTD_BUTTON), "rf gpio");
-  INIT_PH(hardware_init_read_permission_gpio(&rtd_sound_read, GPIO_RTD_SOUND), "rtd sound gpio");
+  INIT_PH(hardware_init_read_permission_gpio(&rtd_sound_read, GPIO_RTD_ASSI_SOUND), "rtd sound gpio");
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 

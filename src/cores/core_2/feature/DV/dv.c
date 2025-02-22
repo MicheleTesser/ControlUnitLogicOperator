@@ -4,8 +4,9 @@
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../../../core_utility/running_status/running_status.h"
 #include "../../../core_utility/mission_reader/mission_reader.h"
+#include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
 #include "res/res.h"
-#include "asb/asb.h"
+#include "ebs/ebs.h"
 #include "speed/speed.h"
 #include "../dv_driver_input/dv_driver_input.h"
 #include "./steering_wheel_alg/stw_alg.h"
@@ -48,11 +49,11 @@ struct Dv_t{
   time_var_microseconds emergency_last_time_on;
   time_var_microseconds emergency_sound_last_time_on;
   DvRes_h dv_res;
-  DvAsb_h dv_asb;
+  DvEbs_h dv_ebs;
   DvSpeed_h dv_speed;
   GpioRead_h gpio_air_precharge_init;
   GpioRead_h gpio_air_precharge_done;
-  Gpio_h gpio_emergency_sound;
+  RtdAssiSound_h o_assi_sound;
   Gpio_h gpio_ass_light_blue;
   Gpio_h gpio_ass_light_yellow;
   CarMissionReader_h* p_mission_reader;
@@ -79,14 +80,14 @@ char __assert_align_dv[(_Alignof(Dv_h) == _Alignof(struct Dv_t))? 1:-1];
 
 //INFO: check dbc of can3 in message DV_system_status
 
-static uint8_t sdc_closed(const struct Dv_t* const restrict self)
+static uint8_t _sdc_closed(const struct Dv_t* const restrict self)
 {
   return  gpio_read_state(&self->gpio_air_precharge_init) &&
     gpio_read_state(&self->gpio_air_precharge_done) &&
     EmergencyNode_is_emergency_state(&self->emergency_node);
 }
 
-static void update_dv_status(struct Dv_t* const restrict self, const enum AS_STATUS status)
+static void _update_dv_status(struct Dv_t* const restrict self, const enum AS_STATUS status)
 {
   if (status == AS_EMERGENCY)
   {
@@ -108,15 +109,21 @@ static void update_dv_status(struct Dv_t* const restrict self, const enum AS_STA
   self->status = status;
 }
 
-static int8_t dv_update_led(struct Dv_t* const restrict self)
+/*
+ * AS Off -> off
+ * AS Ready -> yellow continuous
+ * AS Driving -> yellow flashing (100 MILLIS)
+ * AS Emergency -> blue flashing (100 MILLIS)
+ * AS Finished -> blue continuous
+ */
+static int8_t _dv_update_led(struct Dv_t* const restrict self)
 {
   Gpio_h* const restrict gpio_light_blue = &self->gpio_ass_light_blue;
   Gpio_h* const restrict gpio_light_yellow = &self->gpio_ass_light_yellow;
-  Gpio_h* const restrict gpio_sound = &self->gpio_emergency_sound;
 
   ACTION_ON_FREQUENCY(self->emergency_sound_last_time_on, 8 SECONDS)
   {
-    gpio_set_high(gpio_sound);
+    rtd_assi_sound_stop(&self->o_assi_sound);
   }
 
   switch (self->status)
@@ -124,17 +131,17 @@ static int8_t dv_update_led(struct Dv_t* const restrict self)
     case AS_OFF:
       gpio_set_high(gpio_light_blue);
       gpio_set_high(gpio_light_yellow);
-      gpio_set_high(gpio_sound);
+      rtd_assi_sound_stop(&self->o_assi_sound);
       break;
     case AS_READY:
       gpio_set_high(gpio_light_blue);
       gpio_set_low(gpio_light_yellow);
-      gpio_set_high(gpio_sound);
+      rtd_assi_sound_stop(&self->o_assi_sound);
       res_start_time_go(&self->dv_res);
       break;
     case AS_DRIVING:
       gpio_set_high(gpio_light_blue);
-      gpio_set_high(gpio_sound);
+      rtd_assi_sound_stop(&self->o_assi_sound);
       ACTION_ON_FREQUENCY(self->driving_last_time_on, 100 MILLIS)
       {
         gpio_toggle(gpio_light_yellow);
@@ -142,18 +149,18 @@ static int8_t dv_update_led(struct Dv_t* const restrict self)
       break;
     case AS_EMERGENCY:
       gpio_set_high(gpio_light_yellow);
-      ACTION_ON_FREQUENCY(self->emergency_sound_last_time_on, 100 MILLIS)
+      ACTION_ON_FREQUENCY(self->emergency_last_time_on, 100 MILLIS)
       {
         gpio_toggle(gpio_light_blue);
       }
       if (!self->sound_start) {
         self->sound_start =1;
-        gpio_set_low(gpio_sound);
+        rtd_assi_sound_start(&self->o_assi_sound);
         self->emergency_sound_last_time_on = timer_time_now();
       }
       break;
     case AS_FINISHED:
-      gpio_set_high(gpio_sound);
+      rtd_assi_sound_stop(&self->o_assi_sound);
       gpio_set_high(gpio_light_yellow);
       gpio_set_low(gpio_light_blue);
       break;
@@ -167,7 +174,7 @@ static int8_t dv_update_led(struct Dv_t* const restrict self)
 }
 
 //INFO: Flowchart T 14.9.2
-static int8_t dv_update_status(struct Dv_t* const restrict self)
+static int8_t _dv_update_status(struct Dv_t* const restrict self)
 {
   const float current_speed = dv_speed_get(&self->dv_speed);
   const float driver_brake = dv_driver_input_get_brake(self->dv_driver_input);
@@ -178,54 +185,46 @@ static int8_t dv_update_status(struct Dv_t* const restrict self)
     EmergencyNode_raise(&self->emergency_node, EMERENGENCY_DV_EMERGENCY);
   }
 
-  if (!ebs_on(&self->dv_asb.dv_ebs)) 
+  if (!ebs_on(&self->dv_ebs)) 
   {
     if (car_mission_reader_get_current_mission(self->p_mission_reader) > CAR_MISSIONS_HUMAN
-        && asb_consistency_check(&self->dv_asb)
+        && ebs_asb_consistency_check(&self->dv_ebs)
         && giei_status >= TS_READY)
     {
       if (giei_status == RUNNING)
       {
-        update_dv_status(self, AS_DRIVING);
+        _update_dv_status(self, AS_DRIVING);
       }
       else if(driver_brake > 50)
       {
-        update_dv_status(self, AS_READY);
+        _update_dv_status(self, AS_READY);
       }
       else
       {
-        update_dv_status(self, AS_OFF);
+        _update_dv_status(self, AS_OFF);
       }
     }
     else
     {
-      update_dv_status(self, AS_OFF);
+      _update_dv_status(self, AS_OFF);
     }
   }
 
 
-  else if (self->o_dv_mission_status == MISSION_FINISHED && !current_speed && sdc_closed(self))
+  else if (self->o_dv_mission_status == MISSION_FINISHED && !current_speed && _sdc_closed(self))
   {
-    update_dv_status(self, AS_FINISHED);
+    _update_dv_status(self, AS_FINISHED);
   }
   else
   {
-    update_dv_status(self, AS_EMERGENCY);
+    _update_dv_status(self, AS_EMERGENCY);
   }
   return 0;
 }
 
-  static int8_t
-dv_send_dv_car_status(const struct Dv_t* const restrict self)
-{
-  const uint64_t data=self->dv_car_status;
-  return hardware_mailbox_send(self->send_car_dv_car_status_mailbox, data);
-}
-
 //public
 
-  int8_t
-dv_class_init(Dv_h* const restrict self ,
+int8_t dv_class_init(Dv_h* const restrict self ,
     CarMissionReader_h* const restrict p_mission_reader,
     DvDriverInput_h* const restrict driver )
 {
@@ -244,7 +243,7 @@ dv_class_init(Dv_h* const restrict self ,
   {
     return -2;
   }
-  if(asb_class_init(&p_self->dv_asb) <0)
+  if(ebs_class_init(&p_self->dv_ebs) <0)
   {
     return -3;
   }
@@ -262,7 +261,7 @@ dv_class_init(Dv_h* const restrict self ,
     return -6;
   }
 
-  if (hardware_init_gpio(&p_self->gpio_emergency_sound, GPIO_AS_EMERGENCY_SOUND)<0)
+  if (rtd_assi_sound_init(&p_self->o_assi_sound)<0)
   {
     return -6;
   }
@@ -309,7 +308,7 @@ dv_class_init(Dv_h* const restrict self ,
   return 0;
 }
 
-int8_t dv_update(Dv_h* const restrict self )
+int8_t dv_update(Dv_h* const restrict self)
 {
   union Dv_h_t_conv conv = {self};
   struct Dv_t* const p_self = conv.clear;
@@ -319,25 +318,55 @@ int8_t dv_update(Dv_h* const restrict self )
   can_obj_can3_h_t o3 = {0};
 
   if(dv_speed_update(&p_self->dv_speed)<0)return -1;
-  if(asb_update(&p_self->dv_asb)<0) return -2;
+  if(ebs_update(&p_self->dv_ebs)<0) return -2;
 
-  if(dv_update_status(p_self)<0)return -3;
-  if(dv_update_led(p_self)<0) return -4;
-
-  if (!hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
+  if (car_mission_reader_get_current_mission(p_self->p_mission_reader) > CAR_MISSIONS_HUMAN)
   {
-    unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
+    if (!hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
+    {
+      unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
+      p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
+    }
+  
+    if (p_self->status == AS_DRIVING)
+    {
+      dv_stw_alg_compute(&input_stw_alg, &output_stw_alg); //TODO: not yet implemented
+    }
+
+    if(_dv_update_status(p_self)<0)return -4;
+    if(_dv_update_led(p_self)<0) return -5;
+    hardware_mailbox_send(p_self->send_car_dv_car_status_mailbox, p_self->dv_car_status);
   }
 
-  if (p_self->status == AS_DRIVING
-      && car_mission_reader_get_current_mission(p_self->p_mission_reader) > CAR_MISSIONS_HUMAN)
-  {
-    dv_stw_alg_compute(&input_stw_alg, &output_stw_alg); //TODO: not yet implemented
-  }
-  if (dv_send_dv_car_status(p_self)<0)
-  {
-    return -5;
-  }
   return 0;
 }
+
+#ifdef DEBUG
+
+enum DV_CAR_STATUS debug_dv_get_car_status(Dv_h* const restrict self)
+{
+  union Dv_h_t_conv conv = {self};
+  struct Dv_t* const p_self = conv.clear;
+  return p_self->dv_car_status;
+}
+
+enum AS_STATUS debug_dv_get_as_status(Dv_h* const restrict self)
+{
+  union Dv_h_t_conv conv = {self};
+  struct Dv_t* const p_self = conv.clear;
+  return p_self->status;
+}
+#else
+
+enum DV_CAR_STATUS debug_dv_get_car_status(Dv_h* const restrict self __attribute__(( __unused__)))
+{
+  while (1) {}
+}
+
+enum AS_STATUS debug_dv_get_as_status(Dv_h* const restrict self __attribute__(( __unused__)))
+{
+  while (1) {}
+}
+
+#endif /* ifdef DEBUG */
+

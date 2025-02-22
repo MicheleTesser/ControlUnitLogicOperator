@@ -1,4 +1,5 @@
 #include "./gpio.h"
+#include <stdatomic.h>
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -14,6 +15,7 @@
 static struct {
   struct gpiod_line_request* line_request;
   enum gpiod_line_value init_values[gpio_pin_cnt];
+  atomic_bool taken[gpio_pin_cnt];
 }lines;
 
 struct GpioRead_t{
@@ -151,7 +153,13 @@ hardware_init_gpio(Gpio_h* const restrict self ,
 {
   union Gpio_h_t_conv conv = {self};
   struct Gpio_t* const p_self = conv.clear;
+  if(atomic_load(&lines.taken[id]))
+  {
+    return -1;
+  }
+  atomic_store(&lines.taken[id], 1); 
   p_self->read.gpio_id=id;
+
   return 0;
 }
 

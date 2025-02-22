@@ -2,6 +2,7 @@
 #define __DEBUG_CAR_COMPONENT__
 
 #include "./amk_inverter/amk_inverter.h"
+#include "ebs/ebs.h"
 #include "pcu/pcu.h"
 #include "atc/atc.h"
 #include "bms_hv/bms_hv.h"
@@ -17,6 +18,7 @@ typedef struct ExternalBoards_t{
   EmulationAmkInverter_h amk_inverter;
   SteeringWheel_h steering_wheel;
   EmbeddedSystem_h embedded_system;
+  Ebs_h ebs;
 }ExternalBoards_t;
 
 int8_t

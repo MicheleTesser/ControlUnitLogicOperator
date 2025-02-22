@@ -1,5 +1,5 @@
-#ifndef __DUMMY__
-#define __DUMMY__
+#ifndef __STEERING_WHEEL__
+#define __STEERING_WHEEL__
 
 #include <stdint.h>
 #include "../src/cores/core_utility/mission_reader/mission_reader.h"
@@ -31,4 +31,4 @@ steering_wheel_select_map(struct SteeringWheel_h* const restrict self,
 int8_t
 steering_wheel_stop(struct SteeringWheel_h* const restrict self)__attribute__((__nonnull__(1)));
 
-#endif // !__DUMMY__
+#endif // !__STEERING_WHEEL__

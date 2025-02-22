@@ -52,6 +52,7 @@ int8_t dummy_start(struct Dummy_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
+  p_self->running=1;
   thrd_create(&p_self->thread, _start_dummy, p_self);
   return 0;
 }

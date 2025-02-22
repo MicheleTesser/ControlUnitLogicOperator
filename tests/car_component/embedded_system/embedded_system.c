@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 struct EmbeddedSystem_t{
+  enum MISSION_STATUS mission_status;
   uint8_t running;
   thrd_t thread;
   struct{
@@ -16,6 +17,7 @@ struct EmbeddedSystem_t{
     uint8_t steering_wheel;
   }Input;
   struct CanMailbox* p_mailbox_input_vcu;
+  struct CanMailbox* p_mailbox_send_mission_status_vcu;
 };
 
 union EmbeddedSystem_h_t_conv{
@@ -40,6 +42,7 @@ int _start_embedded_system(void* arg)
   time_var_microseconds t_var =0;
   can_obj_can3_h_t o3={0};
   uint64_t payload_dv_driver = 0;
+  uint64_t payload_dv_mission = 0;
 
   while (p_self->running)
   {
@@ -49,8 +52,13 @@ int _start_embedded_system(void* arg)
       o3.can_0x07d_DV_Driver.Throttle = p_self->Input.throttle;
       o3.can_0x07d_DV_Driver.Steering_angle = p_self->Input.steering_wheel;
 
+      o3.can_0x07e_DV_Mission.Mission_status = p_self->mission_status;
+
       pack_message_can3(&o3, CAN_ID_DV_DRIVER, &payload_dv_driver);
+      pack_message_can3(&o3, CAN_ID_DV_MISSION, &payload_dv_mission);
+
       hardware_mailbox_send(p_self->p_mailbox_input_vcu, payload_dv_driver);
+      hardware_mailbox_send(p_self->p_mailbox_send_mission_status_vcu, payload_dv_mission);
     }
   }
 
@@ -76,6 +84,12 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
           SEND_MAILBOX,
           CAN_ID_DV_DRIVER,
           message_dlc_can3(CAN_ID_DV_DRIVER));
+    p_self->p_mailbox_send_mission_status_vcu =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          SEND_MAILBOX,
+          CAN_ID_DV_MISSION,
+          message_dlc_can3(CAN_ID_DV_MISSION));
   }
 
   if (!p_self->p_mailbox_input_vcu)
@@ -83,6 +97,13 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
     return -1;
   }
 
+  if (!p_self->p_mailbox_send_mission_status_vcu)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
+    return -2;
+  }
+
+  p_self->mission_status = MISSION_NOT_RUNNING;
   p_self->running=1;
   thrd_create(&p_self->thread, _start_embedded_system, p_self);
   return 0;
@@ -109,6 +130,18 @@ int8_t embedded_system_set_dv_input(EmbeddedSystem_h* const restrict self,
     default:
       return -1;
   }
+
+  return 0;
+}
+
+int8_t
+embedded_system_set_mission_status(EmbeddedSystem_h* const restrict self,
+    const enum MISSION_STATUS mission_status)
+{
+  union EmbeddedSystem_h_t_conv conv = {self};
+  struct EmbeddedSystem_t* const p_self = conv.clear;
+
+  p_self->mission_status = mission_status;
 
   return 0;
 }

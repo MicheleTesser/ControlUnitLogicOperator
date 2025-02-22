@@ -1,5 +1,6 @@
 #include "giei.h"
 #include "../../../core_utility/mission_reader/mission_locker/mission_locker.h"
+#include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
@@ -19,7 +20,7 @@
 struct Giei_t{
     Hv_h hv;
     time_var_microseconds rtd_sound_start;
-    Gpio_h gpio_rtd_sound;
+    RtdAssiSound_h o_rtd_sound;
     GpioRead_h gpio_rtd_button;
     MissionLocker_h o_mission_locker;
     enum RUNNING_STATUS running_status;
@@ -107,7 +108,7 @@ giei_init(Giei_h* const restrict self,
         return -2;
     }
 
-    if (hardware_init_gpio(&p_self->gpio_rtd_sound, GPIO_RTD_SOUND)<0)
+    if (rtd_assi_sound_init(&p_self->o_rtd_sound)<0)
     {
         return -3;
     }
@@ -154,7 +155,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
 
     ACTION_ON_FREQUENCY(p_self->rtd_sound_start, 3 SECONDS)
     {
-        gpio_set_high(&p_self->gpio_rtd_sound);
+      rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }
     rt = engine_rtd_procedure(p_self->inverter);
 
@@ -169,14 +170,14 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
     if (rt == RUNNING && !p_self->entered_rtd)
     {
         p_self->entered_rtd =1;
-        gpio_set_low(&p_self->gpio_rtd_sound);
+        rtd_assi_sound_start(&p_self->o_rtd_sound);
         p_self->rtd_sound_start = timer_time_now();
     }
     else if (rt != RUNNING)
     {
         p_self->entered_rtd =0;
         p_self->rtd_sound_start=0;
-        gpio_set_high(&p_self->gpio_rtd_sound);
+        rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }
     p_self->running_status = rt;
     return rt;
