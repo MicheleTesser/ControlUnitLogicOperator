@@ -2,6 +2,7 @@
 #include "../../../core_utility/core_utility.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
+#include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../core_utility/running_status/running_status.h"
 #include "../../../core_utility/mission_reader/mission_reader.h"
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
@@ -33,10 +34,11 @@ enum DV_CAR_STATUS{
   __NUM_OF_DV_CAR_STATUS__,
 };
 
+//INFO: copied from .dbc can2 CarMissionStatus
 enum MISSION_STATUS{
-    MISSION_NOT_RUNNING=0,
-    MISSION_RUNNING,
-    MISSION_FINISHED,
+  MISSION_NOT_RUNNING=0,
+  MISSION_RUNNING,
+  MISSION_FINISHED,
 };
 
 struct Dv_t{
@@ -58,8 +60,9 @@ struct Dv_t{
   Gpio_h gpio_ass_light_yellow;
   CarMissionReader_h* p_mission_reader;
   const DvDriverInput_h* dv_driver_input;
-  struct CanMailbox* send_car_dv_car_status_mailbox;
+  struct CanMailbox* p_send_car_dv_car_status_mailbox;
   struct CanMailbox* p_mailbox_recv_mision_status;
+  struct CanMailbox* p_mailbox_send_mission_can_2;
 };
 
 enum DV_EMERGENCY{
@@ -285,19 +288,49 @@ int8_t dv_class_init(Dv_h* const restrict self ,
 
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
   {
-    p_self->send_car_dv_car_status_mailbox =
+    p_self->p_send_car_dv_car_status_mailbox =
     hardware_get_mailbox_single_mex(
         can_node,
         SEND_MAILBOX,
         CAN_ID_DV_CARSTATUS,
         message_dlc_can3(CAN_ID_DV_CARSTATUS));
+  }
+  if (!p_self->p_send_car_dv_car_status_mailbox)
+  {
+    return -8;
+  }
 
+  ACTION_ON_CAN_NODE(CAN_DV,can_node)
+  {
     p_self->p_mailbox_recv_mision_status=
     hardware_get_mailbox_single_mex(
         can_node,
         RECV_MAILBOX,
         CAN_ID_DV_MISSION,
         message_dlc_can3(CAN_ID_DV_MISSION));
+  }
+
+  if (!p_self->p_mailbox_recv_mision_status)
+  {
+    hardware_free_mailbox_can(&p_self->p_send_car_dv_car_status_mailbox);
+    return -9;
+  }
+
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+    p_self->p_mailbox_send_mission_can_2=
+    hardware_get_mailbox_single_mex(
+        can_node,
+        RECV_MAILBOX,
+        CAN_ID_CARMISSIONSTATUS,
+        message_dlc_can3(CAN_ID_DV_MISSION));
+  }
+
+  if (!p_self->p_mailbox_send_mission_can_2)
+  {
+    hardware_free_mailbox_can(&p_self->p_send_car_dv_car_status_mailbox);
+    hardware_free_mailbox_can(&p_self->p_mailbox_recv_mision_status);
+    return -10;
   }
 
   p_self->dv_car_status=DV_CAR_STATUS_OFF;
@@ -315,7 +348,9 @@ int8_t dv_update(Dv_h* const restrict self)
   const uint8_t input_stw_alg= 1;
   uint8_t output_stw_alg = 1;
   CanMessage mex = {0};
+  uint64_t mission_status_payload = 0;
   can_obj_can3_h_t o3 = {0};
+  can_obj_can2_h_t o2 = {0};
 
   if(dv_speed_update(&p_self->dv_speed)<0)return -1;
   if(ebs_update(&p_self->dv_ebs)<0) return -2;
@@ -335,7 +370,14 @@ int8_t dv_update(Dv_h* const restrict self)
 
     if(_dv_update_status(p_self)<0)return -4;
     if(_dv_update_led(p_self)<0) return -5;
-    hardware_mailbox_send(p_self->send_car_dv_car_status_mailbox, p_self->dv_car_status);
+    
+    o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
+    o2.can_0x071_CarMissionStatus.MissionStatus = p_self->o_dv_mission_status;
+
+    pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
+
+    hardware_mailbox_send(p_self->p_send_car_dv_car_status_mailbox, mission_status_payload);
+    hardware_mailbox_send(p_self->p_send_car_dv_car_status_mailbox, p_self->dv_car_status);
   }
 
   return 0;
