@@ -73,7 +73,10 @@ rtd_assi_sound_stop(RtdAssiSound_h* const restrict self)
       atomic_load(&GPIO_RTD_ASSI.on_req) == 1)
   {
     p_self->req_change=0;
-    atomic_fetch_sub(&GPIO_RTD_ASSI.on_req, 1);
+    if(atomic_fetch_sub(&GPIO_RTD_ASSI.on_req, 1)<0)
+    {
+      atomic_store(&GPIO_RTD_ASSI.on_req,0);
+    }
     gpio_set_high(p_self->p_gpio_rtd_assi_sound);
   }
 }
