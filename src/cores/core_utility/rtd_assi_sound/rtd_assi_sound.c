@@ -6,7 +6,7 @@
 
 struct{
   Gpio_h o_rtd_assi_sound;
-  atomic_uchar on_req;
+  atomic_char on_req;
   atomic_bool init_done;
 }GPIO_RTD_ASSI;
 
