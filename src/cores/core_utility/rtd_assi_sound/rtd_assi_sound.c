@@ -30,7 +30,7 @@ char __assert_align_rtd_assi_sound[(_Alignof(RtdAssiSound_h)==_Alignof(struct Rt
 
 //public
 
-int8_t
+void
 rtd_assi_sound_init(RtdAssiSound_h* const restrict self)
 {
   union RtdAssiSound_h_t_conv conv = {self};
@@ -44,11 +44,9 @@ rtd_assi_sound_init(RtdAssiSound_h* const restrict self)
   memset(p_self, 0, sizeof(*p_self));
 
   p_self->p_gpio_rtd_assi_sound = &GPIO_RTD_ASSI.o_rtd_assi_sound;
-
-  return 0;
 }
 
-int8_t
+void
 rtd_assi_sound_start(RtdAssiSound_h* const restrict self)
 {
   union RtdAssiSound_h_t_conv conv = {self};
@@ -61,12 +59,9 @@ rtd_assi_sound_start(RtdAssiSound_h* const restrict self)
     atomic_fetch_add(&GPIO_RTD_ASSI.on_req, 1);
     gpio_set_low(p_self->p_gpio_rtd_assi_sound);
   }
-
-
-  return 0;
 }
 
-int8_t
+void
 rtd_assi_sound_stop(RtdAssiSound_h* const restrict self)
 {
   union RtdAssiSound_h_t_conv conv = {self};
@@ -81,7 +76,4 @@ rtd_assi_sound_stop(RtdAssiSound_h* const restrict self)
     atomic_fetch_sub(&GPIO_RTD_ASSI.on_req, 1);
     gpio_set_high(p_self->p_gpio_rtd_assi_sound);
   }
-
-
-  return 0;
 }
