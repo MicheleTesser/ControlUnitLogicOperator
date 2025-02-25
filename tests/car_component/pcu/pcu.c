@@ -52,7 +52,7 @@ _pcu_update(struct Pcu_t* const restrict self)
   CanMessage mex = {0};
   can_obj_can2_h_t o2={0};
 
-  if (!hardware_mailbox_read(self->recv_can_node_pcu_inv, &mex)
+  if (hardware_mailbox_read(self->recv_can_node_pcu_inv, &mex)
       && unpack_message_can2(&o2, CAN_ID_PCU, mex.full_word, mex.message_size, 0)>=0)
   {
     if (o2.can_0x130_Pcu.mode == 1)

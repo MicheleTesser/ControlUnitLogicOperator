@@ -108,10 +108,7 @@ giei_init(Giei_h* const restrict self,
         return -2;
     }
 
-    if (rtd_assi_sound_init(&p_self->o_rtd_sound)<0)
-    {
-        return -3;
-    }
+    rtd_assi_sound_init(&p_self->o_rtd_sound);
 
     if (lock_mission_ref_get_mut(&p_self->o_mission_locker)<0)
     {

@@ -45,7 +45,7 @@ int _start_dummy(void* arg)
 
 //public
 
-int8_t dummy_start(struct Dummy_h* const restrict self)
+int8_t dummy_start(Dummy_h* const restrict self)
 {
   union Dummy_h_t_conv conv = {self};
   struct Dummy_t* const p_self = conv.clear;
@@ -57,7 +57,7 @@ int8_t dummy_start(struct Dummy_h* const restrict self)
   return 0;
 }
 
-int8_t dummy_stop(struct Dummy_h* const restrict self)
+int8_t dummy_stop(Dummy_h* const restrict self)
 {
   union Dummy_h_t_conv conv = {self};
   struct Dummy_t* const p_self = conv.clear;

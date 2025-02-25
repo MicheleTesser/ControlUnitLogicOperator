@@ -190,9 +190,9 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
 
   if (!ebs_on(&self->dv_ebs)) 
   {
-    if (car_mission_reader_get_current_mission(self->p_mission_reader) > CAR_MISSIONS_HUMAN
-        && ebs_asb_consistency_check(&self->dv_ebs)
-        && giei_status >= TS_READY)
+    if (car_mission_reader_get_current_mission(self->p_mission_reader) > CAR_MISSIONS_HUMAN &&
+        ebs_asb_consistency_check(&self->dv_ebs) == EBS_SUCCESS &&
+        giei_status >= TS_READY)
     {
       if (giei_status == RUNNING)
       {
@@ -264,10 +264,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -6;
   }
 
-  if (rtd_assi_sound_init(&p_self->o_assi_sound)<0)
-  {
-    return -6;
-  }
+  rtd_assi_sound_init(&p_self->o_assi_sound);
 
   if (hardware_init_read_permission_gpio(&p_self->gpio_air_precharge_init,
         GPIO_AIR_PRECHARGE_INIT)<0)
@@ -357,7 +354,7 @@ int8_t dv_update(Dv_h* const restrict self)
 
   if (car_mission_reader_get_current_mission(p_self->p_mission_reader) > CAR_MISSIONS_HUMAN)
   {
-    if (!hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
+    if (hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
     {
       unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
       p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;

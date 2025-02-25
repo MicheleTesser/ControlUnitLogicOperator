@@ -47,7 +47,7 @@ int _start_SteeringWheel(void* arg)
   {
     ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
-      o2.can_0x067_CarMission.Mission = p_self->o_current_mission;
+      o2.can_0x047_CarMission.Mission = p_self->o_current_mission;
 
       o2.can_0x064_Map.power = p_self->Maps.power;
       o2.can_0x064_Map.regen = p_self->Maps.regen;

@@ -15,14 +15,18 @@
     goto end;\
   }
 
-typedef struct CoreThread{
+typedef struct{
   thrd_t thread_id;
   uint8_t run;
 }CoreThread;
 
-typedef struct CoreInput{
+typedef struct{
   volatile const uint8_t* const core_run;
 }CoreInput;
+
+typedef struct{
+  ExternalBoards_t* external_boards;
+}TestInput;
 
 static int _core_thread_fun(void* arg)
 {

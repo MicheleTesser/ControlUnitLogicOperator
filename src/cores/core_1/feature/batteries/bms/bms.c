@@ -108,7 +108,7 @@ bms_update(Bms_h* const restrict self )
     can_obj_can2_h_t o;
     CanMessage mex;
 
-    if (!hardware_mailbox_read(p_self->mailbox, &mex))
+    if (hardware_mailbox_read(p_self->mailbox, &mex))
     {
         unpack_message_can2(&o, CAN_ID_BMSHV1, mex.full_word, 7, timer_time_now());
         p_self->volts[MAX] = o.can_0x057_BmsHv1.max_volt;

@@ -366,7 +366,7 @@ amk_update(AMKInverter_t* const restrict self)
   int8_t err=0;
 
   _amk_update_rtd_procedure(self);
-  if (!hardware_mailbox_read(self->engine_mailbox, &mex))
+  if (hardware_mailbox_read(self->engine_mailbox, &mex))
   {
     unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, timer_time_now());
     switch (mex.id)
@@ -405,7 +405,7 @@ amk_update(AMKInverter_t* const restrict self)
   }
 
   memset(&mex, 0, sizeof(mex));
-  if (!hardware_mailbox_read(self->mailbox_pcu_rf_signal_read, &mex))
+  if (hardware_mailbox_read(self->mailbox_pcu_rf_signal_read, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
     self->rf_status = o2.can_0x134_PcuRfAck.rf_signalAck;

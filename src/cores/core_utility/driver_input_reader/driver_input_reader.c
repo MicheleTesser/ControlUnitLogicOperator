@@ -77,7 +77,7 @@ driver_input_reader_update(DriverInputReader_h* const restrict self )
   can_obj_can3_h_t o3={0};
   CanMessage mex={0};
 
-  if (!hardware_mailbox_read(p_self->p_human_brake_mailbox, &mex))
+  if (hardware_mailbox_read(p_self->p_human_brake_mailbox, &mex))
   {
     unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
 
@@ -86,7 +86,7 @@ driver_input_reader_update(DriverInputReader_h* const restrict self )
     p_self->Input[DRIVER_HUMAN].f_steering_angle = _saturate_100(o2.can_0x053_Driver.steering);
   }
 
-  if (!hardware_mailbox_read(p_self->p_dv_driver_mailbox, &mex))
+  if (hardware_mailbox_read(p_self->p_dv_driver_mailbox, &mex))
   {
     unpack_message_can3(&o3, CAN_ID_DV_DRIVER, mex.full_word, mex.message_size, timer_time_now());
 

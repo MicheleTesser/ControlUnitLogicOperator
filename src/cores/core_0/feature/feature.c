@@ -71,7 +71,8 @@ int8_t core_0_feature_compute_power(Core0Feature_h* const restrict self )
   status = GIEI_check_running_condition(&p_self->giei);
   if (status)
   {
-    if (p_self->old_running_status != status) {
+    if (p_self->old_running_status != status)
+    {
       p_self->old_running_status = status;
       if(global_running_status_set(status)<0)
       {

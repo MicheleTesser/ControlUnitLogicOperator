@@ -243,6 +243,7 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
     CanMessage* const restrict o_mex)
 {
   uint16_t buffer_index=0;
+  CanMessage* original_mex = NULL;
 
   if (self->type == SEND_MAILBOX)
   {
@@ -269,12 +270,13 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
       atomic_flag_clear(&self->lock);
       return -1;
   }
-  o_mex->id = self->fifo_buffer.buffer[buffer_index].id;
-  o_mex->message_size = self->fifo_buffer.buffer[buffer_index].message_size;
-  o_mex->full_word = self->fifo_buffer.buffer[buffer_index].full_word;
-
+  original_mex = &self->fifo_buffer.buffer[buffer_index];
+  memcpy(o_mex, original_mex, sizeof(*original_mex));
+  memset(original_mex, 0, sizeof(*original_mex));
   atomic_flag_clear(&self->lock);
-  return 0;
+
+
+  return o_mex->id;
 }
 
 int8_t hardware_mailbox_send(struct CanMailbox* const restrict self, const uint64_t data)

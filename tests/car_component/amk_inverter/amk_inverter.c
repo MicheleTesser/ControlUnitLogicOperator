@@ -195,7 +195,7 @@ static void _amk_inverter_update_data(struct EmulationAmkInverter_t* const restr
   can_obj_can1_h_t o1 ={0};
   const uint8_t rf_signal = gpio_read_state(&p_self->o_rf);
 
-  if (!hardware_mailbox_read(p_self->p_recv_mailbox_vcu, &mex))
+  if (hardware_mailbox_read(p_self->p_recv_mailbox_vcu, &mex))
   {
     unpack_message_can1(&o1, mex.id,mex.full_word, mex.message_size, 0);
     switch (mex.id)
@@ -411,6 +411,18 @@ void car_amk_inverter_stop(EmulationAmkInverter_h* self)
   hardware_free_mailbox_can(&p_self->p_recv_mailbox_vcu);
 
   return;
+}
+
+void
+car_amk_inverter_force_precharge_status(EmulationAmkInverter_h* const restrict self)
+{
+  const union AmkInverter_h_t_conv conv = {self};
+  struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
+
+  FOR_EACH_ENGINE(engine)
+  {
+    p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bDcOn=1;
+  }
 }
 
 void car_amk_inverter_emergency_shutdown(EmulationAmkInverter_h* self)

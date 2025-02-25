@@ -72,10 +72,10 @@ car_mission_reader_update(CarMissionReader_h* const restrict self)
   can_obj_can2_h_t o2= {0};
 
   if (!is_mission_locked(&p_self->o_mission_locker_read)
-      && !hardware_mailbox_read(p_self->p_mailbox_current_mission, &mex))
+      && hardware_mailbox_read(p_self->p_mailbox_current_mission, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    p_self->current_mission = o2.can_0x067_CarMission.Mission;
+    p_self->current_mission = o2.can_0x047_CarMission.Mission;
   }
 
   return 0;

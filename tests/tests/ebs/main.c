@@ -16,12 +16,12 @@
     goto end;\
   }
 
-typedef struct CoreThread{
+typedef struct{
   thrd_t thread_id;
   uint8_t run;
 }CoreThread;
 
-typedef struct CoreInput{
+typedef struct {
   DvEbs_h* ebs;
 
   volatile const uint8_t* const core_run;
@@ -43,10 +43,46 @@ static int _core_thread_fun(void* arg)
   return 0;
 }
 
+#define _check_status(bool_exp, check_str)\
+  if (bool_exp)\
+  {\
+    PASSED("consisten state: "check_str);\
+  }\
+  else\
+  {\
+    FAILED("inconsisten state: "check_str);\
+  }
+
+
 //public
 
-void test_ebs(TestInput* t_input)
+void test_ebs_initial_state(TestInput* t_input)
 {
+  _check_status(!ebs_on(t_input->ebs), "initial ebs active state");
+}
+
+void test_ebs_test_activation_of_ebs(TestInput* t_input)
+{
+  while (car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter)!=PRECHARGE_FINISHED)
+  {
+    car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
+    wait_milliseconds(5 SECONDS);
+  }
+
+  asb_set_parameter(&t_input->external_boards->asb, INTEGRITY_CHECK_STATUS, 1);
+
+  _check_status(ebs_on(t_input->ebs), "precharge done and ebs is currently on");
+  _check_status(
+      ebs_asb_consistency_check(t_input->ebs) == EBS_NOT_YET_DONE,
+      "started consistency check of ebs");
+
+  wait_milliseconds(1 SECONDS);
+
+  enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
+  _check_status(consistency == EBS_SUCCESS,"ebs consistency done with success");
+  printf("expected: %d, given %d\n", EBS_SUCCESS, consistency);
+
+  
 }
 
 int main(void)
@@ -78,7 +114,8 @@ int main(void)
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
-  test_ebs(&t_input);
+  test_ebs_initial_state(&t_input);
+  test_ebs_test_activation_of_ebs(&t_input);
 
   printf("tests finished\n");
 

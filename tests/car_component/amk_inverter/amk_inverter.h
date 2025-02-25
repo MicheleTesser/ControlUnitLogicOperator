@@ -53,6 +53,10 @@ car_amk_inverter_precharge_status(const EmulationAmkInverter_h* const restrict s
   __attribute__((__nonnull__(1)));
 
 void
+car_amk_inverter_force_precharge_status(EmulationAmkInverter_h* const restrict self)
+  __attribute__((__nonnull__(1)));
+
+void
 car_amk_inverter_stop(EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
 
 void

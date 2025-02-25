@@ -161,7 +161,8 @@ driving_map_update(DrivingMaps_h* const restrict self )
   struct DrivingMaps_t* const restrict p_self = conv.clear;
   can_obj_can2_h_t o;
   CanMessage mex;
-  if(hardware_mailbox_read(p_self->map_mailbox,&mex)>=0){
+  if(hardware_mailbox_read(p_self->map_mailbox,&mex))
+  {
     unpack_message_can2(&o, CAN_ID_MAP, mex.full_word, mex.message_size, timer_time_now());
     p_self->power_map.active = o.can_0x064_Map.power;
     p_self->regen_map.active = o.can_0x064_Map.regen;
