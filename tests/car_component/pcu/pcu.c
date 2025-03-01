@@ -95,7 +95,7 @@ pcu_init(struct Pcu_h* const restrict self)
   union Pcu_h_t_conv conv = {self};
   struct Pcu_t* const restrict p_self = conv.clear;
   memset(p_self, 0, sizeof(*p_self));
-  if (hardware_init_gpio(&p_self->inverter_on_gpio, GPIO_INVERTER_RF_SIGNAL)<0)
+  if (hardware_init_gpio(&p_self->inverter_on_gpio, (enum GPIO_PIN) GPIO_INVERTER_RF_SIGNAL)<0)
   {
     return -1;
   }

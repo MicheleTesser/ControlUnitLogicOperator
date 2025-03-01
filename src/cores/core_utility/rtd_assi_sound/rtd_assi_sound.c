@@ -14,7 +14,7 @@ struct RtdAssiSound_t{
   uint8_t desidered_state:1;
   uint8_t req_change:1;
   uint8_t user_id:6;
-  struct Gpio_h* p_gpio_rtd_assi_sound;
+  Gpio_h* p_gpio_rtd_assi_sound;
 };
 
 union RtdAssiSound_h_t_conv {

@@ -56,8 +56,8 @@ struct Dv_t{
   GpioRead_h gpio_air_precharge_init;
   GpioRead_h gpio_air_precharge_done;
   RtdAssiSound_h o_assi_sound;
-  Gpio_h gpio_ass_light_blue;
-  Gpio_h gpio_ass_light_yellow;
+  GpioPwm_h gpio_ass_light_blue;
+  GpioPwm_h gpio_ass_light_yellow;
   CarMissionReader_h* p_mission_reader;
   const DvDriverInput_h* dv_driver_input;
   struct CanMailbox* p_send_car_dv_car_status_mailbox;
@@ -121,8 +121,8 @@ static void _update_dv_status(struct Dv_t* const restrict self, const enum AS_ST
  */
 static int8_t _dv_update_led(struct Dv_t* const restrict self)
 {
-  Gpio_h* const restrict gpio_light_blue = &self->gpio_ass_light_blue;
-  Gpio_h* const restrict gpio_light_yellow = &self->gpio_ass_light_yellow;
+  GpioPwm_h* const restrict gpio_light_blue = &self->gpio_ass_light_blue;
+  GpioPwm_h* const restrict gpio_light_yellow = &self->gpio_ass_light_yellow;
 
   ACTION_ON_FREQUENCY(self->emergency_sound_last_time_on, 8 SECONDS)
   {
@@ -132,30 +132,24 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
   switch (self->status)
   {
     case AS_OFF:
-      gpio_set_high(gpio_light_blue);
-      gpio_set_high(gpio_light_yellow);
+      hardware_write_gpio_pwm(gpio_light_blue,0);
+      hardware_write_gpio_pwm(gpio_light_yellow,0);
       rtd_assi_sound_stop(&self->o_assi_sound);
       break;
     case AS_READY:
-      gpio_set_high(gpio_light_blue);
-      gpio_set_low(gpio_light_yellow);
+      hardware_write_gpio_pwm(gpio_light_blue,0);
+      hardware_write_gpio_pwm(gpio_light_yellow,100);
       rtd_assi_sound_stop(&self->o_assi_sound);
       res_start_time_go(&self->dv_res);
       break;
     case AS_DRIVING:
-      gpio_set_high(gpio_light_blue);
+      hardware_write_gpio_pwm(gpio_light_blue,0);
+      hardware_write_gpio_pwm(gpio_light_yellow, 50);
       rtd_assi_sound_stop(&self->o_assi_sound);
-      ACTION_ON_FREQUENCY(self->driving_last_time_on, 100 MILLIS)
-      {
-        gpio_toggle(gpio_light_yellow);
-      }
       break;
     case AS_EMERGENCY:
-      gpio_set_high(gpio_light_yellow);
-      ACTION_ON_FREQUENCY(self->emergency_last_time_on, 100 MILLIS)
-      {
-        gpio_toggle(gpio_light_blue);
-      }
+      hardware_write_gpio_pwm(gpio_light_yellow,0);
+      hardware_write_gpio_pwm(gpio_light_blue,50);
       if (!self->sound_start) {
         self->sound_start =1;
         rtd_assi_sound_start(&self->o_assi_sound);
@@ -164,8 +158,8 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
       break;
     case AS_FINISHED:
       rtd_assi_sound_stop(&self->o_assi_sound);
-      gpio_set_high(gpio_light_yellow);
-      gpio_set_low(gpio_light_blue);
+      hardware_write_gpio_pwm(gpio_light_blue,0);
+      hardware_write_gpio_pwm(gpio_light_yellow,0);
       break;
     case __NUM_OF_AS_STATUS__:
     default:
@@ -254,12 +248,12 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -4;
   }
 
-  if (hardware_init_gpio(&p_self->gpio_ass_light_yellow, GPIO_ASSI_LIGHT_YELLOW)<0)
+  if (hardware_init_gpio_pwm(&p_self->gpio_ass_light_yellow, PWM_GPIO_ASSI_LIGHT_YELLOW)<0)
   {
     return -5;
   }
 
-  if (hardware_init_gpio(&p_self->gpio_ass_light_blue, GPIO_ASSI_LIGHT_BLU)<0)
+  if (hardware_init_gpio_pwm(&p_self->gpio_ass_light_blue, PWM_GPIO_ASSI_LIGHT_BLU)<0)
   {
     return -6;
   }

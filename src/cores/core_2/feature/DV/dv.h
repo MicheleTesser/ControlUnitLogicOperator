@@ -6,7 +6,7 @@
 #include "../../../core_utility/mission_reader/mission_reader.h"
 
 typedef struct __attribute__((aligned(8))) Dv_h{
-  const uint8_t private_data[200];
+  const uint8_t private_data[232];
 }Dv_h;
 
 int8_t

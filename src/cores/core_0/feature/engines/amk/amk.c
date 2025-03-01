@@ -76,10 +76,10 @@ typedef struct Inverter{
   enum RUNNING_STATUS engine_status;
   uint8_t hvCounter[__NUM_OF_ENGINES__];
   time_var_microseconds u_last_send_info;
-  struct GpioRead_h gpio_precharge_init;
-  struct GpioRead_h gpio_precharge_done;
-  struct GpioRead_h gpio_rtd_button;
-  struct GpioRead_h gpio_ts_button;
+  GpioRead_h gpio_precharge_init;
+  GpioRead_h gpio_precharge_done;
+  GpioRead_h gpio_rtd_button;
+  GpioRead_h gpio_ts_button;
   const struct DriverInput_h* driver_input;
   struct CanNode* can_inverter;
   struct CanMailbox* engine_mailbox;

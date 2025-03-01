@@ -6,6 +6,7 @@
 #include "dv_driver_input/dv_driver_input.h"
 
 #include <stdint.h>
+#include <stdio.h>
 
 struct Core2Feature_t{
   DvDriverInput_h driver;
@@ -32,6 +33,7 @@ core_2_feature_init(Core2Feature_h* const restrict self )
   if(dv_driver_input_init(&p_self->driver)<0) return -1;
   if(car_mission_reader_init(&p_self->mission)<0) return -1;
   if(dv_class_init(&p_self->dv, &p_self->mission, &p_self->driver) <0) return -1;
+
 
   return 0;
 }

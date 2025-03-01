@@ -20,8 +20,7 @@ char __assert_align_alive_blink[(_Alignof(CoreAliveBlink_h) == _Alignof(struct C
 #endif // DEBUG
        //public
 
-  int8_t
-core_alive_blink_init(
+int8_t core_alive_blink_init(
     CoreAliveBlink_h* const restrict self,
     const enum GPIO_PIN pin_led, const time_var_microseconds freq)
 {
@@ -29,7 +28,9 @@ core_alive_blink_init(
   struct CoreAliveBlink_t* const restrict p_self = conv.clear;
 
   memset(p_self, 0, sizeof(*p_self));
-  if (hardware_init_gpio(&p_self->gpio_led, pin_led)<0) {
+
+  if (hardware_init_gpio(&p_self->gpio_led, pin_led)<0)
+  {
     return -1;
   }
   p_self->last_time_toggle = timer_time_now();

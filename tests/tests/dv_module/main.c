@@ -92,8 +92,8 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
-  INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_blue_light, GPIO_ASSI_LIGHT_BLU), "dv light blue");
-  INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_yellow_light, GPIO_ASSI_LIGHT_YELLOW), "dv light yellow");
+  INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_blue_light, PWM_GPIO_ASSI_LIGHT_BLU), "dv light blue");
+  INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_yellow_light, PWM_GPIO_ASSI_LIGHT_YELLOW), "dv light yellow");
   INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_emergency_sound, GPIO_RTD_ASSI_SOUND), "dv emergency sound");
   INIT_PH(car_mission_reader_init(&mission_reader), "mission_reader");
   INIT_PH(dv_driver_input_init(&dv_driver_input), "dv driver input");

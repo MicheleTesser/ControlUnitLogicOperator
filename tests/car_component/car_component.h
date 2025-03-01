@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-typedef struct ExternalBoards_t{
+typedef struct{
   BmsHv_h bms_hv;
   Pcu_h pcu;
   Atc_h atc;
