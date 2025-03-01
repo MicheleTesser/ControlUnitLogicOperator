@@ -26,6 +26,15 @@ log_sd_init(LogSd_h* const restrict self )
 }
 
 int8_t
+log_sd_lock(LogSd_h* const restrict self)
+{
+  union LogSd_h_t_conv conv = {self};
+  struct LogSd_t* const restrict p_self __attribute__((__unused__))= conv.clear;
+
+  return 0;
+}
+
+int8_t
 log_sd_write(LogSd_h* const restrict self ,
         const void* const restrict buffer , 
         const uint8_t buffer_size)__attribute__((__nonnull__(1,2)));

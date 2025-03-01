@@ -28,6 +28,9 @@ int8_t
 log_init(Log_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
+log_lock(Log_h* const restrict self, const uint8_t log_type )__attribute__((__nonnull__(1)));
+
+int8_t
 log_add_entry(Log_h* const restrict self ,
         const LogEntry_h* entry, DataPosition position)__attribute__((__nonnull__(1,2)));
 

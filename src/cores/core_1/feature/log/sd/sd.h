@@ -10,6 +10,9 @@ int8_t
 log_sd_init(LogSd_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
+log_sd_lock(LogSd_h* const restrict self )__attribute__((__nonnull__(1)));
+
+int8_t
 log_sd_write(LogSd_h* const restrict self ,
         const void* const restrict buffer , 
         const uint8_t buffer_size)__attribute__((__nonnull__(1,2)));

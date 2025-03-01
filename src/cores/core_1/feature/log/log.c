@@ -40,8 +40,26 @@ log_init(Log_h* const restrict self )
   return 0;
 }
 
-  int8_t
-log_add_entry(Log_h* const restrict self ,
+int8_t log_lock(Log_h* const restrict self, const uint8_t log_type )
+{
+  union Log_h_t_conv conv = {self};
+  struct Log_t* const restrict p_self = conv.clear;
+
+  if (log_type & LOG_TELEMETRY)
+  {
+    log_telemetry_lock_json(&p_self->telemetry);
+  }
+
+  if (log_type & LOG_SD)
+  {
+    log_sd_lock(&p_self->sd);
+  }
+
+
+  return 0;
+}
+
+int8_t log_add_entry(Log_h* const restrict self,
     const LogEntry_h* entry, const DataPosition position)
 {
   union Log_h_t_conv conv = {self};
