@@ -14,7 +14,8 @@ log_telemetry_init(LogTelemetry_h* const restrict self )__attribute__((__nonnull
 int8_t
 log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
         const char* const restrict name, const void* const restrict var,
-        const enum DATA_MODE data_type, const uint32_t data_range,
+        const enum DATA_MODE data_type,
+        const uint32_t min, const uint32_t max,
         const DataPosition position)__attribute__((__nonnull__(1,2,3)));
 
 int8_t

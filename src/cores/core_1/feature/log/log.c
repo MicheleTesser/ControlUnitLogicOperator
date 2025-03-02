@@ -64,11 +64,11 @@ int8_t log_add_entry(Log_h* const restrict self,
 {
   union Log_h_t_conv conv = {self};
   struct Log_t* const restrict p_self = conv.clear;
-  const uint32_t data_range = entry->data_max - entry->data_min;
 
   if (entry->log_mode & LOG_TELEMETRY) {
     log_telemetry_add_entry(&p_self->telemetry, entry->name,
-        entry->data_ptr, entry->data_mode, data_range, position);
+        entry->data_ptr, entry->data_mode,
+        entry->data_min, entry->data_max, position);
   }
   
   return 0;

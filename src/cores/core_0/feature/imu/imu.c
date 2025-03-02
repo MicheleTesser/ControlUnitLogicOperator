@@ -1,4 +1,5 @@
 #include "imu.h"
+#include "../../../../lib/board_dbc/dbc/out_lib/cansbg/cansbg.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include <string.h>
 
