@@ -53,9 +53,7 @@ bms_init(Bms_h* const restrict self ,
 
     {
         LogEntry_h entry = {
-            .data_max = 4200,
-            .data_min = 1900,
-            .data_mode = DATA_UNSIGNED,
+            .data_mode = __u16__,
             .data_ptr = &p_self->volts[MAX],
             .log_mode = LOG_TELEMETRY| LOG_SD,
             .name = "Bms Max Volt",
@@ -68,9 +66,7 @@ bms_init(Bms_h* const restrict self ,
 
     {
         LogEntry_h entry = {
-            .data_max = 4200,
-            .data_min = 1900,
-            .data_mode = DATA_UNSIGNED,
+            .data_mode = __u16__,
             .data_ptr = &p_self->volts[MIN],
             .log_mode = LOG_TELEMETRY| LOG_SD,
             .name = "Bms bms Min Volt",
@@ -84,9 +80,7 @@ bms_init(Bms_h* const restrict self ,
 
     {
         LogEntry_h entry = {
-            .data_max = 100,
-            .data_min = 0,
-            .data_mode = DATA_UNSIGNED,
+            .data_mode = __u8__,
             .data_ptr = &p_self->soc,
             .log_mode = LOG_TELEMETRY| LOG_SD,
             .name = "Bms sv soc",

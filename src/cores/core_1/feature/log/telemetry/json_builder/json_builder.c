@@ -47,19 +47,15 @@ int8_t json_init(Json_h* const restrict self)
 }
 
 int8_t json_push_element(Json_h* const restrict self,
-    const char* const restrict var_name __attribute__((__unused__)) , const uint8_t var_name_length,
-    const JsonVarValue value __attribute__((__unused__)))
+    const char* const restrict var_name,
+    const JsonVarValue value)
 {
   union Json_h_t_conv conv = {self};
   struct Json_t* const p_self = conv.clear;
   char new_json_field[128] = {'\0'};
   uint8_t new_json_cursor = 0;
   uint16_t num_byte_value_var __attribute__((__unused__))=0;
-
-  if (var_name_length > VAR_NAME_MAX_LENGTH)
-  {
-    return  -1;
-  }
+  uint32_t var_name_length = strlen(var_name);
 
   if (p_self->json_cursor_offset > 1)
   {

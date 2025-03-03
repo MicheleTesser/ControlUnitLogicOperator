@@ -2,7 +2,6 @@
 #include "../log/log.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 
-#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -52,8 +51,6 @@ core_1_imu_init(
     // p_self->imu_mailbox=hardware_get_mailbox(can_node, -1, -1);//TODO: not yet defined
   }
 
-  log_entry.data_max = 100; //TODO: define max 
-  log_entry.data_min = 100; //TODO: define min 
   log_entry.data_mode = (LOG_TELEMETRY | LOG_SD);
   log_entry.data_ptr = &p_self->imu_data[ACC_X];
 

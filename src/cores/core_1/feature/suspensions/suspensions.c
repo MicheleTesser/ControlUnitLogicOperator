@@ -23,12 +23,10 @@ union Suspensions_h_t_conv {
 
 #define UPDATE_LOG(LOG, DATA, NAME, POS)\
 {\
-    struct LogEntry_h entry ={\
+    LogEntry_h entry ={\
         .data_ptr = &DATA,\
-        .data_min = 0,/*TODO: check if it's true*/\
-        .data_max = 0,/*TODO: check if it's true*/\
         .log_mode = LOG_SD | LOG_TELEMETRY,\
-        .data_mode = DATA_FLOATED,\
+        .data_mode = __float__,\
     };\
     if (log_add_entry(log, &entry, POS)<0)\
     {\

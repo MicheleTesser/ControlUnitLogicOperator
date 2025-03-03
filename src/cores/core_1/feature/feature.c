@@ -44,8 +44,6 @@ core_1_feature_init(Core1Feature_h* const restrict self )
     if(core_1_imu_init(&p_self->core_1_imu, &p_self->log)<0) return -5;
     if(suspensions_init(&p_self->suspensions, &p_self->log)<0) return -6;
 
-    log_lock(&p_self->log, LOG_SD | LOG_TELEMETRY);
-
     return 0;
 }
 

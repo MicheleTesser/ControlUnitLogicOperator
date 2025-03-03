@@ -32,11 +32,9 @@ union Core1DriverInput_h_t_conv{
 
 #define ADD_ENTRY_TO_LOG(LOG, MODE, DATA, NAME, POS)\
 {\
-    struct LogEntry_h entry= {\
+    LogEntry_h entry= {\
         .data_mode = MODE,\
         .data_ptr = &DATA,\
-        .data_min = 0,\
-        .data_max = 100,\
         .log_mode = LOG_SD | LOG_TELEMETRY,\
         .name = NAME,\
     };\
@@ -62,22 +60,22 @@ core_1_driver_input_init(
     
     memset(p_self, 0, sizeof(*p_self));
 
-    ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[THROTTLE],
+    ADD_ENTRY_TO_LOG(log, __float__, p_self->driver_input[THROTTLE],
             "driver input throttle",11);
 
-    ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[BRAKE],
+    ADD_ENTRY_TO_LOG(log, __float__, p_self->driver_input[BRAKE],
             "driver input brake",12);
 
-    ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[REGEN],
+    ADD_ENTRY_TO_LOG(log, __float__, p_self->driver_input[REGEN],
             "driver input regen",13);
 
-    ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[STERRING_WHEEL],
+    ADD_ENTRY_TO_LOG(log, __float__, p_self->driver_input[STERRING_WHEEL],
             "driver input steering wheel",14);
 
-    ADD_ENTRY_TO_LOG(log, DATA_FLOATED, p_self->driver_input[STERRING_WHEEL],
+    ADD_ENTRY_TO_LOG(log, __float__, p_self->driver_input[STERRING_WHEEL],
             "driver input steering wheel",15);
 
-    ADD_ENTRY_TO_LOG(log, DATA_UNSIGNED, p_self->impl,
+    ADD_ENTRY_TO_LOG(log, __float__, p_self->impl,
             "driver input implausibility list",16);
 
 

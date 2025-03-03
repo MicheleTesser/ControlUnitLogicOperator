@@ -15,18 +15,16 @@ struct TelemetryEntry{
   const char* p_name;
   enum DATA_MODE var_type;
   DataPosition json_cursor;
-  uint32_t min;
-  uint32_t max;
 };
 
 struct BstPos{
   uint16_t entry_pos;
+  struct BstPos* parent;
   struct BstPos* r_child;
   struct BstPos* l_child;
 };
 
 struct LogTelemetry_t{
-  Json_h json;
   struct TelemetryEntry* vars;
   struct BstPos* root_pos;
   uint8_t num_entry;
@@ -83,8 +81,7 @@ static const struct TelemetryEntry* pop_node(struct BstPos* root, const struct T
   return res;
 }
 
-static int8_t
-add_node(struct BstPos** root, const struct TelemetryEntry* const entry_pool,
+static int8_t add_node(struct BstPos** root, const struct TelemetryEntry* const entry_pool,
     struct TelemetryEntry* p_key)
 {
   struct BstPos* cursor = *root;
@@ -129,7 +126,69 @@ add_node(struct BstPos** root, const struct TelemetryEntry* const entry_pool,
     cursor=parent->l_child;
   }
 
+  cursor->parent = parent;
   cursor->entry_pos = entry_pos;
+
+  return 0;
+}
+
+static int8_t _pre_order_execute(struct BstPos* root, const struct TelemetryEntry* const entry_pool,
+    Json_h* json)
+{
+  struct BstPos* cursor = root;
+  const struct TelemetryEntry* p_entry = NULL;
+  float var_value = 0.0f;
+  uint8_t children_done = 0;
+  int8_t err =0;
+
+  while (cursor)
+  {
+    if (!children_done && cursor->l_child)
+    {
+      children_done =0;
+      cursor = cursor->l_child;
+      continue;
+    }
+    p_entry = &entry_pool[cursor->entry_pos];
+    switch (p_entry->var_type)
+    {
+      case __u8__:
+        var_value = *(uint8_t *) p_entry->p_var;
+        break;
+      case __u16__:
+        var_value = *(uint16_t *) p_entry->p_var;
+        break;
+      case __u32__:
+        var_value = *(uint32_t *) p_entry->p_var;
+        break;
+      case __i8__:
+        var_value = *(int8_t *) p_entry->p_var;
+        break;
+      case __i16__:
+        var_value = *(int16_t *) p_entry->p_var;
+        break;
+      case __i32__:
+        var_value = *(int32_t *) p_entry->p_var;
+        break;
+      case __float__:
+        var_value = *(float*) p_entry->p_var;
+        break;
+      default:
+      }
+    if((err = json_push_element(json, p_entry->p_name, var_value))<0)
+    {
+      return err;
+    }
+    if (!children_done && cursor->r_child)
+    {
+      cursor = cursor->r_child;
+      children_done =0;
+      continue;
+    }
+
+    cursor = cursor->parent;
+    children_done = 1;
+  }
 
   return 0;
 }
@@ -143,11 +202,6 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
 
   memset(p_self, 0, sizeof(*p_self));
 
-  if(json_init(&p_self->json)<0)
-  {
-    return -1;
-  }
-
   p_self->vars = calloc(1, sizeof(*p_self->vars));
   p_self->cap_entry=1;
   p_self->num_entry=0;
@@ -157,9 +211,8 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
 }
 
 int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
-    const char* name, const void* const var,
-    const enum DATA_MODE data_type, 
-    const uint32_t min, const uint32_t max,
+    const char* name,
+    const void* const var, const enum DATA_MODE data_type, 
     const DataPosition position)
 {
   union LogTelemetry_h_t_conv conv = {self};
@@ -175,20 +228,27 @@ int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
   entry->p_var = var;
   entry->var_type = data_type;
   entry->p_name = name;
-  entry->max = max;
-  entry->min = min;
   entry->json_cursor = position;
 
   return add_node(&p_self->root_pos, p_self->vars, entry);
 }
 
-int8_t log_telemetry_lock_json(LogTelemetry_h* const restrict self)
+int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
 {
   union LogTelemetry_h_t_conv conv = {self};
   struct LogTelemetry_t* const restrict p_self __attribute__((__unused__))= conv.clear;
+  Json_h json = {0};
+  int8_t err=0;
 
+  if ((err = json_init(&json))<0)
+  {
+    return err; 
+  }
 
-  return 0;
+  err = _pre_order_execute(p_self->root_pos, p_self->vars, &json);
+  json_destroy(&json);
+
+  return err;
 }
 
 
@@ -197,7 +257,6 @@ int8_t log_telemetry_destroy(LogTelemetry_h* const restrict self)
   union LogTelemetry_h_t_conv conv = {self};
   struct LogTelemetry_t* const restrict p_self = conv.clear;
 
-  json_destroy(&p_self->json);
   free(p_self->vars);
   free_tree(p_self->root_pos);
 

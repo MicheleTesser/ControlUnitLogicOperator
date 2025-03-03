@@ -74,12 +74,10 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     }
 
     {
-        struct LogEntry_h entry ={
-            .data_mode = DATA_UNSIGNED,
+        LogEntry_h entry ={
+            .data_mode = __u8__,
             .data_ptr = &p_self->devices[FANS_RADIATOR],
             .log_mode = LOG_SD | LOG_TELEMETRY,
-            .data_min = 0,
-            .data_max = 100,
             .name = "temp fan speed/enable",
         };
         if (log_add_entry(log, &entry,17)<0)
@@ -89,12 +87,10 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     }
 
     {
-        struct LogEntry_h entry ={
-            .data_mode = DATA_UNSIGNED,
+        LogEntry_h entry ={
+            .data_mode = __u8__,
             .data_ptr = &p_self->devices[PUMPS],
             .log_mode = LOG_SD | LOG_TELEMETRY,
-            .data_min = 0,
-            .data_max = 100,
             .name = "temp pump speed/enable",
         };
         if (log_add_entry(log, &entry,18)<0)
