@@ -38,22 +38,23 @@ int8_t json_init(Json_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
-  p_self->p_str_json = malloc(sizeof(initial_json));
-  memcpy(p_self->p_str_json, initial_json, sizeof(initial_json));
+  p_self->str_json_size = sizeof(initial_json);
+  p_self->p_str_json = calloc(1,p_self->str_json_size);
   p_self->json_cursor_offset = 1;
+  memcpy(p_self->p_str_json, initial_json, p_self->str_json_size);
 
   return 0;
 }
 
 int8_t json_push_element(Json_h* const restrict self,
-    const char* const restrict var_name, const uint8_t var_name_length,
-    const JsonVarValue value)
+    const char* const restrict var_name __attribute__((__unused__)) , const uint8_t var_name_length,
+    const JsonVarValue value __attribute__((__unused__)))
 {
   union Json_h_t_conv conv = {self};
   struct Json_t* const p_self = conv.clear;
-  char new_json_field[128] = {0};
+  char new_json_field[128] = {'\0'};
   uint8_t new_json_cursor = 0;
-  uint16_t num_byte_value_var=0;
+  uint16_t num_byte_value_var __attribute__((__unused__))=0;
 
   if (var_name_length > VAR_NAME_MAX_LENGTH)
   {
@@ -72,20 +73,20 @@ int8_t json_push_element(Json_h* const restrict self,
   memcpy(&new_json_field[new_json_cursor], var_name, var_name_length);
   new_json_cursor+=var_name_length;
 
+
   new_json_field[new_json_cursor] = '"';
   new_json_cursor+=1;
 
   new_json_field[new_json_cursor] = ':';
   new_json_cursor+=1;
 
-  num_byte_value_var = sprintf(&new_json_field[1 + var_name_length + 1 + 1], "%0.2f", value);
+  num_byte_value_var = sprintf(&new_json_field[new_json_cursor], "%0.2f", value);
   new_json_cursor+=num_byte_value_var;
 
   new_json_field[new_json_cursor] = '}';
   new_json_cursor+=1;
 
-
-  p_self->str_json_size += new_json_cursor+2;
+  p_self->str_json_size += new_json_cursor;
   p_self->p_str_json = realloc(p_self->p_str_json, p_self->str_json_size);
   if (!p_self->p_str_json)
   {
@@ -97,6 +98,7 @@ int8_t json_push_element(Json_h* const restrict self,
 
   p_self->p_str_json[p_self->json_cursor_offset] = '\0';
   p_self->json_cursor_offset -= 1;
+  
 
   return 0;
 }

@@ -19,8 +19,13 @@ void test_init_json(void)
   else if (strcmp("{ }", json_get(&json)))
   {
     FAILED("json created but not correctly");
-    printf("given: %s, expected: %s\n", json_get(&json), "{ }");
   }
+  else
+  {
+    PASSED("json created correctly");
+  }
+
+  printf("given: %s, expected: %s\n", json_get(&json), "{ }");
 
   json_destroy(&json);
 }
@@ -75,7 +80,7 @@ void test_push_multiple_elements(void)
     printf("%d\n",err);
   }
 
-  const char expected[]= "{\"brake\":10.00,\"throttle\":56,78}";
+  const char expected[]= "{\"brake\":10.00,\"throttle\":56.78}";
   if (strcmp(json_get(&json), expected))
   {
     FAILED("json push muliple elements ok but output is not what expected: ");
