@@ -45,6 +45,7 @@ struct Dv_t{
   enum AS_STATUS status;
   enum DV_CAR_STATUS dv_car_status;
   enum MISSION_STATUS o_dv_mission_status;
+  GlobalRunningStatus_h o_global_running_status_reader;
   uint8_t sound_start;
   time_var_microseconds driving_last_time_on;
   EmergencyNode_h emergency_node;
@@ -175,7 +176,7 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
 {
   const float current_speed = dv_speed_get(&self->dv_speed);
   const float driver_brake = dv_driver_input_get_brake(self->dv_driver_input);
-  const enum RUNNING_STATUS giei_status = global_running_status_get();
+  const enum RUNNING_STATUS giei_status = global_running_status_get(&self->o_global_running_status_reader);
 
   if (EmergencyNode_is_emergency_state(&self->emergency_node)) {
     self->status = AS_EMERGENCY;
@@ -277,6 +278,11 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -7;
   }
 
+  if (global_running_status_init(&p_self->o_global_running_status_reader, READ)<0)
+  {
+    return -8;
+  }
+
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
   {
     p_self->p_send_car_dv_car_status_mailbox =
@@ -288,7 +294,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   }
   if (!p_self->p_send_car_dv_car_status_mailbox)
   {
-    return -8;
+    return -9;
   }
 
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
@@ -304,7 +310,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   if (!p_self->p_mailbox_recv_mision_status)
   {
     hardware_free_mailbox_can(&p_self->p_send_car_dv_car_status_mailbox);
-    return -9;
+    return -10;
   }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
@@ -321,8 +327,9 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   {
     hardware_free_mailbox_can(&p_self->p_send_car_dv_car_status_mailbox);
     hardware_free_mailbox_can(&p_self->p_mailbox_recv_mision_status);
-    return -10;
+    return -11;
   }
+
 
   p_self->dv_car_status=DV_CAR_STATUS_OFF;
   p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
