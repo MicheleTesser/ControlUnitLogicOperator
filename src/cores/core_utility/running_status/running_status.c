@@ -71,6 +71,7 @@ int8_t global_running_status_set(GlobalRunningStatus_h* const restrict self,
     return -1;
   }
 
+  p_self->global_car_status_copy = status;
   atomic_store(&global_car_status, status);
   return 0;
 }
