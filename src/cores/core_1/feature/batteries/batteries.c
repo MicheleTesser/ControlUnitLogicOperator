@@ -1,8 +1,11 @@
 #include "batteries.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
+#include "../../../core_utility/shared_memory/shared_memory.h"
 #include "bms/bms.h"
 
 #include <stdint.h>
+#include <string.h>
 
 enum BMS_S{
   BMS_LV=0,
@@ -13,6 +16,8 @@ enum BMS_S{
 
 struct CarBatteries_t{
   Bms_h bms[__NUM_OF_BMS__];
+  float lem;
+  struct CanMailbox* p_mailbox_read_lem;
 };
 
 union CarBatteries_h_t_conv{
@@ -33,15 +38,46 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
 {
   union CarBatteries_h_t_conv conv = {self};
   struct CarBatteries_t* const restrict p_self = conv.clear;
+  struct CanNode* can_node = NULL;;
+
+  memset(p_self, 0, sizeof(*p_self));
 
   if (bms_init(&p_self->bms[BMS_LV], CAN_ID_BMSLV1, message_dlc_can2(CAN_ID_BMSLV1), "BMS LV" , log))
   {
-    return -1;
+    return -2;
   }
 
   if (bms_init(&p_self->bms[BMS_HV], CAN_ID_BMSHV1, message_dlc_can2(CAN_ID_BMSHV1), "BMS HV" , log))
   {
-    return -2;
+    return -3;
+  }
+
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+    p_self->p_mailbox_read_lem =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_LEM,
+          message_dlc_can2(CAN_ID_LEM));
+  }
+
+  if (!p_self->p_mailbox_read_lem)
+  {
+    return -4;
+  }
+
+  LogEntry_h entry =
+  {
+    .data_mode = __float__,
+    .data_ptr = &p_self->lem,
+    .log_mode = LOG_TELEMETRY | LOG_SD,
+    .name = "lem current",
+  };
+
+  if(log_add_entry(log, &entry, 1)<0)
+  {
+    return -5;
   }
 
   return 0;
@@ -51,7 +87,15 @@ int8_t car_batteries_update(CarBatteries_h* const restrict self)
 {
   union CarBatteries_h_t_conv conv = {self};
   struct CarBatteries_t* const restrict p_self = conv.clear;
+  CanMessage mex = {0};
+  can_obj_can2_h_t o2 = {0};
   int8_t err=0;
+
+  if (hardware_mailbox_read(p_self->p_mailbox_read_lem, &mex))
+  {
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size,0); 
+    p_self->lem = o2.can_0x3c2_Lem.current;
+  }
 
   for (uint8_t i=0; i<__NUM_OF_BMS__; i++)
   {

@@ -3,6 +3,7 @@
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../core_utility/emergency_module/emergency_module.h"
+#include "../../../../core_utility/shared_memory/shared_memory.h"
 #include "../../math_saturated/saturated.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -114,8 +115,7 @@ engine.NegTorq = amk_stop->AMK_TorqueLimitNegative;\
 engine.PosTorq = amk_stop->AMK_TorqueLimitPositive;\
 engine.TargetVel = amk_stop->AMK_TargetVelocity;\
 
-  static int8_t
-_send_message_amk(const AMKInverter_t* const restrict self,
+static int8_t _send_message_amk(const AMKInverter_t* const restrict self,
     const enum ENGINES engine, 
     const struct AMK_Setpoints* const restrict setpoint)
 {
@@ -148,8 +148,7 @@ _send_message_amk(const AMKInverter_t* const restrict self,
   return hardware_write_can(self->can_inverter, &mex);
 }
 
-static uint8_t
-_amk_inverter_on(const AMKInverter_t* const restrict self)
+static uint8_t _amk_inverter_on(const AMKInverter_t* const restrict self)
 {
   uint8_t res = 0xFF;
   FOR_EACH_ENGINE(engine){
@@ -158,8 +157,7 @@ _amk_inverter_on(const AMKInverter_t* const restrict self)
   return res;
 }
 
-static uint8_t
-_precharge_ended(const AMKInverter_t* const restrict self)
+static uint8_t _precharge_ended(const AMKInverter_t* const restrict self)
 {
   uint8_t res =0;
   FOR_EACH_ENGINE(engine)
@@ -176,8 +174,7 @@ _precharge_ended(const AMKInverter_t* const restrict self)
     gpio_read_state(&self->gpio_precharge_init) && gpio_read_state(&self->gpio_precharge_done);
 }
 
-static uint8_t
-_amk_inverter_hv_status(AMKInverter_t* const restrict self)
+static uint8_t _amk_inverter_hv_status(AMKInverter_t* const restrict self)
 {
   const uint8_t HV_TRAP = 50;
   uint8_t res = 0;
@@ -201,8 +198,7 @@ _amk_inverter_hv_status(AMKInverter_t* const restrict self)
   return res;
 }
 
-static void
-_amk_update_rtd_procedure(AMKInverter_t* const restrict self)
+static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 {
   struct AMK_Setpoints setpoint = {0};
   can_obj_can2_h_t o2={0};
@@ -311,8 +307,7 @@ _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 
 }
 
-  static float
-_max_torque(const AMKInverter_t* const restrict self)
+static float _max_torque(const AMKInverter_t* const restrict self)
 {
   float torque_max_sum = 0;
   FOR_EACH_ENGINE(engine)
@@ -324,10 +319,77 @@ _max_torque(const AMKInverter_t* const restrict self)
   return  torque_max_sum/__NUM_OF_ENGINES__;
 }
 
+static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const enum ENGINES engine)
+{
+  const uint8_t basic_id_start = 13;
+  const uint8_t id_offset = 10* engine;
+  
+  if(shared_memory_store_pointer(&self->engines[engine].amk_values_1.AMK_status,
+        (basic_id_start + id_offset) + 0)<0)
+  {
+    return -9 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].amk_values_1.AMK_ActualVelocity,
+        (basic_id_start + id_offset) + 1)<0)
+  {
+    return -10 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].amk_values_1.AMK_TorqueCurrent,
+        (basic_id_start + id_offset) + 2)<0)
+  {
+    return -11 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_TempMotor,
+        (basic_id_start + id_offset) + 3)<0)
+  {
+    return -12 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_TempIGBT,
+        (basic_id_start + id_offset) + 4)<0)
+  {
+    return -12 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_TempInverter,
+        (basic_id_start + id_offset) + 5)<0)
+  {
+    return -13 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_ErrorInfo,
+        (basic_id_start + id_offset) + 6)<0)
+  {
+    return -14 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].AMK_TargetVelocity,
+        (basic_id_start + id_offset) + 7)<0)
+  {
+    return -15 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].AMK_TorqueLimitNegative,
+        (basic_id_start + id_offset) + 8)<0)
+  {
+    return -16 + id_offset;
+  }
+
+  if(shared_memory_store_pointer(&self->engines[engine].AMK_TorqueLimitPositive,
+        (basic_id_start + id_offset) + 9)<0)
+  {
+    return -17 + id_offset;
+  }
+
+  return 0;
+}
+
 //public
 
-  enum RUNNING_STATUS
-amk_rtd_procedure(const AMKInverter_t* const restrict self)
+enum RUNNING_STATUS amk_rtd_procedure(const AMKInverter_t* const restrict self)
 {
   return self->engine_status;
 }
@@ -413,8 +475,7 @@ amk_update(AMKInverter_t* const restrict self)
   return err;
 }
 
-  float
-amk_get_info(const AMKInverter_t* const restrict self,
+float amk_get_info(const AMKInverter_t* const restrict self,
     const enum ENGINES engine, const enum ENGINE_INFO info)
 {
   if (engine == __NUM_OF_ENGINES__) {
@@ -433,23 +494,20 @@ amk_get_info(const AMKInverter_t* const restrict self,
   }
 }
 
-  float
-amk_max_pos_torque(const AMKInverter_t* const restrict self, const float limit_max_pos_torque)
+float amk_max_pos_torque(const AMKInverter_t* const restrict self, const float limit_max_pos_torque)
 {
   const float v_max_torque = _max_torque(self);
   return saturate_float(v_max_torque, limit_max_pos_torque, 0.0f);
 }
 
-  float
-amk_max_neg_torque(const AMKInverter_t* const restrict self, const float limit_max_neg_torque)
+float amk_max_neg_torque(const AMKInverter_t* const restrict self, const float limit_max_neg_torque)
 {
   const float v_max_torque = _max_torque(self);
   return  -saturate_float(v_max_torque, 0.0f, limit_max_neg_torque);
 
 }
 
-  int8_t
-amk_send_torque(const AMKInverter_t* const restrict self,
+int8_t amk_send_torque(const AMKInverter_t* const restrict self,
     const enum ENGINES engine, const float pos_torque, const float neg_torque)
 {
   if (amk_rtd_procedure(self) == RUNNING)
@@ -466,14 +524,12 @@ amk_send_torque(const AMKInverter_t* const restrict self,
   return -1;
 }
 
-  void
-amk_destroy(AMKInverter_t* const restrict self __attribute__((__unused__)))
+void amk_destroy(AMKInverter_t* const restrict self __attribute__((__unused__)))
 {
   return;
 }
 
-  int8_t
-amk_module_init(AmkInverter_h* const restrict self,
+int8_t amk_module_init(AmkInverter_h* const restrict self,
     const struct DriverInput_h* const p_driver_input,
     struct EngineType* const restrict general_inverter)
 {
@@ -552,6 +608,22 @@ amk_module_init(AmkInverter_h* const restrict self,
   if (!p_self->mailbox_pcu_rf_signal_send)
   {
     return -7;
+  }
+
+  int8_t err=0;
+  /*
+   * INFO: min, max included
+   * FRONT_LEFT ranges : 13...22
+   * FRONT_LEFT ranges : 23...32
+   * REAR_LEFT ranges : 33...42
+   * REAR_RIGHT ranges : 43...52
+   */
+  FOR_EACH_ENGINE(engine)
+  {
+    if((err =_share_var_engine(p_self, engine))<0)
+    {
+      return err;
+    }
   }
 
   general_inverter->update_f=amk_update;

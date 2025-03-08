@@ -33,6 +33,12 @@ int8_t shared_memory_init(const uint32_t initial_capacity)
   {
     return -1;
   }
+
+  if (SHARED_MEMORY.memory_capacity)
+  {
+    return 1;
+  }
+
   SHARED_MEMORY.memory_capacity = initial_capacity;
   SHARED_MEMORY.memory = calloc(SHARED_MEMORY.memory_capacity, sizeof(*SHARED_MEMORY.memory));
   SHARED_MEMORY.memory_length = 0;
@@ -42,46 +48,41 @@ int8_t shared_memory_init(const uint32_t initial_capacity)
 
 int8_t shared_memory_store_pointer(const void* p_data, const SharedDataId data_id)
 {
-  int8_t err=0;
-  MUTEX_LOCK_ACTION()
+  while (atomic_flag_test_and_set(&SHARED_MEMORY.lock)){}
+
+  SharedDataInstance instance = 
   {
-    SharedDataInstance instance = 
-    {
-      .data_id = data_id,
-      .p_data = p_data,
-    };
+    .data_id = data_id,
+    .p_data = p_data,
+  };
 
-    if (SHARED_MEMORY.memory_length >= SHARED_MEMORY.memory_capacity)
+  if (SHARED_MEMORY.memory_length >= SHARED_MEMORY.memory_capacity)
+  {
+    SHARED_MEMORY.memory_capacity *= 2;
+    SHARED_MEMORY.memory = realloc(SHARED_MEMORY.memory,
+        sizeof(*SHARED_MEMORY.memory) * SHARED_MEMORY.memory_capacity);
+    if (!SHARED_MEMORY.memory)
     {
-      SHARED_MEMORY.memory_capacity *= 2;
-      SHARED_MEMORY.memory = realloc(SHARED_MEMORY.memory,
-          sizeof(*SHARED_MEMORY.memory) * SHARED_MEMORY.memory_capacity);
-      if (!SHARED_MEMORY.memory)
-      {
-        MUTEXT_ACTION_EXIT(-99);
-      }
-    }
-
-    uint8_t i=0;
-    for (i=0; i<SHARED_MEMORY.memory_length; i++)
-    {
-      if(SHARED_MEMORY.memory[i].data_id == data_id)
-      {
-        break;
-      }
-    }
-
-    if (i==SHARED_MEMORY.memory_length)
-    {
-      memcpy(&SHARED_MEMORY.memory[i], &instance, sizeof(instance));
-      ++SHARED_MEMORY.memory_length;
-    }
-    else
-    {
-      err=-1;
+      MUTEXT_ACTION_EXIT(-99);
     }
   }
-  return err;
+
+  uint8_t i=0;
+  for (i=0; i<SHARED_MEMORY.memory_length; i++)
+  {
+    if(SHARED_MEMORY.memory[i].data_id == data_id)
+    {
+      break;
+    }
+  }
+
+  if (i==SHARED_MEMORY.memory_length)
+  {
+    memcpy(&SHARED_MEMORY.memory[i], &instance, sizeof(instance));
+    ++SHARED_MEMORY.memory_length;
+    MUTEXT_ACTION_EXIT(0);
+  }
+  MUTEXT_ACTION_EXIT(-1);
 }
 
 const void* shared_memory_fetch_pointer(const SharedDataId data_id)

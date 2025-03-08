@@ -4,6 +4,7 @@
 #include "src/cores/core_0/feature/engines/engines.h"
 #include "src/cores/core_0/feature/engines/amk/amk.h"
 #include "src/cores/core_utility/emergency_module/emergency_module.h"
+#include "src/cores/core_utility/shared_memory/shared_memory.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -189,6 +190,7 @@ int main(void)
     .external_boards = &external_boards,
   };
 
+  INIT_PH(shared_memory_init(10), "shared memory");
   INIT_PH(EmergencyNode_class_init(), "emergency module class init");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");

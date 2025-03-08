@@ -1,6 +1,7 @@
 #include "hv.h"
 #include "../../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#include "../../../../../core_utility/shared_memory/shared_memory.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -9,6 +10,7 @@ struct GieiHv_t{
   struct CanMailbox* send_mailbox_bms_hv;
   float hv_public_data[__NUM_OF_GIEI_HV_INFO__];
   float lem_current;
+  float pack_tension;
 };
 
 union GieiHv_conv{
@@ -62,7 +64,8 @@ int8_t hv_init(struct Hv_h* const restrict self)
       hardware_free_mailbox_can(&p_self->lem_mailbox);
     }
   }
-  return 0;
+
+  return shared_memory_store_pointer(&p_self->pack_tension, 12);
 }
 
 int8_t hv_update(Hv_h* const restrict self)
@@ -113,7 +116,6 @@ int8_t hv_computeBatteryPackTension(struct Hv_h* const restrict self,
   float sum = 0.0f;
   uint8_t max = 0;
   can_obj_can2_h_t o;
-  float pack_tension=0;
   uint64_t data_mex=0;
 
   // find max voltage
@@ -140,12 +142,12 @@ int8_t hv_computeBatteryPackTension(struct Hv_h* const restrict self,
     p_self->hv_public_data[HV_TOTAL_POWER]= 0;
   }
   else {
-    pack_tension = sum/ active_motors;
-    p_self->hv_public_data[HV_BATTERY_PACK_TENSION]= pack_tension;
-    p_self->hv_public_data[HV_TOTAL_POWER]= pack_tension * p_self->lem_current;
+    p_self->pack_tension = sum/ active_motors;
+    p_self->hv_public_data[HV_BATTERY_PACK_TENSION]= p_self->pack_tension;
+    p_self->hv_public_data[HV_TOTAL_POWER]= p_self->pack_tension * p_self->lem_current;
   }
 
-  o.can_0x120_InvVolt.car_voltage = pack_tension;
+  o.can_0x120_InvVolt.car_voltage = p_self->pack_tension;
   pack_message_can2(&o, CAN_ID_INVVOLT, &data_mex);
   return hardware_mailbox_send(p_self->send_mailbox_bms_hv, data_mex);
 }

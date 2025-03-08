@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/cdefs.h>
 #include <threads.h>
 #include <unistd.h>
@@ -12,13 +13,18 @@
 
 int main(void)
 {
-  int a =5;
-  int b = 10;
   int err=0;
   const void* temp_pointer=NULL;
+  const unsigned long vars_number = 100;
+  SharedDataId vars_id[vars_number];
+  short vars[vars_number];
 
-  SharedDataId id_a = 10;
-  SharedDataId id_b = 54;
+  for(unsigned long i=0;i < vars_number;++i)
+  {
+    vars_id[i] = i;
+    vars[i] = i * 20;
+  }
+
 
   if (shared_memory_init(1)<0)
   {
@@ -29,48 +35,37 @@ int main(void)
     PASSED("init shared memory ok");
   }
 
-  if((err = shared_memory_store_pointer(&a, id_a))<0)
+  for(unsigned long i=0;i < (sizeof(vars)/sizeof(vars[0]));++i)
   {
-    FAILED("storing shared pointer failed for a");
-    printf("error: %d\n",err);
-  }
-  else
-  {
-  PASSED("pointer var a stored correctly");
-  }
-
-  if((err = shared_memory_store_pointer(&b, id_b))<0)
-  {
-    FAILED("storing shared pointer failed for b");
-    printf("error: %d\n",err);
-  }
-  else
-  {
-  PASSED("pointer var b stored correctly");
+    if((err = shared_memory_store_pointer(&vars[i], vars_id[i]))<0)
+    {
+      FAILED("storing shared pointer: ");
+    }
+    else
+    {
+      PASSED("storing shared pointer: ");
+    }
+    printf("var: %lu, id: %d, value %d\n",i, vars_id[i], vars[i]);
   }
 
-  temp_pointer = shared_memory_fetch_pointer(id_a);
-  if (temp_pointer && *(int *)temp_pointer == a)
+  for(unsigned long i=0;i < (sizeof(vars)/sizeof(vars[0]));++i)
   {
-    PASSED("pointer a fetched correctly");
-  }
-  else
-  {
-    FAILED("pointer a fetch failed with err: ");
-    printf("%p\n", temp_pointer);
+    vars[i] %= vars_number;
+    temp_pointer = shared_memory_fetch_pointer(vars_id[i]);
+    if (temp_pointer && !memcpy(&vars[i], temp_pointer, sizeof(vars[i])))
+    {
+      PASSED("var fetched correctly: ");
+    }
+    else
+    {
+      PASSED("var not fetched correctly: ");
+    }
+    printf("\
+        var: %lu, var_id: %d.\n\
+        given: [var_value: %d], expected: [var_value: %d]\n",
+        i, vars_id[i], *(short *)temp_pointer, vars[i]);
   }
 
-  temp_pointer = NULL;
-  temp_pointer = shared_memory_fetch_pointer(id_b);
-  if (temp_pointer && *(int *)temp_pointer == b)
-  {
-    PASSED("pointer b fetched correctly");
-  }
-  else
-  {
-    FAILED("pointer b fetch failed with err: ");
-    printf("%p\n", temp_pointer);
-  }
 
   temp_pointer = NULL;
   temp_pointer = shared_memory_fetch_pointer(107);

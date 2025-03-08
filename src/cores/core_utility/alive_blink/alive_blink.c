@@ -1,6 +1,5 @@
 #include "alive_blink.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
-#include <stdio.h>
 #include <string.h>
 
 struct CoreAliveBlink_t{

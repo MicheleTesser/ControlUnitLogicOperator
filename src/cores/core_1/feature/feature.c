@@ -4,14 +4,14 @@
 #include "batteries/batteries.h"
 #include "core_1_driver_input/core_1_driver_input.h"
 #include "core_1_imu/core_1_imu.h"
-#include "suspensions/suspensions.h"
 #include "log/log.h"
+#include "suspensions/suspensions.h"
 
 #include <stdint.h>
 #include <string.h>
 
 struct Core1Feature_t{
-    Log_h log;
+    Log_h* p_log;
     Cooling_h cooling;
     CarBatteries_h batteries;
     Core1DriverInput_h core_1_driver_input;
@@ -30,19 +30,21 @@ char __assert_align_core_1_feature[(_Alignof(Core1Feature_h) == _Alignof(struct 
 #endif // DEBUG
 
 int8_t
-core_1_feature_init(Core1Feature_h* const restrict self )
+core_1_feature_init(Core1Feature_h* const restrict self, Log_h* const restrict p_log)
 {
     union Core1Feature_h_t_conv conv = {self};
     struct Core1Feature_t* const restrict p_self = conv.clear;
 
     memset(p_self, 0, sizeof(*p_self));
 
-    if(log_init(&p_self->log) <0) return -1;
-    if(cooling_init(&p_self->cooling, &p_self->log) <0) return -2;
-    if(car_batteries_init(&p_self->batteries, &p_self->log) <0) return -3;
-    if(core_1_driver_input_init(&p_self->core_1_driver_input, &p_self->log) <0) return -4;
-    if(core_1_imu_init(&p_self->core_1_imu, &p_self->log)<0) return -5;
-    if(suspensions_init(&p_self->suspensions, &p_self->log)<0) return -6;
+    p_self->p_log = p_log;
+
+    if(cooling_init(&p_self->cooling, p_self->p_log) <0) return -2;
+    if(car_batteries_init(&p_self->batteries, p_self->p_log) <0) return -3;
+    if(core_1_driver_input_init(&p_self->core_1_driver_input, p_self->p_log) <0) return -4;
+    if(core_1_imu_init(&p_self->core_1_imu, p_self->p_log)<0) return -5;
+    if(suspensions_init(&p_self->suspensions, p_self->p_log)<0) return -6;
+
 
     return 0;
 }
@@ -58,6 +60,5 @@ core_1_feature_update(Core1Feature_h* const restrict self )
     if(core_1_imu_update(&p_self->core_1_imu)) return -3;
     if(suspensions_update(&p_self->suspensions)) return -4;
 
-
-    return log_update_and_send(&p_self->log);
+    return log_update_and_send(p_self->p_log);
 }

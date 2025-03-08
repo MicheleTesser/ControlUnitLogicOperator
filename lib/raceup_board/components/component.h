@@ -9,5 +9,5 @@
 #include "timer.h"
 #include "interrupt.h"
 #include "trap.h"
-#include "pwm.h"
+
 #endif // !__RACEUP_BOARD_COMPONENT__
