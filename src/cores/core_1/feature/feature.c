@@ -59,6 +59,7 @@ core_1_feature_update(Core1Feature_h* const restrict self )
     if(core_1_driver_input_update(&p_self->core_1_driver_input)) return -2;
     if(core_1_imu_update(&p_self->core_1_imu)) return -3;
     if(suspensions_update(&p_self->suspensions)) return -4;
+    if(cooling_update(&p_self->cooling)<0)return -5;
 
     return log_update_and_send(p_self->p_log);
 }

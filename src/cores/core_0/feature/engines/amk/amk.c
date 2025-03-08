@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdatomic.h>
 
 //INFO: doc/amk_datasheet.pdf page 61
 

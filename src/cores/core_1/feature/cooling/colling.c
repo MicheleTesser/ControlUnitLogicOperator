@@ -1,24 +1,28 @@
 #include "colling.h"
 #include "../../../../lib/raceup_board/components/can.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#include "../../../core_utility/running_status/running_status.h"
+
 #include <stdint.h>
 #include <string.h>
 
 #define MAX_MAILBOX_FOR_DEVICE 4
 
 struct CoolingDevice_t{
-    uint8_t enable:1;
-    uint8_t speed:7;
+  uint8_t enable:1;
+  uint8_t speed:7;
 };
 
-typedef struct Cooling_t{
-    struct CanMailbox* send_mailbox;
-    struct CoolingDevice_t devices[__NUM_OF_COOLING_DEVICES__];
-}Cooling_t;
+struct Cooling_t{
+  struct CoolingDevice_t devices[__NUM_OF_COOLING_DEVICES__];
+  GlobalRunningStatus_h m_global_running_status;
+  struct CanMailbox* p_send_mailbox_pcu;
+  struct CanMailbox* p_recv_mailbox_stw;
+};
 
 union Cooling_h_t_conv{
-    Cooling_h* hidden;
-    struct Cooling_t* clear;
+  Cooling_h* hidden;
+  struct Cooling_t* clear;
 };
 
 #ifdef DEBUG
@@ -26,110 +30,116 @@ char __assert_size_cooling[(sizeof(Cooling_h) == sizeof(struct Cooling_t))? 1:-1
 char __assert_align_cooling[(_Alignof(Cooling_h) == _Alignof(struct Cooling_t))? 1:-1];
 #endif // DEBUG
 
-static int8_t update_status(struct Cooling_t* const restrict self)
-{
-    can_obj_can2_h_t o;
-    CanMessage mex;
-
-    mex.id = CAN_ID_PCU;
-    o.can_0x130_Pcu.mode = 0;
-    o.can_0x130_Pcu.fanrad_enable_left = self->devices[FANS_RADIATOR].enable;
-    o.can_0x130_Pcu.fanrad_enable_right = self->devices[FANS_RADIATOR].enable;
-    o.can_0x130_Pcu.fanrad_speed_left = self->devices[FANS_RADIATOR].speed;
-    o.can_0x130_Pcu.fanrad_speed_left = self->devices[FANS_RADIATOR].speed;
-
-    o.can_0x130_Pcu.pump_enable_left = self->devices[PUMPS].enable;
-    o.can_0x130_Pcu.pump_enable_right = self->devices[PUMPS].enable;
-    o.can_0x130_Pcu.pump_speed_left = self->devices[PUMPS].speed;
-    o.can_0x130_Pcu.pump_speed_right = self->devices[PUMPS].speed;
-    
-    mex.message_size = pack_message_can2(&o, mex.id, &mex.full_word);
-
-    return hardware_mailbox_send(self->send_mailbox, mex.full_word);
-}
-
 //public
 
 int8_t cooling_init(Cooling_h* const restrict self ,
-        Log_h* const restrict log )
+    Log_h* const restrict log )
 {
-    union Cooling_h_t_conv conv = {self};
-    struct Cooling_t* const p_self = conv.clear;
-    struct CanNode* can_node = NULL;
+  union Cooling_h_t_conv conv = {self};
+  struct Cooling_t* const p_self = conv.clear;
+  struct CanNode* can_node = NULL;
 
-    memset(p_self, 0, sizeof(*p_self));
+  memset(p_self, 0, sizeof(*p_self));
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+
+  if(global_running_status_init(&p_self->m_global_running_status, READ)<0)
+  {
+    return -1;
+  }
+
+  {
+    LogEntry_h entry ={
+      .data_mode = __u8__,
+      .data_ptr = &p_self->devices[FANS_RADIATOR],
+      .log_mode = LOG_SD | LOG_TELEMETRY,
+      .name = "temp fan speed/enable",
+    };
+    if (log_add_entry(log, &entry,17)<0)
     {
-      p_self->send_mailbox =
-        hardware_get_mailbox_single_mex(
-            can_node,
-            SEND_MAILBOX,
-            CAN_ID_PCU,
-            message_dlc_can2(CAN_ID_PCU));
+      return -2;
     }
-    if (!p_self->send_mailbox)
-    {
-        return -1;
-    }
+  }
 
+  {
+    LogEntry_h entry ={
+      .data_mode = __u8__,
+      .data_ptr = &p_self->devices[PUMPS],
+      .log_mode = LOG_SD | LOG_TELEMETRY,
+      .name = "temp pump speed/enable",
+    };
+    if (log_add_entry(log, &entry,18)<0)
     {
-        LogEntry_h entry ={
-            .data_mode = __u8__,
-            .data_ptr = &p_self->devices[FANS_RADIATOR],
-            .log_mode = LOG_SD | LOG_TELEMETRY,
-            .name = "temp fan speed/enable",
-        };
-        if (log_add_entry(log, &entry,17)<0)
-        {
-            return -2;
-        }
+      return -3;
     }
+  }
 
-    {
-        LogEntry_h entry ={
-            .data_mode = __u8__,
-            .data_ptr = &p_self->devices[PUMPS],
-            .log_mode = LOG_SD | LOG_TELEMETRY,
-            .name = "temp pump speed/enable",
-        };
-        if (log_add_entry(log, &entry,18)<0)
-        {
-            return -3;
-        }
-    }
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
+    p_self->p_send_mailbox_pcu =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          SEND_MAILBOX,
+          CAN_ID_PCU,
+          message_dlc_can2(CAN_ID_PCU));
 
-    return 0;
+    p_self->p_recv_mailbox_stw =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_PCUSWCONTROL,
+          message_dlc_can2(CAN_ID_PCUSWCONTROL));
+  }
+  if (!p_self->p_send_mailbox_pcu)
+  {
+    return -4;
+  }
+
+  if (!p_self->p_recv_mailbox_stw)
+  {
+    hardware_free_mailbox_can(&p_self->p_send_mailbox_pcu);
+    return -5;
+  }
+
+  return 0;
 }
 
-int8_t cooling_switch_device(Cooling_h* const restrict self, const enum COOLING_DEVICES dev_id)
+int8_t cooling_update(Cooling_h* const restrict self)
 {
-#ifdef DEBUG
-    if (dev_id==__NUM_OF_COOLING_DEVICES__)
-    {
-        return -1;
-    }
-#endif /* ifdef DEBUG */
-    union Cooling_h_t_conv conv = {self};
-    struct Cooling_t* const p_self = conv.clear;
+  union Cooling_h_t_conv conv = {self};
+  struct Cooling_t* const p_self = conv.clear;
+  can_obj_can2_h_t o2;
+  CanMessage mex;
 
-    p_self->devices[dev_id].enable ^= 1;
-    return update_status(p_self);
-}
+  if (global_running_status_get(&p_self->m_global_running_status) > SYSTEM_OFF)
+  {
+    p_self->devices[FANS_RADIATOR].speed = 100;
+    p_self->devices[PUMPS].speed = 100;
+  }
 
-int8_t cooling_set_speed_device(Cooling_h* const restrict self ,
-        const enum COOLING_DEVICES dev_id, const float speed)
-{
-#ifdef DEBUG
-    if (dev_id==__NUM_OF_COOLING_DEVICES__)
-    {
-        return -1;
-    }
-#endif /* ifdef DEBUG */
-    union Cooling_h_t_conv conv = {self};
-    struct Cooling_t* const p_self = conv.clear;
+  if (hardware_mailbox_read(p_self->p_recv_mailbox_stw, &mex))
+  {
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
 
-    p_self->devices[dev_id].speed = speed;
-    
-    return update_status(p_self);
+    p_self->devices[FANS_RADIATOR].enable = o2.can_0x133_PcuSwControl.fan;
+    p_self->devices[PUMPS].enable = o2.can_0x133_PcuSwControl.pump;
+  
+    mex.id = CAN_ID_PCU;
+    o2.can_0x130_Pcu.mode = 0;
+    o2.can_0x130_Pcu.fanrad_enable_left = p_self->devices[FANS_RADIATOR].enable;
+    o2.can_0x130_Pcu.fanrad_enable_right = p_self->devices[FANS_RADIATOR].enable;
+    o2.can_0x130_Pcu.fanrad_speed_left = p_self->devices[FANS_RADIATOR].speed;
+    o2.can_0x130_Pcu.fanrad_speed_left = p_self->devices[FANS_RADIATOR].speed;
+
+    o2.can_0x130_Pcu.pump_enable_left = p_self->devices[PUMPS].enable;
+    o2.can_0x130_Pcu.pump_enable_right = p_self->devices[PUMPS].enable;
+    o2.can_0x130_Pcu.pump_speed_left = p_self->devices[PUMPS].speed;
+    o2.can_0x130_Pcu.pump_speed_right = p_self->devices[PUMPS].speed;
+
+    mex.message_size = pack_message_can2(&o2, mex.id, &mex.full_word);
+    return hardware_mailbox_send(p_self->p_send_mailbox_pcu, mex.full_word);
+  }
+
+
+  return 0;
+
 }
