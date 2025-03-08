@@ -1,14 +1,13 @@
 #include "telemetry.h"
+#include "../log_obj_types.h"
+#include "json_builder/json_builder.h"
+#include "../../../../../lib/raceup_board/components/ethernet.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-
-#include "../log_obj_types.h"
-#include "json_builder/json_builder.h"
-
-
 
 struct TelemetryEntry{
   const void* p_var;
@@ -27,6 +26,7 @@ struct BstPos{
 struct LogTelemetry_t{
   struct TelemetryEntry* vars;
   struct BstPos* root_pos;
+  EthernetNodeIpv4_h* p_ethernet_udp_telemetry;
   uint8_t num_entry;
   uint8_t cap_entry;
 };
@@ -202,7 +202,24 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
 
   memset(p_self, 0, sizeof(*p_self));
 
+  IpAddrIpV4Port addr =
+  {
+    .addr = (255 << 3) | (255 << 2) | (255 << 1) | (255 << 0),
+    .port = 92,
+  };
+  p_self->p_ethernet_udp_telemetry = hardware_ethernet_udp_init(ETHERNET_NODE, &addr);
+
+  if (!p_self->p_ethernet_udp_telemetry)
+  {
+    return -1;
+  }
+
   p_self->vars = calloc(1, sizeof(*p_self->vars));
+  if (!p_self->vars)
+  {
+    hardware_ethernet_udp_free(&p_self->p_ethernet_udp_telemetry);
+    return -99;
+  }
   p_self->cap_entry=1;
   p_self->num_entry=0;
   p_self->root_pos = NULL;

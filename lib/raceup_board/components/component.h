@@ -10,4 +10,5 @@
 #include "interrupt.h"
 #include "trap.h"
 
+#include "ethernet.h"
 #endif // !__RACEUP_BOARD_COMPONENT__
