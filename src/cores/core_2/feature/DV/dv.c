@@ -371,6 +371,7 @@ int8_t dv_update(Dv_h* const restrict self)
     
     o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
     o2.can_0x071_CarMissionStatus.MissionStatus = p_self->o_dv_mission_status;
+    o2.can_0x071_CarMissionStatus.AsStatus = p_self->status;
 
     pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
 
