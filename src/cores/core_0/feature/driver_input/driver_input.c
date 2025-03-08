@@ -28,7 +28,7 @@ union DriverInput_h_t_conv_const{
 };
 
 union DriverInputConv{
-  struct DriverInput_h* const hidden;
+  DriverInput_h* const hidden;
   struct DriverInput_t* const clear;
 };
 
@@ -40,14 +40,10 @@ const uint8_t __assert_driver_input_align[_Alignof(DriverInput_h) == _Alignof(st
 //public
 
 int8_t
-driver_input_init(struct DriverInput_h* const restrict self, 
+driver_input_init(DriverInput_h* const restrict self, 
     CarMissionReader_h* const restrict p_car_mission)
 {
-  union Conv{
-    struct DriverInput_h* const hidden;
-    struct DriverInput_t* const clear;
-  };
-  union Conv d_conv = {self};
+  union DriverInputConv d_conv = {self};
   struct DriverInput_t* const p_self = d_conv.clear;
 
   memset(p_self, 0, sizeof(*p_self));
@@ -138,7 +134,7 @@ giei_driver_input_update(DriverInput_h* const restrict self )
 }
 
 void
-driver_input_destroy(struct DriverInput_h* restrict self)
+driver_input_destroy(DriverInput_h* restrict self)
 {
   const union DriverInput_h_t_conv conv = {self};
   struct DriverInput_t* const p_self = conv.clear;

@@ -81,7 +81,7 @@ typedef struct Inverter{
   GpioRead_h gpio_precharge_done;
   GpioRead_h gpio_rtd_button;
   GpioRead_h gpio_ts_button;
-  const struct DriverInput_h* driver_input;
+  const DriverInput_h* driver_input;
   struct CanNode* can_inverter;
   struct CanMailbox* engine_mailbox;
   struct CanMailbox* mailbox_pcu_rf_signal_send;
@@ -530,7 +530,7 @@ void amk_destroy(AMKInverter_t* const restrict self __attribute__((__unused__)))
 }
 
 int8_t amk_module_init(AmkInverter_h* const restrict self,
-    const struct DriverInput_h* const p_driver_input,
+    const DriverInput_h* const p_driver_input,
     struct EngineType* const restrict general_inverter)
 {
   AMK_H_T_CONV(self, p_self);

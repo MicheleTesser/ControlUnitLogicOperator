@@ -13,7 +13,7 @@ typedef struct __attribute__((aligned(8))) AmkInverter_h{
 
 int8_t 
 amk_module_init(AmkInverter_h* const restrict self,
-        const struct DriverInput_h* const p_driver_input,
+        const DriverInput_h* const p_driver_input,
         struct EngineType* const restrict general_inverter)__attribute__((__nonnull__(1,2,3)));
 
 #endif // !__AMK_POWER_SYSTEM__
