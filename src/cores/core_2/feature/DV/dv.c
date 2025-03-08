@@ -376,7 +376,6 @@ int8_t dv_update(Dv_h* const restrict self)
     pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
 
     hardware_mailbox_send(p_self->p_send_car_dv_car_status_mailbox, mission_status_payload);
-    hardware_mailbox_send(p_self->p_send_car_dv_car_status_mailbox, p_self->dv_car_status);
   }
 
   return 0;
