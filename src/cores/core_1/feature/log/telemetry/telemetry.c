@@ -26,7 +26,7 @@ struct BstPos{
 struct LogTelemetry_t{
   struct TelemetryEntry* vars;
   struct BstPos* root_pos;
-  EthernetNodeIpv4_h* p_ethernet_udp_telemetry;
+  EthernetNodeIpv4_t* p_ethernet_udp_telemetry;
   uint8_t num_entry;
   uint8_t cap_entry;
 };
@@ -202,12 +202,13 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
 
   memset(p_self, 0, sizeof(*p_self));
 
+  //TODO: set the proper ip and port
   IpAddrIpV4Port addr =
   {
     .addr = (255 << 3) | (255 << 2) | (255 << 1) | (255 << 0),
     .port = 92,
   };
-  p_self->p_ethernet_udp_telemetry = hardware_ethernet_udp_init(ETHERNET_NODE, &addr);
+  p_self->p_ethernet_udp_telemetry = hardware_ethernet_udp_init(&addr);
 
   if (!p_self->p_ethernet_udp_telemetry)
   {
