@@ -202,11 +202,13 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
 
   memset(p_self, 0, sizeof(*p_self));
 
-  //TODO: set the proper ip and port
+  //addr: 204.216.214.158
+  //port: 8086
+  //INFO: telemetry infos: https://docs.google.com/document/d/1T5-u_UYU2VZMfcQa-BXe2rGkpZzWMHQcCuYubQNwaYI/edit?tab=t.0
   IpAddrIpV4Port addr =
   {
-    .addr = (255 << 3) | (255 << 2) | (255 << 1) | (255 << 0),
-    .port = 92,
+    .addr = (204 << 3) | (216 << 2) | (214 << 1) | (158 << 0),
+    .port = 8086,
   };
   p_self->p_ethernet_udp_telemetry = hardware_ethernet_udp_init(&addr);
 
