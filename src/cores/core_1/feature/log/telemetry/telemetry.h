@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include "../log_obj_types.h"
 
-typedef struct __attribute__((aligned(8))) LogTelemetry_h{
-  const uint8_t private_data[80];
+typedef struct __attribute__((aligned(8))){
+  const uint8_t private_data[8];
 }LogTelemetry_h;
 
 
@@ -15,7 +15,7 @@ log_telemetry_init(LogTelemetry_h* const restrict self )__attribute__((__nonnull
 //INFO: name string MUST me null terminating
   int8_t
 log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
-    const char* const restrict name,
+    const char* const restrict name, const char* const data_format,
     const void* const restrict var, const enum DATA_MODE data_type)
   __attribute__((__nonnull__(1,2,3)));
 

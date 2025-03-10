@@ -9,160 +9,152 @@
 #include <stdint.h>
 #include <string.h>
 
-const char* JSON_1[] =
+typedef struct
 {
-  "stest",
-  "timestamp",
-  "lap",
-  "type",
-  "bms_lv0",
-  "bms_lv1",
-  "bms_lv2",
-  "bms_lv3",
-  "bms_lv4",
-  "bms_lv5",
-  "bms_lv6",
-  "bms_lv7",
-  "amk_status_fl",
-  "amk_actual_velocity_fl",
-  "amk_torque_current_fl",
-  "amk_voltage_fl",
-  "amk_current_fl",
-  "amk_status_fr",
-  "amk_actual_velocity_fr",
-  "amk_torque_current_fr",
-  "amk_voltage_fr",
-  "amk_current_fr",
-  "amk_status_rr",
-  "amk_actual_velocity_rr",
-  "amk_torque_current_rr",
-  "amk_voltage_rr",
-  "amk_current_rr",
-  "amk_status_rl",
-  "amk_actual_velocity_rl",
-  "amk_torque_current_rl",
-  "amk_voltage_rl",
-  "amk_current_rl",
-  "amk_temp_motor_fl",
-  "amk_temp_inverter_fl",
-  "amk_temp_igbt_fl",
-  "amk_error_info_fl",
+  enum DATA_MODE m_data_type;
+  const void* p_data;
+  const char* const m_name;
+  const char* data_format;
+}JsonCell;
+
+#define NEW_EMPTY_CELL(name) \
+  { .m_data_type = __u8__, .p_data = NULL, .m_name =name, .data_format = ""},
+
+static JsonCell JSON_1[] =
+{
+  NEW_EMPTY_CELL("stest")
+  NEW_EMPTY_CELL("stest")
+  NEW_EMPTY_CELL("timestamp")
+  NEW_EMPTY_CELL("lap")
+  NEW_EMPTY_CELL("type")
+  NEW_EMPTY_CELL("bms_lv0")
+  NEW_EMPTY_CELL("bms_lv1")
+  NEW_EMPTY_CELL("bms_lv2")
+  NEW_EMPTY_CELL("bms_lv3")
+  NEW_EMPTY_CELL("bms_lv4")
+  NEW_EMPTY_CELL("bms_lv5")
+  NEW_EMPTY_CELL("bms_lv6")
+  NEW_EMPTY_CELL("bms_lv7")
+  NEW_EMPTY_CELL("amk_status_fl")
+  NEW_EMPTY_CELL("amk_actual_velocity_fl")
+  NEW_EMPTY_CELL("amk_torque_current_fl")
+  NEW_EMPTY_CELL("amk_voltage_fl")
+  NEW_EMPTY_CELL("amk_current_fl")
+  NEW_EMPTY_CELL("amk_status_fr")
+  NEW_EMPTY_CELL("amk_actual_velocity_fr")
+  NEW_EMPTY_CELL("amk_torque_current_fr")
+  NEW_EMPTY_CELL("amk_voltage_fr")
+  NEW_EMPTY_CELL("amk_current_fr")
+  NEW_EMPTY_CELL("amk_status_rr")
+  NEW_EMPTY_CELL("amk_actual_velocity_rr")
+  NEW_EMPTY_CELL("amk_torque_current_rr")
+  NEW_EMPTY_CELL("amk_voltage_rr")
+  NEW_EMPTY_CELL("amk_current_rr")
+  NEW_EMPTY_CELL("amk_status_rl")
+  NEW_EMPTY_CELL("amk_actual_velocity_rl")
+  NEW_EMPTY_CELL("amk_torque_current_rl")
+  NEW_EMPTY_CELL("amk_voltage_rl")
+  NEW_EMPTY_CELL("amk_current_rl")
+  NEW_EMPTY_CELL("amk_temp_motor_fl")
+  NEW_EMPTY_CELL("amk_temp_inverter_fl")
+  NEW_EMPTY_CELL("amk_temp_igbt_fl")
+  NEW_EMPTY_CELL("amk_error_info_fl")
 };
 
-const char* JSON_2[] =
+static JsonCell JSON_2[] =
 {
-  "stest",
-  "timestamp",
-  "lap",
-  "type",
-  "amk_temp_motor_fr",
-  "amk_temp_inverter_fr",
-  "amk_temp_igbt_fr",
-  "amk_error_info_fr",
-  "amk_temp_motor_rr",
-  "amk_temp_inverter_rr",
-  "amk_temp_igbt_rr",
-  "amk_error_info_rr",
-  "amk_temp_motor_rl",
-  "amk_temp_inverter_rl",
-  "amk_temp_igbt_rl",
-  "amk_error_info_rl",
-  "amk_torque_limit_positive_fl",
-  "amk_torque_limit_negative_fl",
-  "amk_torque_limit_positive_fr",
-  "amk_torque_limit_negative_fr",
-  "amk_torque_limit_positive_rr",
-  "amk_torque_limit_negative_rr",
-  "amk_torque_limit_positive_rl",
-  "amk_torque_limit_negative_rl",
-  "throttle",
-  "steering_angle",
-  "brake",
-  "brake_press_front",
-  "brake_press_rear",
-  "actual_velocity_kmh",
-  "car_status",
+  NEW_EMPTY_CELL("stest")
+  NEW_EMPTY_CELL("timestamp")
+  NEW_EMPTY_CELL("lap")
+  NEW_EMPTY_CELL("type")
+  NEW_EMPTY_CELL("amk_temp_motor_fr")
+  NEW_EMPTY_CELL("amk_temp_inverter_fr")
+  NEW_EMPTY_CELL("amk_temp_igbt_fr")
+  NEW_EMPTY_CELL("amk_error_info_fr")
+  NEW_EMPTY_CELL("amk_temp_motor_rr")
+  NEW_EMPTY_CELL("amk_temp_inverter_rr")
+  NEW_EMPTY_CELL("amk_temp_igbt_rr")
+  NEW_EMPTY_CELL("amk_error_info_rr")
+  NEW_EMPTY_CELL("amk_temp_motor_rl")
+  NEW_EMPTY_CELL("amk_temp_inverter_rl")
+  NEW_EMPTY_CELL("amk_temp_igbt_rl")
+  NEW_EMPTY_CELL("amk_error_info_rl")
+  NEW_EMPTY_CELL("amk_torque_limit_positive_fl")
+  NEW_EMPTY_CELL("amk_torque_limit_negative_fl")
+  NEW_EMPTY_CELL("amk_torque_limit_positive_fr")
+  NEW_EMPTY_CELL("amk_torque_limit_negative_fr")
+  NEW_EMPTY_CELL("amk_torque_limit_positive_rr")
+  NEW_EMPTY_CELL("amk_torque_limit_negative_rr")
+  NEW_EMPTY_CELL("amk_torque_limit_positive_rl")
+  NEW_EMPTY_CELL("amk_torque_limit_negative_rl")
+  NEW_EMPTY_CELL("throttle")
+  NEW_EMPTY_CELL("steering_angle")
+  NEW_EMPTY_CELL("brake")
+  NEW_EMPTY_CELL("brake_press_front")
+  NEW_EMPTY_CELL("brake_press_rear")
+  NEW_EMPTY_CELL("actual_velocity_kmh")
+  NEW_EMPTY_CELL("car_status")
 };
 
-const char* JSON_3[] =
+static JsonCell JSON_3[] =
 {
-  "stest",
-  "timestamp",
-  "lap",
-  "type",
-  "acc_pot",
-  "brk_pot",
-  "brk_req",
-  "thr_req",
-  "max_hv_volt",
-  "min_hv_volt",
-  "avg_hv_volt",
-  "max_hv_temp",
-  "min_hv_temp",
-  "avg_hv_temp",
-  "max_temp_n_slave",
-  "bms_error_map",
-  "lem_current",
-  "car_voltage",
-  "current_sens",
-  "total_power",
-  "fan_speed",
-  "acceleration_x",
-  "acceleration_y",
-  "acceleration_z",
-  "omega_x",
-  "omega_y",
-  "omega_z",
-  "motor_post_rl",
-  "motor_pre_rl",
-  "motor_pre_rr",
-  "cplate_pre_right",
-  "cplate_pre_left",
-  "motor_post_fr",
-  "motor_post_rr",
-  "cplate_post_left",
-  "suspensions_rl",
-  "suspensions_fl",
-  "suspensions_fr",
-  "suspensions_rr",
-  "gpio_bms",
-  "gpio_imd",
-  "velocity",
-  "latitude",
-  "longitude",
+  NEW_EMPTY_CELL("stest")
+  NEW_EMPTY_CELL("timestamp")
+  NEW_EMPTY_CELL("lap")
+  NEW_EMPTY_CELL("type")
+  NEW_EMPTY_CELL("acc_pot")
+  NEW_EMPTY_CELL("brk_pot")
+  NEW_EMPTY_CELL("brk_req")
+  NEW_EMPTY_CELL("thr_req")
+  NEW_EMPTY_CELL("max_hv_volt")
+  NEW_EMPTY_CELL("min_hv_volt")
+  NEW_EMPTY_CELL("avg_hv_volt")
+  NEW_EMPTY_CELL("max_hv_temp")
+  NEW_EMPTY_CELL("min_hv_temp")
+  NEW_EMPTY_CELL("avg_hv_temp")
+  NEW_EMPTY_CELL("max_temp_n_slave")
+  NEW_EMPTY_CELL("bms_error_map")
+  NEW_EMPTY_CELL("lem_current")
+  NEW_EMPTY_CELL("car_voltage")
+  NEW_EMPTY_CELL("current_sens")
+  NEW_EMPTY_CELL("total_power")
+  NEW_EMPTY_CELL("fan_speed")
+  NEW_EMPTY_CELL("acceleration_x")
+  NEW_EMPTY_CELL("acceleration_y")
+  NEW_EMPTY_CELL("acceleration_z")
+  NEW_EMPTY_CELL("omega_x")
+  NEW_EMPTY_CELL("omega_y")
+  NEW_EMPTY_CELL("omega_z")
+  NEW_EMPTY_CELL("motor_post_rl")
+  NEW_EMPTY_CELL("motor_pre_rl")
+  NEW_EMPTY_CELL("motor_pre_rr")
+  NEW_EMPTY_CELL("cplate_pre_right")
+  NEW_EMPTY_CELL("cplate_pre_left")
+  NEW_EMPTY_CELL("motor_post_fr")
+  NEW_EMPTY_CELL("motor_post_rr")
+  NEW_EMPTY_CELL("cplate_post_left")
+  NEW_EMPTY_CELL("suspensions_rl")
+  NEW_EMPTY_CELL("suspensions_fl")
+  NEW_EMPTY_CELL("suspensions_fr")
+  NEW_EMPTY_CELL("suspensions_rr")
+  NEW_EMPTY_CELL("gpio_bms")
+  NEW_EMPTY_CELL("gpio_imd")
+  NEW_EMPTY_CELL("velocity")
+  NEW_EMPTY_CELL("latitude")
+  NEW_EMPTY_CELL("longitude")
 };
 
-const char **JSON_ARRAYS[] = {JSON_1, JSON_2, JSON_3};
+JsonCell* JSON_ARRAYS[] = {JSON_1, JSON_2, JSON_3};
 const uint32_t JSON_ARRAY_SIZES[] = 
 {
   sizeof(JSON_1) / sizeof(JSON_1[0]),
   sizeof(JSON_2) / sizeof(JSON_2[0]),
   sizeof(JSON_3) / sizeof(JSON_3[0]),
 };
-#define MACRO_JSON_ARRAY_COUNT (sizeof(JSON_ARRAYS) / sizeof(JSON_ARRAYS[0]))
-const uint8_t JSON_ARRAY_COUNT = MACRO_JSON_ARRAY_COUNT;
 
-struct TelemetryEntry{
-  const void* p_var;
-  const char* p_name;
-  enum DATA_MODE var_type;
-  DataPosition json_cursor;
-};
-
-struct BstPos{
-  uint16_t entry_pos;
-  struct BstPos* parent;
-  struct BstPos* r_child;
-  struct BstPos* l_child;
-};
+const uint8_t JSON_ARRAY_COUNT = (sizeof(JSON_ARRAYS) / sizeof(JSON_ARRAYS[0]));
 
 struct LogTelemetry_t{
-  struct LogPage{
-    uint8_t num_entry;
-    uint8_t cap_entry;
-    struct TelemetryEntry* vars;
-    struct BstPos* root_pos;
-  }m_log_pages[MACRO_JSON_ARRAY_COUNT];
   EthernetNodeIpv4_t* p_ethernet_udp_telemetry;
 };
 
@@ -182,181 +174,21 @@ char __assert_align_telemetry[(_Alignof(LogTelemetry_h) == _Alignof(struct LogTe
 #define FOR_EACH_JSON_FIELD(p_field, p_json)\
   for(const char* p_field=*p_json[0];*p_field;++p_field)
 
-static void free_tree(struct BstPos* root)
-{
-  if (!root) {
-    return;
-  }
 
-  free_tree(root->r_child);
-  free_tree(root->l_child);
-  free(root);
-}
-
-static const struct TelemetryEntry* pop_node(struct BstPos* root, const struct TelemetryEntry* const entry_pool)__attribute__((__unused__));
-static const struct TelemetryEntry* pop_node(struct BstPos* root, const struct TelemetryEntry* const entry_pool)
-{
-  struct BstPos* temp_node = root;
-  struct BstPos* min_node= NULL;
-  struct BstPos* min_parent= NULL;
-  const struct TelemetryEntry* res=0;
-
-  while (temp_node)
-  {
-    min_parent = min_node;
-    min_node = temp_node;
-    temp_node = temp_node->l_child;
-  }
-
-  if (min_node->r_child && min_parent)
-  {
-    min_parent->l_child = min_node->r_child;
-  }
-
-
-  res = &entry_pool[min_node->entry_pos];
-  free(min_node);
-
-
-  return res;
-}
-
-static int8_t add_node(struct BstPos** root, const struct TelemetryEntry* const entry_pool,
-    struct TelemetryEntry* p_key)
-{
-  struct BstPos* cursor = *root;
-  struct BstPos* parent= NULL;
-  const uint16_t key = p_key->json_cursor;
-  const uint16_t entry_pos = p_key - entry_pool;
-  DataPosition n_key = 0;
-
-  if (!cursor)
-  {
-    *root = calloc(1, sizeof(**root));
-    (*root)->entry_pos = entry_pos;
-    return 0;
-  }
-
-  while (cursor)
-  {
-    n_key = entry_pool[cursor->entry_pos].json_cursor;
-    parent = cursor;
-    if (key > n_key)
-    {
-      cursor = cursor->r_child;
-    }
-    else if (key < n_key)
-    {
-      cursor = cursor->l_child;
-    }
-    else
-    {
-      return -1;
-    }
-  }
-
-  if (key > n_key)
-  {
-    parent->r_child = calloc(1,sizeof(*parent->r_child));
-    cursor=parent->r_child;
-  }
-  else
-  {
-    parent->l_child = calloc(1,sizeof(*parent->l_child));
-    cursor=parent->l_child;
-  }
-
-  cursor->parent = parent;
-  cursor->entry_pos = entry_pos;
-
-  return 0;
-}
-
-static int8_t _pre_order_execute(struct BstPos* root, const struct TelemetryEntry* const entry_pool,
-    Json_h* json)
-{
-  struct BstPos* cursor = root;
-  const struct TelemetryEntry* p_entry = NULL;
-  float var_value = 0.0f;
-  uint8_t children_done = 0;
-  int8_t err =0;
-
-  while (cursor)
-  {
-    if (!children_done && cursor->l_child)
-    {
-      children_done =0;
-      cursor = cursor->l_child;
-      continue;
-    }
-    p_entry = &entry_pool[cursor->entry_pos];
-    switch (p_entry->var_type)
-    {
-      case __u8__:
-        var_value = *(uint8_t *) p_entry->p_var;
-        break;
-      case __u16__:
-        var_value = *(uint16_t *) p_entry->p_var;
-        break;
-      case __u32__:
-        var_value = *(uint32_t *) p_entry->p_var;
-        break;
-      case __i8__:
-        var_value = *(int8_t *) p_entry->p_var;
-        break;
-      case __i16__:
-        var_value = *(int16_t *) p_entry->p_var;
-        break;
-      case __i32__:
-        var_value = *(int32_t *) p_entry->p_var;
-        break;
-      case __float__:
-        var_value = *(float*) p_entry->p_var;
-        break;
-      default:
-      }
-    if((err = json_push_element(json, p_entry->p_name, var_value))<0)
-    {
-      return err;
-    }
-    if (!children_done && cursor->r_child)
-    {
-      cursor = cursor->r_child;
-      children_done =0;
-      continue;
-    }
-
-    cursor = cursor->parent;
-    children_done = 1;
-  }
-
-  return 0;
-}
-
-typedef struct
-{
-  uint8_t json_num;
-  uint8_t json_line;
-}LogVarPosition;
-
-static int8_t _search_json_for_log_var(const char* var_name, LogVarPosition* o_log_position)
+static JsonCell* _search_json_for_log_var(const char* var_name)
 {
   for (uint8_t json_num=0;json_num<JSON_ARRAY_COUNT;++json_num)
   {
     for(uint32_t json_line=0;json_line<JSON_ARRAY_SIZES[json_num];++json_line)
     {
-      if (!strcmp(JSON_ARRAYS[json_num][json_line], var_name))
+      if (!strcmp(JSON_ARRAYS[json_num][json_line].m_name, var_name))
       {
-        o_log_position->json_num = json_num;
-        o_log_position->json_line = json_line;
-
-        return 0;
+        return &JSON_ARRAYS[json_num][json_line];
       }
-
     }
   }
 
-  return -1;
+  return NULL;
 }
 
 //public
@@ -383,61 +215,22 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
     return -1;
   }
 
-  for (uint8_t i=0; i<JSON_ARRAY_COUNT; i++)
-  {
-    struct LogPage* log_page = &p_self->m_log_pages[i];
-    log_page->vars = calloc(1, sizeof(*log_page->vars));
-    if (!log_page->vars)
-    {
-      hardware_ethernet_udp_free(&p_self->p_ethernet_udp_telemetry);
-      for (uint8_t j=0; j<i; j++)
-      {
-        free(p_self->m_log_pages[i].vars);
-      }
-      return -99;
-    }
-    log_page->cap_entry=1;
-    log_page->num_entry=0;
-    log_page->root_pos = NULL;
-  
-  }
-
   return 0;
 }
 
-int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
-    const char* name,
-    const void* const var, const enum DATA_MODE data_type)
+int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__((__unused__)),
+    const char* name, const char* const data_format, const void* const var, const enum DATA_MODE data_type)
 {
-  union LogTelemetry_h_t_conv conv = {self};
-  struct LogTelemetry_t* const p_self = conv.clear;
-  struct TelemetryEntry* entry=NULL;
-  struct LogPage* p_log_page = NULL;
-  LogVarPosition log_pos = {0};
+  JsonCell* json_cell = NULL;
 
-  if(_search_json_for_log_var(name, &log_pos)<0)
+  if( (json_cell = _search_json_for_log_var(name)) == NULL || json_cell->p_data)
   {
     return -1;
   }
 
-  p_log_page = &p_self->m_log_pages[log_pos.json_num];
-  if (p_log_page->num_entry >= p_log_page->cap_entry)
-  {
-    p_log_page->cap_entry*=2;
-    p_log_page->vars = realloc(p_log_page->vars, p_log_page->cap_entry * sizeof(*p_log_page->vars));
-  }
-
-  entry = &p_log_page->vars[p_log_page->num_entry++];
-  entry->p_var = var;
-  entry->var_type = data_type;
-  entry->p_name = name;
-  entry->json_cursor = log_pos.json_line;
-
-  if(add_node(&p_log_page->root_pos, p_log_page->vars, entry)<0)
-  {
-    --p_log_page->num_entry;
-    return -1;
-  }
+  json_cell->m_data_type = data_type;
+  json_cell->p_data = var;
+  json_cell->data_format = data_format;
 
   return 0;
 }
@@ -445,25 +238,69 @@ int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
 int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
 {
   union LogTelemetry_h_t_conv conv = {self};
-  struct LogTelemetry_t* const restrict p_self __attribute__((__unused__))= conv.clear;
-  struct LogPage* p_log_page = NULL;
+  struct LogTelemetry_t* const restrict p_self = conv.clear;
+  JsonCell* p_log_page = NULL;
   Json_h json = {0};
   int8_t err=0;
+  float var_value =0;
+  const uint8_t MAX_RETRY_INIT_JSON = 255;
 
-  if ((err = json_init(&json))<0)
-  {
-    return err; 
-  }
 
   for (uint8_t i=0; i<JSON_ARRAY_COUNT; i++)
   {
-    p_log_page = &p_self->m_log_pages[i];
-    err = _pre_order_execute(p_log_page->root_pos, p_log_page->vars, &json);
+    uint8_t retry=0;
+    while(json_init(&json)<0 && retry < MAX_RETRY_INIT_JSON)
+    {
+      ++retry;
+    }
+    if (retry == MAX_RETRY_INIT_JSON)
+    {
+      continue;
+    }
+
+    p_log_page = JSON_ARRAYS[i];
+    for (uint8_t j=0;j<JSON_ARRAY_SIZES[i];j++)
+    {
+      JsonCell* cursor = &p_log_page[j];
+      var_value =0;
+      if (cursor->p_data)
+      {
+        switch (cursor->m_data_type)
+        {
+          case __u8__:
+            var_value = *(uint8_t *) cursor->p_data;
+            break;
+          case __u16__:
+            var_value = *(uint16_t *) cursor->p_data;
+            break;
+          case __u32__:
+            var_value = *(uint32_t *) cursor->p_data;
+            break;
+          case __i8__:
+            var_value = *(int8_t *) cursor->p_data;
+            break;
+          case __i16__:
+            var_value = *(int16_t *) cursor->p_data;
+            break;
+          case __i32__:
+            var_value = *(int32_t *) cursor->p_data;
+            break;
+          case __float__:
+            var_value = *(float*) cursor->p_data;
+            break;
+          default:
+        }
+      }
+      json_push_element(&json, cursor->m_name, cursor->data_format, var_value);
+    }
+    UdpIpv4Mex mex = {
+      .data_length = json_len(&json),
+      .raw_data = json_get(&json),
+    };
+    hardware_ethernet_udp_send(p_self->p_ethernet_udp_telemetry, &mex);
     json_destroy(&json);
     p_log_page = NULL;
   }
-
-
 
   return err;
 }
@@ -473,14 +310,6 @@ int8_t log_telemetry_destroy(LogTelemetry_h* const restrict self)
 {
   union LogTelemetry_h_t_conv conv = {self};
   struct LogTelemetry_t* const restrict p_self = conv.clear;
-  struct LogPage* p_log_page = NULL;
-
-  for (uint8_t i=0; i<JSON_ARRAY_COUNT; i++)
-  {
-    p_log_page = &p_self->m_log_pages[i];
-    free(p_log_page->vars);
-    free_tree(p_log_page->root_pos);
-  }
 
   hardware_ethernet_udp_free(&p_self->p_ethernet_udp_telemetry);
 

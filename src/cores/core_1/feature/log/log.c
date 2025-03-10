@@ -5,8 +5,8 @@
 #include <string.h>
 
 struct Log_t{
-  struct LogSd_h sd;
-  struct LogTelemetry_h telemetry;
+  LogSd_h sd;
+  LogTelemetry_h telemetry;
 };
 
 union Log_h_t_conv{
@@ -47,7 +47,7 @@ int8_t log_add_entry(Log_h* const restrict self,
 
   if (entry->log_mode & LOG_TELEMETRY) {
     log_telemetry_add_entry(&p_self->telemetry, entry->name,
-        entry->data_ptr, entry->data_mode);
+        entry->data_ptr, entry->data_format, entry->data_mode);
   }
   
   return 0;

@@ -11,8 +11,8 @@ float log_var_b = 12.5f;
 unsigned long log_var_c = 912;
 uint8_t log_var_d = 5;
 
-#define LOG_VAR(p_self, VAR, data_type)\
-  log_telemetry_add_entry(p_self, #VAR, &log_var_a, data_type)
+#define LOG_VAR(p_self, VAR, data_type, data_format)\
+  log_telemetry_add_entry(p_self, #VAR, &log_var_a, data_format, data_type)
 
 int main(void)
 {
@@ -24,7 +24,7 @@ int main(void)
   }
 
   //JSON 1
-  if(log_telemetry_add_entry(&o_telemetry, "bms_lv0", &log_var_a, __u8__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "bms_lv0","", &log_var_a, __u8__)<0)
   {
     FAILED("failed to store the log entry for log_var_a");
     goto destroy_log;
@@ -32,7 +32,7 @@ int main(void)
   PASSED("inserted log_var_a");
 
   //JSON 2
-  if(log_telemetry_add_entry(&o_telemetry, "amk_temp_motor_fr", &log_var_b, __float__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "amk_temp_motor_fr", "", &log_var_b, __float__)<0)
   {
     FAILED("failed to store the log entry for log_var_b");
     goto destroy_log;
@@ -40,14 +40,14 @@ int main(void)
   PASSED("inserted log_var_b");
 
   //JSON 3
-  if(log_telemetry_add_entry(&o_telemetry, "acc_pot", &log_var_c, __u32__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "acc_pot", "", &log_var_c, __u32__)<0)
   {
     FAILED("failed to store the log entry for log_var_c");
     goto destroy_log;
   }
   PASSED("inserted log_var_c");
 
-  if(log_telemetry_add_entry(&o_telemetry, "acc_pot", &log_var_d, __u8__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "acc_pot", "", &log_var_d, __u8__)<0)
   {
     PASSED("prevent to store the log entry for log_var_d with already used var: acc_pot");
   }
@@ -57,7 +57,7 @@ int main(void)
   }
 
   //JSON 1
-  if(log_telemetry_add_entry(&o_telemetry, "amk_status_fr", &log_var_d, __u8__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "amk_status_fr", "", &log_var_d, __u8__)<0)
   {
     FAILED("failed to store the log entry for log_var_d");
     goto destroy_log;
@@ -65,8 +65,8 @@ int main(void)
   PASSED("inserted log_var_d");
 
 
-  FAILED("log telemetry send bugged. TO FIX. HEAP BUFFER OVERFLOW");
-  // log_telemetry_send(&o_telemetry);
+  // FAILED("log telemetry send bugged. TO FIX. HEAP BUFFER OVERFLOW");
+  log_telemetry_send(&o_telemetry);
 
 destroy_log:
   log_telemetry_destroy(&o_telemetry);

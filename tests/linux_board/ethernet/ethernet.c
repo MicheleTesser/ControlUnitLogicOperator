@@ -31,14 +31,16 @@ hardware_ethernet_udp_init(const IpAddrIpV4Port* const restrict addr)
   }
   // Create a UDP Socket 
   node->socket = socket(AF_INET, SOCK_DGRAM, 0);
+
+  if (node->socket < 0)
+  {
+    free(node);
+    return NULL;
+  }
+
   node->servaddr.sin_addr.s_addr = addr->addr;
   node->servaddr.sin_port = htons(addr->port);
   node->servaddr.sin_family = AF_INET;
-
-  if (connect(node->socket, (struct sockaddr*) &node->servaddr, sizeof(node->servaddr))<0)
-  {
-    return NULL;
-  }
 
   return node;
 }

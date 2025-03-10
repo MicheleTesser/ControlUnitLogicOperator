@@ -9,7 +9,7 @@ typedef struct{
 }IpAddrIpV4Port;
 
 typedef struct{
-  const void* const raw_data;
+  const void* raw_data;
   const uint16_t data_length;
 }UdpIpv4Mex;
 

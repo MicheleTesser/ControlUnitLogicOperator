@@ -10,6 +10,7 @@ typedef struct{
   uint8_t log_mode:2;
   enum DATA_MODE data_mode;
   const void* data_ptr;
+  const char* data_format;
   char name[LOG_ENTRY_NAME_MAX_SIZE];
 }LogEntry_h;
 
@@ -19,7 +20,7 @@ enum LOG_MODE{
 };
 
 typedef struct __attribute__((aligned(8))) Log_h{
-  const uint8_t private_data[88];
+  const uint8_t private_data[16];
 }Log_h;
 
 int8_t

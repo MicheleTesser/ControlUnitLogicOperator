@@ -47,7 +47,7 @@ int8_t json_init(Json_h* const restrict self)
 }
 
 int8_t json_push_element(Json_h* const restrict self,
-    const char* const restrict var_name,
+    const char* const restrict var_name, const char* const data_format,
     const JsonVarValue value)
 {
   union Json_h_t_conv conv = {self};
@@ -76,7 +76,15 @@ int8_t json_push_element(Json_h* const restrict self,
   new_json_field[new_json_cursor] = ':';
   new_json_cursor+=1;
 
-  num_byte_value_var = sprintf(&new_json_field[new_json_cursor], "%0.2f", value);
+  if (!data_format || !strcmp(data_format, ""))
+  {
+    num_byte_value_var = sprintf(&new_json_field[new_json_cursor], "%0.2f", value);
+  }
+  else
+  {
+    num_byte_value_var = sprintf(&new_json_field[new_json_cursor], data_format, value);
+  }
+
   new_json_cursor+=num_byte_value_var;
 
   new_json_field[new_json_cursor] = '}';
@@ -106,6 +114,15 @@ json_get(const Json_h* const restrict self)
   const struct Json_t* const p_self = conv.clear;
 
   return p_self->p_str_json;
+}
+
+uint16_t
+json_len(const Json_h* const restrict self)
+{
+  const union Json_h_t_conv_const conv = {self};
+  const struct Json_t* const p_self = conv.clear;
+
+  return p_self->str_json_size;
 }
 
 int8_t json_destroy(Json_h* self)

@@ -38,7 +38,7 @@ void test_push_one_element(void)
 
   json_init(&json);
 
-  if((err = json_push_element(&json, "brake", brake))<0)
+  if((err = json_push_element(&json, "brake", "", brake))<0)
   {
     FAILED("json push one element failed when pushing brake with error: ");
     printf("%d\n",err);
@@ -68,13 +68,13 @@ void test_push_multiple_elements(void)
 
   json_init(&json);
 
-  if((err = json_push_element(&json, "brake", brake))<0)
+  if((err = json_push_element(&json, "brake", "", brake))<0)
   {
     FAILED("push muliple elements failed when pushing brake with error: ");
     printf("%d\n",err);
   }
 
-  if((err = json_push_element(&json, "throttle", throttle))<0)
+  if((err = json_push_element(&json, "throttle", "", throttle))<0)
   {
     FAILED("push mulipl elements failed when pushing throttle with error: ");
     printf("%d\n",err);

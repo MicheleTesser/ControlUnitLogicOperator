@@ -2,7 +2,7 @@
 #define __LOG_SD__
 
 #include <stdint.h>
-typedef struct LogSd_h{
+typedef struct {
     const uint8_t private_data[1];
 }LogSd_h;
 
