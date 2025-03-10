@@ -52,13 +52,13 @@ int main(void)
   {
     vars[i] %= vars_number;
     temp_pointer = shared_memory_fetch_pointer(vars_id[i]);
-    if (temp_pointer && !memcpy(&vars[i], temp_pointer, sizeof(vars[i])))
+    if (temp_pointer && vars[i] == *(short *) temp_pointer)
     {
       PASSED("var fetched correctly: ");
     }
     else
     {
-      PASSED("var not fetched correctly: ");
+      FAILED("var not fetched correctly: ");
     }
     printf("\
         var: %lu, var_id: %d.\n\
