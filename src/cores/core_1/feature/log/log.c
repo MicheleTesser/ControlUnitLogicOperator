@@ -1,5 +1,4 @@
 #include "log.h"
-#include "log_obj_types.h"
 #include "sd/sd.h"
 #include "telemetry/telemetry.h"
 #include <stdint.h>
@@ -41,14 +40,14 @@ log_init(Log_h* const restrict self )
 }
 
 int8_t log_add_entry(Log_h* const restrict self,
-    const LogEntry_h* entry, const DataPosition position)
+    const LogEntry_h* entry)
 {
   union Log_h_t_conv conv = {self};
   struct Log_t* const restrict p_self = conv.clear;
 
   if (entry->log_mode & LOG_TELEMETRY) {
     log_telemetry_add_entry(&p_self->telemetry, entry->name,
-        entry->data_ptr, entry->data_mode, position);
+        entry->data_ptr, entry->data_mode);
   }
   
   return 0;

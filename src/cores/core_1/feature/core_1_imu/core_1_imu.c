@@ -56,7 +56,7 @@ core_1_imu_init(
 
   const char* const imu_acc_x_name = "imu acc x";
   memcpy(log_entry.name, imu_acc_x_name , strlen(imu_acc_x_name));
-  log_add_entry(log, &log_entry,5);
+  log_add_entry(log, &log_entry);
 
   return 0;
 }

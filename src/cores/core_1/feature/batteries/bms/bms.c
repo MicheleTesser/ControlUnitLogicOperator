@@ -59,7 +59,7 @@ int8_t bms_init(Bms_h* const restrict self ,
     };
     memcpy(entry.name, bms_name, strlen(bms_name));
     strcat(entry.name, "Max Volt");
-    if(log_add_entry(log, &entry,6)<0)
+    if(log_add_entry(log, &entry)<0)
     {
       return -1;
     }
@@ -74,7 +74,7 @@ int8_t bms_init(Bms_h* const restrict self ,
     };
     memcpy(entry.name, bms_name, strlen(bms_name));
     strcat(entry.name, "Min Volt");
-    if(log_add_entry(log, &entry,7)<0)
+    if(log_add_entry(log, &entry)<0)
     {
       return -2;
     }
@@ -88,7 +88,7 @@ int8_t bms_init(Bms_h* const restrict self ,
       .log_mode = LOG_TELEMETRY| LOG_SD,
       .name = "Bms sv soc",
     };
-    if(log_add_entry(log, &entry,8)<0)
+    if(log_add_entry(log, &entry)<0)
     {
       return -3;
     }

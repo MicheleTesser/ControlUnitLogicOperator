@@ -54,7 +54,7 @@ int8_t cooling_init(Cooling_h* const restrict self ,
       .log_mode = LOG_SD | LOG_TELEMETRY,
       .name = "temp fan speed/enable",
     };
-    if (log_add_entry(log, &entry,17)<0)
+    if (log_add_entry(log, &entry)<0)
     {
       return -2;
     }
@@ -67,7 +67,7 @@ int8_t cooling_init(Cooling_h* const restrict self ,
       .log_mode = LOG_SD | LOG_TELEMETRY,
       .name = "temp pump speed/enable",
     };
-    if (log_add_entry(log, &entry,18)<0)
+    if (log_add_entry(log, &entry)<0)
     {
       return -3;
     }

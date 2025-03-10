@@ -19,7 +19,7 @@ enum LOG_MODE{
 };
 
 typedef struct __attribute__((aligned(8))) Log_h{
-  const uint8_t private_data[40];
+  const uint8_t private_data[88];
 }Log_h;
 
 int8_t
@@ -27,7 +27,7 @@ log_init(Log_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
 log_add_entry(Log_h* const restrict self ,
-    const LogEntry_h* entry, DataPosition position)__attribute__((__nonnull__(1,2)));
+    const LogEntry_h* entry)__attribute__((__nonnull__(1,2)));
 
 int8_t
 log_update_and_send(Log_h* const restrict self )__attribute__((__nonnull__(1)));

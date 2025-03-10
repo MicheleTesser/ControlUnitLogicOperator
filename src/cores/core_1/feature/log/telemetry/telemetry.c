@@ -9,6 +9,139 @@
 #include <stdint.h>
 #include <string.h>
 
+const char* JSON_1[] =
+{
+  "stest",
+  "timestamp",
+  "lap",
+  "type",
+  "bms_lv0",
+  "bms_lv1",
+  "bms_lv2",
+  "bms_lv3",
+  "bms_lv4",
+  "bms_lv5",
+  "bms_lv6",
+  "bms_lv7",
+  "amk_status_fl",
+  "amk_actual_velocity_fl",
+  "amk_torque_current_fl",
+  "amk_voltage_fl",
+  "amk_current_fl",
+  "amk_status_fr",
+  "amk_actual_velocity_fr",
+  "amk_torque_current_fr",
+  "amk_voltage_fr",
+  "amk_current_fr",
+  "amk_status_rr",
+  "amk_actual_velocity_rr",
+  "amk_torque_current_rr",
+  "amk_voltage_rr",
+  "amk_current_rr",
+  "amk_status_rl",
+  "amk_actual_velocity_rl",
+  "amk_torque_current_rl",
+  "amk_voltage_rl",
+  "amk_current_rl",
+  "amk_temp_motor_fl",
+  "amk_temp_inverter_fl",
+  "amk_temp_igbt_fl",
+  "amk_error_info_fl",
+};
+
+const char* JSON_2[] =
+{
+  "stest",
+  "timestamp",
+  "lap",
+  "type",
+  "amk_temp_motor_fr",
+  "amk_temp_inverter_fr",
+  "amk_temp_igbt_fr",
+  "amk_error_info_fr",
+  "amk_temp_motor_rr",
+  "amk_temp_inverter_rr",
+  "amk_temp_igbt_rr",
+  "amk_error_info_rr",
+  "amk_temp_motor_rl",
+  "amk_temp_inverter_rl",
+  "amk_temp_igbt_rl",
+  "amk_error_info_rl",
+  "amk_torque_limit_positive_fl",
+  "amk_torque_limit_negative_fl",
+  "amk_torque_limit_positive_fr",
+  "amk_torque_limit_negative_fr",
+  "amk_torque_limit_positive_rr",
+  "amk_torque_limit_negative_rr",
+  "amk_torque_limit_positive_rl",
+  "amk_torque_limit_negative_rl",
+  "throttle",
+  "steering_angle",
+  "brake",
+  "brake_press_front",
+  "brake_press_rear",
+  "actual_velocity_kmh",
+  "car_status",
+};
+
+const char* JSON_3[] =
+{
+  "stest",
+  "timestamp",
+  "lap",
+  "type",
+  "acc_pot",
+  "brk_pot",
+  "brk_req",
+  "thr_req",
+  "max_hv_volt",
+  "min_hv_volt",
+  "avg_hv_volt",
+  "max_hv_temp",
+  "min_hv_temp",
+  "avg_hv_temp",
+  "max_temp_n_slave",
+  "bms_error_map",
+  "lem_current",
+  "car_voltage",
+  "current_sens",
+  "total_power",
+  "fan_speed",
+  "acceleration_x",
+  "acceleration_y",
+  "acceleration_z",
+  "omega_x",
+  "omega_y",
+  "omega_z",
+  "motor_post_rl",
+  "motor_pre_rl",
+  "motor_pre_rr",
+  "cplate_pre_right",
+  "cplate_pre_left",
+  "motor_post_fr",
+  "motor_post_rr",
+  "cplate_post_left",
+  "suspensions_rl",
+  "suspensions_fl",
+  "suspensions_fr",
+  "suspensions_rr",
+  "gpio_bms",
+  "gpio_imd",
+  "velocity",
+  "latitude",
+  "longitude",
+};
+
+const char **JSON_ARRAYS[] = {JSON_1, JSON_2, JSON_3};
+const uint32_t JSON_ARRAY_SIZES[] = 
+{
+  sizeof(JSON_1) / sizeof(JSON_1[0]),
+  sizeof(JSON_2) / sizeof(JSON_2[0]),
+  sizeof(JSON_3) / sizeof(JSON_3[0]),
+};
+#define MACRO_JSON_ARRAY_COUNT (sizeof(JSON_ARRAYS) / sizeof(JSON_ARRAYS[0]))
+const uint8_t JSON_ARRAY_COUNT = MACRO_JSON_ARRAY_COUNT;
+
 struct TelemetryEntry{
   const void* p_var;
   const char* p_name;
@@ -24,11 +157,13 @@ struct BstPos{
 };
 
 struct LogTelemetry_t{
-  struct TelemetryEntry* vars;
-  struct BstPos* root_pos;
+  struct LogPage{
+    uint8_t num_entry;
+    uint8_t cap_entry;
+    struct TelemetryEntry* vars;
+    struct BstPos* root_pos;
+  }m_log_pages[MACRO_JSON_ARRAY_COUNT];
   EthernetNodeIpv4_t* p_ethernet_udp_telemetry;
-  uint8_t num_entry;
-  uint8_t cap_entry;
 };
 
 union LogTelemetry_h_t_conv{
@@ -41,6 +176,11 @@ union LogTelemetry_h_t_conv{
 char __assert_size_telemetry[(sizeof(LogTelemetry_h) == sizeof(struct LogTelemetry_t))? 1:-1];
 char __assert_align_telemetry[(_Alignof(LogTelemetry_h) == _Alignof(struct LogTelemetry_t))? 1:-1];
 #endif // DEBUG
+
+#define FOR_EACH_JSON(p_json) for(const char*** p_json = &JSON_ARRAYS[0];*p_json;p_json++)
+
+#define FOR_EACH_JSON_FIELD(p_field, p_json)\
+  for(const char* p_field=*p_json[0];*p_field;++p_field)
 
 static void free_tree(struct BstPos* root)
 {
@@ -193,6 +333,32 @@ static int8_t _pre_order_execute(struct BstPos* root, const struct TelemetryEntr
   return 0;
 }
 
+typedef struct
+{
+  uint8_t json_num;
+  uint8_t json_line;
+}LogVarPosition;
+
+static int8_t _search_json_for_log_var(const char* var_name, LogVarPosition* o_log_position)
+{
+  for (uint8_t json_num=0;json_num<JSON_ARRAY_COUNT;++json_num)
+  {
+    for(uint32_t json_line=0;json_line<JSON_ARRAY_SIZES[json_num];++json_line)
+    {
+      if (!strcmp(JSON_ARRAYS[json_num][json_line], var_name))
+      {
+        o_log_position->json_num = json_num;
+        o_log_position->json_line = json_line;
+
+        return 0;
+      }
+
+    }
+  }
+
+  return -1;
+}
+
 //public
 
 int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
@@ -217,46 +383,70 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
     return -1;
   }
 
-  p_self->vars = calloc(1, sizeof(*p_self->vars));
-  if (!p_self->vars)
+  for (uint8_t i=0; i<JSON_ARRAY_COUNT; i++)
   {
-    hardware_ethernet_udp_free(&p_self->p_ethernet_udp_telemetry);
-    return -99;
+    struct LogPage* log_page = &p_self->m_log_pages[i];
+    log_page->vars = calloc(1, sizeof(*log_page->vars));
+    if (!log_page->vars)
+    {
+      hardware_ethernet_udp_free(&p_self->p_ethernet_udp_telemetry);
+      for (uint8_t j=0; j<i; j++)
+      {
+        free(p_self->m_log_pages[i].vars);
+      }
+      return -99;
+    }
+    log_page->cap_entry=1;
+    log_page->num_entry=0;
+    log_page->root_pos = NULL;
+  
   }
-  p_self->cap_entry=1;
-  p_self->num_entry=0;
-  p_self->root_pos = NULL;
 
   return 0;
 }
 
 int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self ,
     const char* name,
-    const void* const var, const enum DATA_MODE data_type, 
-    const DataPosition position)
+    const void* const var, const enum DATA_MODE data_type)
 {
   union LogTelemetry_h_t_conv conv = {self};
-  struct LogTelemetry_t* const restrict p_self = conv.clear;
+  struct LogTelemetry_t* const p_self = conv.clear;
   struct TelemetryEntry* entry=NULL;
+  struct LogPage* p_log_page = NULL;
+  LogVarPosition log_pos = {0};
 
-  if (p_self->num_entry >= p_self->cap_entry)
+  if(_search_json_for_log_var(name, &log_pos)<0)
   {
-    p_self->cap_entry*=2;
-    p_self->vars = realloc(p_self->vars, p_self->cap_entry * sizeof(*p_self->vars));
+    return -1;
   }
-  entry = &p_self->vars[p_self->num_entry++];
+
+  p_log_page = &p_self->m_log_pages[log_pos.json_num];
+  if (p_log_page->num_entry >= p_log_page->cap_entry)
+  {
+    p_log_page->cap_entry*=2;
+    p_log_page->vars = realloc(p_log_page->vars, p_log_page->cap_entry * sizeof(*p_log_page->vars));
+  }
+
+  entry = &p_log_page->vars[p_log_page->num_entry++];
   entry->p_var = var;
   entry->var_type = data_type;
   entry->p_name = name;
-  entry->json_cursor = position;
+  entry->json_cursor = log_pos.json_line;
 
-  return add_node(&p_self->root_pos, p_self->vars, entry);
+  if(add_node(&p_log_page->root_pos, p_log_page->vars, entry)<0)
+  {
+    --p_log_page->num_entry;
+    return -1;
+  }
+
+  return 0;
 }
 
 int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
 {
   union LogTelemetry_h_t_conv conv = {self};
   struct LogTelemetry_t* const restrict p_self __attribute__((__unused__))= conv.clear;
+  struct LogPage* p_log_page = NULL;
   Json_h json = {0};
   int8_t err=0;
 
@@ -265,8 +455,15 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
     return err; 
   }
 
-  err = _pre_order_execute(p_self->root_pos, p_self->vars, &json);
-  json_destroy(&json);
+  for (uint8_t i=0; i<JSON_ARRAY_COUNT; i++)
+  {
+    p_log_page = &p_self->m_log_pages[i];
+    err = _pre_order_execute(p_log_page->root_pos, p_log_page->vars, &json);
+    json_destroy(&json);
+    p_log_page = NULL;
+  }
+
+
 
   return err;
 }
@@ -276,9 +473,16 @@ int8_t log_telemetry_destroy(LogTelemetry_h* const restrict self)
 {
   union LogTelemetry_h_t_conv conv = {self};
   struct LogTelemetry_t* const restrict p_self = conv.clear;
+  struct LogPage* p_log_page = NULL;
 
-  free(p_self->vars);
-  free_tree(p_self->root_pos);
+  for (uint8_t i=0; i<JSON_ARRAY_COUNT; i++)
+  {
+    p_log_page = &p_self->m_log_pages[i];
+    free(p_log_page->vars);
+    free_tree(p_log_page->root_pos);
+  }
+
+  hardware_ethernet_udp_free(&p_self->p_ethernet_udp_telemetry);
 
   memset(self, 0, sizeof(*self));
 

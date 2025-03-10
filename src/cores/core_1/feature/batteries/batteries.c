@@ -75,7 +75,7 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
     .name = "lem current",
   };
 
-  if(log_add_entry(log, &entry, 1)<0)
+  if(log_add_entry(log, &entry)<0)
   {
     return -5;
   }
