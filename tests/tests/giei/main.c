@@ -7,7 +7,6 @@
 #include "src/cores/core_0/feature/maps/maps.h"
 #include "src/cores/core_0/feature/imu/imu.h"
 #include "src/cores/core_utility/emergency_module/emergency_module.h"
-#include "src/cores/core_utility/shared_memory/shared_memory.h"
 #include "car_component/car_component.h"
 
 #include <stdint.h>
@@ -201,7 +200,6 @@ int main(void)
     .external_boards = &external_boards,
   };
 
-  INIT_PH(shared_memory_init(10), "shared memory init");
   INIT_PH(EmergencyNode_class_init(), "emergency module class init");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");

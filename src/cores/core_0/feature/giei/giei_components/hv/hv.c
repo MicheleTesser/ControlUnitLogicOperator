@@ -1,7 +1,6 @@
 #include "hv.h"
 #include "../../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
-#include "../../../../../core_utility/shared_memory/shared_memory.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -65,7 +64,7 @@ int8_t hv_init(struct Hv_h* const restrict self)
     }
   }
 
-  return shared_memory_store_pointer(&p_self->pack_tension, 12);
+  return 0;
 }
 
 int8_t hv_update(Hv_h* const restrict self)

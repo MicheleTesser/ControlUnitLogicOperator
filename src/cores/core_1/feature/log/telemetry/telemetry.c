@@ -23,7 +23,6 @@ typedef struct
 static JsonCell JSON_1[] =
 {
   NEW_EMPTY_CELL("stest")
-  NEW_EMPTY_CELL("stest")
   NEW_EMPTY_CELL("timestamp")
   NEW_EMPTY_CELL("lap")
   NEW_EMPTY_CELL("type")

@@ -1,7 +1,6 @@
 #include "batteries.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
-#include "../../../core_utility/shared_memory/shared_memory.h"
 #include "bms/bms.h"
 
 #include <stdint.h>

@@ -1,4 +1,5 @@
 #include "log.h"
+#include "external_log_variables/external_log_variables.h"
 #include "sd/sd.h"
 #include "telemetry/telemetry.h"
 #include <stdint.h>
@@ -24,8 +25,8 @@ log_init(Log_h* const restrict self )
 {
   union Log_h_t_conv conv = {self};
   struct Log_t* const restrict p_self = conv.clear;
-
   memset(p_self, 0, sizeof(*p_self));
+
   if(log_sd_init(&p_self->sd)<0)
   {
     return -1;
@@ -33,7 +34,7 @@ log_init(Log_h* const restrict self )
 
   if(log_telemetry_init(&p_self->telemetry)<0)
   {
-    return -1;
+    return -2;
   }
 
   return 0;
@@ -50,11 +51,18 @@ int8_t log_add_entry(Log_h* const restrict self,
         entry->data_ptr, entry->data_format, entry->data_mode);
   }
   
+
+  //TODO: SD
+
   return 0;
 }
 
 int8_t
-log_update_and_send(Log_h* const restrict self __attribute__((__unused__)))
+log_update_and_send(Log_h* const restrict self)
 {
-  return 0;
+  union Log_h_t_conv conv = {self};
+  struct Log_t* const restrict p_self = conv.clear;
+
+  //TODO: SD
+  return log_telemetry_send(&p_self->telemetry);
 }

@@ -3,7 +3,7 @@
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../core_utility/emergency_module/emergency_module.h"
-#include "../../../../core_utility/shared_memory/shared_memory.h"
+#include "../../../../core_1/feature/log/external_log_variables/external_log_variables.h"
 #include "../../math_saturated/saturated.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -320,68 +320,47 @@ static float _max_torque(const AMKInverter_t* const restrict self)
 
 static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const enum ENGINES engine)
 {
-  const uint8_t basic_id_start = 13;
-  const uint8_t id_offset = 10* engine;
-  
-  if(shared_memory_store_pointer(&self->engines[engine].amk_values_1.AMK_status,
-        (basic_id_start + id_offset) + 0)<0)
+  uint8_t basic_id_start = AMK_STATUS_FL;
+  uint8_t cursor =0;
+
+  switch (engine)
   {
-    return -9 + id_offset;
+    case FRONT_LEFT:
+      basic_id_start = AMK_STATUS_FL;
+      break;
+    case FRONT_RIGHT:
+      basic_id_start = AMK_STATUS_FR;
+      break;
+    case REAR_LEFT:
+      basic_id_start = AMK_STATUS_RL;
+      break;
+    case REAR_RIGHT:
+      basic_id_start = AMK_STATUS_RR;
+      break;
+    default:
+      return -1;
   }
 
-  if(shared_memory_store_pointer(&self->engines[engine].amk_values_1.AMK_ActualVelocity,
-        (basic_id_start + id_offset) + 1)<0)
-  {
-    return -10 + id_offset;
-  }
+#define SHARE_LOG_VAR(engine, var)\
+  if(external_log_variables_store_pointer(&self->engines[engine].var,\
+        basic_id_start + cursor)<0)\
+  {\
+    return -9 + cursor;\
+  }\
+  ++cursor;
 
-  if(shared_memory_store_pointer(&self->engines[engine].amk_values_1.AMK_TorqueCurrent,
-        (basic_id_start + id_offset) + 2)<0)
-  {
-    return -11 + id_offset;
-  }
-
-  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_TempMotor,
-        (basic_id_start + id_offset) + 3)<0)
-  {
-    return -12 + id_offset;
-  }
-
-  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_TempIGBT,
-        (basic_id_start + id_offset) + 4)<0)
-  {
-    return -12 + id_offset;
-  }
-
-  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_TempInverter,
-        (basic_id_start + id_offset) + 5)<0)
-  {
-    return -13 + id_offset;
-  }
-
-  if(shared_memory_store_pointer(&self->engines[engine].amk_values_2.AMK_ErrorInfo,
-        (basic_id_start + id_offset) + 6)<0)
-  {
-    return -14 + id_offset;
-  }
-
-  if(shared_memory_store_pointer(&self->engines[engine].AMK_TargetVelocity,
-        (basic_id_start + id_offset) + 7)<0)
-  {
-    return -15 + id_offset;
-  }
-
-  if(shared_memory_store_pointer(&self->engines[engine].AMK_TorqueLimitNegative,
-        (basic_id_start + id_offset) + 8)<0)
-  {
-    return -16 + id_offset;
-  }
-
-  if(shared_memory_store_pointer(&self->engines[engine].AMK_TorqueLimitPositive,
-        (basic_id_start + id_offset) + 9)<0)
-  {
-    return -17 + id_offset;
-  }
+  //INFO: ORDER MATTER. For order look at shared_memory.h in AMK_SHARED_VARS
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_status);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_ActualVelocity);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_TorqueCurrent);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_MagnetizingCurrent);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_TorqueCurrent);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_TempMotor);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_TempInverter);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_TempIGBT);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_ErrorInfo);
+  SHARE_LOG_VAR(engine, AMK_TorqueLimitPositive);
+  SHARE_LOG_VAR(engine, AMK_TorqueLimitNegative);
 
   return 0;
 }
@@ -610,13 +589,6 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
   }
 
   int8_t err=0;
-  /*
-   * INFO: min, max included
-   * FRONT_LEFT ranges : 13...22
-   * FRONT_LEFT ranges : 23...32
-   * REAR_LEFT ranges : 33...42
-   * REAR_RIGHT ranges : 43...52
-   */
   FOR_EACH_ENGINE(engine)
   {
     if((err =_share_var_engine(p_self, engine))<0)

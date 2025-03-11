@@ -1,7 +1,7 @@
 #include "core_1.h"
 #include "../core_utility/core_utility.h"
 #include "feature/feature.h"
-#include "core_X_log_variables/core_x_log_variable.h"
+#include "feature/log/external_log_variables/external_log_variables.h"
 #include "feature/log/log.h"
 #include <stdint.h>
 
@@ -25,8 +25,7 @@ void main_1(void)
     core_status_core_ready(CORE_1);
     while (!core_status_ready_state());
 
-    while(init_log_var_core_x(CORE_0, &log)<0);
-    while(init_log_var_core_x(CORE_2, &log)<0);
+    while (external_log_variables_add_to_log(&log)<0);
 
     serial_write_str(0, "core 1 init done");
     //loop

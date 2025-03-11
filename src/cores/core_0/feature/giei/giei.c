@@ -1,7 +1,7 @@
 #include "giei.h"
 #include "../../../core_utility/mission_reader/mission_locker/mission_locker.h"
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
-#include "../../../core_utility/shared_memory/shared_memory.h"
+#include "../../../core_1/feature/log/external_log_variables/external_log_variables.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
@@ -23,10 +23,6 @@ struct Giei_t{
     RtdAssiSound_h o_rtd_sound;
     GpioRead_h gpio_rtd_button;
     MissionLocker_h o_mission_locker;
-    struct{
-      float pos[__NUM_OF_ENGINES__];
-      float neg[__NUM_OF_ENGINES__];
-    }TorquesNM;
     float engines_voltages[__NUM_OF_ENGINES__];
     enum RUNNING_STATUS running_status;
     EngineType* inverter;
@@ -140,9 +136,7 @@ int8_t giei_init(Giei_h* const restrict self,
 
     for (uint8_t i=0; i<__NUM_OF_ENGINES__; i++)
     {
-      if(shared_memory_store_pointer(&p_self->TorquesNM.pos[i], i)<0)return -5;
-      if(shared_memory_store_pointer(p_self->TorquesNM.neg, __NUM_OF_ENGINES__ + i)) return -6;
-      if(shared_memory_store_pointer(p_self->engines_voltages, (2 * __NUM_OF_ENGINES__) + i))return -7;
+      if(external_log_variables_store_pointer(p_self->engines_voltages, (2 * __NUM_OF_ENGINES__) + i))return -7;
     }
 
 
@@ -227,6 +221,11 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
     const float actual_max_neg_torque =
         engine_max_neg_torque(p_self->inverter, giei_max_neg_torque);
 
+    struct{
+      float pos[__NUM_OF_ENGINES__];
+      float neg[__NUM_OF_ENGINES__];
+    }TorquesNM = {0};
+
 
     p_self->engines_voltages[FRONT_LEFT] = engine_get_info(p_self->inverter, FRONT_LEFT,ENGINE_VOLTAGE);
     p_self->engines_voltages[FRONT_RIGHT] = engine_get_info(p_self->inverter, FRONT_RIGHT,ENGINE_VOLTAGE);
@@ -248,11 +247,11 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
             .rpm[2] = engine_get_info(p_self->inverter, REAR_LEFT, ENGINE_RPM),
             .rpm[3] = engine_get_info(p_self->inverter, REAR_RIGHT, ENGINE_RPM),
         };
-        tv_alg_compute(&tv_input, p_self->TorquesNM.pos);
+        tv_alg_compute(&tv_input, TorquesNM.pos);
     }
     else
     {
-        update_torque_NM_vectors_no_tv(p_self,throttle, p_self->TorquesNM.pos, actual_max_pos_torque);
+        update_torque_NM_vectors_no_tv(p_self,throttle, TorquesNM.pos, actual_max_pos_torque);
     }
 
     hv_computeBatteryPackTension(&p_self->hv, p_self->engines_voltages, __NUM_OF_ENGINES__);
@@ -260,7 +259,7 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
     if (throttle > 0 && regen >= 0)
     {
         const float total_power = hv_get_info(&p_self->hv, HV_TOTAL_POWER);
-        powerControl(total_power, limit_power, p_self->TorquesNM.pos);
+        powerControl(total_power, limit_power, TorquesNM.pos);
     }
 
     const struct RegenAlgInput input =
@@ -270,15 +269,15 @@ int8_t GIEI_compute_power(struct Giei_h* const restrict self)
         .front_left_velocity = engine_get_info(p_self->inverter, FRONT_LEFT, ENGINE_VOLTAGE),
         .front_right_velocity = engine_get_info(p_self->inverter, FRONT_RIGHT, ENGINE_VOLTAGE),
     };
-    regen_alg_compute(&input, p_self->TorquesNM.neg);
+    regen_alg_compute(&input, TorquesNM.neg);
 
 
     for (uint8_t i = 0; i < __NUM_OF_ENGINES__; i++)
     {
         const float saturated_pos_torque_nm = 
-            saturate_float(p_self->TorquesNM.pos[i], actual_max_pos_torque, 0.0f);
+            saturate_float(TorquesNM.pos[i], actual_max_pos_torque, 0.0f);
         const float saturated_neg_torque_nm = 
-            saturate_float(p_self->TorquesNM.neg[i],0.0f, actual_max_neg_torque);
+            saturate_float(TorquesNM.neg[i],0.0f, actual_max_neg_torque);
         const float posTorque = NMtoTorqueSetpoint(saturated_pos_torque_nm);
         const float negTorque = NMtoTorqueSetpoint(saturated_neg_torque_nm);
 

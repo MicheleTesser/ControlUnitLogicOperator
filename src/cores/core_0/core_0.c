@@ -1,8 +1,6 @@
 #include "core_0.h"
 #include "../core_utility/core_utility.h"
-#include "../core_utility/shared_memory/shared_memory.h"
 #include "feature/feature.h"
-#include <stdio.h>
 
 //public
 
@@ -13,10 +11,6 @@ void main_0(void)
     Core0Feature_h feature;
     
     serial_write_str(0, "start init core 0");
-    while (shared_memory_init(10)<0)
-    {
-      serial_write_str(0, "trying init shared_memory");
-    };
     while (EmergencyNode_class_init()<0)
     {
       serial_write_str(0, "trying init EmergencyNode class");
