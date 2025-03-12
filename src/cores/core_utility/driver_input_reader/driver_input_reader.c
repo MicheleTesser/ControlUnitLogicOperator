@@ -1,7 +1,10 @@
 #include "driver_input_reader.h"
 #include "../../../lib/raceup_board/raceup_board.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
+#pragma GCC diagnostic pop 
 
 #include <string.h>
 

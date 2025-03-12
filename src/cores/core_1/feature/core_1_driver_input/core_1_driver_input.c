@@ -1,5 +1,8 @@
 #include "core_1_driver_input.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#pragma GCC diagnostic pop 
 #include "../../../../lib/raceup_board/components/can.h"
 #include <stdint.h>
 #include <string.h>

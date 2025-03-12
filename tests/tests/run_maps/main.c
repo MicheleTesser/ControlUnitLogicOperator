@@ -1,6 +1,9 @@
 #include "score_lib/test_lib.h"
 #include "linux_board/linux_board.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "lib/board_dbc/dbc/out_lib/can2/can2.h"
+#pragma GCC diagnostic pop 
 #include "linux_board/linux_board.h"
 #include "./car_component/car_component.h"
 #include "src/cores/core_0/feature/maps/maps.h"

@@ -288,6 +288,7 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
             var_value = *(float*) cursor->p_data;
             break;
           default:
+            break;
         }
       }
       json_push_element(&json, cursor->m_name, cursor->data_format, var_value);

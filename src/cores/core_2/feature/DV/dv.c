@@ -1,8 +1,11 @@
 #include "dv.h"
 #include "../../../core_utility/core_utility.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#pragma GCC diagnostic pop 
 #include "../../../core_utility/running_status/running_status.h"
 #include "../../../core_utility/mission_reader/mission_reader.h"
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"

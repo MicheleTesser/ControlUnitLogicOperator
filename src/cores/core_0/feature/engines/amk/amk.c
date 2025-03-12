@@ -1,6 +1,9 @@
 #include "./amk.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#pragma GCC diagnostic pop 
 #include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../core_utility/emergency_module/emergency_module.h"
 #include "../../../../core_1/feature/log/external_log_variables/external_log_variables.h"

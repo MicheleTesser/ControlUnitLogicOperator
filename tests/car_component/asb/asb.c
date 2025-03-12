@@ -1,6 +1,9 @@
 #include "asb.h"
 #include "../../linux_board/linux_board.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
+#pragma GCC diagnostic pop 
 #include "../embedded_system/embedded_system.h"
 
 #include <stdint.h>

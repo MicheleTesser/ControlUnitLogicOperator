@@ -1,13 +1,12 @@
 CompileFlags:
   Add: [
-    -std=c11,
-    -xc,
-    -pedantic,
+    -Wpedantic,
     -Wall,
     -Wextra,
+    -std=c11,
+    -xc,
     -Wno-gnu-folding-constant,
     -Wno-c23-extensions,
-    -Wno-empty-translation-unit,
     -DDEBUG,
   ]
 

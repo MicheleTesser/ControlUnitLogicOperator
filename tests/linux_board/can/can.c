@@ -1,6 +1,5 @@
 #include "can.h"
 #include "can_lib/canlib.h"
-#include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "raceup_board/components/timer.h"
 
 #include <linux/can.h>
@@ -244,6 +243,7 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
 {
   uint16_t buffer_index=0;
   CanMessage* original_mex = NULL;
+  struct FifoBuffer* fifo = NULL;
 
   if (self->type == SEND_MAILBOX)
   {
@@ -257,7 +257,7 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
       buffer_index=0;
       break;
     case FIFO_BUFFER:
-      struct FifoBuffer* fifo = &self->fifo_buffer;
+      fifo = &self->fifo_buffer;
       if (fifo->tail == fifo->head)
       {
         atomic_flag_clear(&self->lock);
