@@ -17,7 +17,7 @@ end_tests() {
 build_run_logic_test()
 {
   cd host_src
-  make build 1>/dev/null
+  make ${1} 1>/dev/null
   ./main
   make clean 1>/dev/null
   cd ..
@@ -28,7 +28,7 @@ run_test() {
     cd $1
 
     echo -e ${YELLOW}building in DEBUG mode $ENDCOLOR
-    build_run_logic_test
+    build_run_logic_test build_debug
     cd "hardware_src/TriCore Debug (GCC)"
     echo "NOT YET IMPLEMENTED BUILDING IN DEBUG"
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
@@ -36,7 +36,7 @@ run_test() {
     cd - > /dev/null
 
     echo -e ${YELLOW}building in RELEASE mode $ENDCOLOR
-    build_run_logic_test
+    build_run_logic_test build_release
     cd "hardware_src/TriCore Release (GCC)"
     echo "NOT YET IMPLEMENTED BUILDING IN RELEASE"
     echo -e ${GREEN}running in RELEASE mode $ENDCOLOR
