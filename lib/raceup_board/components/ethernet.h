@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct{
-  uint32_t addr;
+  char* addr;
   uint16_t port;
 }IpAddrIpV4Port;
 
@@ -13,17 +13,21 @@ typedef struct{
   const uint16_t data_length;
 }UdpIpv4Mex;
 
-typedef struct EthernetNodeIpv4_t EthernetNodeIpv4_t;
+typedef __attribute__((aligned(8))) struct {
+  const uint8_t private_data[16];
+}EthernetNodeIpv4_h;
 
-extern EthernetNodeIpv4_t*
-hardware_ethernet_udp_init(const IpAddrIpV4Port* const restrict addr)
-  __attribute__((__nonnull__(1)));
+int8_t
+hardware_ethernet_udp_init(
+    EthernetNodeIpv4_h* const restrict self,
+    const IpAddrIpV4Port* const addr);
 
 extern int8_t
-hardware_ethernet_udp_send(const EthernetNodeIpv4_t* const restrict self,
-    const UdpIpv4Mex* const restrict data)__attribute__((__nonnull__(1,2)));
+hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
+    const IpAddrIpV4Port* const restrict addr,
+    const UdpIpv4Mex* const restrict data)__attribute__((__nonnull__(1,2,3)));
 
 extern void 
-hardware_ethernet_udp_free(EthernetNodeIpv4_t** self)__attribute__((__nonnull__(1)));
+hardware_ethernet_udp_free(EthernetNodeIpv4_h** self)__attribute__((__nonnull__(1)));
 
 #endif // !__VIRTUAL_ETHERNET__
