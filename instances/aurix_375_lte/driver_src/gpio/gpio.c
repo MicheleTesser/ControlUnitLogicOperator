@@ -1,58 +1,86 @@
 #include "gpio.h"
 #include "IfxPort.h"
-#include <stdint.h>
-#include "../../Libraries/ControlUnitLogicOperator/lib/raceup_board/components/gpio.h"
+#include "../raceup_board/components/gpio.h"
 
-int8_t hardware_init_gpio(const BoardComponentId id)
+#include <stdint.h>
+
+struct GpioRead_t{
+  Ifx_P *port;
+  uint8_t pin_index;
+};
+
+union GpioRead_h_t_conv{
+  const GpioRead_h* const restrict hidden;
+  const struct GpioRead_t* const restrict clear;
+};
+
+struct Gpio_t{
+  const struct GpioRead_t gpio_read_permission;
+  const uint8_t private_data[4];
+};
+
+union Gpio_h_t_conv{
+  Gpio_h* const restrict hidden;
+  struct Gpio_t* const restrict clear;
+};
+
+//public
+
+int8_t hardware_init_gpio(Gpio_h* const restrict self ,const enum GPIO_PIN id)
 {
-    switch (id) {
-        case 0:
-            IfxPort_setPinModeOutput(&MODULE_P00,5, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
-            IfxPort_setPinLow(&MODULE_P00,5);
-            break;
-        default:
-            return -1;
-    }
+  union Gpio_h_t_conv conv = {self};
+  struct Gpio_t* p_self __attribute__((__unused__))= conv.clear;
+  switch (id)
+  {
+    case GPIO_CORE_0_ALIVE_BLINK:
+    case GPIO_CORE_1_ALIVE_BLINK:
+    case GPIO_CORE_2_ALIVE_BLINK:
+    case GPIO_TS_BUTTON:
+    case GPIO_RTD_BUTTON:
+    case GPIO_RTD_ASSI_SOUND:
+    case GPIO_AIR_PRECHARGE_INIT:
+    case GPIO_AIR_PRECHARGE_DONE:
+    case GPIO_SCS:
+    default:
+      break;
+  }
     return 0;
 }
-int8_t gpio_set_pin_mode(const BoardComponentId id,uint8_t mode)
+int8_t gpio_set_pin_mode(Gpio_h* const restrict self,uint8_t mode)
 {
     return 0;
 }
-int8_t gpio_toggle(const BoardComponentId id)
+
+int8_t gpio_toggle(Gpio_h* const restrict self)
 {
-    switch (id) {
-        case 0:
-            IfxPort_togglePin(&MODULE_P00,5);
-            break;
-        default:
-            return -1;
-    }
-    return 0;
+  union Gpio_h_t_conv conv = {self};
+  struct Gpio_t* p_self = conv.clear;
+  return IfxPort_togglePin(
+      p_self->gpio_read_permission.port,
+      p_self->gpio_read_permission.pin_index);
 }
-int8_t gpio_read_state(const BoardComponentId id)
+int8_t gpio_read_state(const GpioRead_h* const restrict self)
 {
-    return 0;
+  const union GpioRead_h_t_conv conv = {self};
+  const struct GpioRead_t* p_self = conv.clear;
+  return IfxPort_readPin(
+      p_self->port,
+      p_self->pin_index);
 }
-int8_t gpio_set_high(const BoardComponentId id)
+int8_t gpio_set_high(Gpio_h* const restrict self)
 {
-    switch (id) {
-        case 0:
-            IfxPort_setPinHigh(&MODULE_P00,5);
-            break;
-        default:
-            return -1;
-    }
-    return 0;
+  union Gpio_h_t_conv conv = {self};
+  struct Gpio_t* p_self = conv.clear;
+  return IfxPort_setPinHigh(
+      p_self->gpio_read_permission.port,
+      p_self->gpio_read_permission.pin_index);
 }
-int8_t gpio_set_low(const BoardComponentId id)
+
+int8_t gpio_set_low(Gpio_h* const restrict self)
 {
-    switch (id) {
-        case 0:
-            IfxPort_setPinLow(&MODULE_P00,5);
-            break;
-        default:
-            return -1;
-    }
-    return 0;
+  union Gpio_h_t_conv conv = {self};
+  struct Gpio_t* p_self = conv.clear;
+  return IfxPort_setPinLow(
+      p_self->gpio_read_permission.port,
+      p_self->gpio_read_permission.pin_index);
 }

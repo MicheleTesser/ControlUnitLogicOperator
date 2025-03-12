@@ -39,8 +39,7 @@ const uint8_t __assert_driver_input_align[_Alignof(DriverInput_h) == _Alignof(st
 
 //public
 
-int8_t
-driver_input_init(DriverInput_h* const restrict self, 
+int8_t driver_input_init(DriverInput_h* const restrict self, 
     CarMissionReader_h* const restrict p_car_mission)
 {
   union DriverInputConv d_conv = {self};
@@ -65,8 +64,7 @@ driver_input_init(DriverInput_h* const restrict self,
   return 0;
 }
 
-int8_t
-giei_driver_input_get(const DriverInput_h* const restrict self,
+int8_t giei_driver_input_get(const DriverInput_h* const restrict self,
     const enum INPUT_TYPES input_type)
 {
   const union DriverInput_h_t_conv_const conv = {self};
@@ -76,16 +74,14 @@ giei_driver_input_get(const DriverInput_h* const restrict self,
     case DRIVER_HUMAN:
     case DRIVER_EMBEDDED:
       return driver_input_reader_get(&p_self->o_driver_input_reader, p_self->current_driver, input_type);
-    case DRIVER_NONE:
-    case __NUM_OF_DRIVERS__:
+    default:
       return -1;
   }
 
   return 0;
 }
 
-int8_t
-giei_driver_input_rtd_request(const DriverInput_h* const restrict self)
+int8_t giei_driver_input_rtd_request(const DriverInput_h* const restrict self)
 {
   const union DriverInput_h_t_conv_const conv = {self};
   const struct DriverInput_t* const p_self = conv.clear;
@@ -101,8 +97,7 @@ giei_driver_input_rtd_request(const DriverInput_h* const restrict self)
   }
 }
 
-int8_t
-giei_driver_input_update(DriverInput_h* const restrict self )
+int8_t giei_driver_input_update(DriverInput_h* const restrict self )
 {
   union DriverInput_h_t_conv conv = {self};
   struct DriverInput_t* const restrict p_self = conv.clear;
@@ -133,8 +128,7 @@ giei_driver_input_update(DriverInput_h* const restrict self )
   return 0;
 }
 
-void
-driver_input_destroy(DriverInput_h* restrict self)
+void driver_input_destroy(DriverInput_h* restrict self)
 {
   const union DriverInput_h_t_conv conv = {self};
   struct DriverInput_t* const p_self = conv.clear;
