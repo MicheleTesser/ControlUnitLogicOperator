@@ -17,11 +17,3 @@ time_var_microseconds timer_time_now(void)
     return (time_var_microseconds)(tv.tv_sec SECONDS + tv.tv_usec); // Convert to microseconds
 
 }
-
-uint8_t is_time_passed(
-        const time_var_microseconds old_time, 
-        const time_var_microseconds time_tick,
-        const time_var_microseconds amount_passed)
-{
-    return (time_tick - old_time) >= (amount_passed);
-}
