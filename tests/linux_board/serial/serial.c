@@ -3,19 +3,17 @@
 #include <string.h>
 #include <sys/cdefs.h>
 
-int8_t hardware_init_serial(const BoardComponentId id __attribute_maybe_unused__)
+int8_t hardware_init_serial(void)
+{
+  return 0;
+}
+
+int8_t serial_setup(const uint32_t freq __attribute_maybe_unused__)
 {
     return 0;
 }
 
-int8_t serial_setup(const BoardComponentId id __attribute_maybe_unused__,
-        const uint32_t freq __attribute_maybe_unused__)
-{
-    return 0;
-}
-
-int8_t serial_read(const BoardComponentId id __attribute_maybe_unused__, 
-        uint8_t* restrict const o_buffer,
+int8_t serial_read(uint8_t* restrict const o_buffer,
         const uint32_t buffer_size __attribute_maybe_unused__)
 {
     fflush(stdin);
@@ -25,8 +23,7 @@ int8_t serial_read(const BoardComponentId id __attribute_maybe_unused__,
     return 0;
 }
 
-int8_t serial_write_str(const BoardComponentId id __attribute_maybe_unused__, 
-        const char* const restrict buffer)
+int8_t serial_write_str(const char* const restrict buffer)
 {
     printf("%s\n",buffer);
     return 0;
