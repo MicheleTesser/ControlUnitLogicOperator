@@ -49,7 +49,6 @@ hardware_ethernet_udp_init(EthernetNodeIpv4_h* const restrict self,
 
 extern int8_t
 hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
-    const IpAddrIpV4Port* const restrict addr,
     const UdpIpv4Mex* const restrict data)
 {
   const union EthernetNodeIpv4_h_t_conv_const conv = {self};
@@ -64,7 +63,7 @@ hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
 }
 
 extern void 
-hardware_ethernet_udp_free(EthernetNodeIpv4_h** self)
+hardware_ethernet_udp_free(EthernetNodeIpv4_h* self)
 {
-  memset(*self, 0, sizeof(**self));
+  memset(self, 0, sizeof(*self));
 }

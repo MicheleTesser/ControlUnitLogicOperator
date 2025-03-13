@@ -186,7 +186,7 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
     EmergencyNode_raise(&self->emergency_node, EMERENGENCY_DV_EMERGENCY);
   }
 
-  if (!ebs_on(&self->dv_ebs)) 
+  if (ebs_on(&self->dv_ebs) && ebs_activated(&self->dv_ebs)) 
   {
     if (car_mission_reader_get_current_mission(self->p_mission_reader) > CAR_MISSIONS_HUMAN &&
         ebs_asb_consistency_check(&self->dv_ebs) == EBS_SUCCESS &&

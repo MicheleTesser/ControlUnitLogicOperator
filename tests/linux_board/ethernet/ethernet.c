@@ -18,45 +18,58 @@ struct EthernetNodeIpv4_t
   struct sockaddr_in servaddr;
 };
 
+union EthernetNodeIpv4_h_t_conv{
+  EthernetNodeIpv4_h* const hidden;
+  struct EthernetNodeIpv4_t* const clear;
+};
+
+union EthernetNodeIpv4_h_t_conv_const{
+  const EthernetNodeIpv4_h* const hidden;
+  const struct EthernetNodeIpv4_t* const clear;
+};
+
 //public
 
-extern EthernetNodeIpv4_t*
-hardware_ethernet_udp_init(const IpAddrIpV4Port* const restrict addr)
+int8_t
+hardware_ethernet_udp_init(
+    EthernetNodeIpv4_h* const restrict self,
+    const IpAddrIpV4Port* const addr)
 {
-  EthernetNodeIpv4_t* node = calloc(1, sizeof(*node));
+  union EthernetNodeIpv4_h_t_conv conv = {self};
+  struct EthernetNodeIpv4_t* const p_self = conv.clear;
 
-  if (!node)
-  {
-    return NULL;
-  }
   // Create a UDP Socket 
-  node->socket = socket(AF_INET, SOCK_DGRAM, 0);
+  p_self->socket = socket(AF_INET, SOCK_DGRAM, 0);
 
-  if (node->socket < 0)
+  if (p_self->socket < 0)
   {
-    free(node);
-    return NULL;
+    free(p_self);
+    return -1;
   }
 
-  node->servaddr.sin_addr.s_addr = addr->addr;
-  node->servaddr.sin_port = htons(addr->port);
-  node->servaddr.sin_family = AF_INET;
+  p_self->servaddr.sin_addr.s_addr = inet_addr(addr->addr);
+  p_self->servaddr.sin_port = htons(addr->port);
+  p_self->servaddr.sin_family = AF_INET;
 
-  return node;
+  return 0;
 }
 
 extern int8_t
-hardware_ethernet_udp_send(const EthernetNodeIpv4_t* const restrict self,
+hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
     const UdpIpv4Mex* const restrict data)
 {
-  return sendto(self->socket, data->raw_data, data->data_length, 0,
-      (struct sockaddr*) &self->servaddr, sizeof(self->servaddr));
+  const union EthernetNodeIpv4_h_t_conv_const conv = {self};
+  const struct EthernetNodeIpv4_t* const p_self = conv.clear;
+
+  return sendto(p_self->socket, data->raw_data, data->data_length, 0,
+      (struct sockaddr*) &p_self->servaddr, sizeof(p_self->servaddr));
 }
 
 extern void 
-hardware_ethernet_udp_free(EthernetNodeIpv4_t** self)
+hardware_ethernet_udp_free(EthernetNodeIpv4_h* self)
 {
-  close((*self)->socket);
-  free(*self);
-  *self=NULL;
+   union EthernetNodeIpv4_h_t_conv conv = {self};
+   struct EthernetNodeIpv4_t*  p_self = conv.clear;
+  close(p_self->socket);
+  memset(self, 0, sizeof(*self));
 }

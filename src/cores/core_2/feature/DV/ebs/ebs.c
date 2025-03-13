@@ -8,18 +8,28 @@
 #include <stdio.h>
 #include <string.h>
 
+enum Tanks_t{
+  TANK_LEFT=0,
+  TANK_RIGHT,
+
+  __NUM_OF_TANKS__
+};
+
 struct DvEbs_t{
   struct CanMailbox* p_ebs_mailbox;
   struct CanMailbox* p_asb_consistency_check_mailbox_send;
   struct CanMailbox* p_asb_consistency_check_mailbox_recv;
-  struct{
-    GpioRead_h o_gpio_precharge_init;
-    GpioRead_h o_gpio_precharge_done;
-  }SDC;
+  float tank_vals[__NUM_OF_TANKS__];
+  time_var_microseconds last_update;
   struct{
     enum ASB_INTEGRITY_CHECK_RESULT asb_consistency_check;
     uint8_t done:1;
   }ConsistencyCheck;
+  uint8_t sanity_check_right:1;
+  uint8_t sanity_check_left:1;
+  uint8_t system_check:1;
+  uint8_t ebs_working_properly:1;
+  uint8_t ebs_activated:1; //TODO: add to update function
 };
 
 union DvEbs_h_t_conv{
@@ -92,23 +102,8 @@ int8_t ebs_class_init(DvEbs_h* const restrict self)
     goto error_mailbox_consistency_check_recv;
   }
 
-  if (hardware_init_read_permission_gpio(&p_self->SDC.o_gpio_precharge_init, GPIO_AIR_PRECHARGE_INIT)<0)
-  {
-    goto error_gpio_precharge_init; 
-  }
-
-  if (hardware_init_read_permission_gpio(&p_self->SDC.o_gpio_precharge_done, GPIO_AIR_PRECHARGE_DONE)<0)
-  {
-    goto error_gpio_precharge_done; 
-  }
-
-
   return 0;
 
-error_gpio_precharge_done:
-  err--;
-error_gpio_precharge_init:
-  err--;
 error_mailbox_consistency_check_recv:
   hardware_free_mailbox_can(&p_self->p_ebs_mailbox);
   err--;
@@ -131,7 +126,16 @@ int8_t ebs_update(DvEbs_h* const restrict self)
   if (hardware_mailbox_read(p_self->p_ebs_mailbox, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    //TODO: not yet implemented storing and management of brake pump pressure
+    p_self->tank_vals[TANK_LEFT] = o2.can_0x03c_TanksEBS.press_left_tank;
+    p_self->tank_vals[TANK_RIGHT] = o2.can_0x03c_TanksEBS.press_right_tank;
+
+    p_self->sanity_check_left = o2.can_0x03c_TanksEBS.sanity_left_sensor;
+    p_self->sanity_check_right = o2.can_0x03c_TanksEBS.sanity_right_sensor;
+
+    p_self->system_check = o2.can_0x03c_TanksEBS.system_check;
+    p_self->ebs_working_properly =1;
+
+    p_self->last_update = timer_time_now();
   }
 
   if (hardware_mailbox_read(p_self->p_asb_consistency_check_mailbox_recv, &mex))
@@ -142,6 +146,11 @@ int8_t ebs_update(DvEbs_h* const restrict self)
       p_self->ConsistencyCheck.asb_consistency_check = o2.can_0x068_CheckASB.response_status;
       p_self->ConsistencyCheck.done = 1;
     }
+  }
+
+  if ((timer_time_now() - p_self->last_update) > 500 MILLIS)
+  {
+    p_self->ebs_working_properly =0;
   }
 
   return 0;
@@ -166,7 +175,13 @@ int8_t ebs_on(const DvEbs_h* const restrict self)
   const union DvEbs_h_t_conv_const conv = {self};
   const struct DvEbs_t* const restrict p_self= conv.clear;
 
-  return 
-    gpio_read_state(&p_self->SDC.o_gpio_precharge_init) &&
-    gpio_read_state(&p_self->SDC.o_gpio_precharge_done);
+  return p_self->ebs_working_properly;
+}
+
+int8_t ebs_activated(const DvEbs_h* const restrict self)
+{
+  const union DvEbs_h_t_conv_const conv = {self};
+  const struct DvEbs_t* const restrict p_self= conv.clear;
+
+  return p_self->ebs_activated;
 }

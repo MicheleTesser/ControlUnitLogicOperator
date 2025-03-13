@@ -20,7 +20,7 @@ enum LOG_MODE{
 };
 
 typedef struct __attribute__((aligned(8))) Log_h{
-  const uint8_t private_data[16];
+  const uint8_t private_data[24];
 }Log_h;
 
 int8_t

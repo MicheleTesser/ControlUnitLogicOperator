@@ -24,10 +24,9 @@ hardware_ethernet_udp_init(
 
 extern int8_t
 hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
-    const IpAddrIpV4Port* const restrict addr,
-    const UdpIpv4Mex* const restrict data)__attribute__((__nonnull__(1,2,3)));
+    const UdpIpv4Mex* const restrict data)__attribute__((__nonnull__(1,2)));
 
 extern void 
-hardware_ethernet_udp_free(EthernetNodeIpv4_h** self)__attribute__((__nonnull__(1)));
+hardware_ethernet_udp_free(EthernetNodeIpv4_h* self)__attribute__((__nonnull__(1)));
 
 #endif // !__VIRTUAL_ETHERNET__

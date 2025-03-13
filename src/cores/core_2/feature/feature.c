@@ -6,7 +6,6 @@
 #include "dv_driver_input/dv_driver_input.h"
 
 #include <stdint.h>
-#include <stdio.h>
 
 struct Core2Feature_t{
   DvDriverInput_h driver;

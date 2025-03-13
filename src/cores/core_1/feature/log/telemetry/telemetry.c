@@ -154,7 +154,7 @@ const uint32_t JSON_ARRAY_SIZES[] =
 const uint8_t JSON_ARRAY_COUNT = (sizeof(JSON_ARRAYS) / sizeof(JSON_ARRAYS[0]));
 
 struct LogTelemetry_t{
-  EthernetNodeIpv4_t* p_ethernet_udp_telemetry;
+  EthernetNodeIpv4_h p_ethernet_udp_telemetry;
 };
 
 union LogTelemetry_h_t_conv{
@@ -204,12 +204,11 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
   //INFO: telemetry infos: https://docs.google.com/document/d/1T5-u_UYU2VZMfcQa-BXe2rGkpZzWMHQcCuYubQNwaYI/edit?tab=t.0
   IpAddrIpV4Port addr =
   {
-    .addr = (204 << 3) | (216 << 2) | (214 << 1) | (158 << 0),
+    .addr = "204.216.214.158",
     .port = 8086,
   };
-  p_self->p_ethernet_udp_telemetry = hardware_ethernet_udp_init(&addr);
-
-  if (!p_self->p_ethernet_udp_telemetry)
+  
+  if(hardware_ethernet_udp_init(&p_self->p_ethernet_udp_telemetry,&addr)<0)
   {
     return -1;
   }
@@ -297,7 +296,7 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
       .data_length = json_len(&json),
       .raw_data = json_get(&json),
     };
-    hardware_ethernet_udp_send(p_self->p_ethernet_udp_telemetry, &mex);
+    hardware_ethernet_udp_send(&p_self->p_ethernet_udp_telemetry, &mex);
     json_destroy(&json);
     p_log_page = NULL;
   }
