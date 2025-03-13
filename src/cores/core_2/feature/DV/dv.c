@@ -9,6 +9,7 @@
 #include "../../../core_utility/running_status/running_status.h"
 #include "../../../core_utility/mission_reader/mission_reader.h"
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
+#include "../../../core_utility/as_node/as_node.h"
 #include "res/res.h"
 #include "ebs/ebs.h"
 #include "speed/speed.h"
@@ -56,6 +57,7 @@ struct Dv_t{
   time_var_microseconds emergency_sound_last_time_on;
   DvRes_h dv_res;
   DvEbs_h dv_ebs;
+  AsNodeRead_h m_as_node_read;
   DvSpeed_h dv_speed;
   GpioRead_h gpio_air_precharge_init;
   GpioRead_h gpio_air_precharge_done;
@@ -91,7 +93,7 @@ static uint8_t _sdc_closed(const struct Dv_t* const restrict self)
 {
   return  gpio_read_state(&self->gpio_air_precharge_init) &&
     gpio_read_state(&self->gpio_air_precharge_done) &&
-    EmergencyNode_is_emergency_state(&self->emergency_node);
+    as_node_read_get_status(&self->m_as_node_read);
 }
 
 static void _update_dv_status(struct Dv_t* const restrict self, const enum AS_STATUS status)
@@ -196,7 +198,7 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
       {
         _update_dv_status(self, AS_DRIVING);
       }
-      else if(driver_brake > 50)
+      else if(driver_brake > 50 && as_node_read_get_status(&self->m_as_node_read))
       {
         _update_dv_status(self, AS_READY);
       }
@@ -210,9 +212,7 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
       _update_dv_status(self, AS_OFF);
     }
   }
-
-
-  else if (self->o_dv_mission_status == MISSION_FINISHED && !current_speed && _sdc_closed(self))
+  else if (self->o_dv_mission_status == MISSION_FINISHED && !current_speed && !_sdc_closed(self))
   {
     _update_dv_status(self, AS_FINISHED);
   }
@@ -286,6 +286,11 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -8;
   }
 
+  if (as_node_read_init(&p_self->m_as_node_read)<0)
+  {
+    return -9;
+  }
+
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
   {
     p_self->p_send_car_dv_car_status_mailbox =
@@ -297,7 +302,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   }
   if (!p_self->p_send_car_dv_car_status_mailbox)
   {
-    return -9;
+    return -10;
   }
 
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
@@ -313,7 +318,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   if (!p_self->p_mailbox_recv_mision_status)
   {
     hardware_free_mailbox_can(&p_self->p_send_car_dv_car_status_mailbox);
-    return -10;
+    return -11;
   }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
@@ -330,7 +335,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   {
     hardware_free_mailbox_can(&p_self->p_send_car_dv_car_status_mailbox);
     hardware_free_mailbox_can(&p_self->p_mailbox_recv_mision_status);
-    return -11;
+    return -12;
   }
 
 

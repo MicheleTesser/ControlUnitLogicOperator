@@ -1,6 +1,7 @@
 #include "giei.h"
 #include "../../../core_utility/mission_reader/mission_locker/mission_locker.h"
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
+#include "../../../core_utility/as_node/as_node.h"
 #include "../../../core_1/feature/log/external_log_variables/external_log_variables.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
@@ -25,6 +26,7 @@ struct Giei_t{
     MissionLocker_h o_mission_locker;
     float engines_voltages[__NUM_OF_ENGINES__];
     enum RUNNING_STATUS running_status;
+    AsNode_h m_as_node;
     EngineType* inverter;
     const DriverInput_h* driver_input;
     const DrivingMaps_h* driving_maps;
@@ -115,6 +117,12 @@ int8_t giei_init(Giei_h* const restrict self,
       return -4;
     }
 
+    if (as_node_init(&p_self->m_as_node)<0)
+    {
+    
+      return -5;
+    }
+
     speed_alg_init();
     regen_alg_init();
     tv_alg_init();
@@ -157,6 +165,8 @@ int8_t giei_update(Giei_h* const restrict self )
         return -2;
     }
 
+    (void) as_node_update(&p_self->m_as_node);
+
     return 0;
 }
 
@@ -169,7 +179,10 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
     {
       rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }
-    rt = engine_rtd_procedure(p_self->inverter);
+    if (as_node_update(&p_self->m_as_node))
+    {
+      rt = engine_rtd_procedure(p_self->inverter);
+    }
 
     if (rt > SYSTEM_OFF)
     {
