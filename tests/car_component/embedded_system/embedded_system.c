@@ -1,6 +1,10 @@
 #include "embedded_system.h"
 #include "../../linux_board/linux_board.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include "../src/lib/board_dbc/dbc/out_lib/can3/can3.h"
+#include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
+#pragma GCC diagnostic pop 
 
 #include <stdint.h>
 #include <string.h>
@@ -18,6 +22,7 @@ struct EmbeddedSystem_t{
   }Input;
   struct CanMailbox* p_mailbox_input_vcu;
   struct CanMailbox* p_mailbox_send_mission_status_vcu;
+  struct CanMailbox* p_mailbox_send_alive_message;
 };
 
 union EmbeddedSystem_h_t_conv{
@@ -59,6 +64,7 @@ int _start_embedded_system(void* arg)
 
       hardware_mailbox_send(p_self->p_mailbox_input_vcu, payload_dv_driver);
       hardware_mailbox_send(p_self->p_mailbox_send_mission_status_vcu, payload_dv_mission);
+      hardware_mailbox_send(p_self->p_mailbox_send_alive_message, 0);
     }
   }
 
@@ -92,6 +98,16 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
           message_dlc_can3(CAN_ID_DV_MISSION));
   }
 
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+    p_self->p_mailbox_send_alive_message =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          SEND_MAILBOX,
+          CAN_ID_EMBEDDEDALIVECHECK,
+          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
+  }
+
   if (!p_self->p_mailbox_input_vcu)
   {
     return -1;
@@ -101,6 +117,13 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
     return -2;
+  }
+
+  if (!p_self->p_mailbox_send_alive_message)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_send_mission_status_vcu);
+    hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
+    return -3;
   }
 
   p_self->mission_status = MISSION_NOT_RUNNING;

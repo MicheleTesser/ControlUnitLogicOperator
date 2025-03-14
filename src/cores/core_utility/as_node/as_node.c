@@ -1,18 +1,26 @@
 #include "as_node.h"
 #include "../mission_reader/mission_reader.h"
 #include "../../../lib/raceup_board/raceup_board.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#pragma GCC diagnostic pop 
 
 #include <stdatomic.h>
 #include <stdint.h>
 #include <string.h>
 
 struct AsNodeRead_t{
-  GpioRead_h m_gpio_as_node;
+  GpioRead_h m_gpio_read_as_node;
 };
 
 struct AsNode_t{
-  CarMissionReader_h* p_mission_reader;
   Gpio_h m_gpio_as_node;
+  time_var_microseconds m_last_alive_message_received;
+  time_var_microseconds m_last_tank_ebs_message_received;
+  struct CanMailbox* p_mailbox_read_embedded_alive;
+  struct CanMailbox* p_mailbox_read_tank_ebs;
+  CarMissionReader_h* p_mission_reader;
 };
 
 
@@ -48,16 +56,14 @@ char __assert_align_as_node[(_Alignof(AsNodeRead_h)==_Alignof(struct AsNodeRead_
 
 static atomic_bool AS_NODE_OWNING =0;
 
-static uint8_t _check_embedded(struct AsNode_t *const restrict self __attribute__((__unused__)))
+static inline uint8_t _check_embedded(struct AsNode_t *const restrict self __attribute__((__unused__)))
 {
-  //TODO: not yet implemented
-  return 0;
+  return (timer_time_now() - self->m_last_alive_message_received) > 500 MILLIS;
 }
 
-static uint8_t _check_ebs(struct AsNode_t *const restrict self __attribute__((__unused__)))
+static inline uint8_t _check_ebs(struct AsNode_t *const restrict self __attribute__((__unused__)))
 {
-  //TODO: not yet implemented
-  return 0;
+  return (timer_time_now() - self->m_last_tank_ebs_message_received) > 500 MILLIS;
 }
 
 static inline uint8_t _as_node_enable(struct AsNode_t* const restrict self)
@@ -79,6 +85,7 @@ int8_t as_node_init(AsNode_h* const restrict self,
 {
   union AsNode_h_t_conv conv = {self};
   struct AsNode_t* const p_self = conv.clear;
+  struct CanNode* can_node = NULL;
 
   atomic_bool expected_value =0;
   if (!atomic_compare_exchange_strong(&AS_NODE_OWNING, &expected_value, 1))
@@ -94,6 +101,38 @@ int8_t as_node_init(AsNode_h* const restrict self,
     return -2;
   }
 
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+    p_self->p_mailbox_read_embedded_alive =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_EMBEDDEDALIVECHECK,
+          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
+  }
+
+  if (!p_self->p_mailbox_read_embedded_alive)
+  {
+    return -3;
+  }
+
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+
+    p_self->p_mailbox_read_tank_ebs =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_TANKSEBS,
+          message_dlc_can2(CAN_ID_TANKSEBS));
+  }
+
+  if (!p_self->p_mailbox_read_tank_ebs)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
+    return -4;
+  }
+
   p_self->p_mission_reader = p_car_mission_reader;
 
   return 0;
@@ -103,18 +142,31 @@ int8_t as_node_update(AsNode_h* const restrict self)
 {
   union AsNode_h_t_conv conv = {self};
   struct AsNode_t* const p_self = conv.clear;
+  CanMessage mex = {0};
+
+  if (hardware_mailbox_read(p_self->p_mailbox_read_embedded_alive, &mex))
+  {
+    p_self->m_last_alive_message_received = timer_time_now();
+  }
+
+  if (hardware_mailbox_read(p_self->p_mailbox_read_tank_ebs, &mex))
+  {
+    p_self->m_last_tank_ebs_message_received = timer_time_now();
+  }
+
 
   switch (car_mission_reader_get_current_mission(p_self->p_mission_reader))
   {
     case CAR_MISSIONS_HUMAN:
       if (!_check_ebs(p_self))
       {
-        return _as_node_enable(p_self);
+        _as_node_enable(p_self);
       }
       else
       {
-        return _as_node_disable(p_self);
+        _as_node_disable(p_self);
       }
+      break;
     case CAR_MISSIONS_DV_SKIDPAD:
     case CAR_MISSIONS_DV_AUTOCROSS:
     case CAR_MISSIONS_DV_TRACKDRIVE:
@@ -122,15 +174,17 @@ int8_t as_node_update(AsNode_h* const restrict self)
     case CAR_MISSIONS_DV_INSPECTION:
       if (_check_ebs(p_self) && _check_embedded(p_self))
       {
-        return _as_node_enable(p_self);
+        _as_node_enable(p_self);
       }
       else
       {
-        return _as_node_disable(p_self);
+        _as_node_disable(p_self);
       }
+      break;
     default:
-      return _as_node_disable(p_self);
+      _as_node_disable(p_self);
   }
+  return -1;
 }
 
 int8_t as_node_read_init(AsNodeRead_h* const restrict self)
@@ -140,7 +194,7 @@ int8_t as_node_read_init(AsNodeRead_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
-  if (hardware_init_read_permission_gpio(&p_self->m_gpio_as_node, GPIO_AS_NODE)<0)
+  if (hardware_init_read_permission_gpio(&p_self->m_gpio_read_as_node, GPIO_AS_NODE)<0)
   {
     return -1;
   }
@@ -148,10 +202,18 @@ int8_t as_node_read_init(AsNodeRead_h* const restrict self)
   return 0;
 }
 
+uint8_t as_node_get_status(const AsNode_h* const restrict self)
+{
+  const union AsNode_h_t_conv_const conv = {self};
+  const struct AsNode_t* const p_self = conv.clear;
+
+  return gpio_read_state(&p_self->m_gpio_as_node.gpio_read_permission);
+}
+
 uint8_t as_node_read_get_status(const AsNodeRead_h* const restrict self)
 {
   const union AsNodeRead_h_t_conv_const conv = {self};
   const struct AsNodeRead_t* const p_self = conv.clear;
 
-  return gpio_read_state(&p_self->m_gpio_as_node);
+  return gpio_read_state(&p_self->m_gpio_read_as_node);
 }

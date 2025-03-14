@@ -16,8 +16,8 @@
 #include "../imu/imu.h"
 #include "../engines/engines.h"
 
-typedef struct __attribute__((aligned(8))) Giei_h{
-  const uint8_t private_data[144];
+typedef struct __attribute__((aligned(8))){
+  const uint8_t private_data[176];
 }Giei_h;
 
 int8_t 
@@ -36,8 +36,6 @@ enum RUNNING_STATUS
 GIEI_check_running_condition(Giei_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-GIEI_compute_power(struct Giei_h* const restrict self )__attribute__((__nonnull__(1)));
-
-
+GIEI_compute_power(Giei_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_GIEI__

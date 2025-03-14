@@ -35,12 +35,12 @@ struct Giei_t{
 };
 
 union Giei_conv{
-    struct Giei_h* const hidden;
+    Giei_h* const hidden;
     struct Giei_t* const clear;
 };
 
 union Giei_conv_const{
-    const struct Giei_h* const hidden;
+    const Giei_h* const hidden;
     const struct Giei_t* const clear;
 };
 
@@ -49,8 +49,8 @@ union Giei_conv_const{
     struct Giei_t* t_ptr_name = __g_conv_##t_ptr_name##__.clear;
 
 #ifdef DEBUG
-const uint8_t giei_size_check[(sizeof(struct Giei_h) == sizeof(struct Giei_t))? 1 : -1];
-const uint8_t giei_align_check[(_Alignof(struct Giei_h) == _Alignof(struct Giei_t))? 1 : -1];
+const uint8_t giei_size_check[(sizeof(Giei_h) == sizeof(struct Giei_t))? 1 : -1];
+const uint8_t giei_align_check[(_Alignof(Giei_h) == _Alignof(struct Giei_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
 static inline int NMtoTorqueSetpoint(const float torqueNM)
@@ -166,12 +166,15 @@ int8_t giei_update(Giei_h* const restrict self )
         return -2;
     }
 
-    (void) as_node_update(&p_self->m_as_node);
+    if(as_node_update(&p_self->m_as_node)<0)
+    {
+      return -3;
+    }
 
     return 0;
 }
 
-enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict self)
+enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
 {
     GIEI_H_T_CONV(self, p_self);
     enum RUNNING_STATUS rt = SYSTEM_OFF;
@@ -180,7 +183,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
     {
       rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }
-    if (as_node_update(&p_self->m_as_node))
+    if (as_node_get_status(&p_self->m_as_node))
     {
       rt = engine_rtd_procedure(p_self->inverter);
     }
@@ -210,7 +213,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(struct Giei_h* const restrict s
 
 }
 
-int8_t GIEI_compute_power(struct Giei_h* const restrict self)
+int8_t GIEI_compute_power(Giei_h* const restrict self)
 {
     const union Giei_conv conv = {self};
     struct Giei_t* const restrict p_self = conv.clear;
