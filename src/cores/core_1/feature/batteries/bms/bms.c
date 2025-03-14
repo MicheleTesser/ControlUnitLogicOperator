@@ -2,6 +2,7 @@
 #include "../../log/log.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../../../../../lib/raceup_board/raceup_board.h"
@@ -110,7 +111,7 @@ bms_update(Bms_h* const restrict self )
 
   if (hardware_mailbox_read(p_self->mailbox, &mex))
   {
-    unpack_message_can2(&o, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    unpack_message_can2(&o, mex.id, mex.full_word, mex.message_size,(uint8_t) timer_time_now());
     p_self->volts[MAX] = o.can_0x057_BmsHv1.max_volt;
     p_self->volts[MIN] = o.can_0x057_BmsHv1.min_volt;
     p_self->volts[AVG] = o.can_0x057_BmsHv1.avg_volt;

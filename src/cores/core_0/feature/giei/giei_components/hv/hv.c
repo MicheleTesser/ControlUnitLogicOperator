@@ -47,7 +47,7 @@ int8_t hv_init(struct Hv_h* const restrict self)
           can_node,
           RECV_MAILBOX,
           CAN_ID_LEM,
-          message_dlc_can2(CAN_ID_LEM));
+          (uint8_t)message_dlc_can2(CAN_ID_LEM));
 
     if (!p_self->lem_mailbox)
     {
@@ -59,7 +59,7 @@ int8_t hv_init(struct Hv_h* const restrict self)
           can_node,
           SEND_MAILBOX,
           CAN_ID_INVVOLT,
-          message_dlc_can2(CAN_ID_INVVOLT));
+          (uint8_t)message_dlc_can2(CAN_ID_INVVOLT));
 
     if (!p_self->send_mailbox_bms_hv)
     {
@@ -78,7 +78,7 @@ int8_t hv_update(Hv_h* const restrict self)
   if(hardware_mailbox_read(p_self->lem_mailbox,&mex)>=0)
   {
     can_obj_can2_h_t o2= {0};
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, (unsigned int) timer_time_now());
 
     union {
       uint32_t u32;
@@ -116,7 +116,7 @@ int8_t hv_computeBatteryPackTension(struct Hv_h* const restrict self,
   struct GieiHv_t* const restrict p_self = conv.clear;
   uint8_t active_motors = 0;
   float sum = 0.0f;
-  uint8_t max = 0;
+  float max = 0;
   can_obj_can2_h_t o;
   uint64_t data_mex=0;
 
@@ -149,7 +149,7 @@ int8_t hv_computeBatteryPackTension(struct Hv_h* const restrict self,
     p_self->hv_public_data[HV_TOTAL_POWER]= p_self->pack_tension * p_self->lem_current;
   }
 
-  o.can_0x120_InvVolt.car_voltage = p_self->pack_tension;
+  o.can_0x120_InvVolt.car_voltage = (uint16_t) p_self->pack_tension;
   pack_message_can2(&o, CAN_ID_INVVOLT, &data_mex);
   return hardware_mailbox_send(p_self->send_mailbox_bms_hv, data_mex);
 }

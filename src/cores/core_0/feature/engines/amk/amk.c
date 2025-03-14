@@ -1,6 +1,7 @@
 #include "./amk.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can1/can1.h"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
@@ -146,7 +147,7 @@ static int8_t _send_message_amk(const AMKInverter_t* const restrict self,
       return -1;
   }
 
-  mex.message_size = pack_message_can1(&om, mex.id, &mex.full_word);
+  mex.message_size = (uint8_t) pack_message_can1(&om, mex.id, &mex.full_word);
   return hardware_write_can(self->can_inverter, &mex);
 }
 
@@ -316,15 +317,15 @@ static float _max_torque(const AMKInverter_t* const restrict self)
   {
     const float actual_velocity = 
       self->engines[engine].amk_values_1.AMK_ActualVelocity;
-    torque_max_sum += MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
+    torque_max_sum += MAX_MOTOR_TORQUE - 0.000857f*(actual_velocity - 13000.0f);
   }
-  return  torque_max_sum/__NUM_OF_ENGINES__;
+  return  torque_max_sum/ (float)__NUM_OF_ENGINES__;
 }
 
 static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const enum ENGINES engine)
 {
   uint8_t basic_id_start = AMK_STATUS_FL;
-  uint8_t cursor =0;
+  int8_t cursor =0;
 
   switch (engine)
   {
@@ -346,7 +347,7 @@ static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const 
 
 #define SHARE_LOG_VAR(engine, var)\
   if(external_log_variables_store_pointer(&self->engines[engine].var,\
-        basic_id_start + cursor)<0)\
+        (SharedDataId) (basic_id_start + cursor))<0)\
   {\
     return -9 + cursor;\
   }\
@@ -407,11 +408,17 @@ amk_update(AMKInverter_t* const restrict self)
   can_obj_can1_h_t o1 ={0};
   can_obj_can2_h_t o2 ={0};
   int8_t err=0;
+  union u8_u81{
+    uint8_t u8;
+    uint8_t u8_1:1;
+  }u8_u81;
 
   _amk_update_rtd_procedure(self);
   if (hardware_mailbox_read(self->engine_mailbox, &mex))
   {
-    unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, (unsigned int) timer_time_now());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
     switch (mex.id)
     {
       case CAN_ID_INVERTERFL1:
@@ -445,13 +452,16 @@ amk_update(AMKInverter_t* const restrict self)
         err--;
         break;
     }
+
+#pragma GCC diagnostic pop
   }
 
   memset(&mex, 0, sizeof(mex));
+  u8_u81.u8 = o2.can_0x134_PcuRfAck.rf_signalAck;
   if (hardware_mailbox_read(self->mailbox_pcu_rf_signal_read, &mex))
   {
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    self->rf_status = o2.can_0x134_PcuRfAck.rf_signalAck;
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, (unsigned int) timer_time_now());
+    self->rf_status = u8_u81.u8_1;
   }
   return err;
 }
@@ -496,8 +506,8 @@ int8_t amk_send_torque(const AMKInverter_t* const restrict self,
     struct AMK_Setpoints setpoint  ={
       .AMK_Control_fields ={0},
       .AMK_TargetVelocity = SPEED_LIMIT,
-      .AMK_TorqueLimitPositive = pos_torque,
-      .AMK_TorqueLimitNegative = neg_torque,
+      .AMK_TorqueLimitPositive = (int16_t) pos_torque,
+      .AMK_TorqueLimitNegative = (int16_t) neg_torque,
     };
     return _send_message_amk(self, engine, &setpoint);
   }
@@ -576,14 +586,14 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
       hardware_get_mailbox_single_mex(can_node,
           SEND_MAILBOX,
           CAN_ID_PCU,
-          message_dlc_can2(CAN_ID_PCU));
+          (uint8_t)message_dlc_can2(CAN_ID_PCU));
 
     p_self->mailbox_pcu_rf_signal_read =
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
           CAN_ID_PCURFACK,
-          message_dlc_can2(CAN_ID_PCURFACK));
+          (uint8_t)message_dlc_can2(CAN_ID_PCURFACK));
   }
 
   if (!p_self->mailbox_pcu_rf_signal_send)

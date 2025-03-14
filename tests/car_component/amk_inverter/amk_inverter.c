@@ -130,7 +130,7 @@ static void _send_data_engine(struct EmulationAmkInverter_t* const restrict p_se
       return;
   }
   mex.id= can_id;
-  mex.message_size = pack_message_can1(&o, can_id,&mex.full_word);
+  mex.message_size = (uint8_t) pack_message_can1(&o, can_id,&mex.full_word);
   hardware_write_can(p_self->p_can_node_inverter, &mex);
 }
 
@@ -176,6 +176,8 @@ static int _inverter_compute_internal_status(struct EmulationAmkInverter_t* cons
   return 0;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 #define UPDATE_DATA(self, mex, rf_signal)\
 {\
   self.AMK_STATUS.AMK_bDcOn = mex.AMK_bDcOn;\
@@ -193,7 +195,7 @@ static void _amk_inverter_update_data(struct EmulationAmkInverter_t* const restr
 {
   CanMessage mex = {0};
   can_obj_can1_h_t o1 ={0};
-  const uint8_t rf_signal = gpio_read_state(&p_self->o_rf);
+  const int8_t rf_signal = gpio_read_state(&p_self->o_rf);
 
   if (hardware_mailbox_read(p_self->p_recv_mailbox_vcu, &mex))
   {
@@ -226,6 +228,7 @@ static void _amk_inverter_update_data(struct EmulationAmkInverter_t* const restr
     }
   }
 }
+#pragma GCC diagnostic pop 
 
 static int _car_amk_inverter_update(void* args)
 {
@@ -271,7 +274,7 @@ int8_t car_amk_inverter_start(EmulationAmkInverter_h* self)
   // filter id:384, 0000000110000000
   // mask: 65520,   1111111111110000
   const uint16_t filter_id = CAN_ID_VCUINVFL & CAN_ID_VCUINVFR & CAN_ID_VCUINVRL & CAN_ID_VCUINVRR;
-  const uint16_t filter_mask = (~0) ^ 15;
+  const uint16_t filter_mask = (uint16_t)(~0u) ^ 15u;
 
   p_self->p_recv_mailbox_vcu =
     hardware_get_mailbox(p_self->p_can_node_inverter, FIFO_BUFFER, filter_id, filter_mask , 8);
@@ -315,25 +318,32 @@ car_amk_inverter_reset(EmulationAmkInverter_h* self)
 
 int8_t car_amk_inverter_set_attribute(EmulationAmkInverter_h* self,
     const enum INVERTER_ATTRIBUTE attribute, const uint8_t engine,
-    const int64_t value)
+    const uint8_t value)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   struct amk_engines* p_engine = &p_self->o_engines[engine];
 
+  union f_u8{
+    float f;
+    uint8_t u8:1;
+  }f_u8;
+
+  f_u8.f =value;
+
   switch (attribute)
   {
     case ERROR:
-      p_engine->amk_data_1.AMK_STATUS.AMK_bError = value;
+      p_engine->amk_data_1.AMK_STATUS.AMK_bError = f_u8.u8;
       break;
     case WARNING:
-      p_engine->amk_data_1.AMK_STATUS.AMK_bWarn = value;
+      p_engine->amk_data_1.AMK_STATUS.AMK_bWarn = f_u8.u8;
       break;
     case DERATRING:
-      p_engine->amk_data_1.AMK_STATUS.AMK_bDerating = value;
+      p_engine->amk_data_1.AMK_STATUS.AMK_bDerating = f_u8.u8;
       break;
     case SYSTEM_READY:
-      p_engine->amk_data_1.AMK_STATUS.AMK_bSystemReady = value;
+      p_engine->amk_data_1.AMK_STATUS.AMK_bSystemReady = f_u8.u8;
       break;
   }
 
@@ -348,6 +358,16 @@ int8_t car_amk_inverter_set_engine_value(EmulationAmkInverter_h* self,
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
   struct amk_engines* p_engine = &p_self->o_engines[engine];
 
+  union f_i16{
+    float f;
+    int16_t i16;
+  }f_i16;
+
+  union f_u16{
+    float f;
+    uint16_t u16;
+  }f_u16;
+
   if (!gpio_read_state(&p_self->o_rf))
   {
     return -1;
@@ -361,28 +381,31 @@ int8_t car_amk_inverter_set_engine_value(EmulationAmkInverter_h* self,
     }
   }
 
+  f_i16.f =value;
+  f_u16.f =value;
+
   switch (status)
   {
     case ACTUAL_VELOCITY:
-      p_engine->amk_data_1.AMK_ActualVelocity = value;
+      p_engine->amk_data_1.AMK_ActualVelocity = f_i16.i16;
       break;
     case TORQUE_CURRENT:
-      p_engine->amk_data_1.AMK_TorqueCurrent = value;
+      p_engine->amk_data_1.AMK_TorqueCurrent = f_i16.i16;
       break;
     case MAGNETIZING_CURRENT:
-      p_engine->amk_data_1.AMK_MagnetizingCurrent = value;
+      p_engine->amk_data_1.AMK_MagnetizingCurrent = f_i16.i16;
       break;
     case TEMP_MOTOR:
-      p_engine->amk_data_2.AMK_TempMotor= value;
+      p_engine->amk_data_2.AMK_TempMotor= f_i16.i16;
       break;
     case TEMP_INVERTER:
-      p_engine->amk_data_2.AMK_TempInverter = value;
+      p_engine->amk_data_2.AMK_TempInverter = f_i16.i16;
       break;
     case TEMP_IGBT:
-      p_engine->amk_data_2.AMK_TempIGBT = value;
+      p_engine->amk_data_2.AMK_TempIGBT = f_i16.i16;
       break;
     case ERROR_INFO:
-      p_engine->amk_data_2.AMK_ErrorInfo = value;
+      p_engine->amk_data_2.AMK_ErrorInfo = f_u16.u16;
       break;
     default:
       return -1;
@@ -395,9 +418,9 @@ enum PRECHARGE_STATUS car_amk_inverter_precharge_status(const EmulationAmkInvert
 {
   const union AmkInverter_h_t_conv_const conv = {self};
   const struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  return 
-    (gpio_read_state(&p_self->o_precharge_init.gpio_read_permission) << 0) |
-    (gpio_read_state(&p_self->o_precharge_done.gpio_read_permission) << 1);
+  return (enum PRECHARGE_STATUS)
+    ((uint32_t) gpio_read_state(&p_self->o_precharge_init.gpio_read_permission) << 0) |
+    ((uint32_t) gpio_read_state(&p_self->o_precharge_done.gpio_read_permission) << 1);
 }
 
 void car_amk_inverter_stop(EmulationAmkInverter_h* self)

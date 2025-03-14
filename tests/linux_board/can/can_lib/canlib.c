@@ -52,9 +52,8 @@ int can_init_full(const char* const ifname, const uint16_t filter_id, const uint
 
 // Send a CAN frame
 int can_send_frame(int socket, struct can_frame *frame) {
-    int nbytes;
 
-    nbytes = write(socket, frame, sizeof(*frame));
+    int nbytes = (int) write(socket, frame, sizeof(*frame));
     if (nbytes != sizeof(struct can_frame)) {
         perror("Write");
         return -1;
@@ -68,7 +67,7 @@ int can_recv_frame(int socket, struct can_frame *frame) {
   int nbytes;
 
   do{
-    nbytes = read(socket, frame, sizeof(*frame));
+    nbytes = (int) read(socket, frame, sizeof(*frame));
     if (nbytes < 0)
     {
       errno = EINTR;

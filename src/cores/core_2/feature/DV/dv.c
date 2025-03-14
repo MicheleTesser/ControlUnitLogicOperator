@@ -3,6 +3,7 @@
 #include "../../../../lib/raceup_board/raceup_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
@@ -212,7 +213,7 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
       _update_dv_status(self, AS_OFF);
     }
   }
-  else if (self->o_dv_mission_status == MISSION_FINISHED && !current_speed && !_sdc_closed(self))
+  else if (self->o_dv_mission_status == MISSION_FINISHED && current_speed==0.0f && !_sdc_closed(self))
   {
     _update_dv_status(self, AS_FINISHED);
   }
@@ -298,7 +299,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
         can_node,
         SEND_MAILBOX,
         CAN_ID_DV_CARSTATUS,
-        message_dlc_can3(CAN_ID_DV_CARSTATUS));
+        (uint8_t)message_dlc_can3(CAN_ID_DV_CARSTATUS));
   }
   if (!p_self->p_send_car_dv_car_status_mailbox)
   {
@@ -312,7 +313,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
         can_node,
         RECV_MAILBOX,
         CAN_ID_DV_MISSION,
-        message_dlc_can3(CAN_ID_DV_MISSION));
+        (uint8_t)message_dlc_can3(CAN_ID_DV_MISSION));
   }
 
   if (!p_self->p_mailbox_recv_mision_status)
@@ -328,7 +329,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
         can_node,
         RECV_MAILBOX,
         CAN_ID_CARMISSIONSTATUS,
-        message_dlc_can3(CAN_ID_DV_MISSION));
+        (uint8_t)message_dlc_can3(CAN_ID_DV_MISSION));
   }
 
   if (!p_self->p_mailbox_send_mission_can_2)
@@ -365,7 +366,7 @@ int8_t dv_update(Dv_h* const restrict self)
   {
     if (hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
     {
-      unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
+      unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, (unsigned int) timer_time_now());
       p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
     }
   
@@ -377,9 +378,9 @@ int8_t dv_update(Dv_h* const restrict self)
     if(_dv_update_status(p_self)<0)return -4;
     if(_dv_update_led(p_self)<0) return -5;
     
-    o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
-    o2.can_0x071_CarMissionStatus.MissionStatus = p_self->o_dv_mission_status;
-    o2.can_0x071_CarMissionStatus.AsStatus = p_self->status;
+    o2.can_0x071_CarMissionStatus.Mission = (uint8_t) car_mission_reader_get_current_mission(p_self->p_mission_reader);
+    o2.can_0x071_CarMissionStatus.MissionStatus = (uint8_t) p_self->o_dv_mission_status;
+    o2.can_0x071_CarMissionStatus.AsStatus = (uint8_t) p_self->status;
 
     pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
 

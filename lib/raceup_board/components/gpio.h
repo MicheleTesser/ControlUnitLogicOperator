@@ -74,7 +74,7 @@ hardware_init_gpio_pwm_read_only(GpioPwm_h* const restrict self ,
     const enum GPIO_PWM_PIN id)__attribute__((__nonnull__(1)));
 
 extern int8_t
-hardware_write_gpio_pwm(GpioPwm_h* const restrict self, const uint16_t duty_cycle)
+hardware_write_gpio_pwm(GpioPwm_h* const restrict self, const uint8_t duty_cycle)
   __attribute__((__nonnull__(1)));
 
 extern uint16_t

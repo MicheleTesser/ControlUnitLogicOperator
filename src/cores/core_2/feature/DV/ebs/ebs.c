@@ -2,6 +2,7 @@
 #include "../../../../../../lib/raceup_board/raceup_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include <stdint.h>
@@ -64,7 +65,7 @@ int8_t ebs_class_init(DvEbs_h* const restrict self)
         can_node,
         RECV_MAILBOX,
         CAN_ID_TANKSEBS,
-        message_dlc_can2(CAN_ID_TANKSEBS));
+        (uint8_t)message_dlc_can2(CAN_ID_TANKSEBS));
 
   }
   if (!p_self->p_ebs_mailbox)
@@ -79,7 +80,7 @@ int8_t ebs_class_init(DvEbs_h* const restrict self)
         can_node,
         SEND_MAILBOX,
         CAN_ID_CHECKASB,
-        message_dlc_can2(CAN_ID_CHECKASB));
+        (uint8_t)message_dlc_can2(CAN_ID_CHECKASB));
   }
 
   if (!p_self->p_asb_consistency_check_mailbox_send)
@@ -94,7 +95,7 @@ int8_t ebs_class_init(DvEbs_h* const restrict self)
         can_node,
         RECV_MAILBOX,
         CAN_ID_CHECKASB,
-        message_dlc_can2(CAN_ID_CHECKASB));
+        (uint8_t)message_dlc_can2(CAN_ID_CHECKASB));
   }
 
   if (!p_self->p_asb_consistency_check_mailbox_recv)
@@ -125,7 +126,9 @@ int8_t ebs_update(DvEbs_h* const restrict self)
 
   if (hardware_mailbox_read(p_self->p_ebs_mailbox, &mex))
   {
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, (unsigned int)timer_time_now());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
     p_self->tank_vals[TANK_LEFT] = o2.can_0x03c_TanksEBS.press_left_tank;
     p_self->tank_vals[TANK_RIGHT] = o2.can_0x03c_TanksEBS.press_right_tank;
 
@@ -140,7 +143,7 @@ int8_t ebs_update(DvEbs_h* const restrict self)
 
   if (hardware_mailbox_read(p_self->p_asb_consistency_check_mailbox_recv, &mex))
   {
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, (unsigned int) timer_time_now());
     if (o2.can_0x068_CheckASB.Mode)
     {
       p_self->ConsistencyCheck.asb_consistency_check = o2.can_0x068_CheckASB.response_status;
@@ -152,6 +155,7 @@ int8_t ebs_update(DvEbs_h* const restrict self)
   {
     p_self->ebs_working_properly =0;
   }
+#pragma GCC diagnostic pop
 
   return 0;
 }

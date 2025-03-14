@@ -73,7 +73,7 @@ int8_t giei_driver_input_get(const DriverInput_h* const restrict self,
   switch (p_self->current_driver) {
     case DRIVER_HUMAN:
     case DRIVER_EMBEDDED:
-      return driver_input_reader_get(&p_self->o_driver_input_reader, p_self->current_driver, input_type);
+      return (int8_t) driver_input_reader_get(&p_self->o_driver_input_reader, p_self->current_driver, input_type);
     default:
       return -1;
   }

@@ -2,6 +2,7 @@
 #include "../../linux_board/linux_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../embedded_system/embedded_system.h"
@@ -57,6 +58,11 @@ int _start_asb(void* arg)
   uint64_t payload_tank_ebs_mex = 0;
   uint64_t payload_consistency_check_resp = 0;
 
+  union u8_u82{
+    uint8_t u8;
+    uint8_t u82:2;
+  }u8_u82;
+
   while (p_self->running)
   {
     ACTION_ON_FREQUENCY(t_var, 10 MILLIS)
@@ -64,7 +70,8 @@ int _start_asb(void* arg)
       if (hardware_mailbox_read(p_self->p_mailbox_recv_mission_status, &mex))
       {
         unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
-        p_self->mission_status = o2.can_0x071_CarMissionStatus.MissionStatus;
+        u8_u82.u8 = o2.can_0x071_CarMissionStatus.MissionStatus;
+        p_self->mission_status = u8_u82.u82;
       }
 
       if (p_self->mission_status == MISSION_NOT_RUNNING &&
@@ -111,7 +118,7 @@ int8_t asb_start(Asb_h* const restrict self)
           can_node,
           SEND_MAILBOX,
           CAN_ID_TANKSEBS,
-          message_dlc_can2(CAN_ID_TANKSEBS)
+          (uint8_t)message_dlc_can2(CAN_ID_TANKSEBS)
           );
   }
 
@@ -128,7 +135,7 @@ int8_t asb_start(Asb_h* const restrict self)
           can_node,
           RECV_MAILBOX,
           CAN_ID_CARMISSIONSTATUS,
-          message_dlc_can2(CAN_ID_CARMISSIONSTATUS)
+          (uint8_t)message_dlc_can2(CAN_ID_CARMISSIONSTATUS)
           );
   }
 
@@ -146,7 +153,7 @@ int8_t asb_start(Asb_h* const restrict self)
           can_node,
           RECV_MAILBOX,
           CAN_ID_CHECKASB,
-          message_dlc_can2(CAN_ID_CHECKASB)
+          (uint8_t)message_dlc_can2(CAN_ID_CHECKASB)
           );
   }
 
@@ -164,7 +171,7 @@ int8_t asb_start(Asb_h* const restrict self)
           can_node,
           SEND_MAILBOX,
           CAN_ID_CHECKASB,
-          message_dlc_can2(CAN_ID_CHECKASB)
+          (uint8_t)message_dlc_can2(CAN_ID_CHECKASB)
           );
   }
 
@@ -187,23 +194,35 @@ asb_set_parameter(Asb_h* const restrict self,
 {
   union asb_h_t_conv conv = {self};
   struct Asb_t* const p_self = conv.clear;
+  union u8_u8_1{
+    uint8_t u8;
+    uint8_t u8_1:1;
+  }u8_u8_1;
+
+  union u8_u8_5{
+    uint8_t u8;
+    uint8_t u8_5:5;
+  }u8_u8_5;
+
+  u8_u8_1.u8 = value;
+  u8_u8_5.u8 = value;
 
   switch (param_type)
   {
     case TANK_LEFT_PRESSURE:
-      p_self->Tank[TANK_LEFT].pressure = value;
+      p_self->Tank[TANK_LEFT].pressure = u8_u8_5.u8_5;
       break;
     case TANK_LEFT_SANITY:
-      p_self->Tank[TANK_LEFT].sanity = value;
+      p_self->Tank[TANK_LEFT].sanity = u8_u8_1.u8_1;
       break;
     case TANK_RIGHT_PRESSURE:
-      p_self->Tank[TANK_RIGHT].pressure = value;
+      p_self->Tank[TANK_RIGHT].pressure = u8_u8_5.u8_5;
       break;
     case TANK_RIGHT_SANITY:
-      p_self->Tank[TANK_RIGHT].sanity = value;
+      p_self->Tank[TANK_RIGHT].sanity = u8_u8_1.u8_1;
       break;
     case INTEGRITY_CHECK_STATUS:
-      p_self->integrity_check_status = value;
+      p_self->integrity_check_status = u8_u8_1.u8_1;
       break;
     default:
       return -1;;

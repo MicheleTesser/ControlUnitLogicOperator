@@ -17,8 +17,8 @@ void regen_alg_compute
 
     rigen_fun_simulink22_step();
 
-    o_negTorquesNM[REAR_LEFT] = rigen_fun_simulink22_Y.TorqueRL;
-    o_negTorquesNM[REAR_RIGHT] = rigen_fun_simulink22_Y.TorqueRR;
-    o_negTorquesNM[FRONT_LEFT] = rigen_fun_simulink22_Y.TorqueFL;
-    o_negTorquesNM[FRONT_RIGHT] = rigen_fun_simulink22_Y.TorqueFR;
+    o_negTorquesNM[REAR_LEFT] = (float)rigen_fun_simulink22_Y.TorqueRL;
+    o_negTorquesNM[REAR_RIGHT] = (float)rigen_fun_simulink22_Y.TorqueRR;
+    o_negTorquesNM[FRONT_LEFT] = (float)rigen_fun_simulink22_Y.TorqueFL;
+    o_negTorquesNM[FRONT_RIGHT] = (float)rigen_fun_simulink22_Y.TorqueFR;
 }

@@ -1,6 +1,7 @@
 #include "maps.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop
 #include "../../../../lib/raceup_board/raceup_board.h"
@@ -142,7 +143,7 @@ driving_maps_init(DrivingMaps_h* const restrict self )
           can_node,
           RECV_MAILBOX,
           CAN_ID_MAP,
-          message_dlc_can2(CAN_ID_MAP));
+          (uint8_t)message_dlc_can2(CAN_ID_MAP));
   }
 
   if (!p_self->map_mailbox)
@@ -166,7 +167,7 @@ driving_map_update(DrivingMaps_h* const restrict self )
   CanMessage mex;
   if(hardware_mailbox_read(p_self->map_mailbox,&mex))
   {
-    unpack_message_can2(&o, CAN_ID_MAP, mex.full_word, mex.message_size, timer_time_now());
+    unpack_message_can2(&o, CAN_ID_MAP, mex.full_word, mex.message_size, (unsigned int)timer_time_now());
     p_self->power_map.active = o.can_0x064_Map.power;
     p_self->regen_map.active = o.can_0x064_Map.regen;
     p_self->tv_repartition_map.active = o.can_0x064_Map.torque_rep;

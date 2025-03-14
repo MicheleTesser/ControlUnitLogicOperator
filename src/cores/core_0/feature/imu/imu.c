@@ -62,7 +62,7 @@ int8_t imu_update(Imu_h* const restrict self )
     return 0;
 }
 
-int8_t imu_get_acc(const Imu_h* const restrict self,
+float imu_get_acc(const Imu_h* const restrict self,
         const enum IMU_AXIS axes)
 {
     const union Imu_h_t_conv_const conv = {self};
@@ -72,7 +72,7 @@ int8_t imu_get_acc(const Imu_h* const restrict self,
     }
     return -1;
 }
-int8_t imu_get_speed(const Imu_h* const restrict self)
+float imu_get_speed(const Imu_h* const restrict self)
 {
     const union Imu_h_t_conv_const conv = {self};
     const struct Imu_t* const restrict p_self __attribute__((__unused__)) = conv.clear;

@@ -8,7 +8,7 @@
 #include <sys/cdefs.h>
 #include <unistd.h>
 
-#define MAX_TRAP 32
+#define MAX_TRAP 32u
 
 static struct{
     trap_fun trap_table[MAX_TRAP];
@@ -29,7 +29,7 @@ static void default_trap_fun(void){
 }
 
 static void* trap_dispatcher(void* args __attribute_maybe_unused__){
-    for(uint8_t i=0;;i = (i+1)%MAX_TRAP){
+    for(uint8_t i=0;;i = (i+1u)%MAX_TRAP){
         uint8_t trap_num = trap_info.trap_vec & (1 << i);
         if (trap_info.trap_enabled && trap_num)
         {
@@ -54,7 +54,7 @@ int8_t hardware_init_trap(void)
     trap_info.init_done = 0;
     pthread_t trap_dispatch;
     trap_info.trap_vec = 0;
-    for (int i =0; i<MAX_TRAP; i++) {
+    for (uint8_t i =0; i<MAX_TRAP; i++) {
         trap_info.trap_table[i] = default_trap_fun;
     }
     pthread_create(&trap_dispatch, NULL, trap_dispatcher, NULL);

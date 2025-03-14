@@ -47,10 +47,10 @@ static int _core_thread_fun(void* arg)
   return 0;
 }
 
-void _status_check(TestInput* input, const uint8_t brake, char * check_operation)
+void _status_check(TestInput* input, const float brake, char * check_operation)
 {
-  printf("%s with expected brake %d:\t",check_operation, brake);
-  const uint8_t curr_brake = dv_driver_input_get_brake(input->dv_driver_input);
+  printf("%s with expected brake %f:\t",check_operation, brake);
+  const float curr_brake = dv_driver_input_get_brake(input->dv_driver_input);
   if (curr_brake == brake)
   {
     PASSED("consistent state brake");
@@ -58,7 +58,7 @@ void _status_check(TestInput* input, const uint8_t brake, char * check_operation
   else
   {
     FAILED("inconsistent state brake");
-    printf("given %d, expected: %d\n", curr_brake, brake);
+    printf("given %f, expected: %f\n", curr_brake, brake);
   }
 
 }

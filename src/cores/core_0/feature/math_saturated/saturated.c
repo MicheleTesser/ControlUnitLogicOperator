@@ -10,8 +10,8 @@ float saturate_float(const float signal, const float upperBound, const float low
     uint8_t underbound = signal < lowerBound;
     uint8_t overbound = signal > upperBound;
 
-    return 
-        (!underbound * !overbound * signal) +
-        (!underbound * overbound * lowerBound) +
-        (underbound * !overbound * upperBound);   
+    return (float)
+        ((float)!underbound * (float)!overbound * signal) +
+        ((float)!underbound * (float)overbound * lowerBound) +
+        ((float)underbound * (float)!overbound * upperBound);   
 }

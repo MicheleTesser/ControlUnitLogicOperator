@@ -1,6 +1,7 @@
 #include "batteries.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../../../../lib/raceup_board/raceup_board.h"
@@ -44,12 +45,12 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
 
   memset(p_self, 0, sizeof(*p_self));
 
-  if (bms_init(&p_self->bms[BMS_LV], CAN_ID_BMSLV1, message_dlc_can2(CAN_ID_BMSLV1), "BMS LV" , log))
+  if (bms_init(&p_self->bms[BMS_LV], CAN_ID_BMSLV1, (uint8_t) message_dlc_can2(CAN_ID_BMSLV1), "BMS LV" , log))
   {
     return -2;
   }
 
-  if (bms_init(&p_self->bms[BMS_HV], CAN_ID_BMSHV1, message_dlc_can2(CAN_ID_BMSHV1), "BMS HV" , log))
+  if (bms_init(&p_self->bms[BMS_HV], CAN_ID_BMSHV1, (uint8_t) message_dlc_can2(CAN_ID_BMSHV1), "BMS HV" , log))
   {
     return -3;
   }
@@ -61,7 +62,7 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
           can_node,
           RECV_MAILBOX,
           CAN_ID_LEM,
-          message_dlc_can2(CAN_ID_LEM));
+          (uint8_t) message_dlc_can2(CAN_ID_LEM));
   }
 
   if (!p_self->p_mailbox_read_lem)
@@ -96,7 +97,7 @@ int8_t car_batteries_update(CarBatteries_h* const restrict self)
   if (hardware_mailbox_read(p_self->p_mailbox_read_lem, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size,0); 
-    p_self->lem = o2.can_0x3c2_Lem.current;
+    p_self->lem = (float) o2.can_0x3c2_Lem.current;
   }
 
   for (uint8_t i=0; i<__NUM_OF_BMS__; i++)

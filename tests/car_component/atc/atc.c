@@ -2,6 +2,7 @@
 #include "../../linux_board/linux_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wconversion"
 #include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include <stdint.h>
@@ -39,9 +40,10 @@ _atc_start(void* arg)
     {
       can_obj_can2_h_t o2 = {0};
       uint64_t data=0;
-      o2.can_0x053_Driver.brake = self->brake;
-      o2.can_0x053_Driver.throttle = self->throttle;
-      o2.can_0x053_Driver.steering = self->steering_angle;
+
+      o2.can_0x053_Driver.brake = (uint8_t) self->brake;
+      o2.can_0x053_Driver.throttle = (uint8_t) self->throttle;
+      o2.can_0x053_Driver.steering = (uint8_t) self->steering_angle;
       o2.can_0x053_Driver.no_implausibility = 1;
       pack_message_can2(&o2, CAN_ID_DRIVER, &data);
       hardware_mailbox_send(self->send_vcu_mailbox, data);
@@ -68,9 +70,9 @@ atc_start(Atc_h* const restrict self)
   p_self->send_vcu_mailbox =
     hardware_get_mailbox_single_mex(
         node,
-        SEND_MAILBOX,
-        CAN_ID_DRIVER,
-        message_dlc_can2(CAN_ID_DRIVER));
+        (uint16_t) SEND_MAILBOX,
+        (uint16_t) CAN_ID_DRIVER,
+        (uint8_t) message_dlc_can2(CAN_ID_DRIVER));
 
   if (!p_self->send_vcu_mailbox)
   {

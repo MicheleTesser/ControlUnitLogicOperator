@@ -44,8 +44,8 @@ int main(void)
 
 
   while(hardware_init_read_permission_gpio(&alive_led, GPIO_CORE_1_ALIVE_BLINK)<0);
-  uint8_t gpio_val = gpio_read_state(&alive_led);
-  uint8_t new_val = gpio_val;
+  int8_t gpio_val = gpio_read_state(&alive_led);
+  int8_t new_val = gpio_val;
 
   while (new_val == gpio_val) {
     new_val = gpio_read_state(&alive_led);

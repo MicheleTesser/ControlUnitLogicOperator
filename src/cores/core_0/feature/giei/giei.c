@@ -53,14 +53,14 @@ const uint8_t giei_size_check[(sizeof(Giei_h) == sizeof(struct Giei_t))? 1 : -1]
 const uint8_t giei_align_check[(_Alignof(Giei_h) == _Alignof(struct Giei_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
-static inline int NMtoTorqueSetpoint(const float torqueNM)
+static inline float NMtoTorqueSetpoint(const float torqueNM)
 {
-    return (torqueNM/M_N)*1000;
+    return (torqueNM/M_N)*1000.0f;
 }
 
-static inline float torqueSetpointToNM(const int setpoint)
+static inline float torqueSetpointToNM(const float setpoint)
 {
-    return (setpoint/1000.0)*M_N;
+    return (setpoint/1000.0f)*M_N;
 }
 
 static void update_torque_NM_vectors_no_tv(
@@ -76,7 +76,7 @@ static void update_torque_NM_vectors_no_tv(
          * Setpoints are scaled to obtain desired torque repartition that inverts during braking
          * Negative torques are computed in regBrake() 
          */
-        uint32_t setpoint =  throttle* (actual_max_pos_torque/M_N) * 10;
+        float setpoint =  throttle* (actual_max_pos_torque/M_N) * 10;
         switch (i)
         {
             case FRONT_LEFT:
@@ -166,6 +166,7 @@ int8_t giei_update(Giei_h* const restrict self )
         return -2;
     }
 
+    as_node_update(&p_self->m_as_node);
     if(as_node_update(&p_self->m_as_node)<0)
     {
       return -3;
@@ -250,7 +251,7 @@ int8_t GIEI_compute_power(Giei_h* const restrict self)
     p_self->engines_voltages[REAR_RIGHT] = engine_get_info(p_self->inverter, REAR_RIGHT,ENGINE_VOLTAGE);
 
 
-    if (driving_map_get_parameter(p_self->driving_maps, TV_ON))
+    if ((uint8_t)driving_map_get_parameter(p_self->driving_maps, TV_ON))
     {
         struct TVInputArgs tv_input =
         {
@@ -281,10 +282,10 @@ int8_t GIEI_compute_power(Giei_h* const restrict self)
 
     const struct RegenAlgInput input =
     {
-        .rear_left_velocity = engine_get_info(p_self->inverter, REAR_LEFT, ENGINE_VOLTAGE),
-        .rear_right_velocity = engine_get_info(p_self->inverter, REAR_RIGHT, ENGINE_VOLTAGE),
-        .front_left_velocity = engine_get_info(p_self->inverter, FRONT_LEFT, ENGINE_VOLTAGE),
-        .front_right_velocity = engine_get_info(p_self->inverter, FRONT_RIGHT, ENGINE_VOLTAGE),
+        .rear_left_velocity = (int16_t)engine_get_info(p_self->inverter, REAR_LEFT, ENGINE_VOLTAGE),
+        .rear_right_velocity = (int16_t)engine_get_info(p_self->inverter, REAR_RIGHT, ENGINE_VOLTAGE),
+        .front_left_velocity = (int16_t)engine_get_info(p_self->inverter, FRONT_LEFT, ENGINE_VOLTAGE),
+        .front_right_velocity = (int16_t)engine_get_info(p_self->inverter, FRONT_RIGHT, ENGINE_VOLTAGE),
     };
     regen_alg_compute(&input, TorquesNM.neg);
 

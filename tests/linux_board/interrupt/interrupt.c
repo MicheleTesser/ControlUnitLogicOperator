@@ -8,7 +8,7 @@
 #include <sys/cdefs.h>
 #include <unistd.h>
 
-#define MAX_INTERRUPTS 32
+#define MAX_INTERRUPTS 32u
 
 static struct{
     interrupt_fun interrupt_table[MAX_INTERRUPTS];
@@ -29,7 +29,7 @@ static inline void default_interr_fun(void){
 }
 
 static void* interrupt_dispatcher(void* args __attribute_maybe_unused__){
-    for(uint8_t i=0;;i = (i+1)%MAX_INTERRUPTS){
+    for(uint8_t i=0;;i = (i+1u)%MAX_INTERRUPTS){
         uint8_t interrup_num = interrupt_info.interr & (1 << i);
         if (interrupt_info.interrupt_enabled && interrup_num)
         {
@@ -54,7 +54,7 @@ int8_t hardware_init_interrupt(void)
     interrupt_info.init_done = 0;
     pthread_t interrupt_dispatch;
     interrupt_info.interr = 0;
-    for (int i =0; i<MAX_INTERRUPTS; i++) {
+    for (uint8_t i =0; i<MAX_INTERRUPTS; i++) {
         interrupt_info.interrupt_table[i] = default_interr_fun;
     }
     pthread_create(&interrupt_dispatch, NULL, interrupt_dispatcher, NULL);

@@ -73,8 +73,8 @@ static void _check_status_rtd(Giei_h* const self,
     const uint8_t expected_rtd_sound_status)
 {
   enum RUNNING_STATUS status = GIEI_check_running_condition(self);
-  uint8_t emergency_status= EmergencyNode_is_emergency_state(emergency_read);
-  uint8_t rtd_sound_status = gpio_read_state(rtd_sound);
+  int8_t emergency_status= EmergencyNode_is_emergency_state(emergency_read);
+  int8_t rtd_sound_status = gpio_read_state(rtd_sound);
 
   if (status != expected_running_status ||
       emergency_status != expected_emergency_status ||
@@ -108,7 +108,7 @@ static void test_giei_rtd(CoreInput* const input)
 
   FOR_EACH_ENGINE(engine)
   {
-    car_amk_inverter_set_attribute(&input->external_boards->amk_inverter, SYSTEM_READY, engine, 1);
+    car_amk_inverter_set_attribute(&input->external_boards->amk_inverter, SYSTEM_READY, (uint8_t) engine, 1);
   }
 
   printf("starting precharge: SYSTEM_OFF -> SYSTEM_PRECAHRGE\n");
@@ -217,7 +217,7 @@ int main(void)
   INIT_PH(imu_init(&imu), "imu");
   INIT_PH(amk_module_init(&amk, &driver, &engines), "amk module");
   INIT_PH(EmergencyNode_init(&emergency_read), "emergency instance");
-  INIT_PH(giei_init(&giei, &engines, &driver, &maps, &imu), "giei module");
+  INIT_PH(giei_init(&giei, &engines, &driver, &maps, &mission_reader, &imu), "giei module");
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
