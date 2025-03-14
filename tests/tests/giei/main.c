@@ -217,7 +217,7 @@ int main(void)
   INIT_PH(imu_init(&imu), "imu");
   INIT_PH(amk_module_init(&amk, &driver, &engines), "amk module");
   INIT_PH(EmergencyNode_init(&emergency_read), "emergency instance");
-  INIT_PH(giei_init(&giei, &engines, &driver, &maps, &imu), "giei module");
+  INIT_PH(giei_init(&giei, &engines, &driver, &maps, &mission_reader, &imu), "giei module");
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
