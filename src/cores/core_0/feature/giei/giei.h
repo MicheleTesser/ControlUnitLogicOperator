@@ -17,14 +17,15 @@
 #include "../engines/engines.h"
 
 typedef struct __attribute__((aligned(8))) Giei_h{
-  const uint8_t private_data[160];
+  const uint8_t private_data[144];
 }Giei_h;
 
 int8_t 
 giei_init(Giei_h* const restrict self,
-    EngineType* const restrict engine,
+    EngineType* const engine,
     const DriverInput_h* const p_driver,
     const DrivingMaps_h* const p_maps,
+    CarMissionReader_h* const p_car_mission_reader,
     const Imu_h* const p_imu)__attribute__((__nonnull__(1,2,3,4,5)));
 
 

@@ -16,7 +16,7 @@ struct Core0Feature_t{
   AmkInverter_h amk;
   EngineType inverter;
   Giei_h giei;
-  CarMissionReader_h o_car_mission_reader;
+  CarMissionReader_h m_car_mission_reader;
   GlobalRunningStatus_h o_global_running_status_reader;
   enum RUNNING_STATUS old_running_status;
 };
@@ -38,13 +38,13 @@ int8_t core_0_feature_init(Core0Feature_h* const restrict self )
   union Core0Feature_h_t_conv conv = {self};
   struct Core0Feature_t* const restrict p_self = conv.clear;
 
-  if(car_mission_reader_init(&p_self->o_car_mission_reader)) return -1;
-  if(driver_input_init(&p_self->driver, &p_self->o_car_mission_reader) <0) return -2;
+  if(car_mission_reader_init(&p_self->m_car_mission_reader)) return -1;
+  if(driver_input_init(&p_self->driver, &p_self->m_car_mission_reader) <0) return -2;
   if(driving_maps_init(&p_self->maps) <0) return -3;
   if(imu_init(&p_self->imu) <0) return -4;
   if(amk_module_init(&p_self->amk, &p_self->driver, &p_self->inverter)) return -5;
   if(giei_init(&p_self->giei, &p_self->inverter, &p_self->driver, &p_self->maps,
-        &p_self->imu) <0) return -6;
+        &p_self->m_car_mission_reader, &p_self->imu) <0) return -6;
   if (global_running_status_init(&p_self->o_global_running_status_reader, WRITE)<0)return -7;
 
   return 0;

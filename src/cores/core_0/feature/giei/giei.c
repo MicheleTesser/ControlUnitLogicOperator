@@ -94,9 +94,10 @@ static void update_torque_NM_vectors_no_tv(
 //public
 
 int8_t giei_init(Giei_h* const restrict self,
-        EngineType* const restrict engine,
+        EngineType* const engine,
         const DriverInput_h* const p_driver,
         const DrivingMaps_h* const p_maps,
+        CarMissionReader_h* const p_car_mission_reader,
         const Imu_h* const p_imu)
 {
     GIEI_H_T_CONV(self, p_self);
@@ -117,7 +118,7 @@ int8_t giei_init(Giei_h* const restrict self,
       return -4;
     }
 
-    if (as_node_init(&p_self->m_as_node)<0)
+    if (as_node_init(&p_self->m_as_node, p_car_mission_reader)<0)
     {
     
       return -5;

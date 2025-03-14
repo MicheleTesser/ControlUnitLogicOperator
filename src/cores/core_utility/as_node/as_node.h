@@ -2,9 +2,10 @@
 #define __AS_NODE__
 
 #include <stdint.h>
+#include "../mission_reader/mission_reader.h"
 
 typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[32];
+  const uint8_t private_data[16];
 }AsNode_h;
 
 typedef struct __attribute__((aligned(4))){
@@ -12,7 +13,8 @@ typedef struct __attribute__((aligned(4))){
 }AsNodeRead_h;
 
 int8_t
-as_node_init(AsNode_h* const restrict self)__attribute__((__nonnull__(1)));
+as_node_init(AsNode_h* const restrict self,
+    CarMissionReader_h* const restrict p_car_mission_reader)__attribute__((__nonnull__(1,2)));
 
 int8_t
 as_node_update(AsNode_h* const restrict self)__attribute__((__nonnull__(1)));

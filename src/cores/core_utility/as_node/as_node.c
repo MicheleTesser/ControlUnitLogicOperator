@@ -11,7 +11,7 @@ struct AsNodeRead_t{
 };
 
 struct AsNode_t{
-  CarMissionReader_h m_mission_reader;
+  CarMissionReader_h* p_mission_reader;
   Gpio_h m_gpio_as_node;
 };
 
@@ -74,30 +74,27 @@ static inline uint8_t _as_node_disable(struct AsNode_t* const restrict self)
 
 //public
 
-int8_t as_node_init(AsNode_h* const restrict self)
+int8_t as_node_init(AsNode_h* const restrict self,
+    CarMissionReader_h* const restrict p_car_mission_reader)
 {
   union AsNode_h_t_conv conv = {self};
   struct AsNode_t* const p_self = conv.clear;
 
   atomic_bool expected_value =0;
-  if (atomic_compare_exchange_strong(&AS_NODE_OWNING, &expected_value, 1))
+  if (!atomic_compare_exchange_strong(&AS_NODE_OWNING, &expected_value, 1))
   {
     return -1;
   }
 
   memset(p_self, 0, sizeof(*p_self));
 
-  if (car_mission_reader_init(&p_self->m_mission_reader)<0)
-  {
-    atomic_store(&AS_NODE_OWNING, 0);
-    return -1;
-  }
-
   if (hardware_init_gpio(&p_self->m_gpio_as_node, GPIO_AS_NODE)<0)
   {
     atomic_store(&AS_NODE_OWNING, 0);
     return -2;
   }
+
+  p_self->p_mission_reader = p_car_mission_reader;
 
   return 0;
 }
@@ -107,7 +104,7 @@ int8_t as_node_update(AsNode_h* const restrict self)
   union AsNode_h_t_conv conv = {self};
   struct AsNode_t* const p_self = conv.clear;
 
-  switch (car_mission_reader_get_current_mission(&p_self->m_mission_reader))
+  switch (car_mission_reader_get_current_mission(p_self->p_mission_reader))
   {
     case CAR_MISSIONS_HUMAN:
       if (!_check_ebs(p_self))
@@ -132,7 +129,7 @@ int8_t as_node_update(AsNode_h* const restrict self)
         return _as_node_disable(p_self);
       }
     default:
-      return -1;
+      return _as_node_disable(p_self);
   }
 }
 
