@@ -2,7 +2,6 @@
 #include "../../../../lib/raceup_board/raceup_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include <stdint.h>
@@ -66,7 +65,7 @@ suspensions_init(
             can_node,
             RECV_MAILBOX,
             CAN_ID_SUSPFRONT,
-            (uint8_t)message_dlc_can2(CAN_ID_SUSPFRONT));
+            message_dlc_can2(CAN_ID_SUSPFRONT));
       if (!p_self->mailbox[M_FRONT])
       {
         return -2;
@@ -77,7 +76,7 @@ suspensions_init(
             can_node,
             RECV_MAILBOX,
             CAN_ID_SUSPREAR,
-            (uint8_t)message_dlc_can2(CAN_ID_SUSPREAR));
+            message_dlc_can2(CAN_ID_SUSPREAR));
 
       if (!p_self->mailbox[M_REAR])
       {
@@ -99,13 +98,13 @@ suspensions_update(Suspensions_h* const restrict self)
     can_obj_can2_h_t o;
 
     if(hardware_mailbox_read(p_self->mailbox[M_FRONT], &mex)>0){
-        unpack_message_can2(&o, CAN_ID_SUSPFRONT, mex.full_word, 8,(unsigned int) timer_time_now());
+        unpack_message_can2(&o, CAN_ID_SUSPFRONT, mex.full_word, 8, timer_time_now());
         p_self->susps_value[SUSP_FRONT_LEFT] = o.can_0x104_SuspFront.susp_fl;
         p_self->susps_value[SUSP_FRONT_RIGHT] = o.can_0x104_SuspFront.susp_fr;
     }
 
     if(hardware_mailbox_read(p_self->mailbox[M_REAR],&mex)>0){
-        unpack_message_can2(&o, CAN_ID_SUSPREAR, mex.full_word, 8, (unsigned int)timer_time_now());
+        unpack_message_can2(&o, CAN_ID_SUSPREAR, mex.full_word, 8, timer_time_now());
         p_self->susps_value[SUSP_REAR_LEFT] = o.can_0x102_SuspRear.susp_rl;
         p_self->susps_value[SUSP_REAR_RIGHT] = o.can_0x102_SuspRear.susp_rr;
     }

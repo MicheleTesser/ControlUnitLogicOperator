@@ -3,7 +3,6 @@
 #include "../../../lib/raceup_board/raceup_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 
@@ -109,7 +108,7 @@ int8_t as_node_init(AsNode_h* const restrict self,
           can_node,
           RECV_MAILBOX,
           CAN_ID_EMBEDDEDALIVECHECK,
-          (uint8_t)message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
+          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
   }
 
   if (!p_self->p_mailbox_read_embedded_alive)
@@ -125,7 +124,7 @@ int8_t as_node_init(AsNode_h* const restrict self,
           can_node,
           RECV_MAILBOX,
           CAN_ID_TANKSEBS,
-          (uint8_t)message_dlc_can2(CAN_ID_TANKSEBS));
+          message_dlc_can2(CAN_ID_TANKSEBS));
   }
 
   if (!p_self->p_mailbox_read_tank_ebs)
@@ -208,7 +207,7 @@ uint8_t as_node_get_status(const AsNode_h* const restrict self)
   const union AsNode_h_t_conv_const conv = {self};
   const struct AsNode_t* const p_self = conv.clear;
 
-  return (uint8_t) gpio_read_state(&p_self->m_gpio_as_node.gpio_read_permission);
+  return gpio_read_state(&p_self->m_gpio_as_node.gpio_read_permission);
 }
 
 uint8_t as_node_read_get_status(const AsNodeRead_h* const restrict self)
@@ -216,5 +215,5 @@ uint8_t as_node_read_get_status(const AsNodeRead_h* const restrict self)
   const union AsNodeRead_h_t_conv_const conv = {self};
   const struct AsNodeRead_t* const p_self = conv.clear;
 
-  return (uint8_t) gpio_read_state(&p_self->m_gpio_read_as_node);
+  return gpio_read_state(&p_self->m_gpio_read_as_node);
 }

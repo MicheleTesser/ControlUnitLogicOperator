@@ -27,8 +27,8 @@ void tv_alg_compute(const struct TVInputArgs* const restrict input,
 
     Torque_Vectoring_2024_forsecontiu_step();
 
-    o_posTorquesNM[0] =(float)rtY.T_pos[0];
-    o_posTorquesNM[1] =(float)rtY.T_pos[1];
-    o_posTorquesNM[2] =(float)rtY.T_pos[2];
-    o_posTorquesNM[3] =(float)rtY.T_pos[3];
+    o_posTorquesNM[0] =rtY.T_pos[0];
+    o_posTorquesNM[1] =rtY.T_pos[1];
+    o_posTorquesNM[2] =rtY.T_pos[2];
+    o_posTorquesNM[3] =rtY.T_pos[3];
 }

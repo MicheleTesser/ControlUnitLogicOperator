@@ -2,7 +2,6 @@
 #include "../../linux_board/linux_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../src/lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
@@ -58,7 +57,7 @@ int _start_embedded_system(void* arg)
       o3.can_0x07d_DV_Driver.Throttle = p_self->Input.throttle;
       o3.can_0x07d_DV_Driver.Steering_angle = p_self->Input.steering_wheel;
 
-      o3.can_0x07e_DV_Mission.Mission_status = (uint8_t) p_self->mission_status;
+      o3.can_0x07e_DV_Mission.Mission_status = p_self->mission_status;
 
       pack_message_can3(&o3, CAN_ID_DV_DRIVER, &payload_dv_driver);
       pack_message_can3(&o3, CAN_ID_DV_MISSION, &payload_dv_mission);
@@ -90,13 +89,13 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
           can_node, 
           SEND_MAILBOX,
           CAN_ID_DV_DRIVER,
-          (uint8_t)message_dlc_can3(CAN_ID_DV_DRIVER));
+          message_dlc_can3(CAN_ID_DV_DRIVER));
     p_self->p_mailbox_send_mission_status_vcu =
       hardware_get_mailbox_single_mex(
           can_node,
           SEND_MAILBOX,
           CAN_ID_DV_MISSION,
-          (uint8_t)message_dlc_can3(CAN_ID_DV_MISSION));
+          message_dlc_can3(CAN_ID_DV_MISSION));
   }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
@@ -106,7 +105,7 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
           can_node,
           SEND_MAILBOX,
           CAN_ID_EMBEDDEDALIVECHECK,
-          (uint8_t)message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
+          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
   }
 
   if (!p_self->p_mailbox_input_vcu)

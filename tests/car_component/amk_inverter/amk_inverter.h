@@ -41,7 +41,7 @@ car_amk_inverter_reset(EmulationAmkInverter_h* self)__attribute__((__nonnull__(1
 int8_t 
 car_amk_inverter_set_attribute(EmulationAmkInverter_h* self,
     const enum INVERTER_ATTRIBUTE attribute, const uint8_t engine,
-    const uint8_t value)__attribute__((__nonnull__(1)));
+    const int64_t value)__attribute__((__nonnull__(1)));
 
 int8_t
 car_amk_inverter_set_engine_value(EmulationAmkInverter_h* self,

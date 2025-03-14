@@ -1,7 +1,6 @@
 #include "core_1_driver_input.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../../../../lib/raceup_board/components/can.h"
@@ -90,7 +89,7 @@ core_1_driver_input_init(
             can_node,
             RECV_MAILBOX,
             CAN_ID_DRIVER,
-            (uint8_t)message_dlc_can2(CAN_ID_DRIVER));
+            message_dlc_can2(CAN_ID_DRIVER));
 
       if(!p_self->driver_input_mailbox)
       {

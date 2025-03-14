@@ -2,7 +2,6 @@
 #include "../../../../lib/raceup_board/components/can.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../../../core_utility/running_status/running_status.h"
@@ -84,14 +83,14 @@ int8_t cooling_init(Cooling_h* const restrict self ,
           can_node,
           SEND_MAILBOX,
           CAN_ID_PCU,
-          (uint8_t)message_dlc_can2(CAN_ID_PCU));
+          message_dlc_can2(CAN_ID_PCU));
 
     p_self->p_recv_mailbox_stw =
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
           CAN_ID_PCUSWCONTROL,
-          (uint8_t)message_dlc_can2(CAN_ID_PCUSWCONTROL));
+          message_dlc_can2(CAN_ID_PCUSWCONTROL));
   }
   if (!p_self->p_send_mailbox_pcu)
   {
@@ -113,10 +112,6 @@ int8_t cooling_update(Cooling_h* const restrict self)
   struct Cooling_t* const p_self = conv.clear;
   can_obj_can2_h_t o2;
   CanMessage mex;
-  union u8_u81{
-    uint8_t u8;
-    uint8_t u8_1:1;
-  }u8_u81;
 
   if (global_running_status_get(&p_self->m_global_running_status) > SYSTEM_OFF)
   {
@@ -128,10 +123,8 @@ int8_t cooling_update(Cooling_h* const restrict self)
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
 
-    u8_u81.u8 =o2.can_0x133_PcuSwControl.fan;
-    p_self->devices[FANS_RADIATOR].enable = u8_u81.u8_1;
-    u8_u81.u8 =o2.can_0x133_PcuSwControl.pump;
-    p_self->devices[PUMPS].enable = u8_u81.u8_1;
+    p_self->devices[FANS_RADIATOR].enable = o2.can_0x133_PcuSwControl.fan;
+    p_self->devices[PUMPS].enable = o2.can_0x133_PcuSwControl.pump;
   
     mex.id = CAN_ID_PCU;
     o2.can_0x130_Pcu.mode = 0;
@@ -145,7 +138,7 @@ int8_t cooling_update(Cooling_h* const restrict self)
     o2.can_0x130_Pcu.pump_speed_left = p_self->devices[PUMPS].speed;
     o2.can_0x130_Pcu.pump_speed_right = p_self->devices[PUMPS].speed;
 
-    mex.message_size = (uint8_t) pack_message_can2(&o2, mex.id, &mex.full_word);
+    mex.message_size = pack_message_can2(&o2, mex.id, &mex.full_word);
     return hardware_mailbox_send(p_self->p_send_mailbox_pcu, mex.full_word);
   }
 

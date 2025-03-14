@@ -1,7 +1,6 @@
 #include "bms_hv.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../src/lib/raceup_board/raceup_board.h"
@@ -52,31 +51,19 @@ int _start_bms_hv(void* arg)
   uint64_t mex_data_temps = {0};
   time_var_microseconds t_var =0;
 
-  union f_16{
-    float f;
-    uint16_t u16;
-  }f_u16;
-
-
   while (p_self->running)
   {
     ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
       o2.can_0x057_BmsHv1.soc = p_self->soc;
-      f_u16.f = p_self->Voltage.mean;
-      o2.can_0x057_BmsHv1.avg_volt = f_u16.u16;
-      f_u16.f = p_self->Voltage.min;
-      o2.can_0x057_BmsHv1.min_volt = f_u16.u16;
-      f_u16.f = p_self->Voltage.max;
-      o2.can_0x057_BmsHv1.max_volt = f_u16.u16;
+      o2.can_0x057_BmsHv1.avg_volt = p_self->Voltage.mean;
+      o2.can_0x057_BmsHv1.min_volt = p_self->Voltage.min;
+      o2.can_0x057_BmsHv1.max_volt = p_self->Voltage.max;
 
       o2.can_0x058_BmsHv2.fan_speed = p_self->fan_speed;
-      f_u16.f = p_self->Temps.mean;
-      o2.can_0x058_BmsHv2.avg_temp = f_u16.u16;
-      f_u16.f = p_self->Temps.min;
-      o2.can_0x058_BmsHv2.min_temp = f_u16.u16;
-      f_u16.f = p_self->Temps.max;
-      o2.can_0x058_BmsHv2.max_temp = f_u16.u16;
+      o2.can_0x058_BmsHv2.avg_temp = p_self->Temps.mean;
+      o2.can_0x058_BmsHv2.min_temp = p_self->Temps.min;
+      o2.can_0x058_BmsHv2.max_temp = p_self->Temps.max;
 
       pack_message_can2(&o2, CAN_ID_BMSHV1, &mex_data_volts);
       pack_message_can2(&o2, CAN_ID_BMSHV2, &mex_data_temps);
@@ -111,14 +98,14 @@ int8_t bms_hv_start(struct BmsHv_h* const restrict self)
         new_temp_node,
         SEND_MAILBOX,
         CAN_ID_BMSHV1,
-        (uint8_t)message_dlc_can2(CAN_ID_BMSHV1));
+        message_dlc_can2(CAN_ID_BMSHV1));
 
   p_self->mailbox_send_temps=
     hardware_get_mailbox_single_mex(
         new_temp_node,
         SEND_MAILBOX,
         CAN_ID_BMSHV2,
-        (uint8_t)message_dlc_can2(CAN_ID_BMSHV2));
+        message_dlc_can2(CAN_ID_BMSHV2));
 
   hardware_init_new_external_node_destroy(new_temp_node);
 
@@ -131,12 +118,7 @@ int8_t bms_hv_set_attribute(struct BmsHv_h* const restrict self,
 {
   union BmsHv_h_t_conv conv = {self};
   struct BmsHv_t* const p_self = conv.clear;
-  union {
-    float f;
-    uint8_t u8;
-  }f_u8;
 
-  f_u8.f = value;
   switch (attribute)
   {
     case BMS_HV_MIN_VOLTS:
@@ -158,10 +140,10 @@ int8_t bms_hv_set_attribute(struct BmsHv_h* const restrict self,
       p_self->Temps.mean = value;
       break;
     case BMS_HV_MEAN_SOC:
-      p_self->soc = f_u8.u8;
+      p_self->soc = value;
       break;
     case BMS_HV_MEAN_FAN_SPEED:
-      p_self->fan_speed = f_u8.u8;
+      p_self->fan_speed = value;
       break;
     case __NUM_OF_BMS_HV_ATTRIBUTES__:
       return -1;

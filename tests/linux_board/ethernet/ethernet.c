@@ -61,7 +61,7 @@ hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
   const union EthernetNodeIpv4_h_t_conv_const conv = {self};
   const struct EthernetNodeIpv4_t* const p_self = conv.clear;
 
-  return (int8_t) sendto(p_self->socket, data->raw_data, data->data_length, 0,
+  return sendto(p_self->socket, data->raw_data, data->data_length, 0,
       (struct sockaddr*) &p_self->servaddr, sizeof(p_self->servaddr));
 }
 

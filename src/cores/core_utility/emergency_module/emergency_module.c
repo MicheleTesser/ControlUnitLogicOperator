@@ -1,5 +1,6 @@
 #include "./emergency_module.h"
 #include "../../../lib/raceup_board/raceup_board.h"
+#include <stdlib.h>
 #include <stdatomic.h>
 #include <stdint.h>
 #include <string.h>
@@ -102,7 +103,7 @@ int8_t EmergencyNode_raise(EmergencyNode_h* const restrict self, const uint8_t e
     return -1;
   }
 
-  p_self->emergency_buffer[exception_byte] |=(uint8_t) (1u << exception_bit);
+  p_self->emergency_buffer[exception_byte] |= 1 << exception_bit;
   p_self->emergency_counter++;
 
   if (p_self->emergency_counter) {
@@ -115,7 +116,7 @@ int8_t EmergencyNode_raise(EmergencyNode_h* const restrict self, const uint8_t e
 int8_t EmergencyNode_solve(EmergencyNode_h* const restrict self, const uint8_t exeception)
 {
   const uint8_t exception_byte = exeception/8;
-  const uint8_t exception_bit = (uint8_t)(1u << (exeception % 8u));
+  const uint8_t exception_bit = 1 << (exeception % 8);
   union EmergencyNode_h_t_conv conv = {self};
   struct EmergencyNode_t* const restrict p_self =conv.clear;
   const uint8_t old_emergency_counter = p_self->emergency_counter;

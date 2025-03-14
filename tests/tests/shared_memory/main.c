@@ -17,10 +17,10 @@ int main(void)
   SharedDataId vars_id[vars_number];
   short vars[vars_number];
 
-  for(SharedDataId i=0;i < vars_number;++i)
+  for(unsigned long i=0;i < vars_number;++i)
   {
     vars_id[i] = i;
-    vars[i] = (short) i * 20;
+    vars[i] = i * 20;
   }
 
 

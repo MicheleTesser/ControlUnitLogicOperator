@@ -13,7 +13,7 @@ static inline int8_t check_nodes(EmergencyNode_h** nodes, uint8_t node_num)
   if (hardware_init_read_permission_gpio(&gpio_scs, GPIO_SCS) < 0) {
     return -1;
   }
-  int8_t status = EmergencyNode_is_emergency_state(*nodes);
+  uint8_t status = EmergencyNode_is_emergency_state(*nodes);
   for (uint8_t i=0; i<node_num; i++) {
     if (EmergencyNode_is_emergency_state(nodes[i]) != status) {
       return -1;
@@ -82,11 +82,11 @@ static void test_multiple_emergencies(EmergencyNode_h* const restrict node_1, Em
 
 static void test_invalid_emergency(EmergencyNode_h* const restrict node)
 {
-  if (EmergencyNode_solve(node, 255) < 0) {
+  if (EmergencyNode_solve(node, -1) < 0) {
     PASSED("invalid emergency solve failed as expected");
   }
 
-  if (EmergencyNode_raise(node, 255) < 0) {
+  if (EmergencyNode_raise(node, -1) < 0) {
     PASSED("invalid emergency raise failed as expected");
   }
 }

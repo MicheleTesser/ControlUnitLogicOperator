@@ -1,7 +1,6 @@
 #include "mission_reader.h"
 #include "mission_locker/mission_locker.h"
 #include "../../../lib/raceup_board/raceup_board.h"
-#include <stdint.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -48,7 +47,7 @@ car_mission_reader_init(CarMissionReader_h* const restrict self)
           can_node,
           RECV_MAILBOX,
           CAN_ID_CARMISSION,
-          (uint8_t)message_dlc_can2(CAN_ID_CARMISSION));
+          message_dlc_can2(CAN_ID_CARMISSION));
   }
 
   if (!p_self->p_mailbox_current_mission)
@@ -78,7 +77,7 @@ car_mission_reader_update(CarMissionReader_h* const restrict self)
   if (!is_mission_locked(&p_self->o_mission_locker_read)
       && hardware_mailbox_read(p_self->p_mailbox_current_mission, &mex))
   {
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, (uint32_t) timer_time_now());
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
     p_self->current_mission = o2.can_0x047_CarMission.Mission;
   }
 

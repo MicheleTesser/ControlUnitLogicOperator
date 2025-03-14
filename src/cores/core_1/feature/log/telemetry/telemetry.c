@@ -240,15 +240,7 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
   JsonCell* p_log_page = NULL;
   Json_h json = {0};
   int8_t err=0;
-  union {
-    float f;
-    int8_t i8;
-    int16_t i16;
-    int32_t i32;
-    uint8_t u8;
-    uint16_t u16;
-    uint32_t u32;
-  }var_value ={0};
+  float var_value =0;
   const uint8_t MAX_RETRY_INIT_JSON = 255;
 
 
@@ -268,36 +260,37 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
     for (uint8_t j=0;j<JSON_ARRAY_SIZES[i];j++)
     {
       JsonCell* cursor = &p_log_page[j];
+      var_value =0;
       if (cursor->p_data)
       {
         switch (cursor->m_data_type)
         {
           case __u8__:
-            var_value.u8 = *(uint8_t *) cursor->p_data;
+            var_value = *(uint8_t *) cursor->p_data;
             break;
           case __u16__:
-            var_value.u16 = *(uint16_t *) cursor->p_data;
+            var_value = *(uint16_t *) cursor->p_data;
             break;
           case __u32__:
-            var_value.u32 = *(uint32_t *) cursor->p_data;
+            var_value = *(uint32_t *) cursor->p_data;
             break;
           case __i8__:
-            var_value.i8 = *(int8_t *) cursor->p_data;
+            var_value = *(int8_t *) cursor->p_data;
             break;
           case __i16__:
-            var_value.i16 = *(int16_t *) cursor->p_data;
+            var_value = *(int16_t *) cursor->p_data;
             break;
           case __i32__:
-            var_value.i32 = *(int32_t *) cursor->p_data;
+            var_value = *(int32_t *) cursor->p_data;
             break;
           case __float__:
-            var_value.f = *(float*) cursor->p_data;
+            var_value = *(float*) cursor->p_data;
             break;
           default:
             break;
         }
       }
-      json_push_element(&json, cursor->m_name, cursor->data_format, var_value.f);
+      json_push_element(&json, cursor->m_name, cursor->data_format, var_value);
     }
     UdpIpv4Mex mex = {
       .data_length = json_len(&json),

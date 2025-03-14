@@ -63,7 +63,7 @@ int8_t _assign_line(uint16_t* p_store_id, const enum GPIO_PIN line)
     return -1;
   }
   atomic_store(&lines.taken[line], 1); 
-  *p_store_id= (uint16_t) line;
+  *p_store_id=line;
   return 0;
 }
 
@@ -74,7 +74,7 @@ int8_t _assign_line_pwm(uint16_t* p_store_id, const enum GPIO_PWM_PIN line)
     return -1;
   }
   atomic_store(&lines_pwm.taken[line], 1); 
-  *p_store_id= (uint16_t) line;
+  *p_store_id=line;
   return 0;
 }
 
@@ -96,7 +96,7 @@ int8_t _create_virtual_chip_pwm(void)
   assert(settings);
   assert(request_config);
 
-  for (uint32_t i =0; i<gpio_pin_cnt_pwm; i++)
+  for (int i =0; i<gpio_pin_cnt_pwm; i++)
   {
     line_offsets[i] = i;
   }
@@ -190,7 +190,7 @@ int8_t _create_virtual_chip_basic(void)
   assert(settings);
   assert(request_config);
 
-  for (uint32_t i =0; i<gpio_pin_cnt; i++) {
+  for (int i =0; i<gpio_pin_cnt; i++) {
     line_offsets[i] = i;
   }
   if(gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT) < 0){
@@ -306,7 +306,7 @@ int8_t gpio_read_state(const GpioRead_h* const restrict self)
   if (r< 0) {
     fprintf(stderr, "gpio %d read err\n", p_self->gpio_id);
   }
-  return (int8_t) r;
+  return r;
 }
 
 int8_t gpio_set_high(Gpio_h* const restrict self)
@@ -386,13 +386,13 @@ extern int8_t hardware_init_gpio_pwm_read_only(GpioPwm_h* const restrict self,
 
   memset(p_self, 0, sizeof(*p_self));
 
-  p_self->gpio.read.gpio_id= (uint16_t) id;
+  p_self->gpio.read.gpio_id=id;
   p_self->only_reading=1;
 
   return 0;
 }
 
-extern int8_t hardware_write_gpio_pwm(GpioPwm_h* const restrict self, const uint8_t duty_cycle)
+extern int8_t hardware_write_gpio_pwm(GpioPwm_h* const restrict self, const uint16_t duty_cycle)
 {
   union GpioPwm_h_t_conv conv = {self};
   struct GpioPwm_t* const restrict p_self = conv.clear;
@@ -404,7 +404,7 @@ extern int8_t hardware_write_gpio_pwm(GpioPwm_h* const restrict self, const uint
 
   for (uint8_t i=0; i<PWM_LINE_SIZE; i++)
   {
-    uint8_t line_value = duty_cycle & (1u<<i);
+    uint8_t line_value = duty_cycle & (1<<i);
     lines_pwm.init_values[p_self->gpio.read.gpio_id + i] = line_value;
   }
 
@@ -418,9 +418,9 @@ extern uint16_t hardware_read_gpio_pwm(GpioPwm_h* const restrict self)
   struct GpioPwm_t* const restrict p_self = conv.clear;
   uint16_t res=0;
 
-  for (uint16_t i=0; i<PWM_LINE_SIZE; i++)
+  for (uint8_t i=0; i<PWM_LINE_SIZE; i++)
   {
-    res |= (uint16_t)( lines_pwm.init_values[p_self->gpio.read.gpio_id + i] << i);
+    res |= lines_pwm.init_values[p_self->gpio.read.gpio_id + i] << i;
   }
 
   return res;

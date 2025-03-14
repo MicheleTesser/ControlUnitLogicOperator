@@ -2,7 +2,6 @@
 #include "../../linux_board/linux_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../external_gpio.h"
@@ -55,18 +54,13 @@ _pcu_update(struct Pcu_t* const restrict self)
 {
   CanMessage mex = {0};
   can_obj_can2_h_t o2={0};
-  union u8_u81{
-    uint8_t u8;
-    uint8_t u8_1:1;
-  }u8_u8_1;
 
   if (hardware_mailbox_read(self->recv_can_node_pcu_inv, &mex)
       && unpack_message_can2(&o2, CAN_ID_PCU, mex.full_word, mex.message_size, 0)>=0)
   {
     if (o2.can_0x130_Pcu.mode == 1)
     {
-      u8_u8_1.u8 = o2.can_0x130_Pcu.rf;
-      self->rf = u8_u8_1.u8_1;
+      self->rf = o2.can_0x130_Pcu.rf;
       if (self->rf)
       {
         gpio_set_low(&self->inverter_on_gpio);
@@ -120,14 +114,14 @@ pcu_init(struct Pcu_h* const restrict self)
         can_node,
         RECV_MAILBOX,
         CAN_ID_PCU,
-        (uint8_t)message_dlc_can2(CAN_ID_PCU));
+        message_dlc_can2(CAN_ID_PCU));
 
   p_self->send_can_node_pcu_inv =
     hardware_get_mailbox_single_mex(
         can_node,
         SEND_MAILBOX,
         CAN_ID_PCURFACK,
-        (uint8_t)message_dlc_can2(CAN_ID_PCURFACK));
+        message_dlc_can2(CAN_ID_PCURFACK));
 
   hardware_init_new_external_node_destroy(can_node);
 

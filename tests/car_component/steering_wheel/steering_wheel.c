@@ -2,7 +2,6 @@
 #include "../../linux_board/linux_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 
@@ -51,7 +50,7 @@ int _start_SteeringWheel(void* arg)
   {
     ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
-      o2.can_0x047_CarMission.Mission = (uint8_t) p_self->o_current_mission;
+      o2.can_0x047_CarMission.Mission = p_self->o_current_mission;
 
       o2.can_0x064_Map.power = p_self->Maps.power;
       o2.can_0x064_Map.regen = p_self->Maps.regen;
@@ -86,13 +85,13 @@ int8_t steering_wheel_start(struct SteeringWheel_h* const restrict self)
             temp_can_node,
             SEND_MAILBOX,
             CAN_ID_CARMISSION,
-            (uint8_t) message_dlc_can2(CAN_ID_CARMISSION));
+            message_dlc_can2(CAN_ID_CARMISSION));
       p_self->p_mailbox_send_maps =
         hardware_get_mailbox_single_mex(
             temp_can_node,
             SEND_MAILBOX,
             CAN_ID_MAP,
-            (uint8_t) message_dlc_can2(CAN_ID_MAP));
+            message_dlc_can2(CAN_ID_MAP));
   }
   if (!p_self->p_mailbox_send_mission)
   {

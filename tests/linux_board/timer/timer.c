@@ -6,7 +6,7 @@
 
 int8_t wait_milliseconds(const time_var_microseconds time)
 {
-    usleep((unsigned int) time);
+    usleep(time);
     return 0;
 }
 

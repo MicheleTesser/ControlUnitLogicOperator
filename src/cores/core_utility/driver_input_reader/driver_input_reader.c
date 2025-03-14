@@ -1,9 +1,7 @@
 #include "driver_input_reader.h"
 #include "../../../lib/raceup_board/raceup_board.h"
-#include <stdint.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #include "../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #pragma GCC diagnostic pop 
@@ -58,7 +56,7 @@ driver_input_reader_init(DriverInputReader_h* const restrict self)
         can_node,
         RECV_MAILBOX,
         CAN_ID_DRIVER,
-        (uint8_t)message_dlc_can2(CAN_ID_DRIVER));
+        message_dlc_can2(CAN_ID_DRIVER));
   }
   ACTION_ON_CAN_NODE(CAN_DV,can_node)
   {
@@ -67,7 +65,7 @@ driver_input_reader_init(DriverInputReader_h* const restrict self)
         can_node,
         RECV_MAILBOX,
         CAN_ID_DV_DRIVER,
-        (uint8_t)message_dlc_can2(CAN_ID_DV_DRIVER));
+        message_dlc_can2(CAN_ID_DV_DRIVER));
   }
 
   return 0;
@@ -84,7 +82,7 @@ driver_input_reader_update(DriverInputReader_h* const restrict self )
 
   if (hardware_mailbox_read(p_self->p_human_brake_mailbox, &mex))
   {
-    unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, (uint32_t)timer_time_now());
+    unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
 
     p_self->Input[DRIVER_HUMAN].f_throttle = _saturate_100(o2.can_0x053_Driver.throttle);
     p_self->Input[DRIVER_HUMAN].f_brake = _saturate_100(o2.can_0x053_Driver.brake);
@@ -93,7 +91,7 @@ driver_input_reader_update(DriverInputReader_h* const restrict self )
 
   if (hardware_mailbox_read(p_self->p_dv_driver_mailbox, &mex))
   {
-    unpack_message_can3(&o3, CAN_ID_DV_DRIVER, mex.full_word, mex.message_size,(uint32_t)timer_time_now());
+    unpack_message_can3(&o3, CAN_ID_DV_DRIVER, mex.full_word, mex.message_size, timer_time_now());
 
     p_self->Input[DRIVER_EMBEDDED].f_throttle = _saturate_100(o3.can_0x07d_DV_Driver.Throttle);
     p_self->Input[DRIVER_EMBEDDED].f_brake = _saturate_100(o3.can_0x07d_DV_Driver.Brake);

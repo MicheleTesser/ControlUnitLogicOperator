@@ -2,7 +2,6 @@
 #include "linux_board/linux_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wconversion"
 #include "lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "linux_board/linux_board.h"
@@ -203,14 +202,14 @@ static int test_change_repartition_map(TestInput* t_input)
 {
   _check_repartition_map(t_input, 0, 0.50, 1);
   _check_repartition_map(t_input, 1, 1.0f, 0);
-  _check_repartition_map(t_input, 2, 0.82f, 0);
-  _check_repartition_map(t_input, 3, 0.80f, 0);
-  _check_repartition_map(t_input, 4, 0.78f, 0);
-  _check_repartition_map(t_input, 5, 0.75f, 0);
-  _check_repartition_map(t_input, 6, 0.70f, 0);
-  _check_repartition_map(t_input, 7, 0.60f, 0);
-  _check_repartition_map(t_input, 8, 0.50f, 0);
-  _check_repartition_map(t_input, 9, 0.50f, 0);
+  _check_repartition_map(t_input, 2, 0.82, 0);
+  _check_repartition_map(t_input, 3, 0.80, 0);
+  _check_repartition_map(t_input, 4, 0.78, 0);
+  _check_repartition_map(t_input, 5, 0.75, 0);
+  _check_repartition_map(t_input, 6, 0.70, 0);
+  _check_repartition_map(t_input, 7, 0.60, 0);
+  _check_repartition_map(t_input, 8, 0.50, 0);
+  _check_repartition_map(t_input, 9, 0.50, 0);
 
   return 0;
 }
