@@ -70,11 +70,11 @@ void test_as_node_mission_human(TestInput* t_input)
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
   wait_milliseconds(200 MILLIS);
 
-  _check_status(!as_node_get_status(t_input->p_as_node) &&
-      !gpio_read_state(t_input->p_gpio_as_node),
+  _check_status(as_node_get_status(t_input->p_as_node) &&
+      gpio_read_state(t_input->p_gpio_as_node),
       "as node not closed in mission human at initial state");
-  _check_status(!as_node_read_get_status(t_input->p_as_node_read)
-      && !gpio_read_state(t_input->p_gpio_as_node)
+  _check_status(as_node_read_get_status(t_input->p_as_node_read)
+      && gpio_read_state(t_input->p_gpio_as_node)
       ,"as node read status in mission human at initial state");
 }
 

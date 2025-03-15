@@ -101,8 +101,9 @@ static void test_giei_rtd(CoreInput* const input)
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0,0);
 
   printf("switching to human driver\n");
+  embedded_system_disable(&input->external_boards->embedded_system);
   steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(200 MILLIS);
 
   car_amk_inverter_reset(&input->external_boards->amk_inverter);
 

@@ -58,12 +58,12 @@ static atomic_bool AS_NODE_OWNING =0;
 
 static inline uint8_t _check_embedded(struct AsNode_t *const restrict self __attribute__((__unused__)))
 {
-  return (timer_time_now() - self->m_last_alive_message_received) > 500 MILLIS;
+  return (timer_time_now() - self->m_last_alive_message_received) < 500 MILLIS;
 }
 
 static inline uint8_t _check_ebs(struct AsNode_t *const restrict self __attribute__((__unused__)))
 {
-  return (timer_time_now() - self->m_last_tank_ebs_message_received) > 500 MILLIS;
+  return (timer_time_now() - self->m_last_tank_ebs_message_received) < 500 MILLIS;
 }
 
 static inline uint8_t _as_node_enable(struct AsNode_t* const restrict self)

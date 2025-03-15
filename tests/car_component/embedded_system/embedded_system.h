@@ -33,7 +33,13 @@ int8_t
 embedded_system_set_mission_status(EmbeddedSystem_h* const restrict self,
     const enum MISSION_STATUS mission_status)__attribute__((__nonnull__(1)));
 
-int8_t
+void
+embedded_system_disable(EmbeddedSystem_h* const restrict self)__attribute__((__nonnull__(1)));
+
+void
+embedded_system_enable(EmbeddedSystem_h* const restrict self)__attribute__((__nonnull__(1)));
+
+void
 embedded_system_stop(EmbeddedSystem_h* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__EMBEDDED_SYSTEM__

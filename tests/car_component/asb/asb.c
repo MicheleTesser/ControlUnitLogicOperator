@@ -23,6 +23,7 @@ struct Asb_t{
   uint8_t running:1;
   uint8_t integrity_check_status:1;
   uint8_t mission_status:2;
+  uint8_t active:1;
   struct{
     uint8_t pressure:5;
     uint8_t sanity:1;
@@ -65,9 +66,11 @@ int _start_asb(void* arg)
       {
         unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
         p_self->mission_status = o2.can_0x071_CarMissionStatus.MissionStatus;
+        p_self->active = o2.can_0x071_CarMissionStatus.Mission > 1;
       }
 
-      if (p_self->mission_status == MISSION_NOT_RUNNING &&
+      if (p_self->active &&
+          p_self->mission_status == MISSION_NOT_RUNNING &&
           hardware_mailbox_read(p_self->p_mailbox_recv_integrity_check_req, &mex) &&
           !mex.full_word)
       {
@@ -77,16 +80,19 @@ int _start_asb(void* arg)
         hardware_mailbox_send(p_self->p_mailbox_send_integrity_check_resp, payload_consistency_check_resp);
       }
 
-      o2.can_0x03c_TanksEBS.press_left_tank = p_self->Tank[TANK_LEFT].pressure;
-      o2.can_0x03c_TanksEBS.sanity_left_sensor = p_self->Tank[TANK_LEFT].sanity;
+      if (p_self->active)
+      {
+        o2.can_0x03c_TanksEBS.press_left_tank = p_self->Tank[TANK_LEFT].pressure;
+        o2.can_0x03c_TanksEBS.sanity_left_sensor = p_self->Tank[TANK_LEFT].sanity;
 
-      o2.can_0x03c_TanksEBS.press_right_tank = p_self->Tank[TANK_RIGHT].pressure;
-      o2.can_0x03c_TanksEBS.sanity_right_sensor = p_self->Tank[TANK_RIGHT].sanity;
+        o2.can_0x03c_TanksEBS.press_right_tank = p_self->Tank[TANK_RIGHT].pressure;
+        o2.can_0x03c_TanksEBS.sanity_right_sensor = p_self->Tank[TANK_RIGHT].sanity;
 
-      o2.can_0x03c_TanksEBS.system_check = p_self->integrity_check_status;
+        o2.can_0x03c_TanksEBS.system_check = p_self->integrity_check_status;
 
-      pack_message_can2(&o2, CAN_ID_TANKSEBS, &payload_tank_ebs_mex);
-      hardware_mailbox_send(p_self->p_mailbox_send_asb_status, payload_tank_ebs_mex);
+        pack_message_can2(&o2, CAN_ID_TANKSEBS, &payload_tank_ebs_mex);
+        hardware_mailbox_send(p_self->p_mailbox_send_asb_status, payload_tank_ebs_mex);
+      }
     }
   }
 

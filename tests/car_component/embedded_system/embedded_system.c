@@ -20,6 +20,7 @@ struct EmbeddedSystem_t{
     uint8_t brake;
     uint8_t steering_wheel;
   }Input;
+  uint8_t active:1;
   struct CanMailbox* p_mailbox_input_vcu;
   struct CanMailbox* p_mailbox_send_mission_status_vcu;
   struct CanMailbox* p_mailbox_send_alive_message;
@@ -53,18 +54,21 @@ int _start_embedded_system(void* arg)
   {
     ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
-      o3.can_0x07d_DV_Driver.Brake = p_self->Input.brake;
-      o3.can_0x07d_DV_Driver.Throttle = p_self->Input.throttle;
-      o3.can_0x07d_DV_Driver.Steering_angle = p_self->Input.steering_wheel;
+      if (p_self->active)
+      {
+        o3.can_0x07d_DV_Driver.Brake = p_self->Input.brake;
+        o3.can_0x07d_DV_Driver.Throttle = p_self->Input.throttle;
+        o3.can_0x07d_DV_Driver.Steering_angle = p_self->Input.steering_wheel;
 
-      o3.can_0x07e_DV_Mission.Mission_status = p_self->mission_status;
+        o3.can_0x07e_DV_Mission.Mission_status = p_self->mission_status;
 
-      pack_message_can3(&o3, CAN_ID_DV_DRIVER, &payload_dv_driver);
-      pack_message_can3(&o3, CAN_ID_DV_MISSION, &payload_dv_mission);
+        pack_message_can3(&o3, CAN_ID_DV_DRIVER, &payload_dv_driver);
+        pack_message_can3(&o3, CAN_ID_DV_MISSION, &payload_dv_mission);
 
-      hardware_mailbox_send(p_self->p_mailbox_input_vcu, payload_dv_driver);
-      hardware_mailbox_send(p_self->p_mailbox_send_mission_status_vcu, payload_dv_mission);
-      hardware_mailbox_send(p_self->p_mailbox_send_alive_message, 0);
+        hardware_mailbox_send(p_self->p_mailbox_input_vcu, payload_dv_driver);
+        hardware_mailbox_send(p_self->p_mailbox_send_mission_status_vcu, payload_dv_mission);
+        hardware_mailbox_send(p_self->p_mailbox_send_alive_message, 0);
+      }
     }
   }
 
@@ -157,8 +161,7 @@ int8_t embedded_system_set_dv_input(EmbeddedSystem_h* const restrict self,
   return 0;
 }
 
-int8_t
-embedded_system_set_mission_status(EmbeddedSystem_h* const restrict self,
+int8_t embedded_system_set_mission_status(EmbeddedSystem_h* const restrict self,
     const enum MISSION_STATUS mission_status)
 {
   union EmbeddedSystem_h_t_conv conv = {self};
@@ -169,7 +172,23 @@ embedded_system_set_mission_status(EmbeddedSystem_h* const restrict self,
   return 0;
 }
 
-int8_t embedded_system_stop(EmbeddedSystem_h* const restrict self)
+void embedded_system_disable(EmbeddedSystem_h* const restrict self)
+{
+  union EmbeddedSystem_h_t_conv conv = {self};
+  struct EmbeddedSystem_t* const p_self = conv.clear;
+
+  p_self->active=0;
+}
+
+void embedded_system_enable(EmbeddedSystem_h* const restrict self)
+{
+  union EmbeddedSystem_h_t_conv conv = {self};
+  struct EmbeddedSystem_t* const p_self = conv.clear;
+
+  p_self->active=1;
+}
+
+void embedded_system_stop(EmbeddedSystem_h* const restrict self)
 {
   union EmbeddedSystem_h_t_conv conv = {self};
   struct EmbeddedSystem_t* const p_self = conv.clear;
@@ -177,7 +196,5 @@ int8_t embedded_system_stop(EmbeddedSystem_h* const restrict self)
   printf("stopping embedded_system\n");
   p_self->running=0;
   thrd_join(p_self->thread, NULL);
-
-  return 0;
 }
 
