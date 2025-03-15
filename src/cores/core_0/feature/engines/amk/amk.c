@@ -316,7 +316,7 @@ static float _max_torque(const AMKInverter_t* const restrict self)
   {
     const float actual_velocity = 
       self->engines[engine].amk_values_1.AMK_ActualVelocity;
-    torque_max_sum += MAX_MOTOR_TORQUE - 0.000857*(actual_velocity - 13000.0f);
+    torque_max_sum += MAX_MOTOR_TORQUE - 0.000857f*(actual_velocity - 13000.0f);
   }
   return  torque_max_sum/__NUM_OF_ENGINES__;
 }
