@@ -59,7 +59,7 @@ char __assert_size_core_0_maps[(sizeof(DrivingMaps_h)) == sizeof(struct DrivingM
 char __assert_align_core_0_maps[(_Alignof(DrivingMaps_h)) == _Alignof(struct DrivingMaps_t)? 1:-1];
 #endif // DEBUG
 
-static inline void set_pow_map(struct DrivingMaps_t* const restrict self,
+static inline void _set_pow_map(struct DrivingMaps_t* const restrict self,
     const uint8_t map_i, const float kw, const float torque)
 {
   struct PowerMap* map = &self->power_map;
@@ -67,7 +67,7 @@ static inline void set_pow_map(struct DrivingMaps_t* const restrict self,
   map->map_list[map_i].torque_pos =torque;
 }
 
-static inline void set_regen_map(struct DrivingMaps_t* const restrict self,
+static inline void _set_regen_map(struct DrivingMaps_t* const restrict self,
     const uint8_t map_i, const float regen_scale, const float torque)
 {
   struct RegenMap* map = &self->regen_map;
@@ -75,7 +75,7 @@ static inline void set_regen_map(struct DrivingMaps_t* const restrict self,
   map->map_list[map_i].max_neg_torque = torque;
 }
 
-static inline void set_repartition_map(struct DrivingMaps_t* const restrict self,
+static inline void _set_repartition_map(struct DrivingMaps_t* const restrict self,
     const uint8_t map_i, const float repartition, const uint8_t tv)
 {
   struct TvRepartitionMap* map = &self->tv_repartition_map;
@@ -84,50 +84,51 @@ static inline void set_repartition_map(struct DrivingMaps_t* const restrict self
 }
 
 
-static void init_power_maps(struct DrivingMaps_t* const restrict self)
+static void _init_power_maps(struct DrivingMaps_t* const restrict self)
 {
-  set_pow_map(self, 0, 77, 21);
-  set_pow_map(self, 1, 75, 20);
-  set_pow_map(self, 2, 70, 18);
-  set_pow_map(self, 3, 60, 16);
-  set_pow_map(self, 4, 50, 15);
-  set_pow_map(self, 5, 40, 15);
-  set_pow_map(self, 6, 35, 13);
-  set_pow_map(self, 7, 30, 13);
-  set_pow_map(self, 8, 15, 12);
-  set_pow_map(self, 9, 10, 10);
+  _set_pow_map(self, 0, 77, 21);
+  _set_pow_map(self, 1, 75, 20);
+  _set_pow_map(self, 2, 70, 18);
+  _set_pow_map(self, 3, 60, 16);
+  _set_pow_map(self, 4, 50, 15);
+  _set_pow_map(self, 5, 40, 15);
+  _set_pow_map(self, 6, 35, 13);
+  _set_pow_map(self, 7, 30, 13);
+  _set_pow_map(self, 8, 15, 12);
+  _set_pow_map(self, 9, 10, 10);
 }
 
-static void init_regen_maps(struct DrivingMaps_t* const restrict self)
+static void _init_regen_maps(struct DrivingMaps_t* const restrict self)
 {
-  set_regen_map(self, 0, 0, 0);
-  set_regen_map(self, 1, 20, -8);
-  set_regen_map(self, 2, 30, -10);
-  set_regen_map(self, 3, 40, -12);
-  set_regen_map(self, 4, 50, -15);
-  set_regen_map(self, 5, 60, -17);
-  set_regen_map(self, 6, 70, -18);
-  set_regen_map(self, 7, 80, -19);
-  set_regen_map(self, 8, 90, -20);
-  set_regen_map(self, 9, 100, -21);
+  _set_regen_map(self, 0, 0, 0);
+  _set_regen_map(self, 1, 20, -8);
+  _set_regen_map(self, 2, 30, -10);
+  _set_regen_map(self, 3, 40, -12);
+  _set_regen_map(self, 4, 50, -15);
+  _set_regen_map(self, 5, 60, -17);
+  _set_regen_map(self, 6, 70, -18);
+  _set_regen_map(self, 7, 80, -19);
+  _set_regen_map(self, 8, 90, -20);
+  _set_regen_map(self, 9, 100, -21);
 }
 
-static void init_repartition_maps(struct DrivingMaps_t* const restrict self)
+static void _init_repartition_maps(struct DrivingMaps_t* const restrict self)
 {
-  set_repartition_map(self, 0, 0.50f, 1);
-  set_repartition_map(self, 1, 1.0f, 0);
-  set_repartition_map(self, 2, 0.82f, 0);
-  set_repartition_map(self, 3, 0.80f, 0);
-  set_repartition_map(self, 4, 0.78f, 0);
-  set_repartition_map(self, 5, 0.75f, 0);
-  set_repartition_map(self, 6, 0.70f, 0);
-  set_repartition_map(self, 7, 0.60f, 0);
-  set_repartition_map(self, 8, 0.50f, 0);
-  set_repartition_map(self, 9, 0.50f, 0);
+  _set_repartition_map(self, 0, 0.50f, 1);
+  _set_repartition_map(self, 1, 1.0f, 0);
+  _set_repartition_map(self, 2, 0.82f, 0);
+  _set_repartition_map(self, 3, 0.80f, 0);
+  _set_repartition_map(self, 4, 0.78f, 0);
+  _set_repartition_map(self, 5, 0.75f, 0);
+  _set_repartition_map(self, 6, 0.70f, 0);
+  _set_repartition_map(self, 7, 0.60f, 0);
+  _set_repartition_map(self, 8, 0.50f, 0);
+  _set_repartition_map(self, 9, 0.50f, 0);
 }
 
-  int8_t
-driving_maps_init(DrivingMaps_h* const restrict self )
+//public
+
+int8_t driving_maps_init(DrivingMaps_h* const restrict self)
 {
   union DrivingMaps_h_t_conv conv = {self};
   struct DrivingMaps_t* const restrict p_self = conv.clear;
@@ -150,15 +151,14 @@ driving_maps_init(DrivingMaps_h* const restrict self )
     return -1;
   }
 
-  init_power_maps(p_self);
-  init_regen_maps(p_self);
-  init_repartition_maps(p_self);
+  _init_power_maps(p_self);
+  _init_regen_maps(p_self);
+  _init_repartition_maps(p_self);
 
   return 0;
 }
 
-  int8_t
-driving_map_update(DrivingMaps_h* const restrict self )
+int8_t driving_map_update(DrivingMaps_h* const restrict self)
 {
   union DrivingMaps_h_t_conv conv = {self};
   struct DrivingMaps_t* const restrict p_self = conv.clear;
@@ -175,8 +175,7 @@ driving_map_update(DrivingMaps_h* const restrict self )
   return 0;
 }
 
-  float
-driving_map_get_parameter(const DrivingMaps_h* const restrict self ,
+float driving_map_get_parameter(const DrivingMaps_h* const restrict self,
     const enum CAR_PARAMETERS param)
 {
   union DrivingMaps_h_t_conv_const conv = {self};
