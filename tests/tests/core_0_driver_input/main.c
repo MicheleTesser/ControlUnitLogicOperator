@@ -155,7 +155,7 @@ static int test_throttle_dv(TestInput* input)
       DV_INPUT_THROTTLE,
       throttle_value);
 
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
   throttle = giei_driver_input_get(input->driver_input, THROTTLE);
 
   if (throttle == throttle_value) {
@@ -305,6 +305,7 @@ int main(void)
   test_brake(&t_input);
   test_steering_wheel(&t_input);
 
+  embedded_system_enable(&external_boards.embedded_system);
   steering_wheel_select_mission(&external_boards.steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
   wait_milliseconds(500 MILLIS);
   test_throttle_dv(&t_input);

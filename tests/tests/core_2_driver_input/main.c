@@ -126,6 +126,8 @@ int main(void)
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
+  embedded_system_enable(&external_boards.embedded_system);
+
   test_dv_driver_input(&t_input);
 
   printf("tests finished\n");

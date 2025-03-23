@@ -110,7 +110,9 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
-  INIT_PH(ebs_class_init(&ebs), "ebs")
+  INIT_PH(ebs_class_init(&ebs), "ebs");
+
+  embedded_system_enable(&external_boards.embedded_system);
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
