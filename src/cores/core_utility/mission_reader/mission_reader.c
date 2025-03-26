@@ -31,8 +31,7 @@ char __assert_alignment_car_mission_reader[(_Alignof(CarMissionReader_h)==_Align
 
 //public
 
-int8_t
-car_mission_reader_init(CarMissionReader_h* const restrict self)
+int8_t car_mission_reader_init(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv conv = {self};
   struct CarMissionReader_t* const p_self = conv.clear;
@@ -66,8 +65,7 @@ car_mission_reader_init(CarMissionReader_h* const restrict self)
   return 0;
 }
 
-int8_t
-car_mission_reader_update(CarMissionReader_h* const restrict self)
+int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv conv = {self};
   struct CarMissionReader_t* const p_self = conv.clear;
@@ -84,8 +82,7 @@ car_mission_reader_update(CarMissionReader_h* const restrict self)
   return 0;
 }
 
-enum CAR_MISSIONS
-car_mission_reader_get_current_mission(CarMissionReader_h* const restrict self)
+enum CAR_MISSIONS car_mission_reader_get_current_mission(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv_const conv = {self};
   const struct CarMissionReader_t* const p_self = conv.clear;
@@ -93,12 +90,10 @@ car_mission_reader_get_current_mission(CarMissionReader_h* const restrict self)
   return  p_self->current_mission;
 }
 
-void
-car_mission_reader_destroy(CarMissionReader_h* const restrict self)
+void car_mission_reader_destroy(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv conv = {self};
   struct CarMissionReader_t* const p_self = conv.clear;
 
   hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
-
 }

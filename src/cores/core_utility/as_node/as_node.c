@@ -56,26 +56,24 @@ char __assert_align_as_node[(_Alignof(AsNodeRead_h)==_Alignof(struct AsNodeRead_
 
 static atomic_bool AS_NODE_OWNING =0;
 
-static inline uint8_t _check_embedded(struct AsNode_t *const restrict self __attribute__((__unused__)))
+static inline uint8_t _check_embedded(struct AsNode_t *const restrict self)
 {
   return (timer_time_now() - self->m_last_alive_message_received) < 500 MILLIS;
 }
 
-static inline uint8_t _check_ebs(struct AsNode_t *const restrict self __attribute__((__unused__)))
+static inline uint8_t _check_ebs(struct AsNode_t *const restrict self)
 {
   return (timer_time_now() - self->m_last_tank_ebs_message_received) < 500 MILLIS;
 }
 
-static inline uint8_t _as_node_enable(struct AsNode_t* const restrict self)
+static inline void _as_node_enable(struct AsNode_t* const restrict self)
 {
   gpio_set_low(&self->m_gpio_as_node);
-  return 1;
 }
 
-static inline uint8_t _as_node_disable(struct AsNode_t* const restrict self)
+static inline void _as_node_disable(struct AsNode_t* const restrict self)
 {
   gpio_set_high(&self->m_gpio_as_node);
-  return 0;
 }
 
 //public
