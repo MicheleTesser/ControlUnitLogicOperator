@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
-#include "../imu/imu.h"
+#include "../../../core_utility/imu/imu.h"
 #include "../engines/engines.h"
 
 typedef struct __attribute__((aligned(8))){

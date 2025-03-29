@@ -3,9 +3,9 @@
 #include "engines/amk/amk.h"
 #include "engines/engines.h"
 #include "giei/giei.h"
-#include "imu/imu.h"
 #include "maps/maps.h"
 #include "../../core_utility/running_status/running_status.h"
+#include "../../core_utility/imu/imu.h"
 
 #include <stdint.h>
 
