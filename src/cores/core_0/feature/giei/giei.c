@@ -6,7 +6,7 @@
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
-#include "../imu/imu.h"
+#include "../../../core_utility/imu/imu.h"
 #include "giei_components/giei_components.h"
 #include "giei_components/hv/hv.h"
 #include "giei_components/speed_alg/speed_alg.h"

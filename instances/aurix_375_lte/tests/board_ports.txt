@@ -1,2 +1,0 @@
-PORT:/dev/ttyUSB0
-BAUD:11520

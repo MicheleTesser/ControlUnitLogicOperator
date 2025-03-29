@@ -10,9 +10,9 @@
 #include "../../../core_utility/mission_reader/mission_reader.h"
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
 #include "../../../core_utility/as_node/as_node.h"
+#include "../../../core_utility/imu/imu.h"
 #include "res/res.h"
 #include "ebs/ebs.h"
-#include "speed/speed.h"
 #include "../dv_driver_input/dv_driver_input.h"
 #include "./steering_wheel_alg/stw_alg.h"
 #include <stdint.h>
@@ -58,12 +58,12 @@ struct Dv_t{
   DvRes_h dv_res;
   DvEbs_h dv_ebs;
   AsNodeRead_h m_as_node_read;
-  DvSpeed_h dv_speed;
   GpioRead_h gpio_air_precharge_init;
   GpioRead_h gpio_air_precharge_done;
   RtdAssiSound_h o_assi_sound;
   GpioPwm_h gpio_ass_light_blue;
   GpioPwm_h gpio_ass_light_yellow;
+  Imu_h m_imu;
   CarMissionReader_h* p_mission_reader;
   const DvDriverInput_h* dv_driver_input;
   struct CanMailbox* p_send_car_dv_car_status_mailbox;
@@ -179,7 +179,7 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
 //INFO: Flowchart T 14.9.2
 static int8_t _dv_update_status(struct Dv_t* const restrict self)
 {
-  const float current_speed = dv_speed_get(&self->dv_speed);
+  const float current_speed = imu_get_speed(&self->m_imu);
   const float driver_brake = dv_driver_input_get_brake(self->dv_driver_input);
   const enum RUNNING_STATUS giei_status = global_running_status_get(&self->o_global_running_status_reader);
 
@@ -248,7 +248,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   {
     return -3;
   }
-  if (dv_speed_init(&p_self->dv_speed)<0) {
+  if (imu_init(&p_self->m_imu)<0) {
     return -4;
   }
 
@@ -358,7 +358,7 @@ int8_t dv_update(Dv_h* const restrict self)
   can_obj_can3_h_t o3 = {0};
   can_obj_can2_h_t o2 = {0};
 
-  if(dv_speed_update(&p_self->dv_speed)<0)return -1;
+  if(imu_update(&p_self->m_imu)<0)return -1;
   if(ebs_update(&p_self->dv_ebs)<0) return -2;
 
   if (car_mission_reader_get_current_mission(p_self->p_mission_reader) > CAR_MISSIONS_HUMAN)
