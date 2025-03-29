@@ -29,7 +29,6 @@ struct DvEbs_t{
   uint8_t sanity_check_left:1;
   uint8_t system_check:1;
   uint8_t ebs_working_properly:1;
-  uint8_t ebs_activated:1; //TODO: add to update function
 };
 
 union DvEbs_h_t_conv{
@@ -178,10 +177,13 @@ int8_t ebs_on(const DvEbs_h* const restrict self)
   return p_self->ebs_working_properly;
 }
 
+#define BAR 
 int8_t ebs_activated(const DvEbs_h* const restrict self)
 {
   const union DvEbs_h_t_conv_const conv = {self};
   const struct DvEbs_t* const restrict p_self= conv.clear;
 
-  return p_self->ebs_activated;
+  return 
+    p_self->tank_vals[TANK_LEFT] > 90 BAR &&
+    p_self->tank_vals[TANK_RIGHT] > 90 BAR;
 }

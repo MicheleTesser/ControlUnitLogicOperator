@@ -14,12 +14,19 @@ struct AsNodeRead_t{
   GpioRead_h m_gpio_read_as_node;
 };
 
+enum ResStatus{
+  __NUM_OF_RES_STATUS__
+};
+
 struct AsNode_t{
   Gpio_h m_gpio_as_node;
   time_var_microseconds m_last_alive_message_received;
   time_var_microseconds m_last_tank_ebs_message_received;
+  time_var_microseconds m_last_res_message_received;
+  enum ResStatus m_res_status;
   struct CanMailbox* p_mailbox_read_embedded_alive;
   struct CanMailbox* p_mailbox_read_tank_ebs;
+  struct CanMailbox* p_mailbox_read_res;
   CarMissionReader_h* p_mission_reader;
 };
 
@@ -64,6 +71,13 @@ static inline uint8_t _check_embedded(struct AsNode_t *const restrict self)
 static inline uint8_t _check_ebs(struct AsNode_t *const restrict self)
 {
   return (timer_time_now() - self->m_last_tank_ebs_message_received) < 500 MILLIS;
+}
+
+static inline uint8_t _check_res(struct AsNode_t* const restrict self)
+{
+  return 
+    (timer_time_now() - self->m_last_res_message_received) < 500 MILLIS &&
+    self->m_res_status == 1; //TODO: check res status
 }
 
 static inline void _as_node_enable(struct AsNode_t* const restrict self)
@@ -131,6 +145,8 @@ int8_t as_node_init(AsNode_h* const restrict self,
     return -4;
   }
 
+  //TODO: init mailbox res
+
   p_self->p_mission_reader = p_car_mission_reader;
 
   return 0;
@@ -152,6 +168,12 @@ int8_t as_node_update(AsNode_h* const restrict self)
     p_self->m_last_tank_ebs_message_received = timer_time_now();
   }
 
+  if (hardware_mailbox_read(p_self->p_mailbox_read_res, &mex))
+  {
+    p_self->m_last_res_message_received = timer_time_now();
+    //TODO: update res status
+  }
+
 
   switch (car_mission_reader_get_current_mission(p_self->p_mission_reader))
   {
@@ -170,7 +192,7 @@ int8_t as_node_update(AsNode_h* const restrict self)
     case CAR_MISSIONS_DV_TRACKDRIVE:
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
-      if (_check_ebs(p_self) && _check_embedded(p_self))
+      if (_check_ebs(p_self) && _check_embedded(p_self) && _check_res(p_self))
       {
         _as_node_enable(p_self);
       }
