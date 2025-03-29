@@ -11,6 +11,7 @@ all_tests=$(/bin/ls -d ./tests/*/ 2>/dev/null )
 flash_board_script=../flash_board.sh
 port=$(cat ./board_ports.txt | grep "PORT" | cut -d':' -f2)
 baud=$(cat ./board_ports.txt | grep "BAUD" | cut -d':' -f2)
+verbose="> /dev/null"
 
 end_tests() {
     cd $test_root
@@ -19,6 +20,7 @@ end_tests() {
 build_run_logic_test()
 {
   cd host_src
+  cargo build ${verbose}
   cargo run ${port} ${baud}
   cd ..
 }
@@ -29,16 +31,16 @@ run_test() {
 
     echo -e ${YELLOW}building in DEBUG mode $ENDCOLOR
     cd "hardware_src/TriCore Debug (GCC)"
-    wine make --output-sync -j8 all # > /dev/null
-    C_tricore-probe basic_aurix_template.elf  # > /dev/null
+    wine make --output-sync -j8 all ${verbose}
+    C_tricore-probe basic_aurix_template.elf ${verbose}
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
     cd - > /dev/null
     build_run_logic_test build_debug
 
     echo -e ${YELLOW}building in RELEASE mode $ENDCOLOR
     cd "hardware_src/TriCore Release (GCC)"
-    wine make --output-sync -j8 all # > /dev/null
-    C_tricore-probe basic_aurix_template.elf  # > /dev/null
+    wine make --output-sync -j8 all ${verbose}
+    C_tricore-probe basic_aurix_template.elf ${verbose}
     echo -e ${GREEN}running in RELEASE mode $ENDCOLOR
     cd - > /dev/null
     build_run_logic_test build_release
@@ -54,6 +56,7 @@ skip_tests=""
 help ()
 {
   echo "usage ${0}:
+    -v        : verbose
     -h        : print help
     -s args.. : skip a list of tests 
     -t arg..  : run a list of tests
@@ -73,7 +76,16 @@ print_list()
   echo "]"
 }
 
-case "$1" in
+case ${1} in
+  "-v")
+    verbose=""
+    shift
+    ;;
+  *)
+    ;;
+esac
+
+case ${1} in
   "-h") 
     help
     exit 0
