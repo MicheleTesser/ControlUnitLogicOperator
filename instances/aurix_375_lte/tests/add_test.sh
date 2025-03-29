@@ -16,4 +16,4 @@ if [ -d ./tests/$name ]; then
     echo "test already present"
 fi
 
-cp -r ./.dummy ./tests/$name
+rsync -a ./.dummy/ ./tests/$name/
