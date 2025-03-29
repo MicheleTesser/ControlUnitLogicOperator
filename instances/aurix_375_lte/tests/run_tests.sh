@@ -9,6 +9,8 @@ ENDCOLOR="\e[0m"
 test_root=$(pwd)
 all_tests=$(/bin/ls -d ./tests/*/ 2>/dev/null )
 flash_board_script=../flash_board.sh
+port=$(cat ./board_ports.txt | grep "PORT" | cut -d':' -f2)
+baud=$(cat ./board_ports.txt | grep "BAUD" | cut -d':' -f2)
 
 end_tests() {
     cd $test_root
@@ -17,9 +19,7 @@ end_tests() {
 build_run_logic_test()
 {
   cd host_src
-  make ${1} 1>/dev/null
-  ./main
-  make clean 1>/dev/null
+  cargo run ${port} ${baud}
   cd ..
 }
 
@@ -28,20 +28,20 @@ run_test() {
     cd $1
 
     echo -e ${YELLOW}building in DEBUG mode $ENDCOLOR
-    build_run_logic_test build_debug
     cd "hardware_src/TriCore Debug (GCC)"
-    echo "NOT YET IMPLEMENTED BUILDING IN DEBUG"
+    wine make --output-sync -j8 all # > /dev/null
+    C_tricore-probe basic_aurix_template.elf  # > /dev/null
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
-    C_tricore-probe aurix_375_lte.elf
     cd - > /dev/null
+    build_run_logic_test build_debug
 
     echo -e ${YELLOW}building in RELEASE mode $ENDCOLOR
-    build_run_logic_test build_release
     cd "hardware_src/TriCore Release (GCC)"
-    echo "NOT YET IMPLEMENTED BUILDING IN RELEASE"
+    wine make --output-sync -j8 all # > /dev/null
+    C_tricore-probe basic_aurix_template.elf  # > /dev/null
     echo -e ${GREEN}running in RELEASE mode $ENDCOLOR
-    C_tricore-probe aurix_375_lte.elfcd
     cd - > /dev/null
+    build_run_logic_test build_release
 }
 
 if [ ! -d ./.dummy -o ! -d ./tests ]; then
@@ -113,6 +113,7 @@ esac
 
 
 cd tests
+tests_dir=$(pwd)
 for TEST_DIR in $(/bin/ls -d */ 2>/dev/null ); do
   curr=$(echo $TEST_DIR| cut -d'/' -f1)
   if [[ -z $(echo "$skip_tests" | grep -w "${curr}") ]]; then
@@ -121,6 +122,7 @@ for TEST_DIR in $(/bin/ls -d */ 2>/dev/null ); do
     echo -e ${RED}skipping $(echo ${curr} | cut -d'/' -f1) $RED
   fi
   end_tests
+  cd ${tests_dir}
 done
 
 end_tests
