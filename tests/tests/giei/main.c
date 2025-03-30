@@ -5,7 +5,7 @@
 #include "src/cores/core_0/feature/engines/amk/amk.h"
 #include "src/cores/core_0/feature/driver_input/driver_input.h"
 #include "src/cores/core_0/feature/maps/maps.h"
-#include "src/cores/core_0/feature/imu/imu.h"
+#include "src/cores/core_utility/imu/imu.h"
 #include "src/cores/core_utility/emergency_module/emergency_module.h"
 #include "car_component/car_component.h"
 

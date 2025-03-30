@@ -101,6 +101,8 @@ int8_t ebs_class_init(DvEbs_h* const restrict self)
     goto error_mailbox_consistency_check_recv;
   }
 
+  p_self->ConsistencyCheck.asb_consistency_check = EBS_NOT_YET_DONE;
+
   return 0;
 
 error_mailbox_consistency_check_recv:

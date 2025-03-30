@@ -130,6 +130,22 @@ int8_t as_node_init(AsNode_h* const restrict self,
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
   {
+    p_self->p_mailbox_read_res =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          0, //TODO: not yet defined
+          0);//TODO: not yet defined
+  }
+
+  if (!p_self->p_mailbox_read_res)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
+    return -3;
+  }
+
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
 
     p_self->p_mailbox_read_tank_ebs =
       hardware_get_mailbox_single_mex(
@@ -142,10 +158,9 @@ int8_t as_node_init(AsNode_h* const restrict self,
   if (!p_self->p_mailbox_read_tank_ebs)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_res);
     return -4;
   }
-
-  //TODO: init mailbox res
 
   p_self->p_mission_reader = p_car_mission_reader;
 

@@ -300,16 +300,14 @@ int8_t car_amk_inverter_start(EmulationAmkInverter_h* self)
   return 0;
 }
 
-  void 
-car_amk_inverter_reset(EmulationAmkInverter_h* self)
+void car_amk_inverter_reset(EmulationAmkInverter_h* self)
 {
   union AmkInverter_h_t_conv conv = {self};
   struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
-  FOR_EACH_ENGINE(engine){
-    memset(&p_self->o_engines[engine].amk_data_1, 0,
-        sizeof(p_self->o_engines[engine].amk_data_1));
-    memset(&p_self->o_engines[engine].amk_data_2, 0,
-        sizeof(p_self->o_engines[engine].amk_data_2));
+  FOR_EACH_ENGINE(engine)
+  {
+    p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bDcOn =0;
+    p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bQuitDcOn =0;
   }
 }
 
@@ -407,8 +405,10 @@ void car_amk_inverter_stop(EmulationAmkInverter_h* self)
 
   printf("stopping amk inverter\n");
   p_self->o_running=0;
+  printf("destroying can_node_inverter\n");
   hardware_init_new_external_node_destroy(p_self->p_can_node_inverter);
   hardware_free_mailbox_can(&p_self->p_recv_mailbox_vcu);
+  printf("destroying mailbox vcu\n");
 
   return;
 }

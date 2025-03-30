@@ -61,8 +61,34 @@ void test_ebs_initial_state(TestInput* t_input)
   _check_status(!ebs_on(t_input->ebs), "initial ebs active state");
 }
 
-void test_ebs_test_activation_of_ebs(TestInput* t_input)
+void test_ebs_test_activation_of_ebs_human_driver(TestInput* t_input)
 {
+  printf("human driver mode\n");
+  steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
+  while (car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter)!=PRECHARGE_FINISHED)
+  {
+    car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
+    wait_milliseconds(5 SECONDS);
+  }
+
+  _check_status(!ebs_on(t_input->ebs), "precharge done and ebs is currently off");
+  _check_status(
+      ebs_asb_consistency_check(t_input->ebs) == EBS_NOT_YET_DONE,
+      "started consistency check of ebs");
+
+  wait_milliseconds(1 SECONDS);
+
+  enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
+  _check_status(consistency == EBS_NOT_YET_DONE,"ebs consistency still not done");
+  printf("expected: %d, given %d\n", EBS_NOT_YET_DONE , consistency);
+}
+
+void test_ebs_test_activation_of_ebs_dv_driver(TestInput* t_input)
+{
+  printf("dv driver mode\n");
+  car_amk_inverter_reset(&t_input->external_boards->amk_inverter);
+  wait_milliseconds(500 MILLIS);
+  steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
   while (car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter)!=PRECHARGE_FINISHED)
   {
     car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
@@ -81,8 +107,6 @@ void test_ebs_test_activation_of_ebs(TestInput* t_input)
   enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
   _check_status(consistency == EBS_SUCCESS,"ebs consistency done with success");
   printf("expected: %d, given %d\n", EBS_SUCCESS, consistency);
-
-  
 }
 
 int main(void)
@@ -117,7 +141,8 @@ int main(void)
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 
   test_ebs_initial_state(&t_input);
-  test_ebs_test_activation_of_ebs(&t_input);
+  test_ebs_test_activation_of_ebs_human_driver(&t_input);
+  test_ebs_test_activation_of_ebs_dv_driver(&t_input);
 
   printf("tests finished\n");
 
