@@ -1,5 +1,4 @@
 #include "../../src/lib/raceup_board/raceup_board.h"
-#include "../raceup_board/components/gpio.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"

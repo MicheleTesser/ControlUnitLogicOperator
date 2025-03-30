@@ -20,7 +20,11 @@ end_tests() {
 build_run_logic_test()
 {
   cd host_src
-  cargo build ${verbose}
+  if [[ -n ${verbose} ]]; then
+    cargo build -q
+  else
+    cargo build
+  fi
   cargo run ${port} ${baud}
   cd ..
 }
@@ -31,6 +35,7 @@ run_test() {
 
     echo -e ${YELLOW}building in DEBUG mode $ENDCOLOR
     cd "hardware_src/TriCore Debug (GCC)"
+    wine make ${verbose}
     wine make --output-sync -j8 all ${verbose}
     C_tricore-probe basic_aurix_template.elf ${verbose}
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
@@ -39,6 +44,7 @@ run_test() {
 
     echo -e ${YELLOW}building in RELEASE mode $ENDCOLOR
     cd "hardware_src/TriCore Release (GCC)"
+    wine make ${verbose}
     wine make --output-sync -j8 all ${verbose}
     C_tricore-probe basic_aurix_template.elf ${verbose}
     echo -e ${GREEN}running in RELEASE mode $ENDCOLOR
