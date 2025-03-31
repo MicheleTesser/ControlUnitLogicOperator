@@ -305,7 +305,7 @@ int main(void)
   test_brake(&t_input);
   test_steering_wheel(&t_input);
 
-  embedded_system_enable(&external_boards.embedded_system);
+  pcu_start_embedded(&external_boards.pcu);
   steering_wheel_select_mission(&external_boards.steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
   wait_milliseconds(500 MILLIS);
   test_throttle_dv(&t_input);

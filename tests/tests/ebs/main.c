@@ -136,7 +136,7 @@ int main(void)
 
   INIT_PH(ebs_class_init(&ebs), "ebs");
 
-  embedded_system_enable(&external_boards.embedded_system);
+  pcu_start_embedded(&external_boards.pcu);
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 

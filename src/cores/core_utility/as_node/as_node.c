@@ -23,10 +23,12 @@ struct AsNode_t{
   time_var_microseconds m_last_alive_message_received;
   time_var_microseconds m_last_tank_ebs_message_received;
   time_var_microseconds m_last_res_message_received;
+  time_var_microseconds m_last_enable_dv_sent;
   enum ResStatus m_res_status;
   struct CanMailbox* p_mailbox_read_embedded_alive;
   struct CanMailbox* p_mailbox_read_tank_ebs;
   struct CanMailbox* p_mailbox_read_res;
+  struct CanMailbox* p_mailbox_send_pcu_enable_dv;
   CarMissionReader_h* p_mission_reader;
 };
 
@@ -55,8 +57,8 @@ union AsNodeRead_h_t_conv_const{
 char __assert_size_as_node[(sizeof(AsNode_h)==sizeof(struct AsNode_t))?+1:-1];
 char __assert_align_as_node[(_Alignof(AsNode_h)==_Alignof(struct AsNode_t))?+1:-1];
 
-char __assert_size_as_node[(sizeof(AsNodeRead_h)==sizeof(struct AsNodeRead_t))?+1:-1];
-char __assert_align_as_node[(_Alignof(AsNodeRead_h)==_Alignof(struct AsNodeRead_t))?+1:-1];
+char __assert_size_as_node_read[(sizeof(AsNodeRead_h)==sizeof(struct AsNodeRead_t))?+1:-1];
+char __assert_align_as_node_read[(_Alignof(AsNodeRead_h)==_Alignof(struct AsNodeRead_t))?+1:-1];
 #endif /* ifdef DEBUG */
 
 //private
@@ -130,7 +132,7 @@ int8_t as_node_init(AsNode_h* const restrict self,
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
   {
-    p_self->p_mailbox_read_res =
+    p_self->p_mailbox_read_res=
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
@@ -162,6 +164,25 @@ int8_t as_node_init(AsNode_h* const restrict self,
     return -4;
   }
 
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+
+    p_self->p_mailbox_send_pcu_enable_dv =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          SEND_MAILBOX,
+          CAN_ID_PCU,
+          message_dlc_can2(CAN_ID_PCU));
+  }
+
+  if (!p_self->p_mailbox_send_pcu_enable_dv)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_tank_ebs);
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_res);
+    return -4;
+  }
+
   p_self->p_mission_reader = p_car_mission_reader;
 
   return 0;
@@ -172,6 +193,8 @@ int8_t as_node_update(AsNode_h* const restrict self)
   union AsNode_h_t_conv conv = {self};
   struct AsNode_t* const p_self = conv.clear;
   CanMessage mex = {0};
+  can_obj_can2_h_t o2 = {0};
+  uint64_t pcu_payload = 0;
 
   if (hardware_mailbox_read(p_self->p_mailbox_read_embedded_alive, &mex))
   {
@@ -215,11 +238,24 @@ int8_t as_node_update(AsNode_h* const restrict self)
       {
         _as_node_disable(p_self);
       }
+      o2.can_0x130_Pcu.enable_dv = 1;
+      o2.can_0x130_Pcu.enable_embedded = 1;
       break;
     default:
       _as_node_disable(p_self);
+      break;
   }
-  return -1;
+
+  o2.can_0x130_Pcu.mode =2;
+
+  ACTION_ON_FREQUENCY(p_self->m_last_enable_dv_sent, 100 MILLIS)
+  {
+    pack_message_can2(&o2, CAN_ID_PCU, &pcu_payload);
+    hardware_mailbox_send(p_self->p_mailbox_send_pcu_enable_dv, pcu_payload);
+  }
+
+  return 0;
+
 }
 
 int8_t as_node_read_init(AsNodeRead_h* const restrict self)

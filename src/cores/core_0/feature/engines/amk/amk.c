@@ -257,8 +257,6 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       setpoint.AMK_Control_fields.AMK_bInverterOn = 1;
 
-      o2.can_0x130_Pcu.mode = 1;
-      o2.can_0x130_Pcu.rf = 1;
       if (!_amk_inverter_hv_status(self) || !_precharge_ended(self) || !_amk_inverter_on(self))
       {
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
@@ -268,6 +266,8 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       else if (giei_driver_input_rtd_request(self->driver_input) &&
           giei_driver_input_get(self->driver_input, BRAKE) > 20)
       {
+        o2.can_0x130_Pcu.mode = 1;
+        o2.can_0x130_Pcu.rf = 1;
         //INFO: RF message to PCU and wait until rf is active before going
         //into RUNNING status
         if (self->rf_status)

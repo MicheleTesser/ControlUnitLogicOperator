@@ -5,6 +5,8 @@
 #include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../external_gpio.h"
+#include "../embedded_system/embedded_system.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,8 +35,10 @@ struct Pcu_t{
     uint8_t power_percentage: 7;
     uint8_t enable:1;
   }cooling_device[__NUM_OF_COOLING_DEVICES__];
+  Gpio_h m_gpio_embedded_system;
   uint8_t run:1;
   uint8_t rf:1;
+  uint8_t dv_gpio:1;
 };
 
 union Pcu_h_t_conv{
@@ -58,17 +62,32 @@ _pcu_update(struct Pcu_t* const restrict self)
   if (hardware_mailbox_read(self->recv_can_node_pcu_inv, &mex)
       && unpack_message_can2(&o2, CAN_ID_PCU, mex.full_word, mex.message_size, 0)>=0)
   {
-    if (o2.can_0x130_Pcu.mode == 1)
+    switch(o2.can_0x130_Pcu.mode)
     {
-      self->rf = o2.can_0x130_Pcu.rf;
-      if (self->rf)
-      {
-        gpio_set_low(&self->inverter_on_gpio);
-      }
-      else
-      {
-        gpio_set_high(&self->inverter_on_gpio);
-      }
+      case 1:
+        self->rf = o2.can_0x130_Pcu.rf;
+        if (self->rf)
+        {
+          gpio_set_low(&self->inverter_on_gpio);
+        }
+        else
+        {
+          gpio_set_high(&self->inverter_on_gpio);
+        }
+        break;
+      case 2:
+        if (o2.can_0x130_Pcu.enable_embedded)
+        {
+          gpio_set_low(&self->m_gpio_embedded_system);
+        }
+        else
+        {
+          gpio_set_high(&self->m_gpio_embedded_system);
+        }
+        self->dv_gpio = o2.can_0x130_Pcu.enable_dv;
+        break;
+      default:
+        break;
     }
   }
   return hardware_mailbox_send(self->send_can_node_pcu_inv, self->rf);
@@ -92,8 +111,7 @@ _pcu_start(void* args)
 
 //public
 
-int8_t
-pcu_init(struct Pcu_h* const restrict self)
+int8_t pcu_init(Pcu_h* const restrict self)
 {
   union Pcu_h_t_conv conv = {self};
   struct Pcu_t* const restrict p_self = conv.clear;
@@ -130,6 +148,11 @@ pcu_init(struct Pcu_h* const restrict self)
     return -3;
   }
 
+  if (hardware_init_gpio(&p_self->m_gpio_embedded_system, (enum GPIO_PIN) GPIO_PCU_EMBEDDED_SYSTEM)<0)
+  {
+    return -4;
+  }
+
   p_self->run=1;
   thrd_create(&p_self->thread, _pcu_start,p_self);
 
@@ -137,8 +160,7 @@ pcu_init(struct Pcu_h* const restrict self)
 }
 
 
-int8_t
-pcu_stop(struct Pcu_h* const restrict self)
+int8_t pcu_stop(Pcu_h* const restrict self)
 {
   union Pcu_h_t_conv conv = {self};
   struct Pcu_t* const restrict p_self = conv.clear;
@@ -150,4 +172,20 @@ pcu_stop(struct Pcu_h* const restrict self)
   hardware_free_mailbox_can(&p_self->send_can_node_pcu_inv);
 
   return 0;
+}
+
+int8_t pcu_start_embedded(Pcu_h* const restrict self)
+{
+  union Pcu_h_t_conv conv = {self};
+  struct Pcu_t* const restrict p_self = conv.clear;
+
+  return gpio_set_low(&p_self->m_gpio_embedded_system);
+}
+
+int8_t pcu_stop_embedded(Pcu_h* const restrict self)
+{
+  union Pcu_h_t_conv conv = {self};
+  struct Pcu_t* const restrict p_self = conv.clear;
+
+  return gpio_set_high(&p_self->m_gpio_embedded_system);
 }

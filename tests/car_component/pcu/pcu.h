@@ -3,14 +3,20 @@
 
 #include <stdint.h>
 
-typedef struct __attribute__((aligned(8))) Pcu_h{
-  const uint8_t private_data[40];
+typedef struct __attribute__((aligned(8))){
+  const uint8_t private_data[56];
 }Pcu_h;
 
 int8_t
-pcu_init(struct Pcu_h* const restrict self)__attribute__((__nonnull__));
+pcu_init(Pcu_h* const restrict self) __attribute__((__nonnull__(1)));
 
 int8_t
-pcu_stop(struct Pcu_h* const restrict self)__attribute__((__nonnull__));
+pcu_stop(Pcu_h* const restrict self)__attribute__((__nonnull__(1)));
+
+int8_t
+pcu_start_embedded(Pcu_h* const restrict self)__attribute__((__nonnull__(1)));
+
+int8_t
+pcu_stop_embedded(Pcu_h* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_PCU__

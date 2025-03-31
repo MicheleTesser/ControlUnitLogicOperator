@@ -8,6 +8,7 @@ ENDCOLOR="\e[0m"
 
 test_root=$(pwd)
 all_tests=$(/bin/ls -d ./tests/*/ 2>/dev/null )
+verbose="> /dev/null"
 
 end_tests() {
     cd $test_root
@@ -69,6 +70,15 @@ print_list()
   done
   echo "]"
 }
+
+case ${1} in
+  "-v")
+    verbose=""
+    shift
+    ;;
+  *)
+    ;;
+esac
 
 case "$1" in
   "-h") 

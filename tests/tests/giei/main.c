@@ -101,7 +101,7 @@ static void test_giei_rtd(CoreInput* const input)
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0,0);
 
   printf("switching to human driver\n");
-  embedded_system_disable(&input->external_boards->embedded_system);
+  pcu_stop_embedded(&input->external_boards->pcu);
   steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
   wait_milliseconds(200 MILLIS);
 
@@ -122,7 +122,7 @@ static void test_giei_rtd(CoreInput* const input)
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_PRECAHRGE, 0, 0);
 
   printf("after 5 seconds precharge completed: SYSTEM_PRECAHRGE -> TS_READY\n");
-  wait_milliseconds(8 SECONDS);
+  wait_milliseconds(5 SECONDS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, TS_READY, 0, 0);
 
   printf("activating rf with brake pedal at 5 percentage in manual mode from TS_READY -> TS_READY\n");

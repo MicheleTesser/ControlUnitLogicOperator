@@ -5,6 +5,7 @@
 #include "../src/lib/board_dbc/dbc/out_lib/can3/can3.h"
 #include "../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
+#include "../external_gpio.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -20,7 +21,7 @@ struct EmbeddedSystem_t{
     uint8_t brake;
     uint8_t steering_wheel;
   }Input;
-  uint8_t active:1;
+  GpioRead_h m_gpio_pcu_embedded;
   struct CanMailbox* p_mailbox_input_vcu;
   struct CanMailbox* p_mailbox_send_mission_status_vcu;
   struct CanMailbox* p_mailbox_send_alive_message;
@@ -54,7 +55,7 @@ int _start_embedded_system(void* arg)
   {
     ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
-      if (p_self->active)
+      if (gpio_read_state(&p_self->m_gpio_pcu_embedded))
       {
         o3.can_0x07d_DV_Driver.Brake = p_self->Input.brake;
         o3.can_0x07d_DV_Driver.Throttle = p_self->Input.throttle;
@@ -86,6 +87,11 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
+  if (hardware_init_read_permission_gpio(&p_self->m_gpio_pcu_embedded, GPIO_PCU_EMBEDDED_SYSTEM)<0)
+  {
+    return -1;
+  }
+
   ACTION_ON_CAN_NODE_EXTERNAL(CAN_DV, can_node)
   {
     p_self->p_mailbox_input_vcu = 
@@ -94,12 +100,27 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
           SEND_MAILBOX,
           CAN_ID_DV_DRIVER,
           message_dlc_can3(CAN_ID_DV_DRIVER));
+  }
+
+  if (!p_self->p_mailbox_input_vcu)
+  {
+    return -2;
+  }
+
+  ACTION_ON_CAN_NODE_EXTERNAL(CAN_DV, can_node)
+  {
     p_self->p_mailbox_send_mission_status_vcu =
       hardware_get_mailbox_single_mex(
           can_node,
           SEND_MAILBOX,
           CAN_ID_DV_MISSION,
           message_dlc_can3(CAN_ID_DV_MISSION));
+  }
+
+  if (!p_self->p_mailbox_send_mission_status_vcu)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
+    return -2;
   }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
@@ -110,17 +131,6 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
           SEND_MAILBOX,
           CAN_ID_EMBEDDEDALIVECHECK,
           message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
-  }
-
-  if (!p_self->p_mailbox_input_vcu)
-  {
-    return -1;
-  }
-
-  if (!p_self->p_mailbox_send_mission_status_vcu)
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
-    return -2;
   }
 
   if (!p_self->p_mailbox_send_alive_message)
@@ -170,22 +180,6 @@ int8_t embedded_system_set_mission_status(EmbeddedSystem_h* const restrict self,
   p_self->mission_status = mission_status;
 
   return 0;
-}
-
-void embedded_system_disable(EmbeddedSystem_h* const restrict self)
-{
-  union EmbeddedSystem_h_t_conv conv = {self};
-  struct EmbeddedSystem_t* const p_self = conv.clear;
-
-  p_self->active=0;
-}
-
-void embedded_system_enable(EmbeddedSystem_h* const restrict self)
-{
-  union EmbeddedSystem_h_t_conv conv = {self};
-  struct EmbeddedSystem_t* const p_self = conv.clear;
-
-  p_self->active=1;
 }
 
 void embedded_system_stop(EmbeddedSystem_h* const restrict self)
