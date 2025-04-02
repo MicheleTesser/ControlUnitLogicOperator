@@ -1,9 +1,12 @@
 #include "ebs.h"
 #include "../../../../../../lib/raceup_board/raceup_board.h"
+#include "../../../../core_utility/mission_reader/mission_reader.h"
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,6 +22,7 @@ struct DvEbs_t{
   struct CanMailbox* p_ebs_mailbox;
   struct CanMailbox* p_asb_consistency_check_mailbox_send;
   struct CanMailbox* p_asb_consistency_check_mailbox_recv;
+  CarMissionReader_h m_mission_reader;
   float tank_vals[__NUM_OF_TANKS__];
   time_var_microseconds last_update;
   struct{
@@ -56,6 +60,11 @@ int8_t ebs_class_init(DvEbs_h* const restrict self)
   struct CanNode* can_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
+
+  if(car_mission_reader_init(&p_self->m_mission_reader)<0)
+  {
+    return -1;
+  }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
   {
@@ -120,9 +129,17 @@ error_mailbox_ebs:
 int8_t ebs_update(DvEbs_h* const restrict self)
 {
   union DvEbs_h_t_conv conv = {self};
-  struct DvEbs_t* const restrict p_self = conv.clear;
+  struct DvEbs_t* const p_self = conv.clear;
   CanMessage mex = {0};
   can_obj_can2_h_t o2 = {0};
+
+  if (car_mission_reader_get_current_mission(&p_self->m_mission_reader)<= CAR_MISSIONS_HUMAN)
+  {
+    p_self->ebs_working_properly = 0;
+    p_self->ConsistencyCheck.done =0;
+    p_self->ConsistencyCheck.asb_consistency_check = EBS_NOT_YET_DONE;
+    return 0;
+  }
 
   if (hardware_mailbox_read(p_self->p_ebs_mailbox, &mex))
   {
@@ -151,6 +168,7 @@ int8_t ebs_update(DvEbs_h* const restrict self)
 
   if ((timer_time_now() - p_self->last_update) > 500 MILLIS)
   {
+    serial_write_str("ebs failed");
     p_self->ebs_working_properly =0;
   }
 
