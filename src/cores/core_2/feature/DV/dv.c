@@ -57,7 +57,7 @@ struct Dv_t{
   time_var_microseconds emergency_sound_last_time_on;
   DvRes_h dv_res;
   DvEbs_h dv_ebs;
-  AsNodeRead_h m_as_node_read;
+  AsNode_h m_as_node;
   GpioRead_h gpio_air_precharge_init;
   GpioRead_h gpio_air_precharge_done;
   RtdAssiSound_h o_assi_sound;
@@ -93,10 +93,10 @@ static uint8_t _sdc_closed(const struct Dv_t* const restrict self)
 {
   return  gpio_read_state(&self->gpio_air_precharge_init) &&
     gpio_read_state(&self->gpio_air_precharge_done) &&
-    as_node_read_get_status(&self->m_as_node_read);
+    as_node_get_status(&self->m_as_node);
 }
 
-static void _update_dv_status(struct Dv_t* const restrict self, const enum AS_STATUS status)
+static void _dv_set_status(struct Dv_t* const restrict self, const enum AS_STATUS status)
 {
   if (status == AS_EMERGENCY)
   {
@@ -180,45 +180,32 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
 static int8_t _dv_update_status(struct Dv_t* const restrict self)
 {
   const float current_speed = imu_get_speed(&self->m_imu);
-  const float driver_brake = dv_driver_input_get_brake(self->dv_driver_input);
   const enum RUNNING_STATUS giei_status = global_running_status_get(&self->o_global_running_status_reader);
 
   if (EmergencyNode_is_emergency_state(&self->emergency_node)) {
-    self->status = AS_EMERGENCY;
-    EmergencyNode_raise(&self->emergency_node, EMERENGENCY_DV_EMERGENCY);
+    return 0;
   }
 
-  if (as_node_read_get_status(&self->m_as_node_read) && ebs_activated(&self->dv_ebs)) 
+  if (as_node_get_status(&self->m_as_node) && ebs_asb_consistency_check(&self->dv_ebs))
   {
-    if (car_mission_reader_get_current_mission(self->p_mission_reader) > CAR_MISSIONS_HUMAN &&
-        ebs_asb_consistency_check(&self->dv_ebs) == EBS_SUCCESS &&
-        giei_status >= TS_READY)
+    switch (giei_status)
     {
-      if (giei_status == RUNNING)
-      {
-        _update_dv_status(self, AS_DRIVING);
-      }
-      else if(driver_brake > 50)
-      {
-        _update_dv_status(self, AS_READY);
-      }
-      else
-      {
-        _update_dv_status(self, AS_OFF);
-      }
-    }
-    else
-    {
-      _update_dv_status(self, AS_OFF);
+      case SYSTEM_OFF:
+      case SYSTEM_PRECAHRGE:
+      case TS_READY:
+        break;
+      case RUNNING:
+        _dv_set_status(self, AS_DRIVING);
+        break;
     }
   }
   else if (self->o_dv_mission_status == MISSION_FINISHED && !current_speed && !_sdc_closed(self))
   {
-    _update_dv_status(self, AS_FINISHED);
+    _dv_set_status(self, AS_FINISHED);
   }
   else
   {
-    _update_dv_status(self, AS_EMERGENCY);
+    _dv_set_status(self, AS_EMERGENCY);
   }
   return 0;
 }
@@ -286,7 +273,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -8;
   }
 
-  if (as_node_read_init(&p_self->m_as_node_read)<0)
+  if (as_node_init(&p_self->m_as_node,p_self->p_mission_reader)<0)
   {
     return -9;
   }
@@ -358,8 +345,9 @@ int8_t dv_update(Dv_h* const restrict self)
   can_obj_can3_h_t o3 = {0};
   can_obj_can2_h_t o2 = {0};
 
-  if(imu_update(&p_self->m_imu)<0)return -1;
-  if(ebs_update(&p_self->dv_ebs)<0) return -2;
+  if (imu_update(&p_self->m_imu)<0) return -1;
+  if (ebs_update(&p_self->dv_ebs)<0) return -2;
+  if (as_node_update(&p_self->m_as_node)) return -3;
 
   if (car_mission_reader_get_current_mission(p_self->p_mission_reader) > CAR_MISSIONS_HUMAN)
   {
@@ -367,22 +355,26 @@ int8_t dv_update(Dv_h* const restrict self)
     {
       unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
       p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
+      if (p_self->o_dv_mission_status == MISSION_FINISHED)
+      {
+        as_node_open(&p_self->m_as_node);
+      }
     }
   
+    if(_dv_update_status(p_self)<0)return -4;
+    if(_dv_update_led(p_self)<0) return -5;
+
     if (p_self->status == AS_DRIVING)
     {
       dv_stw_alg_compute(&input_stw_alg, &output_stw_alg); //TODO: not yet implemented
     }
 
-    if(_dv_update_status(p_self)<0)return -4;
-    if(_dv_update_led(p_self)<0) return -5;
     
     o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
     o2.can_0x071_CarMissionStatus.MissionStatus = p_self->o_dv_mission_status;
     o2.can_0x071_CarMissionStatus.AsStatus = p_self->status;
 
     pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
-
     hardware_mailbox_send(p_self->p_send_car_dv_car_status_mailbox, mission_status_payload);
   }
 

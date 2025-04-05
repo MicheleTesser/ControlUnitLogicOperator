@@ -26,7 +26,7 @@ struct Giei_t{
     MissionLocker_h o_mission_locker;
     float engines_voltages[__NUM_OF_ENGINES__];
     enum RUNNING_STATUS running_status;
-    AsNode_h m_as_node;
+    AsNodeRead_h m_as_node_read;
     EngineType* inverter;
     const DriverInput_h* driver_input;
     const DrivingMaps_h* driving_maps;
@@ -118,7 +118,7 @@ int8_t giei_init(Giei_h* const restrict self,
       return -4;
     }
 
-    if (as_node_init(&p_self->m_as_node, p_car_mission_reader)<0)
+    if (as_node_read_init(&p_self->m_as_node_read)<0)
     {
     
       return -5;
@@ -166,11 +166,6 @@ int8_t giei_update(Giei_h* const restrict self )
         return -2;
     }
 
-    if(as_node_update(&p_self->m_as_node)<0)
-    {
-      return -3;
-    }
-
     return 0;
 }
 
@@ -183,7 +178,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
     {
       rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }
-    if (as_node_get_status(&p_self->m_as_node))
+    if (as_node_read_get_status(&p_self->m_as_node_read))
     {
       rt = engine_rtd_procedure(p_self->inverter);
     }

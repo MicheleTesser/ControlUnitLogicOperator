@@ -18,6 +18,13 @@ enum ResStatus{
   __NUM_OF_RES_STATUS__
 };
 
+enum Tanks_t{
+  TANK_LEFT=0,
+  TANK_RIGHT,
+
+  __NUM_OF_TANKS__
+};
+
 struct AsNode_t{
   Gpio_h m_gpio_as_node;
   time_var_microseconds m_last_alive_message_received;
@@ -25,10 +32,12 @@ struct AsNode_t{
   time_var_microseconds m_last_res_message_received;
   time_var_microseconds m_last_enable_dv_sent;
   enum ResStatus m_res_status;
+  uint8_t m_ebs_check_ok:1;
   struct CanMailbox* p_mailbox_read_embedded_alive;
   struct CanMailbox* p_mailbox_read_tank_ebs;
   struct CanMailbox* p_mailbox_read_res;
   struct CanMailbox* p_mailbox_send_pcu_enable_dv;
+  struct CanMailbox* p_mailox_recv_ebs_pressure;
   CarMissionReader_h* p_mission_reader;
 };
 
@@ -80,6 +89,11 @@ static inline uint8_t _check_res(struct AsNode_t* const restrict self)
   return 
     (timer_time_now() - self->m_last_res_message_received) < 500 MILLIS &&
     self->m_res_status == 1; //TODO: check res status
+}
+
+static inline uint8_t _check_brakes(struct AsNode_t* const restrict self)
+{
+  return self->m_ebs_check_ok;
 }
 
 static inline void _as_node_enable(struct AsNode_t* const restrict self)
@@ -183,6 +197,26 @@ int8_t as_node_init(AsNode_h* const restrict self,
     return -4;
   }
 
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+
+    p_self->p_mailox_recv_ebs_pressure=
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_TANKSEBS,
+          message_dlc_can2(CAN_ID_TANKSEBS));
+  }
+
+  if (!p_self->p_mailox_recv_ebs_pressure)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_tank_ebs);
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
+    hardware_free_mailbox_can(&p_self->p_mailbox_read_res);
+    hardware_free_mailbox_can(&p_self->p_mailbox_send_pcu_enable_dv);
+    return -5;
+  }
+
   p_self->p_mission_reader = p_car_mission_reader;
 
   return 0;
@@ -212,6 +246,12 @@ int8_t as_node_update(AsNode_h* const restrict self)
     //TODO: update res status
   }
 
+  if (hardware_mailbox_read(p_self->p_mailox_recv_ebs_pressure, &mex))
+  {
+    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
+    p_self->m_ebs_check_ok = o2.can_0x03c_TanksEBS.system_check;
+  }
+
 
   switch (car_mission_reader_get_current_mission(p_self->p_mission_reader))
   {
@@ -230,7 +270,7 @@ int8_t as_node_update(AsNode_h* const restrict self)
     case CAR_MISSIONS_DV_TRACKDRIVE:
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
-      if (_check_ebs(p_self) && _check_embedded(p_self) && _check_res(p_self))
+      if (_check_ebs(p_self) && _check_embedded(p_self) && _check_res(p_self) && _check_brakes(p_self))
       {
         _as_node_enable(p_self);
       }
