@@ -43,8 +43,10 @@ int8_t core_0_feature_init(Core0Feature_h* const restrict self )
   if(driving_maps_init(&p_self->maps) <0) return -3;
   if(imu_init(&p_self->imu) <0) return -4;
   if(amk_module_init(&p_self->amk, &p_self->driver, &p_self->inverter)) return -5;
-  if(giei_init(&p_self->giei, &p_self->inverter, &p_self->driver, &p_self->maps,
-        &p_self->m_car_mission_reader, &p_self->imu) <0) return -6;
+  if(giei_init(&p_self->giei, &p_self->inverter, &p_self->driver, &p_self->maps,&p_self->imu) <0)
+  {
+    return -6;
+  }
   if (global_running_status_init(&p_self->o_global_running_status_reader, WRITE)<0)return -7;
 
   return 0;

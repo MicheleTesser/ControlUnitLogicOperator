@@ -9,7 +9,7 @@ typedef struct __attribute__((aligned(4))){
 }AsNodeRead_h;
 
 typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[88];
+  const uint8_t private_data[96];
 }AsNode_h;
 
 

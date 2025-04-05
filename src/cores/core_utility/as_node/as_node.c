@@ -321,6 +321,14 @@ uint8_t as_node_get_status(const AsNode_h* const restrict self)
   return gpio_read_state(&p_self->m_gpio_as_node.gpio_read_permission);
 }
 
+void as_node_open(AsNode_h* restrict self)
+{
+  union AsNode_h_t_conv conv = {self};
+  struct AsNode_t* const p_self = conv.clear;
+
+  gpio_set_high(&p_self->m_gpio_as_node);
+}
+
 uint8_t as_node_read_get_status(const AsNodeRead_h* const restrict self)
 {
   const union AsNodeRead_h_t_conv_const conv = {self};
