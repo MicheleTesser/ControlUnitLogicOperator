@@ -23,9 +23,6 @@ as_node_update(AsNode_h* const restrict self)__attribute__((__nonnull__(1)));
 uint8_t
 as_node_get_status(const AsNode_h* const restrict self)__attribute__((__nonnull__(1)));
 
-void
-as_node_open(AsNode_h* const restrict self)__attribute__((__nonnull__(1)));
-
 int8_t
 as_node_read_init(AsNodeRead_h* const restrict self)__attribute__((__nonnull__(1)));
 

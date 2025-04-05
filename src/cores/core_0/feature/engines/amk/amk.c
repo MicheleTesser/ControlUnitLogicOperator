@@ -291,8 +291,10 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       }
       else if (!giei_driver_input_rtd_request(self->driver_input))
       {
+        setpoint.AMK_Control_fields.AMK_bDcOn = 0;
+        setpoint.AMK_Control_fields.AMK_bInverterOn = 0;
         setpoint.AMK_Control_fields.AMK_bEnable = 0;
-        self->engine_status= TS_READY;
+        self->engine_status= SYSTEM_OFF;
       }
       break;
   }

@@ -355,10 +355,6 @@ int8_t dv_update(Dv_h* const restrict self)
     {
       unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
       p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
-      if (p_self->o_dv_mission_status == MISSION_FINISHED)
-      {
-        as_node_open(&p_self->m_as_node);
-      }
     }
   
     if(_dv_update_status(p_self)<0)return -4;
