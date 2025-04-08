@@ -149,6 +149,7 @@ int8_t giei_driver_input_update(DriverInput_h* const restrict self )
       }
       break;
     case __NUM_OF_CAR_MISSIONS__:
+      return -1;
       break;
   }
 

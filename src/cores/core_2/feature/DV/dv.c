@@ -273,7 +273,7 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -8;
   }
 
-  if (as_node_init(&p_self->m_as_node,p_self->p_mission_reader)<0)
+  if (as_node_init(&p_self->m_as_node,p_mission_reader)<0)
   {
     return -9;
   }

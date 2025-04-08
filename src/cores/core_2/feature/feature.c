@@ -23,22 +23,20 @@ char __assert_size_core_2_feature[(sizeof(Core2Feature_h) == sizeof(struct Core2
 char __assert_align_core_2_feature[(_Alignof(Core2Feature_h) == _Alignof(struct Core2Feature_t))? 1:-1];
 #endif // DEBUG
 
-  int8_t
-core_2_feature_init(Core2Feature_h* const restrict self )
+int8_t core_2_feature_init(Core2Feature_h* const restrict self )
 {
   union Core2Feature_h_t_conv conv = {self};
   struct Core2Feature_t* const restrict p_self = conv.clear;
 
   if(dv_driver_input_init(&p_self->driver)<0) return -1;
-  if(car_mission_reader_init(&p_self->mission)<0) return -1;
-  if(dv_class_init(&p_self->dv, &p_self->mission, &p_self->driver) <0) return -1;
+  if(car_mission_reader_init(&p_self->mission)<0) return -2;
+  if(dv_class_init(&p_self->dv, &p_self->mission, &p_self->driver) <0) return -3;
 
 
   return 0;
 }
 
-  int8_t
-core_2_feature_update(Core2Feature_h* const restrict self )
+int8_t core_2_feature_update(Core2Feature_h* const restrict self )
 {
   union Core2Feature_h_t_conv conv = {self};
   struct Core2Feature_t* const restrict p_self = conv.clear;

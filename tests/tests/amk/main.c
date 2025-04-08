@@ -120,11 +120,15 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, RUNNING);
 
-  printf("disabling rf in manual mode from RUNNING -> TS_READY: ");
+  printf("disabling rf in manual mode from RUNNING -> SYSTEM_OFF: ");
   gpio_set_high(input->rf);
+  gpio_set_high(input->ts);
   wait_milliseconds(500 MILLIS);
-  _check_status_rtd(self, TS_READY);
+  _check_status_rtd(self, SYSTEM_OFF);
 
+  printf("restarting precharge");
+  gpio_set_low(input->ts);
+  wait_milliseconds(7 SECONDS);
   printf("reactivating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
   gpio_set_low(input->rf);
   wait_milliseconds(500 MILLIS);
