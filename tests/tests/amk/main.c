@@ -128,8 +128,10 @@ static void test_start_precharge(EngineType* self, TestInput* input)
 
   printf("restarting precharge");
   gpio_set_low(input->ts);
-  wait_milliseconds(7 SECONDS);
-  printf("reactivating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
+  car_amk_inverter_force_precharge_status(&input->external_boards->amk_inverter);
+  while (car_amk_inverter_precharge_status(&input->external_boards->amk_inverter) != 3);
+  printf("reactivating rf with brake pedal at 25 percentage in manual mode from SYSTEM_OFF -> RUNNING: ");
+  wait_milliseconds(500 MILLIS);
   gpio_set_low(input->rf);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, RUNNING);

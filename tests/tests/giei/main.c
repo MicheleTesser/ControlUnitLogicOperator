@@ -7,6 +7,7 @@
 #include "src/cores/core_0/feature/maps/maps.h"
 #include "src/cores/core_utility/imu/imu.h"
 #include "src/cores/core_utility/emergency_module/emergency_module.h"
+#include "src/cores/core_utility/as_node/as_node.h"
 #include "car_component/car_component.h"
 
 #include <stdint.h>
@@ -38,6 +39,7 @@ typedef struct CoreInput{
   Gpio_h* ts;
   Gpio_h* rf;
   GpioRead_h* rtd_sound;
+  AsNode_h* as_node;
 
   ExternalBoards_t* external_boards;
 
@@ -54,6 +56,7 @@ static int _core_thread_fun(void* arg)
   {
     ACTION_ON_FREQUENCY(last_update, 50 MILLIS)
     {
+      as_node_update(core_input->as_node);
       car_mission_reader_update(core_input->mission_reader);
       giei_driver_input_update(core_input->driver);
       driving_map_update(core_input->maps);
@@ -105,8 +108,6 @@ static void test_giei_rtd(CoreInput* const input)
   steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
   wait_milliseconds(200 MILLIS);
 
-  car_amk_inverter_reset(&input->external_boards->amk_inverter);
-
   FOR_EACH_ENGINE(engine)
   {
     car_amk_inverter_set_attribute(&input->external_boards->amk_inverter, SYSTEM_READY, engine, 1);
@@ -114,6 +115,8 @@ static void test_giei_rtd(CoreInput* const input)
 
   printf("starting precharge: SYSTEM_OFF -> SYSTEM_PRECAHRGE\n");
   gpio_set_low(input->ts);
+  while (!car_amk_inverter_precharge_status(&input->external_boards->amk_inverter));
+
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_PRECAHRGE, 0 ,0);
 
@@ -145,14 +148,19 @@ static void test_giei_rtd(CoreInput* const input)
   wait_milliseconds(2 SECONDS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 0);
 
-  printf("disabling rf in manual mode from RUNNING -> TS_READY\n");
+  printf("disabling rf in manual mode from RUNNING -> SYSTEM_OFF\n");
   gpio_set_high(input->rf);
+  gpio_set_high(input->ts);
   wait_milliseconds(500 MILLIS);
-  _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, TS_READY, 0, 0);
+  _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0, 0);
 
-  printf("enabling rf in manual mode from TS_READY -> RUNNING \n");
+  printf("restarting precharge requence enabling ts and rf in manual mode from SYSTEM_OFF -> RUNNING \n");
+  gpio_set_low(input->ts);
+  car_amk_inverter_force_precharge_status(&input->external_boards->amk_inverter);
+  while (car_amk_inverter_precharge_status(&input->external_boards->amk_inverter)!= 3);
+  wait_milliseconds(500 MILLIS);
   gpio_set_low(input->rf);
-  wait_milliseconds(1 SECONDS);
+  wait_milliseconds(500 MILLIS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency\n");
@@ -171,6 +179,7 @@ int main(void)
 {
   ExternalBoards_t external_boards = {0};
 
+  AsNode_h as_node = {0};
   Giei_h giei = {0};
   EngineType engines = {0};
   AmkInverter_h amk = {0};
@@ -196,6 +205,7 @@ int main(void)
     .rf = &rf,
     .rtd_sound = &rtd_sound_read,
     .mission_reader = &mission_reader,
+    .as_node = &as_node,
 
     .core_run = &core_thread.run,
     .external_boards = &external_boards,
@@ -218,6 +228,7 @@ int main(void)
   INIT_PH(imu_init(&imu), "imu");
   INIT_PH(amk_module_init(&amk, &driver, &engines), "amk module");
   INIT_PH(EmergencyNode_init(&emergency_read), "emergency instance");
+  INIT_PH(as_node_init(&as_node, &mission_reader),"as node master");
   INIT_PH(giei_init(&giei, &engines, &driver, &maps, &imu), "giei module");
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);

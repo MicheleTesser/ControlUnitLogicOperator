@@ -421,6 +421,7 @@ car_amk_inverter_force_precharge_status(EmulationAmkInverter_h* const restrict s
 
   FOR_EACH_ENGINE(engine)
   {
+    p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bQuitDcOn=1;
     p_self->o_engines[engine].amk_data_1.AMK_STATUS.AMK_bDcOn=1;
   }
 }
