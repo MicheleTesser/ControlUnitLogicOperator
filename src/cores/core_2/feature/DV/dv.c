@@ -191,6 +191,7 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
       case SYSTEM_OFF:
       case SYSTEM_PRECAHRGE:
       case TS_READY:
+        _dv_set_status(self, AS_READY);
         break;
       case RUNNING:
         _dv_set_status(self, AS_DRIVING);
