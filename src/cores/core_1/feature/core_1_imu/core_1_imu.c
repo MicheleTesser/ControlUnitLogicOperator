@@ -20,7 +20,7 @@ enum IMU_DATA{
 
 struct Core1Imu_t{
   float imu_data[__NUM_OF_IMU_DATA__];
-  Imu_h* p_imu;
+  Imu_h m_imu;
 };
 
 union Core1Imu_h_t_conv {
@@ -45,12 +45,18 @@ uint8_t __assert_align_core_1_imu[(_Alignof(Core1Imu_h) == _Alignof(struct Core1
   if(log_add_entry(log, &log_entry)<0)return err_code;\
 }
 
-int8_t core_1_imu_init(Core1Imu_h* const restrict self, Log_h* const restrict log)
+int8_t core_1_imu_init(Core1Imu_h* const restrict self,
+    Log_h* const restrict log)
 {
   union Core1Imu_h_t_conv conv = {self};
   struct Core1Imu_t* const restrict p_self = conv.clear;
 
   memset(p_self, 0, sizeof(*p_self));
+
+  if (imu_init(&p_self->m_imu)<0)
+  {
+    return -1;
+  }
 
   IMU_LOG_VAR(&p_self->imu_data[ACC_X], "imu acc x",-1);
   IMU_LOG_VAR(&p_self->imu_data[ACC_Y], "imu acc y",-2);
@@ -65,10 +71,10 @@ int8_t core_1_imu_update(Core1Imu_h* const restrict self)
   union Core1Imu_h_t_conv conv = {self};
   struct Core1Imu_t* const restrict p_self = conv.clear;
 
-  p_self->imu_data[ACC_X] = imu_get_acc(p_self->p_imu, AXES_X);
-  p_self->imu_data[ACC_Y] = imu_get_acc(p_self->p_imu, AXES_Y);
-  p_self->imu_data[ACC_Z] = imu_get_acc(p_self->p_imu, AXES_Z);
-  p_self->imu_data[SPEED] = imu_get_speed(p_self->p_imu);
+  p_self->imu_data[ACC_X] = imu_get_acc(&p_self->m_imu, AXES_X);
+  p_self->imu_data[ACC_Y] = imu_get_acc(&p_self->m_imu, AXES_Y);
+  p_self->imu_data[ACC_Z] = imu_get_acc(&p_self->m_imu, AXES_Z);
+  p_self->imu_data[SPEED] = imu_get_speed(&p_self->m_imu);
 
   //TODO: add omegas
 

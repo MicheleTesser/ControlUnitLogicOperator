@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[80];
+  const uint8_t private_data[72];
 }DvEbs_h;
 
 //INFO: copied from can2.dbc message 104 response_status

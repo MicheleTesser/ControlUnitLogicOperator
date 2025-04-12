@@ -2,7 +2,6 @@
 #include "linux_board/linux_board.h"
 #include "car_component/car_component.h"
 #include "src/cores/core_2/feature/DV/dv.h"
-#include "src/cores/core_2/feature/dv_driver_input/dv_driver_input.h"
 #include "src/cores/core_utility/mission_reader/mission_reader.h"
 
 #include <stdint.h>
@@ -27,7 +26,6 @@ typedef struct CoreInput{
   volatile const uint8_t* const core_run;
 
   CarMissionReader_h* p_car_mission;
-  DvDriverInput_h* p_dv_driver_input;
   Dv_h* p_dv;
 
 }CoreInput;
@@ -44,7 +42,6 @@ static int _core_thread_fun(void* arg)
   while (*core_input->core_run)
   {
     car_mission_reader_update(core_input->p_car_mission);
-    dv_driver_input_update(core_input->p_dv_driver_input);
     dv_update(core_input->p_dv);
   }
   return 0;
@@ -62,7 +59,6 @@ int main(void)
 {
   ExternalBoards_t external_boards = {0};
   CarMissionReader_h mission_reader = {0};
-  DvDriverInput_h dv_driver_input = {0};
   Dv_h dv={0};
 
   GpioRead_h gpio_dv_yellow_light = {0};
@@ -75,7 +71,6 @@ int main(void)
     .core_run = &core_thread.run,
 
     .p_car_mission = &mission_reader,
-    .p_dv_driver_input = &dv_driver_input,
     .p_dv = &dv,
   };
 
@@ -96,8 +91,7 @@ int main(void)
   INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_yellow_light, PWM_GPIO_ASSI_LIGHT_YELLOW), "dv light yellow");
   INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_emergency_sound, GPIO_RTD_ASSI_SOUND), "dv emergency sound");
   INIT_PH(car_mission_reader_init(&mission_reader), "mission_reader");
-  INIT_PH(dv_driver_input_init(&dv_driver_input), "dv driver input");
-  INIT_PH(dv_class_init(&dv, &mission_reader, &dv_driver_input), "dv module");
+  INIT_PH(dv_class_init(&dv, &mission_reader), "dv module");
 
   thrd_create(&core_thread.thread_id, _core_thread_fun, &input);
 

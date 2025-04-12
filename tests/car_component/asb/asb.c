@@ -24,6 +24,7 @@ struct Asb_t{
   uint8_t integrity_check_status:1;
   uint8_t mission_status:2;
   uint8_t active:1;
+  uint8_t asb_check:2;
   struct{
     uint8_t pressure:5;
     uint8_t sanity:1;
@@ -60,22 +61,26 @@ int _start_asb(void* arg)
 
   while (p_self->running)
   {
-    ACTION_ON_FREQUENCY(t_var, 10 MILLIS)
+    ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
       if (hardware_mailbox_read(p_self->p_mailbox_recv_mission_status, &mex))
       {
         unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
         p_self->mission_status = o2.can_0x071_CarMissionStatus.MissionStatus;
-        p_self->active = o2.can_0x071_CarMissionStatus.Mission > 1;
+        p_self->active = o2.can_0x047_CarMission.Mission > 1;
+      }
+
+      if (p_self->active && hardware_mailbox_read(p_self->p_mailbox_recv_integrity_check_req, &mex))
+      {
+        p_self->asb_check =0;
       }
 
       if (p_self->active &&
           p_self->mission_status == MISSION_NOT_RUNNING &&
-          hardware_mailbox_read(p_self->p_mailbox_recv_integrity_check_req, &mex) &&
           !mex.full_word)
       {
         o2.can_0x068_CheckASB.Mode = 1;
-        o2.can_0x068_CheckASB.response_status = 0;
+        o2.can_0x068_CheckASB.response_status = p_self->asb_check;
         pack_message_can2(&o2, CAN_ID_CHECKASB, &payload_consistency_check_resp);
         hardware_mailbox_send(p_self->p_mailbox_send_integrity_check_resp, payload_consistency_check_resp);
       }
@@ -133,8 +138,8 @@ int8_t asb_start(Asb_h* const restrict self)
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
-          CAN_ID_CARMISSIONSTATUS,
-          message_dlc_can2(CAN_ID_CARMISSIONSTATUS)
+          CAN_ID_CARMISSION,
+          message_dlc_can2(CAN_ID_CARMISSION)
           );
   }
 
@@ -183,6 +188,7 @@ int8_t asb_start(Asb_h* const restrict self)
   }
 
   p_self->running=1;
+  p_self->asb_check =3;
   thrd_create(&p_self->thread, _start_asb, p_self);
   return 0;
 }
