@@ -10,7 +10,9 @@
 
 struct CarMissionReader_t{
   enum CAR_MISSIONS current_mission;
+  time_var_microseconds m_embeed_last_alive;
   struct CanMailbox* p_mailbox_current_mission;
+  struct CanMailbox* p_mailbox_recv_embedded_alive;
   MissionLockerRead_h o_mission_locker_read;
 };
 
@@ -23,6 +25,7 @@ union CarMissionReader_h_t_conv_const{
   const CarMissionReader_h* const hidden;
   const struct CarMissionReader_t* const clear;
 };
+
 
 #ifdef DEBUG
 char __assert_size_car_mission_reader[(sizeof(CarMissionReader_h)==sizeof(struct CarMissionReader_t))?+1:-1];
@@ -54,10 +57,27 @@ int8_t car_mission_reader_init(CarMissionReader_h* const restrict self)
     return -1;
   }
 
-  if (lock_mission_ref_get(&p_self->o_mission_locker_read)<0)
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+    p_self->p_mailbox_recv_embedded_alive =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_EMBEDDEDALIVECHECK,
+          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
+  }
+
+  if (!p_self->p_mailbox_recv_embedded_alive)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
     return -2;
+  }
+
+  if (lock_mission_ref_get(&p_self->o_mission_locker_read)<0)
+  {
+    hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
+    hardware_free_mailbox_can(&p_self->p_mailbox_recv_embedded_alive);
+    return -3;
   }
 
   p_self->current_mission = CAR_MISSIONS_NONE;
@@ -71,6 +91,18 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
   struct CarMissionReader_t* const p_self = conv.clear;
   CanMessage mex = {0};
   can_obj_can2_h_t o2= {0};
+
+  if (hardware_mailbox_read(p_self->p_mailbox_recv_embedded_alive, &mex))
+  {
+    p_self->m_embeed_last_alive = timer_time_now(); 
+  }
+
+  if ((timer_time_now() - p_self->m_embeed_last_alive) > 500 MILLIS && 
+      p_self->current_mission > CAR_MISSIONS_HUMAN &&
+      !is_mission_locked(&p_self->o_mission_locker_read))
+  {
+    p_self->current_mission = CAR_MISSIONS_NONE;
+  }
 
   if (!is_mission_locked(&p_self->o_mission_locker_read)
       && hardware_mailbox_read(p_self->p_mailbox_current_mission, &mex))

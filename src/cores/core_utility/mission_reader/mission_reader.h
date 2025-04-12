@@ -5,7 +5,7 @@
 #include "mission_locker/mission_locker.h"
 
 typedef struct __attribute__((aligned(8))) CarMissionReader_h{
-  const uint8_t private_data[16];
+  const uint8_t private_data[32];
   MissionLockerRead_h o_mission_locker_read;
 }CarMissionReader_h;
 

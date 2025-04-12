@@ -54,6 +54,7 @@ struct Dv_t{
   EmergencyNode_h emergency_node;
   time_var_microseconds emergency_last_time_on;
   time_var_microseconds emergency_sound_last_time_on;
+  time_var_microseconds m_embeed_last_alive;
   DvRes_h dv_res;
   DvEbs_h dv_ebs;
   AsNode_h m_as_node;
@@ -66,6 +67,7 @@ struct Dv_t{
   CarMissionReader_h* p_mission_reader;
   struct CanMailbox* p_send_car_dv_car_status_mailbox;
   struct CanMailbox* p_mailbox_recv_mision_status;
+  struct CanMailbox* p_mailbox_recv_embedded_alive;
   struct CanMailbox* p_mailbox_send_mission_can_2;
 };
 
@@ -105,7 +107,7 @@ static void _dv_set_status(struct Dv_t* const restrict self, const enum AS_STATU
   {
     EmergencyNode_solve(&self->emergency_node, EMERENGENCY_DV_EMERGENCY);
   }
-  if (status==AS_OFF)
+  if (status==AS_OFF || status == AS_FINISHED)
   {
     self->dv_car_status = DV_CAR_STATUS_OFF;
   }
@@ -154,7 +156,8 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
     case AS_EMERGENCY:
       hardware_write_gpio_pwm(gpio_light_yellow,0);
       hardware_write_gpio_pwm(gpio_light_blue,50);
-      if (!self->sound_start) {
+      if (!self->sound_start)
+      {
         self->sound_start =1;
         rtd_assi_sound_start(&self->o_assi_sound);
         self->emergency_sound_last_time_on = timer_time_now();
@@ -323,6 +326,25 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -12;
   }
 
+  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  {
+    p_self->p_mailbox_recv_embedded_alive =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_EMBEDDEDALIVECHECK,
+          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
+  }
+
+  if (!p_self->p_mailbox_recv_embedded_alive)
+  {
+    hardware_free_mailbox_can(&p_self->p_send_car_dv_car_status_mailbox);
+    hardware_free_mailbox_can(&p_self->p_mailbox_recv_mision_status);
+    hardware_free_mailbox_can(&p_self->p_mailbox_send_mission_can_2);
+    return -13;
+  
+  }
+
 
   p_self->dv_car_status=DV_CAR_STATUS_OFF;
   p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
@@ -346,43 +368,58 @@ int8_t dv_update(Dv_h* const restrict self)
   if (ebs_update(&p_self->dv_ebs)<0) return -2;
   if (as_node_update(&p_self->m_as_node)) return -3;
 
-  switch (car_mission_reader_get_current_mission(p_self->p_mission_reader)) {
-  case CAR_MISSIONS_NONE:
+  if (hardware_mailbox_read(p_self->p_mailbox_recv_embedded_alive, &mex))
+  {
+    p_self->m_embeed_last_alive = timer_time_now(); 
+  }
+
+  if ((timer_time_now() - p_self->m_embeed_last_alive) > 500 MILLIS)
+  {
     p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
     p_self->status = AS_OFF;
-    break;
-  case CAR_MISSIONS_HUMAN:
-    p_self->status = AS_OFF;
-    break;
-  case CAR_MISSIONS_DV_SKIDPAD:
-  case CAR_MISSIONS_DV_AUTOCROSS:
-  case CAR_MISSIONS_DV_TRACKDRIVE:
-  case CAR_MISSIONS_DV_EBS_TEST:
-  case CAR_MISSIONS_DV_INSPECTION:
-    if (hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
-    {
-      unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
-      p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
-    }
-  
+  }
 
-    if (p_self->status == AS_DRIVING)
-    {
-      dv_stw_alg_compute(&input_stw_alg, &output_stw_alg); //TODO: not yet implemented
-    }
 
-    
-    o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
-    o2.can_0x071_CarMissionStatus.MissionStatus = p_self->o_dv_mission_status;
-    o2.can_0x071_CarMissionStatus.AsStatus = p_self->status;
 
-    pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
-    hardware_mailbox_send(p_self->p_send_car_dv_car_status_mailbox, mission_status_payload);
-    break;
-  case __NUM_OF_CAR_MISSIONS__:
-    p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
-    p_self->status = AS_OFF;
-    break;
+  switch (car_mission_reader_get_current_mission(p_self->p_mission_reader))
+  {
+    case CAR_MISSIONS_NONE:
+      p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
+      p_self->status = AS_OFF;
+      break;
+    case CAR_MISSIONS_HUMAN:
+      p_self->status = AS_OFF;
+      break;
+    case CAR_MISSIONS_DV_SKIDPAD:
+    case CAR_MISSIONS_DV_AUTOCROSS:
+    case CAR_MISSIONS_DV_TRACKDRIVE:
+    case CAR_MISSIONS_DV_EBS_TEST:
+    case CAR_MISSIONS_DV_INSPECTION:
+      if (hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
+      {
+        unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
+        p_self->o_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
+      }
+
+
+      if (p_self->status == AS_DRIVING)
+      {
+        //TODO: add check continuous monitoring
+        dv_stw_alg_compute(&input_stw_alg, &output_stw_alg); //TODO: not yet implemented
+      }
+
+
+      o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
+      o2.can_0x071_CarMissionStatus.MissionStatus = p_self->o_dv_mission_status;
+      o2.can_0x071_CarMissionStatus.AsStatus = p_self->status;
+
+      pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
+      hardware_mailbox_send(p_self->p_send_car_dv_car_status_mailbox, mission_status_payload);
+      break;
+    case __NUM_OF_CAR_MISSIONS__:
+      p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
+      p_self->status = AS_OFF;
+      break;
   }
 
   if(_dv_update_status(p_self)<0)return -4;

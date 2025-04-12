@@ -6,7 +6,7 @@
 #include "../../../core_utility/driver_input_reader/driver_input_reader.h"
 
 typedef struct __attribute__((aligned(8))) Dv_h{
-  const uint8_t private_data[376];
+  const uint8_t private_data[408];
 }Dv_h;
 
 int8_t
