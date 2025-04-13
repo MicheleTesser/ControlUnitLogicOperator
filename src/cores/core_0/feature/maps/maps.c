@@ -32,7 +32,7 @@ struct RegenMap{
 struct TvRepartitionMap{
   struct{
     float repartition;
-    uint8_t tv_active;
+    uint8_t tv_active:1;
   }map_list[10];
   uint8_t active;
 };

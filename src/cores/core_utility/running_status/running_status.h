@@ -2,6 +2,7 @@
 #define __RUNNING_STATUS__
 
 #include <stdint.h>
+#include "../../../lib/raceup_board/raceup_board.h"
 
 enum RUNNING_STATUS{
     SYSTEM_OFF = 0,

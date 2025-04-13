@@ -52,6 +52,7 @@ driver_imp/serial/serial.o: ../driver_imp/serial/serial.c \
  Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore\Cpu\Irq/IfxCpu_Irq.h \
  ../driver_imp/serial/../../src/lib/raceup_board/raceup_board.h \
  ../driver_imp/serial/../../src/lib/raceup_board/./components/component.h \
+ ../driver_imp/serial/../../src/lib/raceup_board/./components/board_architecture.h \
  ../driver_imp/serial/../../src/lib/raceup_board/./components/serial.h \
  ../driver_imp/serial/../../src/lib/raceup_board/./components/./common_idx/common_idx.h \
  ../driver_imp/serial/../../src/lib/raceup_board/./components/gpio.h \
@@ -59,7 +60,8 @@ driver_imp/serial/serial.o: ../driver_imp/serial/serial.c \
  ../driver_imp/serial/../../src/lib/raceup_board/./components/timer.h \
  ../driver_imp/serial/../../src/lib/raceup_board/./components/interrupt.h \
  ../driver_imp/serial/../../src/lib/raceup_board/./components/trap.h \
- ../driver_imp/serial/../../src/lib/raceup_board/./components/ethernet.h
+ ../driver_imp/serial/../../src/lib/raceup_board/./components/ethernet.h \
+ ../driver_imp/serial/../../src/lib/raceup_board/./components/./board_architecture.h
 Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore\Asclin\Asc/IfxAsclin_Asc.h:
 Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore/Asclin/Std/IfxAsclin.h:
 Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore/_Impl/IfxAsclin_cfg.h:
@@ -113,6 +115,7 @@ Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOpera
 Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore\Cpu\Irq/IfxCpu_Irq.h:
 ../driver_imp/serial/../../src/lib/raceup_board/raceup_board.h:
 ../driver_imp/serial/../../src/lib/raceup_board/./components/component.h:
+../driver_imp/serial/../../src/lib/raceup_board/./components/board_architecture.h:
 ../driver_imp/serial/../../src/lib/raceup_board/./components/serial.h:
 ../driver_imp/serial/../../src/lib/raceup_board/./components/./common_idx/common_idx.h:
 ../driver_imp/serial/../../src/lib/raceup_board/./components/gpio.h:
@@ -121,3 +124,4 @@ Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOpera
 ../driver_imp/serial/../../src/lib/raceup_board/./components/interrupt.h:
 ../driver_imp/serial/../../src/lib/raceup_board/./components/trap.h:
 ../driver_imp/serial/../../src/lib/raceup_board/./components/ethernet.h:
+../driver_imp/serial/../../src/lib/raceup_board/./components/./board_architecture.h:

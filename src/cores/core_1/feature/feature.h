@@ -2,11 +2,20 @@
 #define __CORE_1_FEATURE__
 
 #include "log/log.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
+
 #include <stdint.h>
 
+#if ARCH == 64
 typedef struct __attribute__((aligned(8))) Core1Feature_h{
   const uint8_t private_data[208];
 }Core1Feature_h;
+#elif ARCH == 32
+typedef struct __attribute__((aligned(4))) Core1Feature_h{
+  const uint8_t private_data[148];
+}Core1Feature_h;
+#else
+#endif
 
 int8_t
 core_1_feature_init(Core1Feature_h* const restrict self, Log_h* const restrict p_log)

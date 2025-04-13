@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "../mission_reader/mission_reader.h"
 
+#if ARCH == 64
 typedef struct __attribute__((aligned(4))){
   const uint8_t private_data[4];
 }AsNodeRead_h;
@@ -11,6 +12,17 @@ typedef struct __attribute__((aligned(4))){
 typedef struct __attribute__((aligned(8))){
   const uint8_t private_data[96];
 }AsNode_h;
+#elif ARCH == 32
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[4];
+}AsNodeRead_h;
+
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[72];
+}AsNode_h;
+#else
+#endif
+
 
 
 int8_t

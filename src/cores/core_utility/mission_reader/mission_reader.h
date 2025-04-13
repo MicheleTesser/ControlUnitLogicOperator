@@ -2,12 +2,21 @@
 #define __CAR_MISSION_READER__
 
 #include <stdint.h>
+#include "../../../lib/raceup_board/raceup_board.h"
 #include "mission_locker/mission_locker.h"
 
+#if ARCH == 32
+typedef struct __attribute__((aligned(4))) CarMissionReader_h{
+  const uint8_t private_data[20];
+  MissionLockerRead_h o_mission_locker_read;
+}CarMissionReader_h;
+#elif ARCH == 64
 typedef struct __attribute__((aligned(8))) CarMissionReader_h{
   const uint8_t private_data[32];
   MissionLockerRead_h o_mission_locker_read;
 }CarMissionReader_h;
+#else
+#endif
 
 /*
 FROM can2.dbc

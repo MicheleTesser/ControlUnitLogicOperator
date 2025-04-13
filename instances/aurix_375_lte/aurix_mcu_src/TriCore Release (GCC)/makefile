@@ -27,7 +27,6 @@ RM := rm -rf
 -include src/cores/core_utility/core_status/subdir.mk
 -include src/cores/core_utility/as_node/subdir.mk
 -include src/cores/core_utility/alive_blink/subdir.mk
--include src/cores/core_2/feature/dv_driver_input/subdir.mk
 -include src/cores/core_2/feature/DV/steering_wheel_alg/subdir.mk
 -include src/cores/core_2/feature/DV/res/subdir.mk
 -include src/cores/core_2/feature/DV/ebs/subdir.mk
@@ -38,7 +37,6 @@ RM := rm -rf
 -include src/cores/core_1/feature/log/telemetry/json_builder/subdir.mk
 -include src/cores/core_1/feature/log/telemetry/subdir.mk
 -include src/cores/core_1/feature/log/sd/subdir.mk
--include src/cores/core_1/feature/log/external_log_variables/subdir.mk
 -include src/cores/core_1/feature/log/subdir.mk
 -include src/cores/core_1/feature/core_1_imu/subdir.mk
 -include src/cores/core_1/feature/core_1_driver_input/subdir.mk

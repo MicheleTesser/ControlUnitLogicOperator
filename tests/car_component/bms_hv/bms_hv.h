@@ -2,10 +2,17 @@
 #define __BMS_HV__
 
 #include <stdint.h>
+#include "../../../lib/raceup_board/raceup_board.h"
 
+#if ARCH == 64
 typedef struct __attribute__((aligned(8))) BmsHv_h{
   const uint8_t private_data[56];
 }BmsHv_h;
+#elif ARCH == 32
+typedef struct __attribute__((aligned(4))) BmsHv_h{
+  const uint8_t private_data[56];
+}BmsHv_h;
+#endif // ARCH == 64
 
 enum BMS_HV_ATTRIBUTE{
   BMS_HV_MIN_VOLTS,

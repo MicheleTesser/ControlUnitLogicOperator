@@ -18,6 +18,7 @@
 					<folderInfo id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.2136527182." name="/" resourcePath="">
 						<toolChain id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.565955296" name="GCC" superClass="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug">
 							<option id="com.infineon.aurix.buildsystem.managed.gcc.c.option.mtc.288032646" name="Instruction set" superClass="com.infineon.aurix.buildsystem.managed.gcc.c.option.mtc" value="com.infineon.aurix.buildsystem.managed.gcc.c.option.mtc.mtc162" valueType="enumerated"/>
+							<option id="com.infineon.aurix.buildsystem.managed.gcc.c.option.mcpu.613980644" name="CPU Derivative" superClass="com.infineon.aurix.buildsystem.managed.gcc.c.option.mcpu"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.infineon.aurix.buildsystem.managed.gcc.targetPlatform.1740432271" isAbstract="false" osList="all" superClass="com.infineon.aurix.buildsystem.managed.gcc.targetPlatform"/>
 							<builder buildPath="${workspace_loc:/aurix_mcu_src}/TriCore Debug (GCC)" id="com.infineon.aurix.buildsystem.managed.gcc.builtin.builder.1016322592" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="com.infineon.aurix.buildsystem.managed.gcc.builtin.builder"/>
 							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.1376270176" name="AURIX GCC Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler">
@@ -95,7 +96,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/core_1_driver_input}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/core_1_imu}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/external_log_variables}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/sd}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/telemetry}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/telemetry/json_builder}&quot;"/>
@@ -106,7 +106,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/DV/ebs}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/DV/res}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/DV/steering_wheel_alg}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/dv_driver_input}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_utility}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_utility/alive_blink}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_utility/as_node}&quot;"/>
@@ -142,6 +141,7 @@
 								</option>
 								<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.debugging.other.937196722" name="Other debugging flags" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.debugging.other" useByScannerDiscovery="false" value="-gdwarf-3" valueType="string"/>
 								<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.dialect.std.1877860405" name="Language standard" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.c11" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols.1003256840" name="Defined symbols (-D)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols"/>
 								<inputType id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType.667901904" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType"/>
 							</tool>
 							<tool id="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler.1615001450" name="AURIX G++ Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler">
@@ -171,6 +171,9 @@
 								<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.nowarn.1122183828" name="Inhibit all warnings (-w)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.nowarn" value="false" valueType="boolean"/>
 								<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.extrawarn.408205392" name="Extra warnings (-Wextra)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.extrawarn" value="true" valueType="boolean"/>
 								<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.toerrors.1519901067" name="Warnings as errors (-Werror)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.toerrors" value="true" valueType="boolean"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols.1872326138" name="Defined symbols (-D)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
 								<inputType id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType.66812812" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType"/>
 							</tool>
 							<tool id="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler.768352651" name="AURIX G++ Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler.1615001450"/>
@@ -182,6 +185,27 @@
 							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.objcopy.776817828" name="AURIX Object Copy" superClass="com.infineon.aurix.buildsystem.managed.tool.c.objcopy.243483782"/>
 							<tool id="com.infineon.aurix.buildsystem.managed.tool.objdump.492350141" name="AURIX Create Listing" superClass="com.infineon.aurix.buildsystem.managed.tool.objdump.899820896"/>
 							<tool id="com.infineon.aurix.buildsystem.managed.tool.printsize.464703569" name="AURIX Print Size" superClass="com.infineon.aurix.buildsystem.managed.tool.printsize.1343116564"/>
+						</toolChain>
+					</folderInfo>
+					<folderInfo id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.2136527182.842171119" name="/" resourcePath="src">
+						<toolChain id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.1324216869" name="GCC" superClass="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug" unusedChildren="">
+							<option id="com.infineon.aurix.buildsystem.managed.gcc.c.option.mtc.288032646.1531165013" name="Instruction set" superClass="com.infineon.aurix.buildsystem.managed.gcc.c.option.mtc.288032646"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.infineon.aurix.buildsystem.managed.gcc.targetPlatform" isAbstract="false" osList="all" superClass="com.infineon.aurix.buildsystem.managed.gcc.targetPlatform"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.755735125" name="AURIX GCC Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.1376270176">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols.444693923" name="Defined symbols (-D)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<inputType id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType.153965014" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType"/>
+							</tool>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler.533343475" name="AURIX G++ Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler.1615001450"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.assembler.2065993330" name="AURIX GCC Assembler" superClass="com.infineon.aurix.buildsystem.managed.tool.assembler.434384137">
+								<inputType id="com.infineon.aurix.buildsystem.managed.tool.assembler.inputType.699972043" name="Assembler Input" superClass="com.infineon.aurix.buildsystem.managed.tool.assembler.inputType"/>
+							</tool>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.linker.1320559928" name="AURIX GCC Linker" superClass="com.infineon.aurix.buildsystem.managed.tool.c.linker.362859381"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.cpp.linker.750358394" name="AURIX G++ Linker" superClass="com.infineon.aurix.buildsystem.managed.tool.cpp.linker.2139993600"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.objcopy.1264353133" name="AURIX Object Copy" superClass="com.infineon.aurix.buildsystem.managed.tool.c.objcopy.243483782"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.objdump.1365956194" name="AURIX Create Listing" superClass="com.infineon.aurix.buildsystem.managed.tool.objdump.899820896"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.printsize.652837674" name="AURIX Print Size" superClass="com.infineon.aurix.buildsystem.managed.tool.printsize.1343116564"/>
 						</toolChain>
 					</folderInfo>
 					<fileInfo id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.2136527182.1818049951" name="Cpu2_Main.c" rcbsApplicability="disable" resourcePath="Cpu2_Main.c" toolsToInvoke="com.infineon.aurix.buildsystem.managed.tool.c.compiler.1376270176.109195441">
@@ -199,6 +223,32 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.591142414" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
+					<folderInfo id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.2136527182.909408170" name="/" resourcePath="TriCore Debug (GCC)">
+						<toolChain id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.604297149" name="GCC" superClass="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug" unusedChildren="">
+							<option id="com.infineon.aurix.buildsystem.managed.gcc.c.option.mtc.288032646.2026914037" name="Instruction set" superClass="com.infineon.aurix.buildsystem.managed.gcc.c.option.mtc.288032646"/>
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.infineon.aurix.buildsystem.managed.gcc.targetPlatform" isAbstract="false" osList="all" superClass="com.infineon.aurix.buildsystem.managed.gcc.targetPlatform"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.413908429" name="AURIX GCC Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.1376270176">
+								<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.optimization.level.2011634812" name="Optimization Level" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.optimization.level" value="gnu.c.optimization.level.none" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols.1086310749" name="Defined symbols (-D)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.debugging.level.175623821" name="Debug Level" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+								<inputType id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType.1557382459" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.inputType"/>
+							</tool>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler.1103267447" name="AURIX G++ Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.cpp.compiler.1615001450"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.assembler.655475281" name="AURIX GCC Assembler" superClass="com.infineon.aurix.buildsystem.managed.tool.assembler.434384137">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.infineon.aurix.buildsystem.managed.tool.assembler.symbols.defined.1029377289" name="Defined symbols (-D)" superClass="com.infineon.aurix.buildsystem.managed.tool.assembler.symbols.defined" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<inputType id="com.infineon.aurix.buildsystem.managed.tool.assembler.inputType.890397759" name="Assembler Input" superClass="com.infineon.aurix.buildsystem.managed.tool.assembler.inputType"/>
+							</tool>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.linker.375586206" name="AURIX GCC Linker" superClass="com.infineon.aurix.buildsystem.managed.tool.c.linker.362859381"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.cpp.linker.1979811472" name="AURIX G++ Linker" superClass="com.infineon.aurix.buildsystem.managed.tool.cpp.linker.2139993600"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.c.objcopy.1886690907" name="AURIX Object Copy" superClass="com.infineon.aurix.buildsystem.managed.tool.c.objcopy.243483782"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.objdump.240138535" name="AURIX Create Listing" superClass="com.infineon.aurix.buildsystem.managed.tool.objdump.899820896"/>
+							<tool id="com.infineon.aurix.buildsystem.managed.tool.printsize.2085248914" name="AURIX Print Size" superClass="com.infineon.aurix.buildsystem.managed.tool.printsize.1343116564"/>
+						</toolChain>
+					</folderInfo>
 					<fileInfo id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.debug.2136527182.581114029" name="Cpu0_Main.c" rcbsApplicability="disable" resourcePath="Cpu0_Main.c" toolsToInvoke="com.infineon.aurix.buildsystem.managed.tool.c.compiler.1376270176.1746036051">
 						<tool id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.1376270176.1746036051" name="AURIX GCC Compiler" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.1376270176">
 							<option id="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.nowarn.622075639" name="Inhibit all warnings (-w)" superClass="com.infineon.aurix.buildsystem.managed.tool.c.compiler.option.warnings.nowarn" value="true" valueType="boolean"/>
@@ -225,6 +275,7 @@
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+			<storageModule moduleId="com.infineon.aurix.buildsystem.build.autodiscovery.settings"/>
 		</cconfiguration>
 		<cconfiguration id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.release.116517859">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.infineon.aurix.buildsystem.managed.external.gcc.builtin.configuration.release.116517859" moduleId="org.eclipse.cdt.core.settings" name="TriCore Release (GCC)">
@@ -320,7 +371,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/core_1_driver_input}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/core_1_imu}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/external_log_variables}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/sd}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/telemetry}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_1/feature/log/telemetry/json_builder}&quot;"/>
@@ -331,7 +381,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/DV/ebs}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/DV/res}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/DV/steering_wheel_alg}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_2/feature/dv_driver_input}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_utility}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_utility/alive_blink}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src/cores/core_utility/as_node}&quot;"/>
@@ -413,4 +462,5 @@
 		</project-mappings>
 	</storageModule>
 	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>

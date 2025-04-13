@@ -1,5 +1,4 @@
 #include "log.h"
-#include "external_log_variables/external_log_variables.h"
 #include "sd/sd.h"
 #include "telemetry/telemetry.h"
 #include <stdint.h>

@@ -16,24 +16,24 @@ struct GieiHv_t{
 };
 
 union GieiHv_conv{
-  struct Hv_h* const hidden;
+  Hv_h* const hidden;
   struct GieiHv_t* const clear;
 };
 
 union GieiHv_const_conv{
-  const struct Hv_h* const  hidden;
+  const Hv_h* const  hidden;
   const struct GieiHv_t* const  clear;
 };
 
 #ifdef DEBUG
 char __assert_size_GieiHv[(sizeof(Hv_h) == sizeof(struct GieiHv_t))? 1:-1];
-char __assert_align_GieiHv[(sizeof(Hv_h) == sizeof(struct GieiHv_t))? 1:-1];
+char __assert_align_GieiHv[(_Alignof(Hv_h) == _Alignof(struct GieiHv_t))? 1:-1];
 #endif // DEBUG
 
 
 //public
 
-int8_t hv_init(struct Hv_h* const restrict self)
+int8_t hv_init(Hv_h* const restrict self)
 {
   union GieiHv_conv conv = {self};
   struct GieiHv_t* p_self = conv.clear;
@@ -91,7 +91,7 @@ int8_t hv_update(Hv_h* const restrict self)
   return 0;
 }
 
-float hv_get_info(const struct Hv_h* const restrict self, const enum GIEI_HV_INFO info)
+float hv_get_info(const Hv_h* const restrict self, const enum GIEI_HV_INFO info)
 {
   union GieiHv_const_conv conv = {self};
   const struct GieiHv_t* const p_self = conv.clear;
@@ -109,7 +109,7 @@ float hv_get_info(const struct Hv_h* const restrict self, const enum GIEI_HV_INF
  *
  * BMS precharge needs a message with the tot voltage
  */
-int8_t hv_computeBatteryPackTension(struct Hv_h* const restrict self, 
+int8_t hv_computeBatteryPackTension(Hv_h* const restrict self, 
     const float* const engines_voltages, const uint8_t num_of_voltages)
 {
   union GieiHv_conv conv = {self};

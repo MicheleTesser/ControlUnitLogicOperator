@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "board_architecture.h"
 #include "serial.h"
 #include "gpio.h"
 #include "can.h"

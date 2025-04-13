@@ -2,6 +2,7 @@
 #define __VIRTUAL_GPIO__
 
 #include <stdint.h>
+#include "board_architecture.h"
 
 
 //common_gpio
@@ -61,9 +62,15 @@ enum GPIO_PWM_PIN{
   __NUM_OF_PWM_GPIOS__
 };
 
+#if ARCH == 64
 typedef struct __attribute__((aligned(8))){
   const uint8_t private_data[24];
 }GpioPwm_h;
+#elif ARCH == 32
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[24];
+}GpioPwm_h;
+#endif
 
 extern int8_t
 hardware_init_gpio_pwm(GpioPwm_h* const restrict self , 

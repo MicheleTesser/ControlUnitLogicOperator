@@ -45,30 +45,57 @@ enum MISSION_STATUS{
 };
 
 struct Dv_t{
-  enum AS_STATUS status;
-  enum DV_CAR_STATUS dv_car_status;
-  enum MISSION_STATUS o_dv_mission_status;
-  GlobalRunningStatus_h o_global_running_status_reader;
-  uint8_t sound_start;
-  time_var_microseconds driving_last_time_on;
-  EmergencyNode_h emergency_node;
-  time_var_microseconds emergency_last_time_on;
-  time_var_microseconds emergency_sound_last_time_on;
-  time_var_microseconds m_embeed_last_alive;
-  DvRes_h dv_res;
-  DvEbs_h dv_ebs;
-  AsNode_h m_as_node;
-  GpioRead_h gpio_air_precharge_init;
-  GpioRead_h gpio_air_precharge_done;
-  RtdAssiSound_h o_assi_sound;
-  GpioPwm_h gpio_ass_light_blue;
-  GpioPwm_h gpio_ass_light_yellow;
-  Imu_h m_imu;
-  CarMissionReader_h* p_mission_reader;
-  struct CanMailbox* p_send_car_dv_car_status_mailbox;
-  struct CanMailbox* p_mailbox_recv_mision_status;
-  struct CanMailbox* p_mailbox_recv_embedded_alive;
-  struct CanMailbox* p_mailbox_send_mission_can_2;
+  enum AS_STATUS status; //4
+  enum DV_CAR_STATUS dv_car_status; //4
+  enum MISSION_STATUS o_dv_mission_status; //4
+  GlobalRunningStatus_h o_global_running_status_reader; //8
+  uint8_t sound_start; //1 (4)
+  time_var_microseconds driving_last_time_on; //4
+  EmergencyNode_h emergency_node; //9 (12)
+  time_var_microseconds emergency_last_time_on; //4
+  time_var_microseconds emergency_sound_last_time_on; //4
+  time_var_microseconds m_embeed_last_alive; //4
+  DvRes_h dv_res; //16
+  DvEbs_h dv_ebs; //58 (60)
+  AsNode_h m_as_node; //72
+  GpioRead_h gpio_air_precharge_init; //4
+  GpioRead_h gpio_air_precharge_done; //4
+  RtdAssiSound_h o_assi_sound; //5 (8)
+  GpioPwm_h gpio_ass_light_blue; //24
+  GpioPwm_h gpio_ass_light_yellow; //24
+  Imu_h m_imu; //16
+  CarMissionReader_h* p_mission_reader; //4
+  struct CanMailbox* p_send_car_dv_car_status_mailbox; //4
+  struct CanMailbox* p_mailbox_recv_mision_status; //4
+  struct CanMailbox* p_mailbox_recv_embedded_alive;//4
+  struct CanMailbox* p_mailbox_send_mission_can_2; //4
+};
+
+struct Dv_t_1{
+  enum AS_STATUS status; //4
+  enum DV_CAR_STATUS dv_car_status; //4
+  enum MISSION_STATUS o_dv_mission_status; //4
+  GlobalRunningStatus_h o_global_running_status_reader; //8
+  uint8_t sound_start; //1 (4)
+  time_var_microseconds driving_last_time_on; //4
+  EmergencyNode_h emergency_node; //9 (12)
+  time_var_microseconds emergency_last_time_on; //4 OK 272
+  time_var_microseconds emergency_sound_last_time_on; //4
+  time_var_microseconds m_embeed_last_alive; //4
+  DvRes_h dv_res; //16 OK 248
+  DvEbs_h dv_ebs; //58 (60) OK
+  AsNode_h m_as_node; //72 //OK
+  GpioRead_h gpio_air_precharge_init; //4 100 OK
+  GpioRead_h gpio_air_precharge_done; //4
+  RtdAssiSound_h o_assi_sound; //5 (8)
+  GpioPwm_h gpio_ass_light_blue; //84 OK
+  GpioPwm_h gpio_ass_light_yellow; //24
+  Imu_h m_imu; //16
+  CarMissionReader_h* p_mission_reader; //4
+  struct CanMailbox* p_send_car_dv_car_status_mailbox; //4
+  struct CanMailbox* p_mailbox_recv_mision_status; //4
+  struct CanMailbox* p_mailbox_recv_embedded_alive;//4
+  struct CanMailbox* p_mailbox_send_mission_can_2; //4
 };
 
 enum DV_EMERGENCY{
@@ -78,7 +105,7 @@ enum DV_EMERGENCY{
 };
 
 union Dv_h_t_conv{
-  struct Dv_h* const hidden;
+  Dv_h* const hidden;
   struct Dv_t* const clear;
 };
 

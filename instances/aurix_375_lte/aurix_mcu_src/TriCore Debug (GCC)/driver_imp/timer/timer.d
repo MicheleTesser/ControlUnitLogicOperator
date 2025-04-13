@@ -1,6 +1,7 @@
 driver_imp/timer/timer.o: ../driver_imp/timer/timer.c \
  ../driver_imp/timer/../../src/lib/raceup_board/raceup_board.h \
  ../driver_imp/timer/../../src/lib/raceup_board/./components/component.h \
+ ../driver_imp/timer/../../src/lib/raceup_board/./components/board_architecture.h \
  ../driver_imp/timer/../../src/lib/raceup_board/./components/serial.h \
  ../driver_imp/timer/../../src/lib/raceup_board/./components/./common_idx/common_idx.h \
  ../driver_imp/timer/../../src/lib/raceup_board/./components/gpio.h \
@@ -9,6 +10,7 @@ driver_imp/timer/timer.o: ../driver_imp/timer/timer.c \
  ../driver_imp/timer/../../src/lib/raceup_board/./components/interrupt.h \
  ../driver_imp/timer/../../src/lib/raceup_board/./components/trap.h \
  ../driver_imp/timer/../../src/lib/raceup_board/./components/ethernet.h \
+ ../driver_imp/timer/../../src/lib/raceup_board/./components/./board_architecture.h \
  z:\home\mr_monopoly\alberto\programmazione\cproject\raceup\controlunitlogicoperator\instances\aurix_375_lte\aurix_mcu_src\src\lib\raceup_board\components\timer.h \
  Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore\Port\Std/IfxPort.h \
  Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore/_Impl/IfxPort_cfg.h \
@@ -55,6 +57,7 @@ driver_imp/timer/timer.o: ../driver_imp/timer/timer.c \
  Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\Infra\Sfr\TC37A\_Reg/IfxCbs_regdef.h
 ../driver_imp/timer/../../src/lib/raceup_board/raceup_board.h:
 ../driver_imp/timer/../../src/lib/raceup_board/./components/component.h:
+../driver_imp/timer/../../src/lib/raceup_board/./components/board_architecture.h:
 ../driver_imp/timer/../../src/lib/raceup_board/./components/serial.h:
 ../driver_imp/timer/../../src/lib/raceup_board/./components/./common_idx/common_idx.h:
 ../driver_imp/timer/../../src/lib/raceup_board/./components/gpio.h:
@@ -63,6 +66,7 @@ driver_imp/timer/timer.o: ../driver_imp/timer/timer.c \
 ../driver_imp/timer/../../src/lib/raceup_board/./components/interrupt.h:
 ../driver_imp/timer/../../src/lib/raceup_board/./components/trap.h:
 ../driver_imp/timer/../../src/lib/raceup_board/./components/ethernet.h:
+../driver_imp/timer/../../src/lib/raceup_board/./components/./board_architecture.h:
 z:\home\mr_monopoly\alberto\programmazione\cproject\raceup\controlunitlogicoperator\instances\aurix_375_lte\aurix_mcu_src\src\lib\raceup_board\components\timer.h:
 Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore\Port\Std/IfxPort.h:
 Z:\home\mr_monopoly\Alberto\programmazione\Cproject\raceup\ControlUnitLogicOperator\instances\aurix_375_lte\aurix_mcu_src\Libraries\iLLD\TC37A\Tricore/_Impl/IfxPort_cfg.h:

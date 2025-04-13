@@ -3,12 +3,19 @@
 
 #include <stdint.h>
 #include "../../../feature/driver_input/driver_input.h"
+#include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../engines.h"
 
-
-typedef struct __attribute__((aligned(8))) AmkInverter_h{
-    const uint8_t private_data[176];
+#if ARCH == 64
+typedef struct __attribute__((aligned(8))){
+  const uint8_t private_data[176];
 }AmkInverter_h;
+#elif ARCH == 32
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[156];
+}AmkInverter_h;
+#endif // ARCH == 64
+
 
 
 int8_t 

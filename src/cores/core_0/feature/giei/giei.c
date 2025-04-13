@@ -2,7 +2,6 @@
 #include "../../../core_utility/mission_reader/mission_locker/mission_locker.h"
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
 #include "../../../core_utility/as_node/as_node.h"
-#include "../../../core_1/feature/log/external_log_variables/external_log_variables.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
@@ -19,19 +18,19 @@
 #define M_N                                 9.8f
 
 struct Giei_t{
-    Hv_h hv;
-    time_var_microseconds rtd_sound_start;
-    RtdAssiSound_h o_rtd_sound;
-    GpioRead_h gpio_rtd_button;
-    MissionLocker_h o_mission_locker;
-    float engines_voltages[__NUM_OF_ENGINES__];
-    enum RUNNING_STATUS running_status;
-    AsNodeRead_h m_as_node_read;
-    EngineType* inverter;
-    const DriverInput_h* driver_input;
-    const DrivingMaps_h* driving_maps;
-    const Imu_h* imu;
-    uint8_t entered_rtd : 1;
+    Hv_h hv; //24
+    time_var_microseconds rtd_sound_start; //32
+    RtdAssiSound_h o_rtd_sound; //40
+    GpioRead_h gpio_rtd_button; //44
+    MissionLocker_h o_mission_locker; //48
+    float engines_voltages[__NUM_OF_ENGINES__]; //64
+    enum RUNNING_STATUS running_status; //68
+    AsNodeRead_h m_as_node_read; //72
+    EngineType* inverter; //76
+    const DriverInput_h* driver_input; //80
+    const DrivingMaps_h* driving_maps; //84
+    const Imu_h* imu; //88
+    uint8_t entered_rtd : 1; //92
 };
 
 union Giei_conv{
@@ -49,8 +48,8 @@ union Giei_conv_const{
     struct Giei_t* t_ptr_name = __g_conv_##t_ptr_name##__.clear;
 
 #ifdef DEBUG
-const uint8_t giei_size_check[(sizeof(Giei_h) == sizeof(struct Giei_t))? 1 : -1];
-const uint8_t giei_align_check[(_Alignof(Giei_h) == _Alignof(struct Giei_t))? 1 : -1];
+char __giei_size_check[(sizeof(Giei_h) == sizeof(struct Giei_t))? 1 : -1];
+char __giei_align_check[(_Alignof(Giei_h) == _Alignof(struct Giei_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
 static inline int NMtoTorqueSetpoint(const float torqueNM)
@@ -142,10 +141,10 @@ int8_t giei_init(Giei_h* const restrict self,
     //neg: 4..7
     //engines engines_voltages: 8..11
 
-    for (uint8_t i=0; i<__NUM_OF_ENGINES__; i++)
-    {
-      if(external_log_variables_store_pointer(p_self->engines_voltages, (2 * __NUM_OF_ENGINES__) + i))return -7;
-    }
+    // for (uint8_t i=0; i<__NUM_OF_ENGINES__; i++)
+    // {
+    //   if(external_log_variables_store_pointer(p_self->engines_voltages, (2 * __NUM_OF_ENGINES__) + i))return -7;
+    // }
 
 
     return 0;

@@ -1,7 +1,7 @@
 #include "feature.h"
 
 #include "DV/dv.h"
-#include "../../../lib/raceup_board/components/can.h"
+#include "../../../lib/raceup_board/raceup_board.h"
 #include "../../core_utility/mission_reader/mission_reader.h"
 
 #include <stdint.h>

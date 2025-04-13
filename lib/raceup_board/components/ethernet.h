@@ -2,6 +2,7 @@
 #define __VIRTUAL_ETHERNET__
 
 #include <stdint.h>
+#include "./board_architecture.h"
 
 typedef struct{
   char* addr;
@@ -13,9 +14,16 @@ typedef struct{
   const uint16_t data_length;
 }UdpIpv4Mex;
 
+#if ARCH == 64
 typedef __attribute__((aligned(8))) struct {
   const uint8_t private_data[16];
 }EthernetNodeIpv4_h;
+#elif ARCH == 32
+typedef __attribute__((aligned(4))) struct {
+  const uint8_t private_data[16];
+}EthernetNodeIpv4_h;
+#else
+#endif
 
 int8_t
 hardware_ethernet_udp_init(

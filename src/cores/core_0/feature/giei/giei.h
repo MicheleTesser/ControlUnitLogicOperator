@@ -14,11 +14,19 @@
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
 #include "../../../core_utility/imu/imu.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
 #include "../engines/engines.h"
 
+#if ARCH == 64
 typedef struct __attribute__((aligned(8))){
   const uint8_t private_data[128];
 }Giei_h;
+#elif ARCH == 32
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[92];
+}Giei_h;
+#endif // ARCH == 64
+
 
 int8_t 
 giei_init(Giei_h* const restrict self,

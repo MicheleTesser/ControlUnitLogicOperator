@@ -44,7 +44,8 @@ union DvEbs_h_t_conv_const{
 
 //private
 
-#if DEBUG
+
+#ifdef DEBUG
 uint8_t __assert_size_dv_ebs[(sizeof(DvEbs_h) == sizeof(struct DvEbs_t))? 1:-1];
 uint8_t __assert_align_dv_ebs[(_Alignof(DvEbs_h) == _Alignof(struct DvEbs_t))? 1:-1];
 #endif
