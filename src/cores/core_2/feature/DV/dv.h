@@ -8,7 +8,7 @@
 
 #if ARCH == 64
 typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[388];
+  const uint8_t private_data[408];
 }Dv_h;
 #elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
