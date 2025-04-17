@@ -7,6 +7,7 @@
 #include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../core_utility/emergency_module/emergency_module.h"
 #include "../../math_saturated/saturated.h"
+#include "../../../../core_1/feature/log/external_log_variables/external_log_variables.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -322,29 +323,29 @@ static float _max_torque(const AMKInverter_t* const restrict self)
   return  torque_max_sum/__NUM_OF_ENGINES__;
 }
 
-// static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const enum ENGINES engine)
-// {
-//   uint8_t basic_id_start = AMK_STATUS_FL;
-//   uint8_t cursor =0;
-//
-//   switch (engine)
-//   {
-//     case FRONT_LEFT:
-//       basic_id_start = AMK_STATUS_FL;
-//       break;
-//     case FRONT_RIGHT:
-//       basic_id_start = AMK_STATUS_FR;
-//       break;
-//     case REAR_LEFT:
-//       basic_id_start = AMK_STATUS_RL;
-//       break;
-//     case REAR_RIGHT:
-//       basic_id_start = AMK_STATUS_RR;
-//       break;
-//     default:
-//       return -1;
-//   }
-//
+static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const enum ENGINES engine)
+{
+  uint8_t basic_id_start = AMK_STATUS_FL;
+  uint8_t cursor =0;
+
+  switch (engine)
+  {
+    case FRONT_LEFT:
+      basic_id_start = AMK_STATUS_FL;
+      break;
+    case FRONT_RIGHT:
+      basic_id_start = AMK_STATUS_FR;
+      break;
+    case REAR_LEFT:
+      basic_id_start = AMK_STATUS_RL;
+      break;
+    case REAR_RIGHT:
+      basic_id_start = AMK_STATUS_RR;
+      break;
+    default:
+      return -1;
+  }
+
 #define SHARE_LOG_VAR(engine, var)\
   if(external_log_variables_store_pointer(&self->engines[engine].var,\
         basic_id_start + cursor)<0)\
@@ -352,22 +353,22 @@ static float _max_torque(const AMKInverter_t* const restrict self)
     return -9 + cursor;\
   }\
   ++cursor;
-//
-//   //INFO: ORDER MATTER. For order look at shared_memory.h in AMK_SHARED_VARS
-//   SHARE_LOG_VAR(engine, amk_values_1.AMK_status);
-//   SHARE_LOG_VAR(engine, amk_values_1.AMK_ActualVelocity);
-//   SHARE_LOG_VAR(engine, amk_values_1.AMK_TorqueCurrent);
-//   SHARE_LOG_VAR(engine, amk_values_1.AMK_MagnetizingCurrent);
-//   SHARE_LOG_VAR(engine, amk_values_1.AMK_TorqueCurrent);
-//   SHARE_LOG_VAR(engine, amk_values_2.AMK_TempMotor);
-//   SHARE_LOG_VAR(engine, amk_values_2.AMK_TempInverter);
-//   SHARE_LOG_VAR(engine, amk_values_2.AMK_TempIGBT);
-//   SHARE_LOG_VAR(engine, amk_values_2.AMK_ErrorInfo);
-//   SHARE_LOG_VAR(engine, AMK_TorqueLimitPositive);
-//   SHARE_LOG_VAR(engine, AMK_TorqueLimitNegative);
-//
-//   return 0;
-// }
+
+  //INFO: ORDER MATTER. For order look at shared_memory.h in AMK_SHARED_VARS
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_status);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_ActualVelocity);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_TorqueCurrent);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_MagnetizingCurrent);
+  SHARE_LOG_VAR(engine, amk_values_1.AMK_TorqueCurrent);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_TempMotor);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_TempInverter);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_TempIGBT);
+  SHARE_LOG_VAR(engine, amk_values_2.AMK_ErrorInfo);
+  SHARE_LOG_VAR(engine, AMK_TorqueLimitPositive);
+  SHARE_LOG_VAR(engine, AMK_TorqueLimitNegative);
+
+  return 0;
+}
 
 //public
 
@@ -592,14 +593,14 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
     return -7;
   }
 
-  // int8_t err=0;
-  // FOR_EACH_ENGINE(engine)
-  // {
-  //   if((err =_share_var_engine(p_self, engine))<0)
-  //   {
-  //     return err;
-  //   }
-  // }
+  int8_t err=0;
+  FOR_EACH_ENGINE(engine)
+  {
+    if((err =_share_var_engine(p_self, engine))<0)
+    {
+      return err;
+    }
+  }
 
   general_inverter->update_f=amk_update;
   general_inverter->rtd_f=amk_rtd_procedure;
