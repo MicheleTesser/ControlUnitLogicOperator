@@ -66,6 +66,7 @@ src/cores/core_1/feature/cooling \
 src/cores/core_1/feature/core_1_driver_input \
 src/cores/core_1/feature/core_1_imu \
 src/cores/core_1/feature \
+src/cores/core_1/feature/log/external_log_variables \
 src/cores/core_1/feature/log \
 src/cores/core_1/feature/log/sd \
 src/cores/core_1/feature/log/telemetry/json_builder \

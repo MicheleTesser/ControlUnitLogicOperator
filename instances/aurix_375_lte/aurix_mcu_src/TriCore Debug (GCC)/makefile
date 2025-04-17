@@ -37,6 +37,7 @@ RM := rm -rf
 -include src/cores/core_1/feature/log/telemetry/json_builder/subdir.mk
 -include src/cores/core_1/feature/log/telemetry/subdir.mk
 -include src/cores/core_1/feature/log/sd/subdir.mk
+-include src/cores/core_1/feature/log/external_log_variables/subdir.mk
 -include src/cores/core_1/feature/log/subdir.mk
 -include src/cores/core_1/feature/core_1_imu/subdir.mk
 -include src/cores/core_1/feature/core_1_driver_input/subdir.mk

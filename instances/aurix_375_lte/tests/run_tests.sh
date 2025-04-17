@@ -35,18 +35,18 @@ run_test() {
 
     echo -e ${YELLOW}building in DEBUG mode $ENDCOLOR
     cd "hardware_src/TriCore Debug (GCC)"
-    wine make ${verbose}
     wine make --output-sync -j8 all ${verbose}
     C_tricore-probe basic_aurix_template.elf ${verbose}
+    wine make ${verbose}
     echo -e ${GREEN}running in DEBUG mode $ENDCOLOR
     cd - > /dev/null
     build_run_logic_test build_debug
 
     echo -e ${YELLOW}building in RELEASE mode $ENDCOLOR
     cd "hardware_src/TriCore Release (GCC)"
-    wine make ${verbose}
     wine make --output-sync -j8 all ${verbose}
     C_tricore-probe basic_aurix_template.elf ${verbose}
+    wine make ${verbose}
     echo -e ${GREEN}running in RELEASE mode $ENDCOLOR
     cd - > /dev/null
     build_run_logic_test build_release
