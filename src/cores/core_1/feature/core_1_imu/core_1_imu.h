@@ -6,16 +6,9 @@
 #include <stdint.h>
 #include "../log/log.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))) Core1Imu_h{
-    const uint8_t private_data[56];
-}Core1Imu_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))) Core1Imu_h{
-    const uint8_t private_data[44];
+  const uint8_t private_data[44];
 }Core1Imu_h;
-#else
-#endif
 
 int8_t
 core_1_imu_init(

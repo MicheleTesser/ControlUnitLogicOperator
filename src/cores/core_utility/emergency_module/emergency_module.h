@@ -1,18 +1,11 @@
 #ifndef __EMERGENCY_MODULE__
 #define __EMERGENCY_MODULE__
 
-#include "../../../lib/raceup_board/raceup_board.h"
 #include <stdint.h>
 
-#if ARCH == 64
 typedef struct __attribute__((aligned(1))){
   const uint8_t private_data[9];
 }EmergencyNode_h;
-#elif ARCH == 32
-typedef struct __attribute__((aligned(1))){
-  const uint8_t private_data[9];
-}EmergencyNode_h;
-#endif
 
 int8_t EmergencyNode_class_init(void);
 

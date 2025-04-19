@@ -4,19 +4,10 @@
 #include <stdint.h>
 #include "../../../core_utility/mission_reader/mission_reader.h"
 #include "../../../core_utility/driver_input_reader/driver_input_reader.h"
-#include "../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  uint8_t private_data[72];
-}DriverInput_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
   uint8_t private_data[52];
 }DriverInput_h;
-#else
-#endif // ARCH == 64
-
 
 int8_t 
 driver_input_init(DriverInput_h* const restrict self,

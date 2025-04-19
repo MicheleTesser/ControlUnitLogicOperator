@@ -6,17 +6,9 @@
 #include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../engines.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[176];
-}AmkInverter_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[156];
+  const uint8_t private_data[152];
 }AmkInverter_h;
-#endif // ARCH == 64
-
-
 
 int8_t 
 amk_module_init(AmkInverter_h* const restrict self,

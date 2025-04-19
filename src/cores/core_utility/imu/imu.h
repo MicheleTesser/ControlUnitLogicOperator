@@ -4,16 +4,9 @@
 #include <stdint.h>
 #include "../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-    const uint8_t private_data[24];
-}Imu_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
-    const uint8_t private_data[16];
+  const uint8_t private_data[16];
 }Imu_h;
-#else
-#endif
 
 
 enum IMU_AXIS{

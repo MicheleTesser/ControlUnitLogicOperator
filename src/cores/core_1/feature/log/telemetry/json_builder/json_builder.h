@@ -6,16 +6,9 @@
 
 typedef float JsonVarValue;
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[16];
-}Json_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
   const uint8_t private_data[12];
 }Json_h;
-#else
-#endif
 
 int8_t
 json_init(Json_h* const restrict self)__attribute__((__nonnull__(1)));

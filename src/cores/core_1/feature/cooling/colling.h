@@ -5,16 +5,9 @@
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../log/log.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[32];
-}Cooling_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
   const uint8_t private_data[20];
 }Cooling_h;
-#else
-#endif
 
 enum COOLING_DEVICES{
   PUMPS=0,

@@ -2,8 +2,8 @@
 #define __ATC__
 
 #include <stdint.h>
-typedef struct Atc_h{
-  const uint8_t private_data[40];
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[24];
 }Atc_h;
 
 enum InputAtc

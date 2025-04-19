@@ -5,16 +5,9 @@
 #include "../log_obj_types.h"
 #include "../../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[16];
-}LogTelemetry_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
   const uint8_t private_data[16];
 }LogTelemetry_h;
-#else
-#endif
 
 
 int8_t

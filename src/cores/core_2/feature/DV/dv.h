@@ -6,15 +6,9 @@
 #include "../../../core_utility/driver_input_reader/driver_input_reader.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[408];
-}Dv_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[316];
+  const uint8_t private_data[300];
 }Dv_h;
-#endif
 
 int8_t
 dv_class_init(Dv_h* const restrict self ,

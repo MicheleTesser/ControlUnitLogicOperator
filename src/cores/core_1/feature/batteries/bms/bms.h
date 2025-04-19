@@ -3,17 +3,10 @@
 
 #include <stdint.h>
 #include "../../log/log.h"
-#include "../../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-    const uint8_t private_data[16];
-}Bms_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
-    const uint8_t private_data[12];
+  const uint8_t private_data[12];
 }Bms_h;
-#endif
 
 int8_t
 bms_init(Bms_h* const restrict self ,

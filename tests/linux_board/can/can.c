@@ -295,7 +295,7 @@ int8_t hardware_mailbox_send(struct CanMailbox* const restrict self, const uint6
 
 void hardware_free_mailbox_can(struct CanMailbox** restrict self)
 {
-  printf("closing mail: %ld\n", (*self) - MAILBOX_POOL.pool);
+  printf("closing mail: %d\n", (*self) - MAILBOX_POOL.pool);
   shutdown((*self)->can_fd, SHUT_RDWR);
   memset(*self, 0, sizeof(**self));
   (*self)->can_fd=-1;

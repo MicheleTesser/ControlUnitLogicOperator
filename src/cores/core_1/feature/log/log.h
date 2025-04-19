@@ -21,16 +21,9 @@ enum LOG_MODE{
   LOG_TELEMETRY = (1<<1),
 };
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))) Log_h{
-  const uint8_t private_data[24];
-}Log_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))) Log_h{
   const uint8_t private_data[20];
 }Log_h;
-#else
-#endif
 
 int8_t
 log_init(Log_h* const restrict self )__attribute__((__nonnull__(1)));

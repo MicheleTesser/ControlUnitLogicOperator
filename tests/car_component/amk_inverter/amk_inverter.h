@@ -28,8 +28,8 @@ enum PRECHARGE_STATUS{
   PRECHARGE_ERROR = 2,
 };
 
-typedef struct{
-  const char private_date[144];
+typedef struct __attribute__((aligned(4))){
+  const char private_date[124];
 }EmulationAmkInverter_h;
 
 int8_t

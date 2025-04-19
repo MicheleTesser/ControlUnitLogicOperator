@@ -5,6 +5,7 @@ CompileFlags:
     -Wextra,
     -std=c11,
     -xc,
+    -m32,
     -Wno-gnu-folding-constant,
     -Wno-c23-extensions,
     -Wconversion,

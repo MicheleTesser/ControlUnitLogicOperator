@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-typedef struct __attribute__((aligned(8))) EmbeddedSystem_h{
-  const uint8_t private_data[48];
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[32];
 }EmbeddedSystem_h;
 
 //INFO: copied from src/cores/core_2/feature/DV/dv.c

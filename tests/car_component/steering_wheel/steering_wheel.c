@@ -70,7 +70,7 @@ int _start_SteeringWheel(void* arg)
 
 //public
 
-int8_t steering_wheel_start(struct SteeringWheel_h* const restrict self)
+int8_t steering_wheel_start(SteeringWheel_h* const restrict self)
 {
   union SteeringWheel_h_t_conv conv = {self};
   struct SteeringWheel_t* const p_self = conv.clear;
@@ -108,7 +108,7 @@ int8_t steering_wheel_start(struct SteeringWheel_h* const restrict self)
   return 0;
 }
 
-int8_t steering_wheel_select_mission(struct SteeringWheel_h* const restrict self,
+int8_t steering_wheel_select_mission(SteeringWheel_h* const restrict self,
     const enum CAR_MISSIONS mission)
 {
   union SteeringWheel_h_t_conv conv = {self};
@@ -124,7 +124,7 @@ int8_t steering_wheel_select_mission(struct SteeringWheel_h* const restrict self
   return 0;
 }
 
-int8_t steering_wheel_select_map(struct SteeringWheel_h* const restrict self,
+int8_t steering_wheel_select_map(SteeringWheel_h* const restrict self,
     const enum MAPS_TYPE map_type, const uint8_t value)
 {
   union SteeringWheel_h_t_conv conv = {self};
@@ -149,7 +149,7 @@ int8_t steering_wheel_select_map(struct SteeringWheel_h* const restrict self,
   return 0;
 }
 
-int8_t steering_wheel_stop(struct SteeringWheel_h* const restrict self)
+int8_t steering_wheel_stop(SteeringWheel_h* const restrict self)
 {
   union SteeringWheel_h_t_conv conv = {self};
   struct SteeringWheel_t* const p_self = conv.clear;

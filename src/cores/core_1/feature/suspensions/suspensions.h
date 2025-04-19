@@ -3,18 +3,10 @@
 
 #include <stdint.h>
 #include "../log/log.h"
-#include "../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))) Suspensions_h{
-    const uint8_t private_data[32];
-}Suspensions_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))) Suspensions_h{
-    const uint8_t private_data[24];
+  const uint8_t private_data[24];
 }Suspensions_h;
-#else
-#endif
 
 enum SUSP_ID{
     SUSP_FRONT_LEFT = 0,

@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[48];
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[24];
 }Asb_h;
 
 enum ASB_CONFIG{

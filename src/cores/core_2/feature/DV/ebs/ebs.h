@@ -2,18 +2,10 @@
 #define __DV_EBS__
 
 #include <stdint.h>
-#include "../../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[88];
-}DvEbs_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
   const uint8_t private_data[58];
 }DvEbs_h;
-#else
-#endif
 
 //INFO: copied from can2.dbc message 104 response_status
 enum ASB_INTEGRITY_CHECK_RESULT

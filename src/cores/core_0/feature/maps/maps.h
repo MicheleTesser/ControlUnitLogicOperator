@@ -2,18 +2,10 @@
 #define __GIEI_MAPS__
 
 #include <stdint.h>
-#include "../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))) DrivingMaps_h{
-  const uint8_t private_data[264];
-}DrivingMaps_h;
-#elif ARCH ==32
 typedef struct __attribute__((aligned(4))) DrivingMaps_h{
   const uint8_t private_data[256];
 }DrivingMaps_h;
-#else
-#endif
 
 enum CAR_PARAMETERS{
     MAX_POS_TORQUE,

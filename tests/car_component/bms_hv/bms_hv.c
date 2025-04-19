@@ -79,7 +79,7 @@ int _start_bms_hv(void* arg)
 
 //public
 
-int8_t bms_hv_start(struct BmsHv_h* const restrict self)
+int8_t bms_hv_start(BmsHv_h* const restrict self)
 {
   union BmsHv_h_t_conv conv = {self};
   struct BmsHv_t* const p_self = conv.clear;
@@ -113,7 +113,7 @@ int8_t bms_hv_start(struct BmsHv_h* const restrict self)
   return 0;
 }
 
-int8_t bms_hv_set_attribute(struct BmsHv_h* const restrict self,
+int8_t bms_hv_set_attribute(BmsHv_h* const restrict self,
     const enum BMS_HV_ATTRIBUTE attribute, const float value)
 {
   union BmsHv_h_t_conv conv = {self};
@@ -151,7 +151,7 @@ int8_t bms_hv_set_attribute(struct BmsHv_h* const restrict self,
   return 0;
 }
 
-int8_t bms_hv_stop(struct BmsHv_h* const restrict self)
+int8_t bms_hv_stop(BmsHv_h* const restrict self)
 {
   union BmsHv_h_t_conv conv = {self};
   struct BmsHv_t* const p_self = conv.clear;

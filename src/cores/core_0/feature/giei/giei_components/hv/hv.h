@@ -2,17 +2,10 @@
 #define __GIEI_HV__
 
 #include <stdint.h>
-#include "../../../../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  const uint8_t private_data[32];
-}Hv_h;
-#elif ARCH ==32
 typedef struct __attribute__((aligned(4))){
   const uint8_t private_data[24];
 }Hv_h;
-#endif // ARCH == 64
 
 enum GIEI_HV_INFO{
     HV_BATTERY_PACK_TENSION=0,

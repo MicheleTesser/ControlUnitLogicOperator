@@ -4,16 +4,9 @@
 #include <stdint.h>
 #include "../../../lib/raceup_board/raceup_board.h"
 
-#if ARCH == 64
-typedef struct __attribute__((aligned(8))){
-  uint8_t private_data[40];
-}DriverInputReader_h;
-#elif ARCH == 32
 typedef struct __attribute__((aligned(4))){
   uint8_t private_data[32];
 }DriverInputReader_h;
-#else
-#endif
 
 enum INPUT_TYPES{
     THROTTLE =0,
