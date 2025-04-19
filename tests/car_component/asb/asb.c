@@ -3,6 +3,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../src/lib/board_dbc/dbc/out_lib/can2/can2.h"
+#include "../../../src/cores/core_utility/mission_reader/mission_reader.h"
 #pragma GCC diagnostic pop 
 #include "../embedded_system/embedded_system.h"
 
@@ -18,21 +19,35 @@ enum TANKS{
   __NUM_OF_TANKS__
 };
 
+//INFO: phase details at: https://github.com/raceup-electric/EBS/tree/main
+typedef enum{
+  EbsPhase_0=0,
+  EbsPhase_1,
+  EbsPhase_2,
+  EbsPhase_3,
+  EbsPhase_4,
+  EbsPhase_5,
+}EbsPhaes_t;
+
 struct Asb_t{
   thrd_t thread;
-  uint8_t running:1;
-  uint8_t integrity_check_status:1;
-  uint8_t mission_status:2;
-  uint8_t active:1;
-  uint8_t asb_check:2;
+  enum CAR_MISSIONS m_mission;
+  EbsPhaes_t m_phase;
+  float m_current_speed;
+  uint8_t m_running:1;
+  uint8_t m_integrity_check_status:1;
+  uint8_t m_rtd:1;
+  uint8_t m_brakes_engaged:1;
   struct{
     uint8_t pressure:5;
     uint8_t sanity:1;
   }Tank[__NUM_OF_TANKS__];
-  struct CanMailbox* p_mailbox_send_asb_status;
-  struct CanMailbox* p_mailbox_send_integrity_check_resp;
-  struct CanMailbox* p_mailbox_recv_mission_status;
-  struct CanMailbox* p_mailbox_recv_integrity_check_req;
+  struct CanMailbox* p_mailbox_recv_dv_mission_status;
+  struct CanMailbox* p_mailbox_recv_asb_check_req;
+  struct CanMailbox* p_mailbox_recv_car_status;
+  struct CanMailbox* p_mailbox_recv_res;
+  struct CanMailbox* p_mailbox_recv_brake_request;
+  struct CanMailbox* p_mailbox_recv_imu;
 };
 
 union asb_h_t_conv{
@@ -50,55 +65,119 @@ char __assert_size_asb[(sizeof(Asb_h)==sizeof(struct Asb_t))?+1:-1];
 char __assert_align_asb[(_Alignof(Asb_h)==_Alignof(struct Asb_t))?+1:-1];
 #endif /* ifdef DEBUG */
 
-int _start_asb(void* arg)
+static void _tank_pressure_validation(const struct Asb_t* const restrict self)
+{
+}
+
+static void _send_system_status(const struct Asb_t* const restrict self)
+{
+}
+
+static void _asb_check(struct Asb_t* const restrict self)
+{
+}
+
+static void _send_result_validation(struct Asb_t* const restrict self)
+{
+}
+
+static int _start_asb(void* arg)
 {
   struct Asb_t* const p_self = arg;
   CanMessage mex = {0};
-  time_var_microseconds t_var =0;
   can_obj_can2_h_t o2 = {0};
-  uint64_t payload_tank_ebs_mex = 0;
-  uint64_t payload_consistency_check_resp = 0;
 
-  while (p_self->running)
+  while (p_self->m_running)
   {
-    ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
+    if (hardware_mailbox_read(p_self->p_mailbox_recv_dv_mission_status, &mex))
     {
-      if (hardware_mailbox_read(p_self->p_mailbox_recv_mission_status, &mex))
-      {
-        unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
-        p_self->mission_status = o2.can_0x071_CarMissionStatus.MissionStatus;
-        p_self->active = o2.can_0x047_CarMission.Mission > 1;
-      }
-
-      if (p_self->active && hardware_mailbox_read(p_self->p_mailbox_recv_integrity_check_req, &mex))
-      {
-        p_self->asb_check =0;
-      }
-
-      if (p_self->active &&
-          p_self->mission_status == MISSION_NOT_RUNNING &&
-          !mex.full_word)
-      {
-        o2.can_0x068_CheckASB.Mode = 1;
-        o2.can_0x068_CheckASB.response_status = p_self->asb_check;
-        pack_message_can2(&o2, CAN_ID_CHECKASB, &payload_consistency_check_resp);
-        hardware_mailbox_send(p_self->p_mailbox_send_integrity_check_resp, payload_consistency_check_resp);
-      }
-
-      if (p_self->active)
-      {
-        o2.can_0x03c_TanksEBS.press_left_tank = p_self->Tank[TANK_LEFT].pressure;
-        o2.can_0x03c_TanksEBS.sanity_left_sensor = p_self->Tank[TANK_LEFT].sanity;
-
-        o2.can_0x03c_TanksEBS.press_right_tank = p_self->Tank[TANK_RIGHT].pressure;
-        o2.can_0x03c_TanksEBS.sanity_right_sensor = p_self->Tank[TANK_RIGHT].sanity;
-
-        o2.can_0x03c_TanksEBS.system_check = p_self->integrity_check_status;
-
-        pack_message_can2(&o2, CAN_ID_TANKSEBS, &payload_tank_ebs_mex);
-        hardware_mailbox_send(p_self->p_mailbox_send_asb_status, payload_tank_ebs_mex);
-      }
+      unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
+      p_self->m_mission = o2.can_0x071_CarMissionStatus.Mission;
     }
+
+    if (hardware_mailbox_read(p_self->p_mailbox_recv_imu, &mex))
+    {
+      unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
+      p_self->m_current_speed = 0; //TODO: not yet defined
+    }
+
+    switch (p_self->m_phase)
+    {
+      case EbsPhase_0:
+        if (p_self->m_mission >= CAR_MISSIONS_HUMAN)
+        {
+          p_self->m_phase = EbsPhase_1;
+        }
+        break;
+      case EbsPhase_1:
+        _tank_pressure_validation(p_self);
+        _send_system_status(p_self);
+        if (hardware_mailbox_read(p_self->p_mailbox_recv_asb_check_req, &mex))
+        {
+          unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
+          if(o2.can_0x068_CheckASB.Mode == 1)
+          {
+            p_self->m_phase = EbsPhase_2;
+          }
+        }
+        break;
+      case EbsPhase_2:
+        _asb_check(p_self);
+        _send_result_validation(p_self);
+        if (hardware_mailbox_read(p_self->p_mailbox_recv_asb_check_req, &mex))
+        {
+          unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
+          if(o2.can_0x068_CheckASB.Mode == 2)
+          {
+            p_self->m_phase = EbsPhase_3;
+          }
+        }
+        break;
+      case EbsPhase_3:
+        _tank_pressure_validation(p_self);
+        _send_system_status(p_self);
+        if (hardware_mailbox_read(p_self->p_mailbox_recv_car_status, &mex))
+        {
+          unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
+          p_self->m_rtd = o2.can_0x065_CarStatus.R2D;
+        }
+        if (p_self->m_rtd)
+        {
+          p_self->m_phase = EbsPhase_4;
+        }
+        break;
+      case EbsPhase_4:
+        if (p_self->m_rtd && hardware_mailbox_read(p_self->p_mailbox_recv_res, &mex))
+        {
+          unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
+          //TODO: check res message to start drive mode
+          p_self->m_phase = EbsPhase_5;
+        }
+        if (!p_self->m_rtd)
+        {
+          p_self->m_phase = EbsPhase_0;
+        }
+        break;
+      case EbsPhase_5:
+        //TODO: sen continuous monitoring tank pressure
+        if (p_self->m_mission == CAR_MISSIONS_NONE)
+        {
+          p_self->m_phase = EbsPhase_0;
+        }
+
+        if (hardware_mailbox_read(p_self->p_mailbox_recv_brake_request, &mex))
+        {
+          if (p_self->m_current_speed < 5.0f) //km/h
+          {
+            p_self->m_brakes_engaged = 1;
+          }
+        }
+        else
+        {
+          p_self->m_brakes_engaged =0;
+        }
+        break;
+      }
   }
 
   return 0;
@@ -115,80 +194,7 @@ int8_t asb_start(Asb_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
-  ACTION_ON_CAN_NODE_EXTERNAL(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_send_asb_status = 
-      hardware_get_mailbox_single_mex(
-          can_node,
-          SEND_MAILBOX,
-          CAN_ID_TANKSEBS,
-          message_dlc_can2(CAN_ID_TANKSEBS)
-          );
-  }
-
-  if (!p_self->p_mailbox_send_asb_status)
-  {
-    return -1;
-  }
-
-
-  ACTION_ON_CAN_NODE_EXTERNAL(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_recv_mission_status= 
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_CARMISSION,
-          message_dlc_can2(CAN_ID_CARMISSION)
-          );
-  }
-
-  if (!p_self->p_mailbox_recv_mission_status)
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_send_asb_status);
-    return -2;
-  }
-
-
-  ACTION_ON_CAN_NODE_EXTERNAL(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_recv_integrity_check_req =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_CHECKASB,
-          message_dlc_can2(CAN_ID_CHECKASB)
-          );
-  }
-
-  if (!p_self->p_mailbox_recv_integrity_check_req)
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_send_asb_status);
-    hardware_free_mailbox_can(&p_self->p_mailbox_recv_mission_status);
-    return -3;
-  }
-
-  ACTION_ON_CAN_NODE_EXTERNAL(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_send_integrity_check_resp =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          SEND_MAILBOX,
-          CAN_ID_CHECKASB,
-          message_dlc_can2(CAN_ID_CHECKASB)
-          );
-  }
-
-  if (!p_self->p_mailbox_send_integrity_check_resp)
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_send_asb_status);
-    hardware_free_mailbox_can(&p_self->p_mailbox_recv_integrity_check_req);
-    hardware_free_mailbox_can(&p_self->p_mailbox_recv_mission_status);
-    return -3;
-  }
-
-  p_self->running=1;
-  p_self->asb_check =3;
+  p_self->m_running=1;
   thrd_create(&p_self->thread, _start_asb, p_self);
   return 0;
 }
@@ -215,7 +221,7 @@ asb_set_parameter(Asb_h* const restrict self,
       p_self->Tank[TANK_RIGHT].sanity = value;
       break;
     case INTEGRITY_CHECK_STATUS:
-      p_self->integrity_check_status = value;
+      p_self->m_integrity_check_status = value;
       break;
     default:
       return -1;;
@@ -230,7 +236,7 @@ int8_t asb_stop(Asb_h* const restrict self)
   struct Asb_t* const p_self = conv.clear;
 
   printf("stopping asb\n");
-  p_self->running=0;
+  p_self->m_running=0;
   thrd_join(p_self->thread, NULL);
 
   return 0;
