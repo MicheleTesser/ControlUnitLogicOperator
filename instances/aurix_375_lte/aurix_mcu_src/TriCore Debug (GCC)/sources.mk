@@ -29,6 +29,8 @@ Libraries/Service/CpuGeneric/StdIf \
 Libraries/Service/CpuGeneric/SysSe/Bsp \
 Libraries/iLLD/TC37A/Tricore/Asclin/Asc \
 Libraries/iLLD/TC37A/Tricore/Asclin/Std \
+Libraries/iLLD/TC37A/Tricore/Can/Can \
+Libraries/iLLD/TC37A/Tricore/Can/Std \
 Libraries/iLLD/TC37A/Tricore/Cpu/Irq \
 Libraries/iLLD/TC37A/Tricore/Cpu/Std \
 Libraries/iLLD/TC37A/Tricore/Cpu/Trap \
