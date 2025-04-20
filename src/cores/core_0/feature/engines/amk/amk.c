@@ -68,28 +68,28 @@ struct AMK_Setpoints{
   int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
 };
 
-typedef struct Inverter{ //96
+typedef struct Inverter{ 
   struct{
     struct AMK_Actual_Values_1 amk_values_1;
     struct AMK_Actual_Values_2 amk_values_2;
-    int16_t AMK_TargetVelocity; //INFO: unit: rpm Speed setpoint
+    int16_t AMK_TargetVelocity; // INFO: unit: rpm Speed setpoint
     int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
     int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
-  }engines[__NUM_OF_ENGINES__]; //16 * 4 = 64
-  enum RUNNING_STATUS engine_status; //68
-  uint8_t hvCounter[__NUM_OF_ENGINES__]; // 72
-  time_var_microseconds u_last_send_info; //80
-  GpioRead_h gpio_precharge_init; //84
-  GpioRead_h gpio_precharge_done; //88
-  GpioRead_h gpio_rtd_button; //92
-  GpioRead_h gpio_ts_button; // 96
-  const DriverInput_h* driver_input; //100
-  struct CanNode* can_inverter; //104
-  struct CanMailbox* engine_mailbox; //108
-  struct CanMailbox* mailbox_pcu_rf_signal_send; //112
-  struct CanMailbox* mailbox_pcu_rf_signal_read; //116
-  EmergencyNode_h amk_emergency; //126
-  uint8_t rf_status:1;
+  }engines[__NUM_OF_ENGINES__];
+  enum RUNNING_STATUS engine_status; 
+  uint8_t hvCounter[__NUM_OF_ENGINES__];
+  time_var_microseconds u_last_send_info; 
+  GpioRead_h gpio_precharge_init; 
+  GpioRead_h gpio_precharge_done; 
+  GpioRead_h gpio_rtd_button; 
+  GpioRead_h gpio_ts_button;
+  const DriverInput_h* driver_input; 
+  struct CanNode* can_inverter; 
+  struct CanMailbox* engine_mailbox; 
+  struct CanMailbox* mailbox_pcu_rf_signal_send; 
+  struct CanMailbox* mailbox_pcu_rf_signal_read; 
+  EmergencyNode_h amk_emergency; 
+  uint32_t rf_status; //HACK: for padding with aurix, this is just a bool
 }AMKInverter_t;
 
 union AMKConv{
