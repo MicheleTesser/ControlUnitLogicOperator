@@ -179,7 +179,7 @@ int8_t hardware_read_can(struct CanNode* const restrict self, CanMessage* const 
   return 0;
 }
 
-int8_t hardware_write_can(const struct CanNode* const restrict self ,
+int8_t hardware_write_can(struct CanNode* const restrict self ,
     const CanMessage* restrict const mex )
 {
   const int can_node = can_init(self->can_interface);

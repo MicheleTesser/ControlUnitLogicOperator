@@ -19,7 +19,11 @@
 
 //private
 
-typedef struct{
+#define NUMBER_OF_FIFO_ELEMENTS 15
+#define WAIT_TIME                   1                       /* Number of milliseconds to wait after transmission */
+
+
+typedef struct CanNode{
     IfxCan_Can_Config canConfig;                            /* CAN module configuration structure                   */
     IfxCan_Can canModule;                                   /* CAN module handle                                    */
     IfxCan_Can_Node canNode;                                /* CAN node handle data structure                       */
@@ -68,15 +72,21 @@ int8_t hardware_init_can(const enum CAN_MODULES mod , const enum CAN_FREQUENCY b
 
   node->canNodeConfig.nodeId = node->pins.rxPin->nodeId;
   node->canNodeConfig.baudRate.baudrate = baud_rate;
+
   node->canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
+  node->canNodeConfig.frame.mode = IfxCan_FrameMode_standard;
 
   //set rx mailbox node
   node->canNodeConfig.rxConfig.rxMode = IfxCan_RxMode_dedicatedBuffers;
+  node->canNodeConfig.rxConfig.rxFifo0Size = NUMBER_OF_FIFO_ELEMENTS;
+  node->canNodeConfig.rxConfig.rxFifo1Size = NUMBER_OF_FIFO_ELEMENTS;
   node->canNodeConfig.rxConfig.rxBufferDataFieldSize= IfxCan_DataFieldSize_8;
 
   //set tx mailbox node
   node->canNodeConfig.txConfig.txMode = IfxCan_TxMode_dedicatedBuffers;
   node->canNodeConfig.txConfig.txBufferDataFieldSize= IfxCan_DataFieldSize_8;
+  node->canNodeConfig.filterConfig.standardFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_reject;
+  node->canNodeConfig.filterConfig.extendedFilterForNonMatchingFrames = IfxCan_NonMatchingFrame_reject;
 
   if(!IfxCan_Can_initNode(&node->canNode, &node->canNodeConfig))
   {
@@ -97,15 +107,41 @@ struct CanNode* hardware_init_can_get_ref_node(const enum CAN_MODULES mod)
   return NULL;
 }
 
-void hardware_init_can_destroy_ref_node(struct CanNode** restrict self)
+void hardware_init_can_destroy_ref_node(struct CanNode** restrict self __attribute__((__unused__)))
 {
   self = NULL;
 }
 
-int8_t hardware_read_can(struct CanNode* const restrict self , CanMessage* const restrict mex );
+int8_t hardware_read_can(struct CanNode* const restrict self __attribute__((__unused__)),
+    CanMessage* const restrict mex __attribute__((__unused__)))
+{
+  //INFO: not yet implemented because not used yet
+  return -1;
+}
 
-int8_t hardware_write_can(const struct CanNode* const restrict self ,
-    const CanMessage* restrict const mex );
+int8_t hardware_write_can(struct CanNode* const restrict self ,
+    const CanMessage* restrict const mex )
+{
+  IfxCan_Message tx_message = 
+  {
+    .messageId = mex->id,
+    .messageIdLength = IfxCan_MessageIdLength_standard,
+    .frameMode = IfxCan_FrameMode_standard,
+    .dataLengthCode = mex->message_size,
+  };
+
+  /* Send the CAN message with the previously defined TX message configuration and content */
+  while(IfxCan_Status_notSentBusy == IfxCan_Can_sendMessage(&self->canNode, &tx_message,(uint32_t *)&mex->words))
+  {
+  }
+
+  /* Initialize a time variable for waiting 1 ms */
+  Ifx_TickTime ticksFor1ms = IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, WAIT_TIME);
+
+  /* Adding additional time delay so we are sure that acceptance filtering took place by the node 1 */
+  wait(ticksFor1ms);
+  return 0;
+}
 
 struct CanMailbox* hardware_get_mailbox(
     struct CanNode* const restrict self, const enum MAILBOX_TYPE type,
