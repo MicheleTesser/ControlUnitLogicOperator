@@ -10,7 +10,7 @@ typedef struct{
     uint32_t words[2];
     uint64_t full_word;
   };
-  uint8_t message_size;
+  uint8_t message_size:4;
 }CanMessage;
 
 enum CAN_FREQUENCY{
@@ -56,7 +56,7 @@ hardware_read_can(struct CanNode* const restrict self ,
     CanMessage* const restrict mex )__attribute__((__nonnull__(1,2)));
 
 extern int8_t
-hardware_write_can(const struct CanNode* const restrict self ,
+hardware_write_can(struct CanNode* const restrict self ,
     const CanMessage* restrict const mex )__attribute__((__nonnull__(1,2)));
 
 extern struct CanMailbox*
