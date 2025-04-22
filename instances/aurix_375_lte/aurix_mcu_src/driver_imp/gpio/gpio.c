@@ -4,9 +4,14 @@
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "IfxPort.h"
 #include "Bsp.h"
+#include "Ifx_Types.h"
+#include "IfxGpt12.h"
+#include "IfxPort.h"
 #pragma GCC diagnostic pop
 
 #include <stdint.h>
+
+//gpio
 
 struct GpioRead_t{
   Ifx_P *port;
@@ -68,10 +73,7 @@ int8_t gpio_read_state(const GpioRead_h* const restrict self)
 {
   const union GpioRead_h_t_conv conv = {self};
   const struct GpioRead_t* p_self __attribute__((__unused__)) = conv.clear;
-  //return IfxPort_readPin(
-  //    p_self->port,
-  //    p_self->pin_index);
-  return 0;
+  return IfxPort_getPinState(p_self->port,p_self->pin_index);
 }
 int8_t gpio_set_high(Gpio_h* const restrict self)
 {
@@ -91,4 +93,29 @@ int8_t gpio_set_low(Gpio_h* const restrict self)
       p_self->gpio_read_permission.port,
       p_self->gpio_read_permission.pin_index);
   return 0;
+}
+
+//pwm
+
+struct GpioPwm_t{
+  const uint8_t private_data[16];
+};
+
+int8_t hardware_init_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)),
+    const enum GPIO_PWM_PIN id __attribute__((__unused__)))
+{
+}
+
+int8_t hardware_init_gpio_pwm_read_only(GpioPwm_h* const restrict self __attribute__((__unused__)),
+    const enum GPIO_PWM_PIN id __attribute__((__unused__)))
+{
+}
+
+int8_t hardware_write_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)),
+    const uint16_t duty_cycle __attribute__((__unused__)))
+{
+}
+
+uint16_t hardware_read_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)))
+{
 }
