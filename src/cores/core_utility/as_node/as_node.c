@@ -167,8 +167,8 @@ int8_t as_node_init(AsNode_h* const restrict self,
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
-          CAN_ID_TANKSEBS,
-          message_dlc_can2(CAN_ID_TANKSEBS));
+          CAN_ID_EBSSTATUS,
+          message_dlc_can2(CAN_ID_EBSSTATUS));
   }
 
   if (!p_self->p_mailbox_read_tank_ebs)
@@ -204,8 +204,8 @@ int8_t as_node_init(AsNode_h* const restrict self,
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
-          CAN_ID_TANKSEBS,
-          message_dlc_can2(CAN_ID_TANKSEBS));
+          CAN_ID_EBSSTATUS,
+          message_dlc_can2(CAN_ID_EBSSTATUS));
   }
 
   if (!p_self->p_mailox_recv_ebs_pressure)
@@ -249,7 +249,7 @@ int8_t as_node_update(AsNode_h* const restrict self)
   if (hardware_mailbox_read(p_self->p_mailox_recv_ebs_pressure, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    p_self->m_ebs_check_ok = o2.can_0x03c_TanksEBS.system_check;
+    p_self->m_ebs_check_ok = o2.can_0x03c_EbsStatus.system_check;
   }
 
 

@@ -2,6 +2,7 @@
 #include "../log/log.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../../../core_utility/imu/imu.h"
+#include "../../../core_utility/car_speed/car_speed.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -13,13 +14,13 @@ enum IMU_DATA{
   OMEGA_X,
   OMEGA_Y,
   OMEGA_Z,
-  SPEED,
 
   __NUM_OF_IMU_DATA__
 };
 
 struct Core1Imu_t{
   float imu_data[__NUM_OF_IMU_DATA__];
+  uint32_t speed;
   Imu_h m_imu;
 };
 
@@ -61,7 +62,7 @@ int8_t core_1_imu_init(Core1Imu_h* const restrict self,
   IMU_LOG_VAR(&p_self->imu_data[ACC_X], "imu acc x",-1);
   IMU_LOG_VAR(&p_self->imu_data[ACC_Y], "imu acc y",-2);
   IMU_LOG_VAR(&p_self->imu_data[ACC_Z], "imu acc z",-3);
-  IMU_LOG_VAR(&p_self->imu_data[SPEED], "imu speed",-4);
+  IMU_LOG_VAR(&p_self->speed, "car speed",-4);
 
   return 0;
 }
@@ -74,7 +75,7 @@ int8_t core_1_imu_update(Core1Imu_h* const restrict self)
   p_self->imu_data[ACC_X] = imu_get_acc(&p_self->m_imu, AXES_X);
   p_self->imu_data[ACC_Y] = imu_get_acc(&p_self->m_imu, AXES_Y);
   p_self->imu_data[ACC_Z] = imu_get_acc(&p_self->m_imu, AXES_Z);
-  p_self->imu_data[SPEED] = imu_get_speed(&p_self->m_imu);
+  p_self->speed = car_speed_get();
 
   //TODO: add omegas
 

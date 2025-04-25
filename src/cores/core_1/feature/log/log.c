@@ -1,10 +1,12 @@
 #include "log.h"
 #include "sd/sd.h"
 #include "telemetry/telemetry.h"
+#include "can_log/can_log.h"
 #include <stdint.h>
 #include <string.h>
 
 struct Log_t{
+  CanLog_h m_can;
   LogSd_h sd;
   LogTelemetry_h telemetry;
 };
@@ -19,8 +21,7 @@ char __assert_size_log[(sizeof(Log_h) == sizeof(struct Log_t))? 1:-1];
 char __assert_align_log[(_Alignof(Log_h) == _Alignof(struct Log_t))? 1:-1];
 #endif // DEBUG
 
-  int8_t
-log_init(Log_h* const restrict self )
+int8_t log_init(Log_h* const restrict self )
 {
   union Log_h_t_conv conv = {self};
   struct Log_t* const restrict p_self = conv.clear;
@@ -34,6 +35,11 @@ log_init(Log_h* const restrict self )
   if(log_telemetry_init(&p_self->telemetry)<0)
   {
     return -2;
+  }
+
+  if (can_log_init(&p_self->m_can)<0)
+  {
+    return -3;
   }
 
   return 0;
@@ -56,12 +62,21 @@ int8_t log_add_entry(Log_h* const restrict self,
   return 0;
 }
 
-int8_t
-log_update_and_send(Log_h* const restrict self)
+int8_t log_update_and_send(Log_h* const restrict self)
 {
   union Log_h_t_conv conv = {self};
   struct Log_t* const restrict p_self = conv.clear;
+  int8_t err =0;
 
   //TODO: SD
-  return log_telemetry_send(&p_self->telemetry);
+  if(log_telemetry_send(&p_self->telemetry)<0)
+  {
+    err |= -2;
+  }
+  if(can_log_update(&p_self->m_can)<0)
+  {
+    err |= -3;
+  }
+
+  return err;
 }

@@ -11,6 +11,7 @@
 #include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
 #include "../../../core_utility/as_node/as_node.h"
 #include "../../../core_utility/imu/imu.h"
+#include "../../../core_utility/car_speed/car_speed.h"
 #include "res/res.h"
 #include "ebs/ebs.h"
 #include "./steering_wheel_alg/stw_alg.h"
@@ -180,7 +181,7 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
 //INFO: Flowchart T 14.9.2
 static int8_t _dv_update_status(struct Dv_t* const restrict self)
 {
-  const float current_speed = imu_get_speed(&self->m_imu);
+  const float current_speed = car_speed_get();
   const enum RUNNING_STATUS giei_status = global_running_status_get(&self->o_global_running_status_reader);
 
   if (EmergencyNode_is_emergency_state(&self->emergency_node)) {

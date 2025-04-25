@@ -6,6 +6,7 @@
 #pragma GCC diagnostic pop 
 #include "../../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../core_utility/emergency_module/emergency_module.h"
+#include "../../../../core_utility/car_speed/car_speed.h"
 #include "../../math_saturated/saturated.h"
 #include "../../../../core_1/feature/log/external_log_variables/external_log_variables.h"
 #include <stdint.h>
@@ -68,7 +69,7 @@ struct AMK_Setpoints{
   int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
 };
 
-typedef struct Inverter{ 
+typedef struct Inverter{
   struct{
     struct AMK_Actual_Values_1 amk_values_1;
     struct AMK_Actual_Values_2 amk_values_2;
@@ -89,7 +90,9 @@ typedef struct Inverter{
   struct CanMailbox* mailbox_pcu_rf_signal_send; 
   struct CanMailbox* mailbox_pcu_rf_signal_read; 
   EmergencyNode_h amk_emergency; 
-  uint32_t rf_status; //HACK: for padding with aurix, this is just a bool
+  CarSpeedMut_h m_car_speed;
+  uint8_t rf_status:1;
+  uint32_t padding; //HACK: for padding with aurix, this is just a bool
 }AMKInverter_t;
 
 union AMKConv{
@@ -402,8 +405,7 @@ enum RUNNING_STATUS amk_rtd_procedure(const AMKInverter_t* const restrict self)
   val->AMK_TempMotor = mex.TempMotor;\
 }
 
-int8_t
-amk_update(AMKInverter_t* const restrict self)
+int8_t amk_update(AMKInverter_t* const restrict self)
 {
   CanMessage mex = {0};
   can_obj_can1_h_t o1 ={0};
@@ -446,6 +448,18 @@ amk_update(AMKInverter_t* const restrict self)
       default:
         err--;
         break;
+    }
+
+    const float engines_rpm[] = 
+    {
+      self->engines[FRONT_LEFT].AMK_TargetVelocity,
+      self->engines[FRONT_RIGHT].AMK_TargetVelocity,
+      self->engines[REAR_LEFT].AMK_TargetVelocity,
+      self->engines[REAR_RIGHT].AMK_TargetVelocity,
+    };
+    if(car_speed_mut_update(&self->m_car_speed, engines_rpm)<0)
+    {
+      err--;
     }
   }
 
@@ -532,25 +546,30 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
     return -2;
   }
 
-  if (hardware_init_read_permission_gpio(&p_self->gpio_precharge_init, GPIO_AIR_PRECHARGE_INIT)<0)
- 
+  if (car_speed_mut_init(&p_self->m_car_speed)<0)
   {
     return -3;
   }
 
-  if (hardware_init_read_permission_gpio(&p_self->gpio_precharge_done, GPIO_AIR_PRECHARGE_DONE)<0)
+  if (hardware_init_read_permission_gpio(&p_self->gpio_precharge_init, GPIO_AIR_PRECHARGE_INIT)<0)
+ 
   {
     return -4;
+  }
+
+  if (hardware_init_read_permission_gpio(&p_self->gpio_precharge_done, GPIO_AIR_PRECHARGE_DONE)<0)
+  {
+    return -5;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->gpio_rtd_button, GPIO_RTD_BUTTON)<0)
   {
-    return -4;
+    return -6;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->gpio_ts_button, GPIO_TS_BUTTON)<0)
   {
-    return -5;
+    return -7;
   }
 
   /*
@@ -569,7 +588,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
     hardware_get_mailbox(p_self->can_inverter, FIFO_BUFFER, 0x280, 0xFFF0, 8);
   if (!p_self->engine_mailbox)
   {
-    return -6;
+    return -8;
   }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
@@ -590,7 +609,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
 
   if (!p_self->mailbox_pcu_rf_signal_send)
   {
-    return -7;
+    return -9;
   }
 
   int8_t err=0;
@@ -598,7 +617,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
   {
     if((err =_share_var_engine(p_self, engine))<0)
     {
-      return err;
+      return -9 + err;
     }
   }
 

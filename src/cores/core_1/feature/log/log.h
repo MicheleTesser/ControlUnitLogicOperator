@@ -21,8 +21,8 @@ enum LOG_MODE{
   LOG_TELEMETRY = (1<<1),
 };
 
-typedef struct __attribute__((aligned(4))) Log_h{
-  const uint8_t private_data[20];
+typedef struct __attribute__((aligned(4))){
+  const uint8_t private_data[40];
 }Log_h;
 
 int8_t

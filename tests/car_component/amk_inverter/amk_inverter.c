@@ -88,9 +88,11 @@ const char __assert_size_amk_inverter[(sizeof(EmulationAmkInverter_h)==sizeof(st
 const char __assert_align_amk_inverter[(_Alignof(EmulationAmkInverter_h)==_Alignof(struct EmulationAmkInverter_t))?1:-1]; 
 #endif /* ifdef DEBUG */
 
-#define POPULATE_MEX_ENGINE(self, mex, engine)\
+#define POPULATE_MEX_ENGINE_1(self, mex, engine)\
 {\
   struct AMK_Actual_Values_1* s_w = &self->o_engines[engine].amk_data_1;\
+  \
+  mex.ActualVelocity = s_w->AMK_ActualVelocity;\
   \
   mex.SystemReady = s_w->AMK_STATUS.AMK_bSystemReady;\
   mex.HVOn = s_w->AMK_STATUS.AMK_bDcOn;\
@@ -115,16 +117,16 @@ static void _send_data_engine(struct EmulationAmkInverter_t* const restrict p_se
   switch (can_id)
   {
     case CAN_ID_INVERTERFL1:
-      POPULATE_MEX_ENGINE(p_self, o.can_0x283_InverterFL1, FRONT_LEFT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x283_InverterFL1, FRONT_LEFT);
       break;
     case CAN_ID_INVERTERFR1:
-      POPULATE_MEX_ENGINE(p_self, o.can_0x284_InverterFR1, FRONT_RIGHT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x284_InverterFR1, FRONT_RIGHT);
       break;
     case CAN_ID_INVERTERRR1:
-      POPULATE_MEX_ENGINE(p_self, o.can_0x288_InverterRR1, REAR_RIGHT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x288_InverterRR1, REAR_RIGHT);
       break;
     case CAN_ID_INVERTERRL1:
-      POPULATE_MEX_ENGINE(p_self, o.can_0x287_InverterRL1, REAR_LEFT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x287_InverterRL1, REAR_LEFT);
       break;
     default:
       return;
@@ -382,9 +384,10 @@ int8_t car_amk_inverter_set_engine_value(EmulationAmkInverter_h* self,
     case ERROR_INFO:
       p_engine->amk_data_2.AMK_ErrorInfo = value;
       break;
-    default:
-      return -1;
-  }
+      p_engine->amk_data_1.AMK_ActualVelocity = value;
+    case ENGINES_RPM:
+      break;
+    }
 
   return 0;
 }

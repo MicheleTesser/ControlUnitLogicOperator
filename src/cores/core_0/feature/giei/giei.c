@@ -211,7 +211,6 @@ int8_t GIEI_compute_power(Giei_h* const restrict self)
     const union Giei_conv conv = {self};
     struct Giei_t* const restrict p_self = conv.clear;
 
-    const float throttle = giei_driver_input_get(p_self->driver_input, THROTTLE);
     const float regen = giei_driver_input_get(p_self->driver_input, BRAKE);
     const float limit_power = driving_map_get_parameter(p_self->driving_maps, POWER_KW);
     const float driver_throttle = giei_driver_input_get(p_self->driver_input, THROTTLE);
@@ -261,12 +260,12 @@ int8_t GIEI_compute_power(Giei_h* const restrict self)
     }
     else
     {
-        update_torque_NM_vectors_no_tv(p_self,throttle, TorquesNM.pos, actual_max_pos_torque);
+        update_torque_NM_vectors_no_tv(p_self,driver_throttle, TorquesNM.pos, actual_max_pos_torque);
     }
 
     hv_computeBatteryPackTension(&p_self->hv, p_self->engines_voltages, __NUM_OF_ENGINES__);
 
-    if (throttle > 0 && regen >= 0)
+    if (driver_throttle> 0 && regen >= 0)
     {
         const float total_power = hv_get_info(&p_self->hv, HV_TOTAL_POWER);
         powerControl(total_power, limit_power, TorquesNM.pos);
