@@ -24,7 +24,7 @@ typedef  uint8_t BoardComponentId;
 
 struct CanNode{
   const char* can_interface;
-  atomic_flag taken;
+  atomic_bool taken;
   uint8_t init_done:1;
 };
 
@@ -119,7 +119,7 @@ int8_t hardware_init_can(const enum CAN_MODULES mod,
     const enum CAN_FREQUENCY baud_rate __attribute__((__unused__)))
 {
   const char* can_interface=NULL;
-  if (mod == __NUM_OF_CAN_MODULES__)
+  if (mod >= __NUM_OF_CAN_MODULES__)
   {
     return -1;
   }
@@ -128,7 +128,7 @@ int8_t hardware_init_can(const enum CAN_MODULES mod,
     return -2;
   }
 
-  while(atomic_flag_test_and_set(&BOARD_CAN_NODES.nodes[mod].taken));
+  while(!atomic_exchange(&BOARD_CAN_NODES.nodes[mod].taken,1));
   switch (mod) {
     case 0:
       can_interface = CAN_INTERFACE_0;
@@ -140,22 +140,26 @@ int8_t hardware_init_can(const enum CAN_MODULES mod,
       can_interface = CAN_INTERFACE_2;
       break;
     default:
-      atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
+      atomic_exchange(&BOARD_CAN_NODES.nodes[mod].taken,0);
       return -3;
   }
   BOARD_CAN_NODES.nodes[mod].can_interface = can_interface;
   BOARD_CAN_NODES.nodes[mod].init_done =1;
 
-  atomic_flag_clear(&BOARD_CAN_NODES.nodes[mod].taken);
+  atomic_exchange(&BOARD_CAN_NODES.nodes[mod].taken,0);
   return 0;
 }
 
 struct CanNode* hardware_init_can_get_ref_node(const enum CAN_MODULES mod)
 {
   struct CanNode* node =  &BOARD_CAN_NODES.nodes[mod];
-  while(atomic_flag_test_and_set(&node->taken));
-  if (!node->init_done) {
-    atomic_flag_clear(&node->taken);
+  if(atomic_exchange(&node->taken, 1))
+  {
+    return NULL;
+  }
+  if (!node->init_done)
+  {
+    atomic_store(&node->taken,0);
     return NULL;
   }
   return node;
@@ -163,7 +167,7 @@ struct CanNode* hardware_init_can_get_ref_node(const enum CAN_MODULES mod)
 
 void hardware_init_can_destroy_ref_node(struct CanNode** restrict self)
 {
-  atomic_flag_clear(&(*self)->taken);
+  atomic_store(&(*self)->taken,0);
   self=NULL;
 }
 

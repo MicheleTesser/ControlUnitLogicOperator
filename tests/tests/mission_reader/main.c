@@ -24,6 +24,7 @@ typedef struct TestInput{
   CarMissionReader_h* mission_reader;
   SteeringWheel_h* stw;
   MissionLocker_h* locker;
+  ExternalBoards_t* external_boards;
 
 }TestInput;
 
@@ -65,8 +66,10 @@ static void _test_status_mission(TestInput* input,
 
 void test_mission(TestInput* input)
 {
-  printf("testing update of all missions witout lock\n");
-  for (int i=0; i<__NUM_OF_CAR_MISSIONS__; i++) {
+  pcu_start_embedded(&input->external_boards->pcu);
+  printf("testing update of all missions without lock\n");
+  for (enum CAR_MISSIONS i=0; i<__NUM_OF_CAR_MISSIONS__; i++)
+  {
     _test_status_mission(input, i, i);
   }
 
@@ -75,14 +78,16 @@ void test_mission(TestInput* input)
   lock_mission(input->locker);
 
   printf("testing update of mission with lock\n");
-  for (int i=0; i<__NUM_OF_CAR_MISSIONS__; i++) {
+  for (enum CAR_MISSIONS i=0; i<__NUM_OF_CAR_MISSIONS__; i++)
+  {
     _test_status_mission(input, CAR_MISSIONS_NONE, i);
   }
 
   unlock_mission(input->locker);
 
   printf("testing update of mission after unlock\n");
-  for (int i=0; i<__NUM_OF_CAR_MISSIONS__; i++) {
+  for (enum CAR_MISSIONS i=0; i<__NUM_OF_CAR_MISSIONS__; i++)
+  {
     _test_status_mission(input, i, i);
   }
 
@@ -104,6 +109,7 @@ int main(void)
   TestInput t_input = {
     .mission_reader = &mission_reader,
     .locker = &mission_locker,
+    .external_boards = &external_boards,
     .stw = &external_boards.steering_wheel,
   };
 

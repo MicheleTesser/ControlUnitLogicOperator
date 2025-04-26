@@ -13,9 +13,18 @@ void main_2(void)
 
     serial_write_str("start init core 2");
 
-    while (hardware_init_can(CAN_DV, _500_KBYTE_S_)<0);
-    while (core_alive_blink_init(&alive_blink, GPIO_CORE_2_ALIVE_BLINK, 1 SECONDS) <0);
-    while (core_2_feature_init(&feature)<0);
+    while (hardware_init_can(CAN_DV, _500_KBYTE_S_)<0)
+    {
+      serial_write_str("init can node dv");
+    }
+    while (core_alive_blink_init(&alive_blink, GPIO_CORE_2_ALIVE_BLINK, 1 SECONDS) <0)
+    {
+      serial_write_str("alive blink init core 2");
+    }
+    while (core_2_feature_init(&feature)<0)
+    {
+      serial_write_str("core 2 feature");
+    }
 
     serial_write_str("core 2 wait sync cores");
     //cores sync

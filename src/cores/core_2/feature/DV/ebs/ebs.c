@@ -139,9 +139,10 @@ int8_t ebs_update(DvEbs_h* const restrict self)
     p_self->sanity_check_right = o2.can_0x03c_EbsStatus.sanity_right_sensor;
 
     p_self->system_check = o2.can_0x03c_EbsStatus.system_check;
-    p_self->last_update = timer_time_now();
     p_self->ebs_working_properly =1;
     p_self->asb_consistency_check = o2.can_0x03c_EbsStatus.ASB_check;
+
+    p_self->last_update = timer_time_now();
   }
 
   if ((timer_time_now() - p_self->last_update) > 500 MILLIS)
