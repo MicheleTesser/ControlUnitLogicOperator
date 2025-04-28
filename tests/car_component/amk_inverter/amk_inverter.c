@@ -278,7 +278,9 @@ int8_t car_amk_inverter_start(EmulationAmkInverter_h* self)
   p_self->p_recv_mailbox_vcu =
     hardware_get_mailbox(p_self->p_can_node_inverter, FIFO_BUFFER, filter_id, filter_mask , 8);
 
-  if (!p_self->p_recv_mailbox_vcu) {
+  if (!p_self->p_recv_mailbox_vcu)
+  {
+    hardware_init_new_external_node_destroy(p_self->p_can_node_inverter);
     return -2;
   }
 
@@ -409,8 +411,8 @@ void car_amk_inverter_stop(EmulationAmkInverter_h* self)
   printf("stopping amk inverter\n");
   p_self->o_running=0;
   printf("destroying can_node_inverter\n");
-  hardware_init_new_external_node_destroy(p_self->p_can_node_inverter);
   hardware_free_mailbox_can(&p_self->p_recv_mailbox_vcu);
+  hardware_init_new_external_node_destroy(p_self->p_can_node_inverter);
   printf("destroying mailbox vcu\n");
 
   return;

@@ -56,6 +56,7 @@ int main(void)
   PASSED("core 2 alive gpio switched 2");
 
 end:
+  hardware_can_node_debug_print_status();
   print_SCORE();
   return err;
 }

@@ -60,5 +60,7 @@ int main(void)
 
 end:
   print_SCORE();
+  
+  hardware_can_node_debug_print_status();
   return err;
 }

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[32];
+  const uint8_t private_data[40];
 }EmbeddedSystem_h;
 
 //INFO: copied from src/cores/core_2/feature/DV/dv.c

@@ -21,6 +21,7 @@ struct SteeringWheel_t{
   enum CAR_MISSIONS o_current_mission;
   struct CanMailbox* p_mailbox_send_mission;
   struct CanMailbox* p_mailbox_send_maps;
+  struct CanNode* temp_can_node;
 };
 
 union SteeringWheel_h_t_conv{
@@ -74,32 +75,36 @@ int8_t steering_wheel_start(SteeringWheel_h* const restrict self)
 {
   union SteeringWheel_h_t_conv conv = {self};
   struct SteeringWheel_t* const p_self = conv.clear;
-  struct CanNode* temp_can_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
 
-  ACTION_ON_CAN_NODE_EXTERNAL(CAN_GENERAL, temp_can_node)
-  {
-      p_self->p_mailbox_send_mission = 
-        hardware_get_mailbox_single_mex(
-            temp_can_node,
-            SEND_MAILBOX,
-            CAN_ID_CARMISSION,
-            message_dlc_can2(CAN_ID_CARMISSION));
-      p_self->p_mailbox_send_maps =
-        hardware_get_mailbox_single_mex(
-            temp_can_node,
-            SEND_MAILBOX,
-            CAN_ID_MAP,
-            message_dlc_can2(CAN_ID_MAP));
-  }
+  p_self->temp_can_node = hardware_init_new_external_node(CAN_GENERAL);
+
+  p_self->p_mailbox_send_mission = 
+    hardware_get_mailbox_single_mex(
+        p_self->temp_can_node,
+        SEND_MAILBOX,
+        CAN_ID_CARMISSION,
+        message_dlc_can2(CAN_ID_CARMISSION));
+
   if (!p_self->p_mailbox_send_mission)
   {
+    hardware_init_new_external_node_destroy(p_self->temp_can_node);
     return -1;
   }
 
+  p_self->p_mailbox_send_maps =
+    hardware_get_mailbox_single_mex(
+        p_self->temp_can_node,
+        SEND_MAILBOX,
+        CAN_ID_MAP,
+        message_dlc_can2(CAN_ID_MAP));
+
+
   if (!p_self->p_mailbox_send_maps)
   {
+    hardware_free_mailbox_can(&p_self->p_mailbox_send_mission);
+    hardware_init_new_external_node_destroy(p_self->temp_can_node);
     return -2;
   }
 
@@ -157,6 +162,10 @@ int8_t steering_wheel_stop(SteeringWheel_h* const restrict self)
   printf("stopping SteeringWheel\n");
   p_self->u8_running=0;
   thrd_join(p_self->o_thread, NULL);
+  hardware_free_mailbox_can(&p_self->p_mailbox_send_maps);
+  hardware_free_mailbox_can(&p_self->p_mailbox_send_mission);
+  hardware_init_new_external_node_destroy(p_self->temp_can_node);
+
 
   return 0;
 }

@@ -29,6 +29,7 @@ enum CoolingDeviceType
 struct Pcu_t{
   struct CanMailbox* recv_can_node_pcu_inv;
   struct CanMailbox* send_can_node_pcu_inv;
+  struct CanNode* can_node;
   Gpio_h inverter_on_gpio;
   thrd_t thread;
   struct CollingDevice{
@@ -121,27 +122,26 @@ int8_t pcu_init(Pcu_h* const restrict self)
     return -1;
   }
 
-  struct CanNode* can_node = hardware_init_new_external_node(CAN_GENERAL);
-  if (!can_node)
+  p_self->can_node = hardware_init_new_external_node(CAN_GENERAL);
+  if (!p_self->can_node)
   {
     return -2;
   }
 
   p_self->recv_can_node_pcu_inv = 
     hardware_get_mailbox_single_mex(
-        can_node,
+        p_self->can_node,
         RECV_MAILBOX,
         CAN_ID_PCU,
         message_dlc_can2(CAN_ID_PCU));
 
   p_self->send_can_node_pcu_inv =
     hardware_get_mailbox_single_mex(
-        can_node,
+        p_self->can_node,
         SEND_MAILBOX,
         CAN_ID_PCURFACK,
         message_dlc_can2(CAN_ID_PCURFACK));
 
-  hardware_init_new_external_node_destroy(can_node);
 
   if (!p_self->recv_can_node_pcu_inv)
   {
@@ -170,6 +170,7 @@ int8_t pcu_stop(Pcu_h* const restrict self)
   thrd_join(p_self->thread, NULL);
   hardware_free_mailbox_can(&p_self->recv_can_node_pcu_inv);
   hardware_free_mailbox_can(&p_self->send_can_node_pcu_inv);
+  hardware_init_new_external_node_destroy(p_self->can_node);
 
   return 0;
 }

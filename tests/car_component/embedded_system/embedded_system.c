@@ -22,6 +22,8 @@ struct EmbeddedSystem_t{
     uint8_t steering_wheel;
   }Input;
   GpioRead_h m_gpio_pcu_embedded;
+  struct CanNode* can_node_general;
+  struct CanNode* can_node_dv;
   struct CanMailbox* p_mailbox_input_vcu;
   struct CanMailbox* p_mailbox_send_mission_status_vcu;
   struct CanMailbox* p_mailbox_send_alive_message;
@@ -83,7 +85,6 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
 {
   union EmbeddedSystem_h_t_conv conv = {self};
   struct EmbeddedSystem_t* const p_self = conv.clear;
-  struct CanNode* can_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
 
@@ -92,51 +93,64 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
     return -1;
   }
 
-  ACTION_ON_CAN_NODE_EXTERNAL(CAN_DV, can_node)
-  {
-    p_self->p_mailbox_input_vcu = 
-      hardware_get_mailbox_single_mex(
-          can_node, 
-          SEND_MAILBOX,
-          CAN_ID_DV_DRIVER,
-          message_dlc_can3(CAN_ID_DV_DRIVER));
-  }
+  p_self->can_node_general = hardware_init_new_external_node(CAN_GENERAL);
 
-  if (!p_self->p_mailbox_input_vcu)
+  if (!p_self->can_node_general)
   {
     return -2;
   }
 
-  ACTION_ON_CAN_NODE_EXTERNAL(CAN_DV, can_node)
+  p_self->can_node_dv = hardware_init_new_external_node(CAN_DV);
+
+  if (!p_self->can_node_dv)
   {
-    p_self->p_mailbox_send_mission_status_vcu =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          SEND_MAILBOX,
-          CAN_ID_DV_MISSION,
-          message_dlc_can3(CAN_ID_DV_MISSION));
+    hardware_init_new_external_node_destroy(p_self->can_node_general);
+    return -4;
   }
+
+  p_self->p_mailbox_input_vcu = 
+    hardware_get_mailbox_single_mex(
+        p_self->can_node_dv, 
+        SEND_MAILBOX,
+        CAN_ID_DV_DRIVER,
+        message_dlc_can3(CAN_ID_DV_DRIVER));
+
+  if (!p_self->p_mailbox_input_vcu)
+  {
+    hardware_init_new_external_node_destroy(p_self->can_node_dv);
+    hardware_init_new_external_node_destroy(p_self->can_node_general);
+    return -3;
+  }
+
+
+  p_self->p_mailbox_send_mission_status_vcu =
+    hardware_get_mailbox_single_mex(
+        p_self->can_node_dv,
+        SEND_MAILBOX,
+        CAN_ID_DV_MISSION,
+        message_dlc_can3(CAN_ID_DV_MISSION));
 
   if (!p_self->p_mailbox_send_mission_status_vcu)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
+    hardware_init_new_external_node_destroy(p_self->can_node_general);
+    hardware_init_new_external_node_destroy(p_self->can_node_dv);
     return -2;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_send_alive_message =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          SEND_MAILBOX,
-          CAN_ID_EMBEDDEDALIVECHECK,
-          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
-  }
+  p_self->p_mailbox_send_alive_message =
+    hardware_get_mailbox_single_mex(
+        p_self->can_node_general,
+        SEND_MAILBOX,
+        CAN_ID_EMBEDDEDALIVECHECK,
+        message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
 
   if (!p_self->p_mailbox_send_alive_message)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_send_mission_status_vcu);
     hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
+    hardware_init_new_external_node_destroy(p_self->can_node_general);
+    hardware_init_new_external_node_destroy(p_self->can_node_dv);
     return -3;
   }
 
@@ -190,5 +204,11 @@ void embedded_system_stop(EmbeddedSystem_h* const restrict self)
   printf("stopping embedded_system\n");
   p_self->running=0;
   thrd_join(p_self->thread, NULL);
+
+  hardware_free_mailbox_can(&p_self->p_mailbox_send_alive_message);
+  hardware_free_mailbox_can(&p_self->p_mailbox_send_mission_status_vcu);
+  hardware_free_mailbox_can(&p_self->p_mailbox_input_vcu);
+  hardware_init_new_external_node_destroy(p_self->can_node_general);
+  hardware_init_new_external_node_destroy(p_self->can_node_dv);
 }
 

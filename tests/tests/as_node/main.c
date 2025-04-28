@@ -138,6 +138,7 @@ int main(void)
   core_thread.run=0;
   thrd_join(core_thread.thread_id, NULL);
 
+  hardware_can_node_debug_print_status();
   stop_external_boards(&external_boards);
   stop_thread_can();
 end:

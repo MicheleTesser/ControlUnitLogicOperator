@@ -97,6 +97,7 @@ void test_ebs_test_activation_of_ebs_dv_driver(TestInput* t_input)
   car_amk_inverter_reset(&t_input->external_boards->amk_inverter);
 
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
+  asb_set_parameter(&t_input->external_boards->asb, CURR_MISSION, CAR_MISSIONS_DV_EBS_TEST);
   while (car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter)!=PRECHARGE_FINISHED)
   {
     car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
@@ -165,6 +166,7 @@ int main(void)
   core_thread.run=0;
   thrd_join(core_thread.thread_id, NULL);
 
+  hardware_can_node_debug_print_status();
   stop_external_boards(&external_boards);
   stop_thread_can();
 end:

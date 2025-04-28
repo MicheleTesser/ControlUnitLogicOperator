@@ -22,11 +22,6 @@ typedef  uint8_t BoardComponentId;
 #define NUM_OF_MAILBOX 1024
 #define FIFO_BUFFER_SIZE 32
 
-struct CanNode{
-  const char* can_interface;
-  atomic_bool taken;
-  uint8_t init_done:1;
-};
 
 struct FifoBuffer{
   CanMessage buffer[FIFO_BUFFER_SIZE];
@@ -37,24 +32,29 @@ struct FifoBuffer{
 };
 
 struct CanMailbox{
+  uint8_t mailbox_index;
   struct FifoBuffer fifo_buffer;
   atomic_flag lock;
+  atomic_bool running;
   thrd_t thread;
   int can_fd;
   int size;
-  uint8_t running:1;
   enum MAILBOX_TYPE type:2;
+};
+
+struct CanNode{
+  const char* can_interface;
+  struct CanMailbox r_mailbox[64];
+  struct CanMailbox w_mailbox[32];
+  struct CanMailbox fifo_mailbox[2];
+  atomic_bool taken;
+  uint8_t init_done:1;
 };
 
 enum MAILBOX_MODE{
   MAILBOX_RECV=0,
   MAILBOX_SEND=1,
 };
-
-static struct{
-  struct CanMailbox pool[NUM_OF_MAILBOX];
-  uint16_t last_assigned;
-}MAILBOX_POOL;
 
 static struct{
   struct CanNode nodes[__NUM_OF_CAN_MODULES__];
@@ -64,7 +64,7 @@ static int _run_recv_mailbox_fifo_buffer(void* args)
 {
   struct CanMailbox* const restrict self = args;
 
-  while (self->running)
+  while (atomic_load(&self->running))
   {
     struct can_frame frame = {0};
 
@@ -95,7 +95,7 @@ static int _run_recv_mailbox_single_mex(void* args)
 {
   struct CanMailbox* const restrict self = args;
 
-  while (self->running)
+  while (atomic_load(&self->running))
   {
     struct can_frame frame = {0};
 
@@ -113,6 +113,44 @@ static int _run_recv_mailbox_single_mex(void* args)
   return 0;
 }
 
+static void _init_mailboxes(struct CanMailbox* const restrict mailbox_array, 
+    const enum MAILBOX_TYPE type, const uint8_t size)
+{
+  for (uint8_t i=0; i<size; i++)
+  {
+    memset(&mailbox_array[i], 0, sizeof(mailbox_array[i]));
+    mailbox_array[i].mailbox_index = i;
+    mailbox_array[i].type = type;
+  }
+}
+
+static void _free_mailboxes(struct CanMailbox* const restrict mailbox_array, const uint8_t size)
+{
+  struct CanMailbox* m = NULL;
+  for (uint8_t i=0; i<size; i++)
+  {
+    m = &mailbox_array[i];
+    if (atomic_load(&m->running))
+    {
+      hardware_free_mailbox_can(&m);
+    }
+  }
+}
+
+struct CanMailbox* _find_free_mailbox(struct CanMailbox* const restrict mailbox_array,
+    const uint8_t size)
+{
+  for (uint8_t i=0; i<size; i++)
+  {
+    if (!atomic_exchange(&mailbox_array[i].running,1))
+    {
+      return &mailbox_array[i];
+    }
+  }
+
+  return NULL;
+}
+
 //public
 
 int8_t hardware_init_can(const enum CAN_MODULES mod,
@@ -123,12 +161,15 @@ int8_t hardware_init_can(const enum CAN_MODULES mod,
   {
     return -1;
   }
-  if(BOARD_CAN_NODES.nodes[mod].init_done)
+
+  struct CanNode* node = &BOARD_CAN_NODES.nodes[mod];
+
+  if(node->init_done)
   {
     return -2;
   }
 
-  while(!atomic_exchange(&BOARD_CAN_NODES.nodes[mod].taken,1));
+  while(!atomic_exchange(&node->taken,1));
   switch (mod) {
     case 0:
       can_interface = CAN_INTERFACE_0;
@@ -140,11 +181,15 @@ int8_t hardware_init_can(const enum CAN_MODULES mod,
       can_interface = CAN_INTERFACE_2;
       break;
     default:
-      atomic_exchange(&BOARD_CAN_NODES.nodes[mod].taken,0);
+      atomic_exchange(&node->taken,0);
       return -3;
   }
-  BOARD_CAN_NODES.nodes[mod].can_interface = can_interface;
-  BOARD_CAN_NODES.nodes[mod].init_done =1;
+  node->can_interface = can_interface;
+  node->init_done =1;
+
+  _init_mailboxes(node->r_mailbox, RECV_MAILBOX, sizeof(node->r_mailbox)/sizeof(node->r_mailbox[0]));
+  _init_mailboxes(node->w_mailbox, SEND_MAILBOX, sizeof(node->w_mailbox)/sizeof(node->w_mailbox[0]));
+  _init_mailboxes(node->fifo_mailbox, FIFO_BUFFER,  sizeof(node->fifo_mailbox)/sizeof(node->fifo_mailbox[0]));
 
   atomic_exchange(&BOARD_CAN_NODES.nodes[mod].taken,0);
   return 0;
@@ -153,16 +198,11 @@ int8_t hardware_init_can(const enum CAN_MODULES mod,
 struct CanNode* hardware_init_can_get_ref_node(const enum CAN_MODULES mod)
 {
   struct CanNode* node =  &BOARD_CAN_NODES.nodes[mod];
-  if(atomic_exchange(&node->taken, 1))
+  if(node->init_done && !atomic_exchange(&node->taken, 1))
   {
-    return NULL;
+    return node;
   }
-  if (!node->init_done)
-  {
-    atomic_store(&node->taken,0);
-    return NULL;
-  }
-  return node;
+  return NULL;
 }
 
 void hardware_init_can_destroy_ref_node(struct CanNode** restrict self)
@@ -206,22 +246,34 @@ struct CanMailbox* hardware_get_mailbox(struct CanNode* const restrict self,
     const enum MAILBOX_TYPE type, const uint16_t filter_id,
     const uint16_t filter_mask, uint16_t mex_size)
 {
-  struct CanMailbox* mailbox;
-  uint16_t maillbox_index = MAILBOX_POOL.last_assigned++;
+  struct CanMailbox* mailbox = NULL;
+  switch (type)
+  {
+    case FIFO_BUFFER:
+      mailbox =
+        _find_free_mailbox(self->fifo_mailbox,sizeof(self->fifo_mailbox)/sizeof(self->fifo_mailbox[0]));
+      break;
+    case RECV_MAILBOX:
+      mailbox = 
+        _find_free_mailbox(self->r_mailbox,sizeof(self->r_mailbox)/sizeof(self->r_mailbox[0]));
+      break;
+    case SEND_MAILBOX:
+      mailbox = 
+        _find_free_mailbox(self->w_mailbox,sizeof(self->w_mailbox)/sizeof(self->w_mailbox[0]));
+      break;
+  }
 
-  if (maillbox_index >= NUM_OF_MAILBOX) {
+  if (!mailbox)
+  {
     return NULL;
   }
 
-  mailbox = &MAILBOX_POOL.pool[maillbox_index];
-
-  memset(mailbox, 0, sizeof(*mailbox));
   mailbox->type = type;
   mailbox->fifo_buffer.filter_id = filter_id;
   mailbox->fifo_buffer.filter_mask = filter_mask;
   mailbox->size=mex_size;
-  mailbox->running=1;
   mailbox->can_fd = can_init_full(self->can_interface, filter_id, filter_mask);
+  atomic_store(&mailbox->running,1);
 
   switch (type)
   {
@@ -233,11 +285,7 @@ struct CanMailbox* hardware_get_mailbox(struct CanNode* const restrict self,
       break;
     case SEND_MAILBOX:
       break;
-    default:
-      MAILBOX_POOL.last_assigned--;
-      return NULL;
   }
-
 
   return  mailbox;
 }
@@ -299,7 +347,18 @@ int8_t hardware_mailbox_send(struct CanMailbox* const restrict self, const uint6
 
 void hardware_free_mailbox_can(struct CanMailbox** restrict self)
 {
-  printf("closing mail: %d\n", (*self) - MAILBOX_POOL.pool);
+  switch ((*self)->type)
+  {
+    case FIFO_BUFFER:
+      printf("closing fifo mailbox: (%p, %d)\n", (void*) *self, (*self)->mailbox_index);
+      break;
+    case RECV_MAILBOX:
+      printf("closing recv mailbox: (%p, %d)\n", (void*) *self, (*self)->mailbox_index);
+      break;
+    case SEND_MAILBOX:
+      printf("closing send mailbox: (%p, %d)\n", (void*) *self, (*self)->mailbox_index);
+      break;
+  }
   shutdown((*self)->can_fd, SHUT_RDWR);
   memset(*self, 0, sizeof(**self));
   (*self)->can_fd=-1;
@@ -308,15 +367,14 @@ void hardware_free_mailbox_can(struct CanMailbox** restrict self)
 
 void stop_thread_can(void)
 {
-
+  struct CanNode* node = NULL;
   printf("stopping can module\n");
-  for (uint16_t i=0; i<NUM_OF_MAILBOX; i++)
+  for (uint16_t i=0; i<sizeof(BOARD_CAN_NODES.nodes)/sizeof(BOARD_CAN_NODES.nodes[0]); i++)
   {
-    struct CanMailbox* mail = &MAILBOX_POOL.pool[i];
-    if (mail->running)
-    {
-      hardware_free_mailbox_can(&mail);
-    }
+    node = &BOARD_CAN_NODES.nodes[i];
+    _free_mailboxes(node->r_mailbox, sizeof(node->r_mailbox)/sizeof(node->r_mailbox[0]));
+    _free_mailboxes(node->w_mailbox, sizeof(node->w_mailbox)/sizeof(node->w_mailbox[0]));
+    _free_mailboxes(node->fifo_mailbox, sizeof(node->fifo_mailbox)/sizeof(node->fifo_mailbox[0]));
   }
 }
 
@@ -327,7 +385,8 @@ struct CanNode* hardware_init_new_external_node(const enum CAN_MODULES mod)
 {
   struct CanNode* node = calloc(1, sizeof(*node));
   const char* can_interface;
-  switch (mod) {
+  switch (mod)
+  {
     case CAN_INVERTER:
       can_interface = CAN_INTERFACE_0;
       break;
@@ -343,6 +402,10 @@ struct CanNode* hardware_init_new_external_node(const enum CAN_MODULES mod)
   node->can_interface = can_interface;
   node->init_done =1;
 
+  _init_mailboxes(node->r_mailbox, RECV_MAILBOX, sizeof(node->r_mailbox)/sizeof(node->r_mailbox[0]));
+  _init_mailboxes(node->w_mailbox, SEND_MAILBOX, sizeof(node->w_mailbox)/sizeof(node->w_mailbox[0]));
+  _init_mailboxes(node->fifo_mailbox, FIFO_BUFFER, sizeof(node->fifo_mailbox)/sizeof(node->fifo_mailbox[0]));
+
   return node;
 }
 
@@ -351,10 +414,50 @@ void hardware_init_new_external_node_destroy(struct CanNode* const restrict self
   free(self);
 }
 
-void hardware_can_debug_print_status(struct CanMailbox* const restrict self)
+void hardware_can_node_debug_print_status(void)
 {
-  printf("mailbox: id: %d\t, mailbox type: %d\t, mailbox running: %d\n",
-      self->can_fd,
-      self->type,
-      self->running);
+
+  struct CanMailbox* m = NULL;
+  struct CanNode* self = NULL;
+
+  for (enum CAN_MODULES i=0; i<__NUM_OF_CAN_MODULES__; i++)
+  {
+    uint8_t num_r_taken =0;
+    uint8_t num_w_taken =0;
+    uint8_t num_fifo_taken =0;
+    self = &BOARD_CAN_NODES.nodes[i];
+    for (uint8_t i=0; i<sizeof(self->r_mailbox)/sizeof(self->r_mailbox[0]); i++)
+    {
+      m = &self->r_mailbox[i];
+      if (atomic_load(&m->running))
+      {
+        num_r_taken++;
+      }
+
+    }
+
+    for (uint8_t i=0; i<sizeof(self->w_mailbox)/sizeof(self->w_mailbox[0]); i++)
+    {
+      m = &self->w_mailbox[i];
+      if (atomic_load(&m->running))
+      {
+        num_w_taken++;
+      }
+
+    }
+
+    for (uint8_t i=0; i<sizeof(self->fifo_mailbox)/sizeof(self->fifo_mailbox[0]); i++)
+    {
+      m = &self->fifo_mailbox[i];
+      if (atomic_load(&m->running))
+      {
+        num_fifo_taken++;
+      }
+
+    }
+    printf("node: %d, case usage  read: %d, can usage write: %d, can usage fifo: %d\n",
+        i, num_r_taken, num_w_taken, num_fifo_taken);
+  }
+
+
 }

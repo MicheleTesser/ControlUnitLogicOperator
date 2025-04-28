@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[44];
+  const uint8_t private_data[48];
 }Asb_h;
 
 enum ASB_CONFIG{
@@ -16,6 +16,8 @@ enum ASB_CONFIG{
 
   SYSTEM_CHECK,
   INTEGRITY_CHECK_STATUS,
+
+  CURR_MISSION,
 
   __NUM_OF_ASB_CONFI__
 };

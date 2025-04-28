@@ -48,7 +48,7 @@ static int test_throttle(TestInput* input){
 
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_THROTTLE, throttle_value);
 
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
   throttle = giei_driver_input_get(input->driver_input, THROTTLE);
 
   if (throttle == throttle_value) {
@@ -61,7 +61,7 @@ static int test_throttle(TestInput* input){
 
   throttle_value = 67;
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_THROTTLE, throttle_value);
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
 
   throttle = giei_driver_input_get(input->driver_input, THROTTLE);
   if (throttle == throttle_value) {
@@ -81,7 +81,7 @@ static int test_brake(TestInput* input){
   float brake =0;
 
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, brk_value);
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
 
   brake = giei_driver_input_get(input->driver_input, BRAKE);
 
@@ -95,7 +95,7 @@ static int test_brake(TestInput* input){
 
   brk_value = 30;
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, brk_value);
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
   brake = giei_driver_input_get(input->driver_input, BRAKE);
 
   if (brake == brk_value) {
@@ -116,7 +116,7 @@ static int test_steering_wheel(TestInput* input)
   float stw =0;
 
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_STEERING_ANGLE, steering_value);
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
 
   stw = giei_driver_input_get(input->driver_input, STEERING_ANGLE);
 
@@ -130,7 +130,7 @@ static int test_steering_wheel(TestInput* input)
 
   steering_value = 88;
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_STEERING_ANGLE, steering_value);
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
   stw = giei_driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
@@ -155,7 +155,7 @@ static int test_throttle_dv(TestInput* input)
       DV_INPUT_THROTTLE,
       throttle_value);
 
-  wait_milliseconds(200 MILLIS);
+  wait_milliseconds(50 MILLIS);
   throttle = giei_driver_input_get(input->driver_input, THROTTLE);
 
   if (throttle == throttle_value) {
@@ -252,7 +252,7 @@ static int test_steering_wheel_dv(TestInput* input){
       DV_INPUT_STEERING_ANGLE,
       steering_value);
 
-  wait_milliseconds(50 MILLIS);
+  wait_milliseconds(200 MILLIS);
   stw = giei_driver_input_get(input->driver_input, STEERING_ANGLE);
 
   if (stw == steering_value) {
@@ -300,14 +300,14 @@ int main(void)
   thrd_create(&driver, driver_loop, &input);
 
   steering_wheel_select_mission(&external_boards.steering_wheel, CAR_MISSIONS_HUMAN);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(50 MILLIS);
   test_throttle(&t_input);
   test_brake(&t_input);
   test_steering_wheel(&t_input);
 
   pcu_start_embedded(&external_boards.pcu);
   steering_wheel_select_mission(&external_boards.steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(50 MILLIS);
   test_throttle_dv(&t_input);
   test_brake_dv(&t_input);
   test_steering_wheel_dv(&t_input);
@@ -318,6 +318,7 @@ int main(void)
   input.run=0;
   thrd_join(driver,NULL);
 
+  hardware_can_node_debug_print_status();
   stop_external_boards(&external_boards);
   stop_thread_can();
 

@@ -221,6 +221,7 @@ int main(void)
   input.run=0;
   thrd_join(core,NULL);
 
+  hardware_can_node_debug_print_status();
   stop_external_boards(&external_boards);
   stop_thread_can();
 

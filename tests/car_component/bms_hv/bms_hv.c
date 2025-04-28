@@ -24,6 +24,7 @@ struct BmsHv_t{
   uint8_t soc;
   uint8_t fan_speed;
   uint8_t running:1;
+  struct CanNode* new_temp_node;
   struct CanMailbox* mailbox_send_temps;
   struct CanMailbox* mailbox_send_volts;
 };
@@ -83,31 +84,28 @@ int8_t bms_hv_start(BmsHv_h* const restrict self)
 {
   union BmsHv_h_t_conv conv = {self};
   struct BmsHv_t* const p_self = conv.clear;
-  struct CanNode* new_temp_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
 
-  new_temp_node = hardware_init_new_external_node(CAN_GENERAL);
-  if (!new_temp_node)
+  p_self->new_temp_node = hardware_init_new_external_node(CAN_GENERAL);
+  if (!p_self->new_temp_node)
   {
     return -1;
   }
 
   p_self->mailbox_send_volts=
     hardware_get_mailbox_single_mex(
-        new_temp_node,
+        p_self->new_temp_node,
         SEND_MAILBOX,
         CAN_ID_BMSHV1,
         message_dlc_can2(CAN_ID_BMSHV1));
 
   p_self->mailbox_send_temps=
     hardware_get_mailbox_single_mex(
-        new_temp_node,
+        p_self->new_temp_node,
         SEND_MAILBOX,
         CAN_ID_BMSHV2,
         message_dlc_can2(CAN_ID_BMSHV2));
-
-  hardware_init_new_external_node_destroy(new_temp_node);
 
   thrd_create(&p_self->thread, _start_bms_hv, p_self);
   return 0;
@@ -162,6 +160,7 @@ int8_t bms_hv_stop(BmsHv_h* const restrict self)
 
   hardware_free_mailbox_can(&p_self->mailbox_send_volts);
   hardware_free_mailbox_can(&p_self->mailbox_send_temps);
+  hardware_init_new_external_node_destroy(p_self->new_temp_node);
 
   return 0;
 }

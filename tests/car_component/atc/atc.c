@@ -13,6 +13,7 @@ struct Atc_t{
   float brake;
   float steering_angle;
   struct CanMailbox* send_vcu_mailbox;
+  struct CanNode* node;
   thrd_t thread;
   uint8_t run:1;
 };
@@ -24,7 +25,7 @@ union Atc_h_t_conv{
 
 #ifdef DEBUG
 char __assert_size_atc[(sizeof(Atc_h)==sizeof(struct Atc_t))?1:-1];
-char __assert_align_atc[(sizeof(Atc_h)==sizeof(struct Atc_t))?1:-1];
+char __assert_align_atc[(_Alignof(Atc_h)==_Alignof(struct Atc_t))?1:-1];
 #endif /* ifdef DEBUG */
 
 static int
@@ -58,16 +59,16 @@ atc_start(Atc_h* const restrict self)
   union Atc_h_t_conv conv = {self};
   struct Atc_t* const restrict p_self = conv.clear;
 
-  struct CanNode* node = hardware_init_new_external_node(CAN_GENERAL);
+  p_self->node = hardware_init_new_external_node(CAN_GENERAL);
 
-  if (!node)
+  if (!p_self->node)
   {
     return -1;
   }
 
   p_self->send_vcu_mailbox =
     hardware_get_mailbox_single_mex(
-        node,
+        p_self->node,
         SEND_MAILBOX,
         CAN_ID_DRIVER,
         message_dlc_can2(CAN_ID_DRIVER));
@@ -76,7 +77,6 @@ atc_start(Atc_h* const restrict self)
   {
     return -2;
   }
-  hardware_init_new_external_node_destroy(node);
 
   p_self->run=1;
   thrd_create(&p_self->thread, _atc_start, p_self);
@@ -117,5 +117,7 @@ atc_stop(Atc_h* const restrict self)
   p_self->run=0;
   thrd_join(p_self->thread, NULL);
   hardware_free_mailbox_can(&p_self->send_vcu_mailbox);
+  hardware_init_new_external_node_destroy(p_self->node);
+
   return 0;
 }

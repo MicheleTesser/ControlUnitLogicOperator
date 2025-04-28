@@ -5,7 +5,7 @@
 #include "../src/cores/core_utility/mission_reader/mission_reader.h"
 
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[20];
+  const uint8_t private_data[24];
 }SteeringWheel_h;
 
 //INFO: copied from src/cores/core_0/feature/maps/maps.c

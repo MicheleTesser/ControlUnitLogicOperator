@@ -50,6 +50,8 @@ static void _test_status_mission(TestInput* input,
 {
   steering_wheel_select_mission(input->stw, given);
   wait_milliseconds(200 MILLIS);
+  steering_wheel_select_mission(input->stw, given);
+  wait_milliseconds(200 MILLIS);
   uint8_t m = car_mission_reader_get_current_mission(input->mission_reader);
   if (m==expected)
   {
@@ -133,6 +135,7 @@ int main(void)
   core_thread.run=0;
   thrd_join(core_thread.thread_id, NULL);
 
+  hardware_can_node_debug_print_status();
   stop_external_boards(&external_boards);
   stop_thread_can();
 end:
