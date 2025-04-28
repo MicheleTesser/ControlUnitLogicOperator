@@ -62,6 +62,10 @@ int8_t core_1_imu_init(Core1Imu_h* const restrict self,
   IMU_LOG_VAR(&p_self->imu_data[ACC_X], "imu acc x",-1);
   IMU_LOG_VAR(&p_self->imu_data[ACC_Y], "imu acc y",-2);
   IMU_LOG_VAR(&p_self->imu_data[ACC_Z], "imu acc z",-3);
+  IMU_LOG_VAR(&p_self->imu_data[OMEGA_X], "imu omega x",-4);
+  IMU_LOG_VAR(&p_self->imu_data[OMEGA_Y], "imu omega y",-5);
+  IMU_LOG_VAR(&p_self->imu_data[OMEGA_Z], "imu omega z",-6);
+
   IMU_LOG_VAR(&p_self->speed, "car speed",-4);
 
   return 0;
@@ -75,9 +79,10 @@ int8_t core_1_imu_update(Core1Imu_h* const restrict self)
   p_self->imu_data[ACC_X] = imu_get_acc(&p_self->m_imu, AXES_X);
   p_self->imu_data[ACC_Y] = imu_get_acc(&p_self->m_imu, AXES_Y);
   p_self->imu_data[ACC_Z] = imu_get_acc(&p_self->m_imu, AXES_Z);
+  p_self->imu_data[OMEGA_X] = imu_get_omega(&p_self->m_imu, AXES_X);
+  p_self->imu_data[OMEGA_Y] = imu_get_omega(&p_self->m_imu, AXES_Y);
+  p_self->imu_data[OMEGA_Z] = imu_get_omega(&p_self->m_imu, AXES_Z);
   p_self->speed = car_speed_get();
-
-  //TODO: add omegas
 
   return 0;
 }

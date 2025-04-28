@@ -7,7 +7,7 @@
 #include "../log/log.h"
 
 typedef struct __attribute__((aligned(4))) Core1Imu_h{
-  const uint8_t private_data[44];
+  const uint8_t private_data[64];
 }Core1Imu_h;
 
 int8_t
