@@ -103,9 +103,9 @@ int8_t can_log_update(CanLog_h* const restrict self)
 
   //HACK: look amk.c AMK_Actual_Values_1 to check if the position checked with the shift are right
   o2.can_0x065_CarStatus.HV= 
-    (*p_self->p_log_var_amk_status_fr & (1<<12))&& 
-    (*p_self->p_log_var_amk_status_fl & (1<<12))&&
-    (*p_self->p_log_var_amk_status_rr & (1<<12))&&
+    (*p_self->p_log_var_amk_status_fr & (1<<12))||
+    (*p_self->p_log_var_amk_status_fl & (1<<12))||
+    (*p_self->p_log_var_amk_status_rr & (1<<12))||
     (*p_self->p_log_var_amk_status_rl & (1<<12));
 
   o2.can_0x065_CarStatus.AIR1= gpio_read_state(&p_self->m_start_precharge_gpio);
