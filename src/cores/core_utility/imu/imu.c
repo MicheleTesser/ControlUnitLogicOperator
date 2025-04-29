@@ -6,8 +6,6 @@
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include <string.h>
 
-//TODO: imu can messages not yet defined
-
 struct Imu_t{
     float acc[__NUM_OF_AXIS__];
     float omega[__NUM_OF_AXIS__];

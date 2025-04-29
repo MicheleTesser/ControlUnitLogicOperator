@@ -96,7 +96,8 @@ float hv_get_info(const Hv_h* const restrict self, const enum GIEI_HV_INFO info)
   union GieiHv_const_conv conv = {self};
   const struct GieiHv_t* const p_self = conv.clear;
 
-  if (info!=__NUM_OF_GIEI_HV_INFO__) {
+  if (info!=__NUM_OF_GIEI_HV_INFO__)
+  {
     return p_self->hv_public_data[info];
   }
   return -1;

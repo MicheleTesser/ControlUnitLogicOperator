@@ -74,6 +74,7 @@ struct Dv_t{
 
 enum DV_EMERGENCY{
   EMERENGENCY_DV_EMERGENCY =0,
+  EMERGENCY_DV_EMBEDDED_OFF,
 
   __NUM_OF_DV_EMERGENCIES__
 };
@@ -90,7 +91,7 @@ char __assert_align_dv[(_Alignof(Dv_h) == _Alignof(struct Dv_t))? 1:-1];
 
 //INFO: check dbc of can3 in message DV_system_status
 
-static uint8_t _sdc_closed(const struct Dv_t* const restrict self)
+static inline uint8_t _sdc_closed(const struct Dv_t* const restrict self)
 {
   return  gpio_read_state(&self->gpio_air_precharge_init) &&
     gpio_read_state(&self->gpio_air_precharge_done) &&
@@ -184,7 +185,8 @@ static int8_t _dv_update_status(struct Dv_t* const restrict self)
   const float current_speed = car_speed_get();
   const enum RUNNING_STATUS giei_status = global_running_status_get(&self->o_global_running_status_reader);
 
-  if (EmergencyNode_is_emergency_state(&self->emergency_node)) {
+  if (EmergencyNode_is_emergency_state(&self->emergency_node))
+  {
     return 0;
   }
 
@@ -372,13 +374,9 @@ int8_t dv_update(Dv_h* const restrict self)
   if (hardware_mailbox_read(p_self->p_mailbox_recv_embedded_alive, &mex))
   {
     p_self->m_embeed_last_alive = timer_time_now(); 
+    EmergencyNode_solve(&p_self->emergency_node, EMERGENCY_DV_EMBEDDED_OFF);
   }
 
-  if ((timer_time_now() - p_self->m_embeed_last_alive) > 500 MILLIS)
-  {
-    p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
-    p_self->status = AS_OFF;
-  }
 
 
 
@@ -396,6 +394,13 @@ int8_t dv_update(Dv_h* const restrict self)
     case CAR_MISSIONS_DV_TRACKDRIVE:
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
+      if ((timer_time_now() - p_self->m_embeed_last_alive) > 500 MILLIS)
+      {
+        p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
+        p_self->status = AS_OFF;
+        EmergencyNode_raise(&p_self->emergency_node, EMERGENCY_DV_EMBEDDED_OFF);
+      }
+
       if (hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
       {
         unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
@@ -428,33 +433,3 @@ int8_t dv_update(Dv_h* const restrict self)
 
   return 0;
 }
-
-#ifdef DEBUG
-
-enum DV_CAR_STATUS debug_dv_get_car_status(Dv_h* const restrict self)
-{
-  union Dv_h_t_conv conv = {self};
-  struct Dv_t* const p_self = conv.clear;
-  return p_self->dv_car_status;
-}
-
-enum AS_STATUS debug_dv_get_as_status(Dv_h* const restrict self)
-{
-  union Dv_h_t_conv conv = {self};
-  struct Dv_t* const p_self = conv.clear;
-  return p_self->status;
-}
-#else
-
-enum DV_CAR_STATUS debug_dv_get_car_status(Dv_h* const restrict self __attribute__(( __unused__)))
-{
-  while (1) {}
-}
-
-enum AS_STATUS debug_dv_get_as_status(Dv_h* const restrict self __attribute__(( __unused__)))
-{
-  while (1) {}
-}
-
-#endif /* ifdef DEBUG */
-
