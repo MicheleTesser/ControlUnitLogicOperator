@@ -10,10 +10,8 @@ typedef struct __attribute__((aligned(4))){
 //INFO: copied from can2.dbc message 104 response_status
 enum ASB_INTEGRITY_CHECK_RESULT
 {
-  EBS_SUCCESS=0,
-  EBS_FAILURE,
-  EBS_ERROR,
-  EBS_NOT_YET_DONE, //added in here only
+  EBS_NO=0,
+  EBS_OK,
 
   __NUM_OF_ASB_INTEGRITY_CHECK_RESULT__
 };

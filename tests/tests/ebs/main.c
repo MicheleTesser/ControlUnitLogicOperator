@@ -78,14 +78,14 @@ void test_ebs_test_activation_of_ebs_human_driver(TestInput* t_input)
 
   _check_status(!ebs_on(t_input->ebs), "precharge done and ebs is currently off");
   _check_status(
-      ebs_asb_consistency_check(t_input->ebs) == EBS_NOT_YET_DONE,
+      ebs_asb_consistency_check(t_input->ebs) == EBS_NO,
       "started consistency check of ebs");
 
   wait_milliseconds(1 SECONDS);
 
   enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
-  _check_status(consistency == EBS_NOT_YET_DONE,"ebs consistency still not done");
-  printf("expected: %d, given %d\n", EBS_NOT_YET_DONE , consistency);
+  _check_status(consistency == EBS_NO,"ebs consistency still not done");
+  printf("expected: %d, given %d\n", EBS_NO, consistency);
   gpio_set_high(t_input->ts_button);
 }
 
@@ -105,17 +105,22 @@ void test_ebs_test_activation_of_ebs_dv_driver(TestInput* t_input)
   }
 
   asb_set_parameter(&t_input->external_boards->asb, INTEGRITY_CHECK_STATUS, 1);
+  wait_milliseconds(500 MILLIS);
 
   _check_status(ebs_on(t_input->ebs), "precharge done and ebs is currently on");
   _check_status(
-      ebs_asb_consistency_check(t_input->ebs) == EBS_NOT_YET_DONE,
+      ebs_asb_consistency_check(t_input->ebs) == EBS_NO,
       "started consistency check of ebs");
 
-  wait_milliseconds(1 SECONDS);
+  wait_milliseconds(3 SECONDS);
 
   enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
-  _check_status(consistency == EBS_SUCCESS,"ebs consistency done with success");
-  printf("expected: %d, given %d\n", EBS_SUCCESS, consistency);
+  _check_status(consistency == EBS_OK,"ebs consistency done with success");
+  printf("expected: %d, given %d\n", EBS_OK, consistency);
+
+  EbsPhaes_t current_asb_phase = asb_current_phase(&t_input->external_boards->asb);
+  _check_status(current_asb_phase == EbsPhase_3, "consistency done and asb received the ack from MCU");
+  printf("expected: %d, given %d\n", EbsPhase_3, current_asb_phase);
 }
 
 int main(void)

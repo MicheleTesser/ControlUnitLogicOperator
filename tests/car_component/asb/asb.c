@@ -20,16 +20,6 @@ enum TANKS{
   __NUM_OF_TANKS__
 };
 
-//INFO: phase details at: https://github.com/raceup-electric/EBS/tree/main
-typedef enum{
-  EbsPhase_0=0,
-  EbsPhase_1,
-  EbsPhase_2,
-  EbsPhase_3,
-  EbsPhase_4,
-  EbsPhase_5,
-}EbsPhaes_t;
-
 struct Asb_t{
   thrd_t thread;
   enum CAR_MISSIONS m_mission;
@@ -40,6 +30,7 @@ struct Asb_t{
   uint8_t m_rtd:1;
   uint8_t m_brakes_engaged:1;
   uint8_t m_system_status:1;
+  time_var_microseconds m_start_system_check;
   struct{
     uint8_t pressure:5;
     uint8_t sanity:1;
@@ -68,7 +59,7 @@ char __assert_size_asb[(sizeof(Asb_h)==sizeof(struct Asb_t))?+1:-1];
 char __assert_align_asb[(_Alignof(Asb_h)==_Alignof(struct Asb_t))?+1:-1];
 #endif /* ifdef DEBUG */
 
-static void _send_ebs_status(struct Asb_t* const restrict self __attribute_maybe_unused__)
+static void _send_ebs_status(struct Asb_t* const restrict self)
 {
   can_obj_can2_h_t o2 = {0};
   uint64_t payload =0;
@@ -82,7 +73,11 @@ static void _send_ebs_status(struct Asb_t* const restrict self __attribute_maybe
   o2.can_0x03c_EbsStatus.brakes_engaged = self->m_brakes_engaged;
 
   o2.can_0x03c_EbsStatus.system_check = self->m_system_status;
-  o2.can_0x03c_EbsStatus.ASB_check = self->m_integrity_check_status;
+
+  o2.can_0x03c_EbsStatus.ASB_check =
+      self->m_system_status &&
+      self->m_integrity_check_status &&
+      (timer_time_now() - self->m_start_system_check) > 2 SECONDS;
 
   pack_message_can2(&o2, CAN_ID_EBSSTATUS, &payload);
 
@@ -113,11 +108,6 @@ static int _start_asb(void* arg)
         p_self->m_current_speed = o2.can_0x065_CarStatus.speed;
       }
 
-      if (hardware_mailbox_read(p_self->p_mailbox_recv_asb_check_req, &mex))
-      {
-        unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
-      }
-
       if (p_self->m_mission <= CAR_MISSIONS_HUMAN)
       {
         asb_reset(conv.hidden);
@@ -133,12 +123,17 @@ static int _start_asb(void* arg)
           }
           break;
         case EbsPhase_1:
+          p_self->m_brakes_engaged =1;
           if (hardware_mailbox_read(p_self->p_mailbox_recv_asb_check_req, &mex))
           {
             unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
             if(o2.can_0x068_CheckASBReq.req)
             {
               p_self->m_phase = EbsPhase_2;
+              if (!p_self->m_start_system_check)
+              {
+                p_self->m_start_system_check = timer_time_now();
+              }
             }
           }
           break;
@@ -169,6 +164,7 @@ static int _start_asb(void* arg)
             unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
             //TODO: check res message to start drive mode
             p_self->m_phase = EbsPhase_5;
+            p_self->m_brakes_engaged =0;
           }
           if (!p_self->m_rtd)
           {
@@ -181,7 +177,7 @@ static int _start_asb(void* arg)
             p_self->m_phase = EbsPhase_0;
           }
 
-          p_self->m_current_speed = 
+          p_self->m_brakes_engaged= 
             hardware_mailbox_read(p_self->p_mailbox_recv_brake_request, &mex) && 
             p_self->m_current_speed < 5.0f;//INFO: km/h
 
@@ -358,6 +354,7 @@ void asb_reset(Asb_h* const restrict self)
   p_self->m_integrity_check_status = 0;
   p_self->m_rtd = 0;
   p_self->m_brakes_engaged = 0;
+  p_self->m_start_system_check = 0;
   p_self->m_phase = EbsPhase_0;
   p_self->m_current_speed =0;
   memset(p_self->Tank,0 ,sizeof(p_self->Tank));
@@ -382,4 +379,12 @@ int8_t asb_stop(Asb_h* const restrict self)
   p_self->can_node_general = NULL;
 
   return 0;
+}
+
+EbsPhaes_t asb_current_phase(const Asb_h* const restrict self)
+{
+  const union asb_h_t_conv_const conv = {self};
+  const struct Asb_t* const p_self = conv.clear;
+
+  return p_self->m_phase;
 }

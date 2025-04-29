@@ -24,7 +24,7 @@ struct DvEbs_t{
   CarMissionReader_h m_mission_reader;
   float tank_vals[__NUM_OF_TANKS__];
   time_var_microseconds last_update;
-  enum ASB_INTEGRITY_CHECK_RESULT asb_consistency_check;
+  enum ASB_INTEGRITY_CHECK_RESULT m_asb_consistency_check;
   uint8_t sanity_check_right:1;
   uint8_t sanity_check_left:1;
   uint8_t system_check:1;
@@ -93,7 +93,7 @@ int8_t ebs_class_init(DvEbs_h* const restrict self)
   }
 
   p_self->last_update = timer_time_now();
-  p_self->asb_consistency_check = EBS_NOT_YET_DONE;
+  p_self->m_asb_consistency_check = EBS_NO;
 
   return 0;
 
@@ -121,7 +121,7 @@ int8_t ebs_update(DvEbs_h* const restrict self)
   if (car_mission_reader_get_current_mission(&p_self->m_mission_reader)<= CAR_MISSIONS_HUMAN)
   {
     p_self->ebs_working_properly = 0;
-    p_self->asb_consistency_check = EBS_NOT_YET_DONE;
+    p_self->m_asb_consistency_check = EBS_NO;
     return 0;
   }
   else
@@ -140,7 +140,16 @@ int8_t ebs_update(DvEbs_h* const restrict self)
 
     p_self->system_check = o2.can_0x03c_EbsStatus.system_check;
     p_self->ebs_working_properly =1;
-    p_self->asb_consistency_check = o2.can_0x03c_EbsStatus.ASB_check;
+    p_self->m_asb_consistency_check = o2.can_0x03c_EbsStatus.ASB_check;
+
+    if (p_self->m_asb_consistency_check == EBS_OK)
+    {
+      uint64_t payload =0;
+      o2.can_0x068_CheckASBReq.req=1;
+      o2.can_0x068_CheckASBReq.reqAck =1;
+      pack_message_can2(&o2, CAN_ID_CHECKASBREQ, &payload);
+      hardware_mailbox_send(p_self->p_asb_consistency_check_mailbox_send, payload);
+    }
 
     p_self->last_update = timer_time_now();
   }
@@ -148,7 +157,7 @@ int8_t ebs_update(DvEbs_h* const restrict self)
   if ((timer_time_now() - p_self->last_update) > 500 MILLIS)
   {
     serial_write_str("ebs failed\n");
-    p_self->asb_consistency_check = EBS_NOT_YET_DONE;
+    p_self->m_asb_consistency_check = EBS_NO;
     p_self->ebs_working_properly =0;
   }
 
@@ -159,14 +168,17 @@ enum ASB_INTEGRITY_CHECK_RESULT ebs_asb_consistency_check(DvEbs_h* const restric
 {
   union DvEbs_h_t_conv conv = {self};
   struct DvEbs_t* const restrict p_self = conv.clear;
+  can_obj_can2_h_t o2 ={0};
+  uint64_t payload =0;
 
-  if (p_self->asb_consistency_check == EBS_NOT_YET_DONE)
+  if (p_self->m_asb_consistency_check == EBS_NO)
   {
-    hardware_mailbox_send(p_self->p_asb_consistency_check_mailbox_send, 0);
-    return EBS_NOT_YET_DONE;
+    o2.can_0x068_CheckASBReq.req =1;
+    pack_message_can2(&o2, CAN_ID_CHECKASBREQ, &payload);
+    // hardware_mailbox_send(p_self->p_asb_consistency_check_mailbox_send, payload);
   }
 
-  return p_self->asb_consistency_check;
+  return p_self->m_asb_consistency_check;
 }
 
 int8_t ebs_on(const DvEbs_h* const restrict self)
@@ -177,7 +189,7 @@ int8_t ebs_on(const DvEbs_h* const restrict self)
   return p_self->ebs_working_properly;
 }
 
-#define BAR 
+#define BAR /*Pressure*/
 int8_t ebs_activated(const DvEbs_h* const restrict self)
 {
   const union DvEbs_h_t_conv_const conv = {self};
