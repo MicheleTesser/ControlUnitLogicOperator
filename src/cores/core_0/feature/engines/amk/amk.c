@@ -244,7 +244,6 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
     case SYSTEM_PRECAHRGE:
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       if (!_amk_inverter_on(self) ||
-          !gpio_read_state(&self->gpio_ts_button) ||
           giei_driver_input_rtd_request(self->driver_input))
       {
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
