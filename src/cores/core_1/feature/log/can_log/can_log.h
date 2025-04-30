@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[36];
+  const uint8_t private_data[44];
 }CanLog_h;
 
 int8_t can_log_init(CanLog_h* const restrict self)__attribute__((__nonnull__(1)));

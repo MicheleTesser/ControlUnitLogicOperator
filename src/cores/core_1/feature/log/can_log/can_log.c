@@ -11,6 +11,7 @@
 #include <string.h>
 
 struct CanLog_t{
+  time_var_microseconds m_last_sent;
   GlobalRunningStatus_h m_running_status;
   GpioRead_h m_start_precharge_gpio;
   GpioRead_h m_done_precharge_gpio;
@@ -101,19 +102,24 @@ int8_t can_log_update(CanLog_h* const restrict self)
 
   CHECK_INIT(p_self);
 
-  //HACK: look amk.c AMK_Actual_Values_1 to check if the position checked with the shift are right
-  o2.can_0x065_CarStatus.HV= 
-    (*p_self->p_log_var_amk_status_fr & (1<<12))||
-    (*p_self->p_log_var_amk_status_fl & (1<<12))||
-    (*p_self->p_log_var_amk_status_rr & (1<<12))||
-    (*p_self->p_log_var_amk_status_rl & (1<<12));
+  ACTION_ON_FREQUENCY(p_self->m_last_sent, 100 MILLIS)
+  {
+    //HACK: look amk.c AMK_Actual_Values_1 to check if the position checked with the shift are right
+    o2.can_0x065_CarStatus.HV= 
+      (*p_self->p_log_var_amk_status_fr & (1<<12))||
+      (*p_self->p_log_var_amk_status_fl & (1<<12))||
+      (*p_self->p_log_var_amk_status_rr & (1<<12))||
+      (*p_self->p_log_var_amk_status_rl & (1<<12));
 
-  o2.can_0x065_CarStatus.AIR1= gpio_read_state(&p_self->m_start_precharge_gpio);
-  o2.can_0x065_CarStatus.AIR2= gpio_read_state(&p_self->m_done_precharge_gpio);
-  o2.can_0x065_CarStatus.RunningStatus = global_running_status_get(&p_self->m_running_status);
-  o2.can_0x065_CarStatus.speed = car_speed_get();
+    o2.can_0x065_CarStatus.AIR1= gpio_read_state(&p_self->m_start_precharge_gpio);
+    o2.can_0x065_CarStatus.AIR2= gpio_read_state(&p_self->m_done_precharge_gpio);
+    o2.can_0x065_CarStatus.RunningStatus = global_running_status_get(&p_self->m_running_status);
+    o2.can_0x065_CarStatus.speed = car_speed_get();
 
-  pack_message_can2(&o2, CAN_ID_CARSTATUS, &payload);
+    pack_message_can2(&o2, CAN_ID_CARSTATUS, &payload);
 
-  return hardware_mailbox_send(p_self->p_mailbox_send_car_status, payload);
+    return hardware_mailbox_send(p_self->p_mailbox_send_car_status, payload);
+  }
+
+  return 0;
 }

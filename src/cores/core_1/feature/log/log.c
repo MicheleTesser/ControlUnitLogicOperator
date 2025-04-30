@@ -68,15 +68,15 @@ int8_t log_update_and_send(Log_h* const restrict self)
   struct Log_t* const restrict p_self = conv.clear;
   int8_t err =0;
 
-  //TODO: SD
   if(log_telemetry_send(&p_self->telemetry)<0)
   {
-    err |= -2;
+    err |= -1;
   }
   if(can_log_update(&p_self->m_can)<0)
   {
-    err |= -3;
+    err |= -2;
   }
+  //TODO: SD
 
   return err;
 }

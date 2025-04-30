@@ -49,8 +49,7 @@ core_1_feature_init(Core1Feature_h* const restrict self, Log_h* const restrict p
     return 0;
 }
 
-int8_t
-core_1_feature_update(Core1Feature_h* const restrict self )
+int8_t core_1_feature_update(Core1Feature_h* const restrict self )
 {
     union Core1Feature_h_t_conv conv = {self};
     struct Core1Feature_t* const restrict p_self = conv.clear;
@@ -60,6 +59,5 @@ core_1_feature_update(Core1Feature_h* const restrict self )
     if(core_1_imu_update(&p_self->core_1_imu)) return -3;
     if(suspensions_update(&p_self->suspensions)) return -4;
     if(cooling_update(&p_self->cooling)<0)return -5;
-
-    return log_update_and_send(p_self->p_log);
+    return 0;
 }
