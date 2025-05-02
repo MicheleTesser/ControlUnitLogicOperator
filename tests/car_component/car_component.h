@@ -8,6 +8,7 @@
 #include "steering_wheel/steering_wheel.h"
 #include "embedded_system/embedded_system.h"
 #include "asb/asb.h"
+#include "imu/imu.h"
 
 #include <stdint.h>
 
@@ -19,6 +20,7 @@ typedef struct{
   SteeringWheel_h steering_wheel;
   EmbeddedSystem_h embedded_system;
   Asb_h asb;
+  imu_h imu;
 }ExternalBoards_t;
 
 int8_t

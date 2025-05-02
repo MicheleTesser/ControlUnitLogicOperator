@@ -10,7 +10,8 @@ start_external_boards(ExternalBoards_t* const restrict self)
   if (bms_hv_start(&self->bms_hv)<0)return -4;
   if (steering_wheel_start(&self->steering_wheel)<0)return -4;
   if (embedded_system_start(&self->embedded_system)<0) return  -5;;
-  if (asb_start(&self->asb)<0) return  -5;;
+  if (asb_start(&self->asb)<0) return  -5;
+  if (imu_start(&self->imu)<0) return -6;
 
   return 0;
 }
@@ -25,6 +26,7 @@ stop_external_boards(ExternalBoards_t* const restrict self)
   steering_wheel_stop(&self->steering_wheel);
   embedded_system_stop(&self->embedded_system);
   asb_stop(&self->asb);
+  imu_stop(&self->imu);
 
   return 0;
 }
