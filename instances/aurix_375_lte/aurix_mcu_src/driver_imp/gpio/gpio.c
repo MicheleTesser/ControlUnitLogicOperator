@@ -10,6 +10,7 @@
 #pragma GCC diagnostic pop
 
 #include <stdint.h>
+#include <stddef.h>
 
 //gpio
 
@@ -18,14 +19,34 @@ struct GpioRead_t{
   uint8_t pin_index;
 };
 
+#define GPIO_INPUT_MODE (IfxPort_Mode)(IfxPort_OutputMode_pushPull | IfxPort_OutputIdx_general)
+#define GPIO_OUTPUT_MODE (IfxPort_Mode) IfxPort_InputMode_pullDown
+
+static struct GpioSpec{
+  Ifx_P *port;
+  uint8_t pin_index;
+  IfxPort_Mode mode;
+}BOARD_GPIOS[__NUM_OF_GPIOS__] =
+{
+  {&MODULE_P33,4, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_0_ALIVE_BLINK, default led 
+  {&MODULE_P33,5, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_1_ALIVE_BLINK, debug led 2
+  {&MODULE_P33,6, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_2_ALIVE_BLINK, debug led 3
+  {&MODULE_P23,1, GPIO_INPUT_MODE }, //TODO: GPIO_RTD_BUTTON, DRIVE_BUTTON
+  {&MODULE_P33,5, GPIO_OUTPUT_MODE }, //INFO: GPIO_RTD_ASSI_SOUND, RTDS
+  {&MODULE_P32,4, GPIO_INPUT_MODE }, //INFO: GPIO_AIR_PRECHARGE_INIT
+  {&MODULE_P23,0, GPIO_INPUT_MODE }, //INFO: GPIO_AIR_PRECHARGE_DONE
+  {&MODULE_P33,3, GPIO_OUTPUT_MODE}, //INFO: GPIO_SCS
+  {&MODULE_P33,2, GPIO_OUTPUT_MODE}, //INFO: GPIO_AS_NODE
+};
+
 union GpioRead_h_t_conv{
   const GpioRead_h* const restrict hidden;
   const struct GpioRead_t* const restrict clear;
 };
 
 struct Gpio_t{
-  const struct GpioRead_t gpio_read_permission;
-  const uint8_t private_data[4];
+  struct GpioRead_t gpio_read_permission;
+  uint8_t private_data[4];
 };
 
 union Gpio_h_t_conv{
@@ -38,26 +59,26 @@ union Gpio_h_t_conv{
 int8_t hardware_init_gpio(Gpio_h* const restrict self ,const enum GPIO_PIN id)
 {
   union Gpio_h_t_conv conv = {self};
-  struct Gpio_t* p_self __attribute__((__unused__))= conv.clear;
-  switch (id)
+  struct Gpio_t* p_self = conv.clear;
+  struct GpioSpec* p_info_gpio = NULL;
+
+  if (id >= __NUM_OF_GPIOS__)
   {
-    case GPIO_CORE_0_ALIVE_BLINK:
-    case GPIO_CORE_1_ALIVE_BLINK:
-    case GPIO_CORE_2_ALIVE_BLINK:
-    case GPIO_TS_BUTTON:
-    case GPIO_RTD_BUTTON:
-    case GPIO_RTD_ASSI_SOUND:
-    case GPIO_AIR_PRECHARGE_INIT:
-    case GPIO_AIR_PRECHARGE_DONE:
-    case GPIO_SCS:
-    default:
-      break;
+    return -1;
   }
-    return 0;
-}
-int8_t gpio_set_pin_mode(Gpio_h* const restrict self __attribute__((__unused__)) ,uint8_t mode __attribute__((__unused__)))
-{
-    return 0;
+
+  p_info_gpio = &BOARD_GPIOS[id];
+
+  p_self->gpio_read_permission.port = p_info_gpio->port;
+  p_self->gpio_read_permission.pin_index = p_info_gpio->pin_index;
+
+  IfxPort_setPinMode(p_info_gpio->port,p_info_gpio->pin_index,p_info_gpio->mode);
+  if (p_info_gpio->mode == GPIO_OUTPUT_MODE)
+  {
+    gpio_set_high(self);
+  }
+
+  return 0;
 }
 
 int8_t gpio_toggle(Gpio_h* const restrict self)
@@ -72,9 +93,10 @@ int8_t gpio_toggle(Gpio_h* const restrict self)
 int8_t gpio_read_state(const GpioRead_h* const restrict self)
 {
   const union GpioRead_h_t_conv conv = {self};
-  const struct GpioRead_t* p_self __attribute__((__unused__)) = conv.clear;
+  const struct GpioRead_t* p_self = conv.clear;
   return IfxPort_getPinState(p_self->port,p_self->pin_index);
 }
+
 int8_t gpio_set_high(Gpio_h* const restrict self)
 {
   union Gpio_h_t_conv conv = {self};
@@ -104,18 +126,22 @@ struct GpioPwm_t{
 int8_t hardware_init_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)),
     const enum GPIO_PWM_PIN id __attribute__((__unused__)))
 {
+  return -1;
 }
 
 int8_t hardware_init_gpio_pwm_read_only(GpioPwm_h* const restrict self __attribute__((__unused__)),
     const enum GPIO_PWM_PIN id __attribute__((__unused__)))
 {
+  return -1;
 }
 
 int8_t hardware_write_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)),
     const uint16_t duty_cycle __attribute__((__unused__)))
 {
+  return -1;
 }
 
 uint16_t hardware_read_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)))
 {
+  return 0;
 }

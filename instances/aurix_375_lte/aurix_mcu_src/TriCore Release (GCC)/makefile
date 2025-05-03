@@ -14,9 +14,10 @@ RM := rm -rf
 -include src/lib/board_dbc/dbc/out_lib/can2/subdir.mk
 -include src/lib/board_dbc/dbc/out_lib/can1/subdir.mk
 -include src/lib/TV/subdir.mk
+-include src/lib/DPS/src/slave/subdir.mk
+-include src/lib/DPS/src/master/subdir.mk
+-include src/lib/DPS/src/common/subdir.mk
 -include src/lib/DPS/lib/c_vector/subdir.mk
--include src/lib/DPS/subdir.mk
--include src/lib/Cmemory/subdir.mk
 -include src/cores/core_utility/running_status/subdir.mk
 -include src/cores/core_utility/rtd_assi_sound/subdir.mk
 -include src/cores/core_utility/mission_reader/mission_locker/subdir.mk
@@ -25,6 +26,7 @@ RM := rm -rf
 -include src/cores/core_utility/emergency_module/subdir.mk
 -include src/cores/core_utility/driver_input_reader/subdir.mk
 -include src/cores/core_utility/core_status/subdir.mk
+-include src/cores/core_utility/car_speed/subdir.mk
 -include src/cores/core_utility/as_node/subdir.mk
 -include src/cores/core_utility/alive_blink/subdir.mk
 -include src/cores/core_2/feature/DV/steering_wheel_alg/subdir.mk
@@ -38,6 +40,7 @@ RM := rm -rf
 -include src/cores/core_1/feature/log/telemetry/subdir.mk
 -include src/cores/core_1/feature/log/sd/subdir.mk
 -include src/cores/core_1/feature/log/external_log_variables/subdir.mk
+-include src/cores/core_1/feature/log/can_log/subdir.mk
 -include src/cores/core_1/feature/log/subdir.mk
 -include src/cores/core_1/feature/core_1_imu/subdir.mk
 -include src/cores/core_1/feature/core_1_driver_input/subdir.mk
@@ -73,9 +76,12 @@ RM := rm -rf
 -include Libraries/iLLD/TC37A/Tricore/Pms/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Mtu/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Gtm/Std/subdir.mk
+-include Libraries/iLLD/TC37A/Tricore/Gpt12/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Trap/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Cpu/Irq/subdir.mk
+-include Libraries/iLLD/TC37A/Tricore/Can/Std/subdir.mk
+-include Libraries/iLLD/TC37A/Tricore/Can/Can/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Asclin/Std/subdir.mk
 -include Libraries/iLLD/TC37A/Tricore/Asclin/Asc/subdir.mk
 -include Libraries/Service/CpuGeneric/SysSe/Bsp/subdir.mk

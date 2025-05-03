@@ -22,7 +22,6 @@ enum GPIO_PIN{
   GPIO_CORE_0_ALIVE_BLINK=0,
   GPIO_CORE_1_ALIVE_BLINK,
   GPIO_CORE_2_ALIVE_BLINK,
-  GPIO_TS_BUTTON,
   GPIO_RTD_BUTTON,
   GPIO_RTD_ASSI_SOUND,
   GPIO_AIR_PRECHARGE_INIT,
@@ -42,9 +41,6 @@ typedef struct __attribute__((aligned(4))){
 extern int8_t
 hardware_init_gpio(Gpio_h* const restrict self , 
     const enum GPIO_PIN id)__attribute__((__nonnull__(1)));
-
-extern int8_t gpio_set_pin_mode(Gpio_h* const restrict self,
-    const uint8_t mode)__attribute__((__nonnull__(1)));
 
 extern int8_t gpio_toggle(Gpio_h* const restrict self)__attribute__((__nonnull__(1)));
 

@@ -70,6 +70,9 @@ struct AMK_Setpoints{
 };
 
 typedef struct Inverter{
+  CarSpeedMut_h m_car_speed;
+  uint8_t rf_status:1;
+  uint8_t hvCounter[__NUM_OF_ENGINES__];
   struct{
     struct AMK_Actual_Values_1 amk_values_1;
     struct AMK_Actual_Values_2 amk_values_2;
@@ -77,21 +80,17 @@ typedef struct Inverter{
     int16_t AMK_TorqueLimitPositive; //INFO: unit: 0.1% MN Positive torque limit (subject to nominal torque)
     int16_t AMK_TorqueLimitNegative; //INFO: unit: 0.1% MN Negative torque limit (subject to nominal torque)
   }engines[__NUM_OF_ENGINES__];
-  enum RUNNING_STATUS engine_status; 
-  uint8_t hvCounter[__NUM_OF_ENGINES__];
   time_var_microseconds u_last_send_info; 
   GpioRead_h gpio_precharge_init; 
   GpioRead_h gpio_precharge_done; 
   GpioRead_h gpio_rtd_button; 
+  enum RUNNING_STATUS engine_status; 
   const DriverInput_h* driver_input; 
   struct CanNode* can_inverter; 
   struct CanMailbox* engine_mailbox; 
   struct CanMailbox* mailbox_pcu_rf_signal_send; 
   struct CanMailbox* mailbox_pcu_rf_signal_read; 
-  EmergencyNode_h amk_emergency; 
-  CarSpeedMut_h m_car_speed;
-  uint8_t rf_status:1;
-  uint32_t padding; //HACK: for padding with aurix, this is just a bool
+  EmergencyNode_h __attribute__((aligned(4))) amk_emergency; 
 }AMKInverter_t;
 
 union AMKConv{
@@ -104,6 +103,7 @@ union AMKConv{
   AMKInverter_t* t_ptr_name = __a_conv##t_ptr_name__.clear;
 
 #ifdef DEBUG
+// char (*aa)[sizeof(AMKInverter_t)]=1;
 const uint8_t __debug_amk_size__[(sizeof(AmkInverter_h) == sizeof(AMKInverter_t))? 1 : -1];
 const uint8_t __debug_amk_align__[(_Alignof(AmkInverter_h) == _Alignof(AMKInverter_t))? 1 : -1];
 #endif /* ifdef DEBUG */

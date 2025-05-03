@@ -29,9 +29,12 @@ Libraries/Service/CpuGeneric/StdIf \
 Libraries/Service/CpuGeneric/SysSe/Bsp \
 Libraries/iLLD/TC37A/Tricore/Asclin/Asc \
 Libraries/iLLD/TC37A/Tricore/Asclin/Std \
+Libraries/iLLD/TC37A/Tricore/Can/Can \
+Libraries/iLLD/TC37A/Tricore/Can/Std \
 Libraries/iLLD/TC37A/Tricore/Cpu/Irq \
 Libraries/iLLD/TC37A/Tricore/Cpu/Std \
 Libraries/iLLD/TC37A/Tricore/Cpu/Trap \
+Libraries/iLLD/TC37A/Tricore/Gpt12/Std \
 Libraries/iLLD/TC37A/Tricore/Gtm/Std \
 Libraries/iLLD/TC37A/Tricore/Mtu/Std \
 Libraries/iLLD/TC37A/Tricore/Pms/Std \
@@ -66,6 +69,7 @@ src/cores/core_1/feature/cooling \
 src/cores/core_1/feature/core_1_driver_input \
 src/cores/core_1/feature/core_1_imu \
 src/cores/core_1/feature \
+src/cores/core_1/feature/log/can_log \
 src/cores/core_1/feature/log/external_log_variables \
 src/cores/core_1/feature/log \
 src/cores/core_1/feature/log/sd \
@@ -80,6 +84,7 @@ src/cores/core_2/feature/DV/steering_wheel_alg \
 src/cores/core_2/feature \
 src/cores/core_utility/alive_blink \
 src/cores/core_utility/as_node \
+src/cores/core_utility/car_speed \
 src/cores/core_utility/core_status \
 src/cores/core_utility/driver_input_reader \
 src/cores/core_utility/emergency_module \
@@ -88,9 +93,10 @@ src/cores/core_utility/mission_reader/mission_locker \
 src/cores/core_utility/mission_reader \
 src/cores/core_utility/rtd_assi_sound \
 src/cores/core_utility/running_status \
-src/lib/Cmemory \
-src/lib/DPS \
 src/lib/DPS/lib/c_vector \
+src/lib/DPS/src/common \
+src/lib/DPS/src/master \
+src/lib/DPS/src/slave \
 src/lib/TV \
 src/lib/board_dbc/dbc/out_lib/can1 \
 src/lib/board_dbc/dbc/out_lib/can2 \
