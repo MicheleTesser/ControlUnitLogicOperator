@@ -47,13 +47,13 @@ int _start_imu(void* arg)
   {
     ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
     {
-      o2.can_0x060_Imu1.acc_x = p_self->imu_params[pos_acc + AXES_X];
-      o2.can_0x060_Imu1.acc_y = p_self->imu_params[pos_acc + AXES_Y];
-      o2.can_0x061_Imu2.acc_z = p_self->imu_params[pos_acc + AXES_Z];
+      o2.can_0x060_Imu1.acc_x = p_self->imu_params[pos_acc + IMU_AXES_X];
+      o2.can_0x060_Imu1.acc_y = p_self->imu_params[pos_acc + IMU_AXES_Y];
+      o2.can_0x061_Imu2.acc_z = p_self->imu_params[pos_acc + IMU_AXES_Z];
 
-      o2.can_0x061_Imu2.omega_x = p_self->imu_params[pos_ome + AXES_X];
-      o2.can_0x062_Imu3.omega_y = p_self->imu_params[pos_ome + AXES_Y];
-      o2.can_0x062_Imu3.omega_z = p_self->imu_params[pos_ome + AXES_Z];
+      o2.can_0x061_Imu2.omega_x = p_self->imu_params[pos_ome + IMU_AXES_X];
+      o2.can_0x062_Imu3.omega_y = p_self->imu_params[pos_ome + IMU_AXES_Y];
+      o2.can_0x062_Imu3.omega_z = p_self->imu_params[pos_ome + IMU_AXES_Z];
 
 
       mex.id = CAN_ID_IMU1;
@@ -113,6 +113,8 @@ int8_t imu_stop(imu_h* const restrict self)
 {
   union imu_h_t_conv conv = {self};
   struct imu_t* const p_self = conv.clear;
+
+  hardware_init_new_external_node_destroy(p_self->p_node_general_can);
 
   printf("stopping imu\n");
   p_self->running=0;

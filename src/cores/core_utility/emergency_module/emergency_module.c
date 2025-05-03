@@ -80,8 +80,7 @@ int8_t EmergencyNode_class_init(void)
   return 0;
 }
 
-int8_t
-EmergencyNode_init(EmergencyNode_h* const restrict self)
+int8_t EmergencyNode_init(EmergencyNode_h* const restrict self)
 {
   union EmergencyNode_h_t_conv conv = {self};
   struct EmergencyNode_t* const restrict p_self =conv.clear;

@@ -6,7 +6,6 @@
 
 struct DvRes_t{
     time_var_microseconds start_go_timeout;
-    time_var_microseconds minimum_time_needed;
 };
 
 union DvRes_h_t_conv{
@@ -32,7 +31,6 @@ int8_t res_class_init(DvRes_h* const restrict self )
     memset(p_self, 0, sizeof(*p_self));
 
     p_self->start_go_timeout = -1;
-    p_self->minimum_time_needed = 5 SECONDS; //INFO: T 14.9.3 of rules
 
     return 0;
 }
@@ -41,7 +39,7 @@ int8_t res_check_go(const DvRes_h* self )
 {
     union DvRes_h_t_conv_const conv = {self};
     const struct DvRes_t* const restrict p_self = conv.clear;
-    return (timer_time_now() - p_self->start_go_timeout) >= p_self->minimum_time_needed;
+    return (timer_time_now() - p_self->start_go_timeout) >= 5 SECONDS; //INFO: T 14.9.3 of rules
 }
 
 int8_t res_start_time_go(DvRes_h* self )

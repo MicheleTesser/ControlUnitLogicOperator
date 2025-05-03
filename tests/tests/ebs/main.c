@@ -29,7 +29,6 @@ typedef struct {
 
 typedef struct{
   ExternalBoards_t* external_boards;
-  Gpio_h* ts_button;
   Gpio_h* rf_button;
 
   DvEbs_h* ebs;
@@ -69,8 +68,9 @@ void test_ebs_test_activation_of_ebs_human_driver(TestInput* t_input)
   asb_reset(&t_input->external_boards->asb);
   asb_set_parameter(&t_input->external_boards->asb, SYSTEM_CHECK, 1);
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
+  bms_hv_start_button(&t_input->external_boards->bms_hv);
 
-  while (car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter)!=PRECHARGE_FINISHED)
+  while (!car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter))
   {
     car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
     wait_milliseconds(5 SECONDS);
@@ -86,7 +86,7 @@ void test_ebs_test_activation_of_ebs_human_driver(TestInput* t_input)
   enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
   _check_status(consistency == EBS_NO,"ebs consistency still not done");
   printf("expected: %d, given %d\n", EBS_NO, consistency);
-  gpio_set_high(t_input->ts_button);
+  bms_hv_start_button(&t_input->external_boards->bms_hv);
 }
 
 void test_ebs_test_activation_of_ebs_dv_driver(TestInput* t_input)
@@ -96,9 +96,10 @@ void test_ebs_test_activation_of_ebs_dv_driver(TestInput* t_input)
   asb_set_parameter(&t_input->external_boards->asb, SYSTEM_CHECK, 1);
   car_amk_inverter_reset(&t_input->external_boards->amk_inverter);
 
+  bms_hv_start_button(&t_input->external_boards->bms_hv);
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_DV_EBS_TEST);
   asb_set_parameter(&t_input->external_boards->asb, CURR_MISSION, CAR_MISSIONS_DV_EBS_TEST);
-  while (car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter)!=PRECHARGE_FINISHED)
+  while (!car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter))
   {
     car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
     wait_milliseconds(5 SECONDS);
@@ -125,7 +126,6 @@ void test_ebs_test_activation_of_ebs_dv_driver(TestInput* t_input)
 
 int main(void)
 {
-  Gpio_h ts_button = {0};
   Gpio_h rtd_button= {0};
 
   ExternalBoards_t external_boards = {0};
@@ -140,13 +140,11 @@ int main(void)
   };
 
   TestInput t_input = {
-    .ts_button = &ts_button,
     .rf_button = &rtd_button,
     .external_boards = &external_boards,
     .ebs = &ebs,
   };
 
-  INIT_PH(hardware_init_gpio(&ts_button, GPIO_TS_BUTTON),"ts button");
   INIT_PH(hardware_init_gpio(&rtd_button, GPIO_RTD_BUTTON),"rf button");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");

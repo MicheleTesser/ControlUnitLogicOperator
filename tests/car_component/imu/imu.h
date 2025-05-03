@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 typedef enum{
-  AXES_X=0u,
-  AXES_Y,
-  AXES_Z,
+  IMU_AXES_X=0u,
+  IMU_AXES_Y,
+  IMU_AXES_Z,
 
   __NUM_OF_AXYS__
 }ImuAxys;

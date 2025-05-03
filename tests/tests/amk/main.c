@@ -31,7 +31,6 @@ typedef struct{
   DriverInput_h* driver_input;
   EngineType* engine_input;
   EmergencyNode_h* emergency_node;
-  Gpio_h* ts;
   Gpio_h* rf;
 }TestInput;
 
@@ -54,17 +53,23 @@ static int core_update(void* args)
 
 static inline void _check_status_rtd(EngineType* self,const enum RUNNING_STATUS expected)
 {
+  EmergencyNode_h emergency_read = {0};
   enum RUNNING_STATUS status = engine_rtd_procedure(self);
+  INIT_PH(EmergencyNode_init(&emergency_read), "emergency_read");
+  const int8_t emergency_status= EmergencyNode_is_emergency_state(&emergency_read);
+
   if (status != expected)
   {
     FAILED("status is not what expected");
-    printf("expected: %d, given: %d\n",expected, status);
   }
   else
   {
     PASSED("correct status:");
-    printf("expected: %d, given: %d\n",expected, status);
   }
+  printf("expected: %d, given: %d, emergency: %d\n",expected, status, emergency_status);
+  return;
+end:
+  printf("error emergency node\n");
 }
 
 static void test_initial_status(EngineType* self)
@@ -92,7 +97,7 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   printf("system ready but precharge not yet started: ");
   _check_status_rtd(self, SYSTEM_OFF);
 
-  gpio_set_low(input->ts);
+  bms_hv_start_button(&input->external_boards->bms_hv);
   wait_milliseconds(500 MILLIS);
 
   printf("system ready and precharge started: ");
@@ -121,23 +126,32 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   _check_status_rtd(self, RUNNING);
 
   printf("disabling rf in manual mode from RUNNING -> SYSTEM_OFF: ");
+  bms_hv_start_button(&input->external_boards->bms_hv);
+  wait_milliseconds(500 MILLIS);
   gpio_set_high(input->rf);
-  gpio_set_high(input->ts);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, SYSTEM_OFF);
 
-  printf("restarting precharge");
-  gpio_set_low(input->ts);
-  car_amk_inverter_force_precharge_status(&input->external_boards->amk_inverter);
-  while (car_amk_inverter_precharge_status(&input->external_boards->amk_inverter) != 3);
-  printf("reactivating rf with brake pedal at 25 percentage in manual mode from SYSTEM_OFF -> RUNNING: ");
+  bms_hv_start_button(&input->external_boards->bms_hv);
   wait_milliseconds(500 MILLIS);
+
+  printf("system ready and precharge started: ");
+  _check_status_rtd(self, SYSTEM_PRECAHRGE);
+
+  wait_milliseconds(6 SECONDS);
+
+  printf("still system ready and precharge completed -> TS_READY: ");
+  _check_status_rtd(self, TS_READY);
+
+  printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
+  atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 25);
   gpio_set_low(input->rf);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, RUNNING);
 
+
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency ");
-  car_amk_inverter_emergency_shutdown(&input->external_boards->amk_inverter);
+  bms_hv_emergency_shutdown(&input->external_boards->bms_hv);
   wait_milliseconds(1 SECONDS);
   _check_status_rtd(self, SYSTEM_OFF);
   if(EmergencyNode_is_emergency_state(input->emergency_node))
@@ -151,7 +165,7 @@ static void test_start_precharge(EngineType* self, TestInput* input)
 
   printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved ");
   gpio_set_high(input->rf);
-  gpio_set_high(input->ts);
+  bms_hv_start_button(&input->external_boards->bms_hv);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(self, SYSTEM_OFF);
   if(!EmergencyNode_is_emergency_state(input->emergency_node))
@@ -175,7 +189,6 @@ int main(void)
 
   AmkInverter_h amk={0};
   thrd_t core=0;
-  Gpio_h ts={0};
   Gpio_h rf ={0};
   EmergencyNode_h read_emergecy;
   struct ThInput input = {
@@ -190,7 +203,6 @@ int main(void)
     .engine_input = &engine,
     .driver_input = &driver_input,
     .rf = &rf,
-    .ts = &ts,
     .emergency_node = &read_emergecy,
     .external_boards = &external_boards,
   };
@@ -200,7 +212,6 @@ int main(void)
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
-  INIT_PH(hardware_init_gpio(&ts, GPIO_TS_BUTTON), "ts gpio");
   INIT_PH(hardware_init_gpio(&rf, GPIO_RTD_BUTTON), "rf gpio");
   
   INIT_PH(start_external_boards(&external_boards), "external_boards");

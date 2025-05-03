@@ -24,6 +24,7 @@ struct BmsHv_t{
   uint8_t soc;
   uint8_t fan_speed;
   uint8_t running:1;
+  Gpio_h m_precharge_init;
   struct CanNode* new_temp_node;
   struct CanMailbox* mailbox_send_temps;
   struct CanMailbox* mailbox_send_volts;
@@ -91,6 +92,11 @@ int8_t bms_hv_start(BmsHv_h* const restrict self)
   if (!p_self->new_temp_node)
   {
     return -1;
+  }
+
+  if (hardware_init_gpio(&p_self->m_precharge_init, GPIO_AIR_PRECHARGE_INIT)<0)
+  {
+    return -2;
   }
 
   p_self->mailbox_send_volts=
@@ -163,4 +169,28 @@ int8_t bms_hv_stop(BmsHv_h* const restrict self)
   hardware_init_new_external_node_destroy(p_self->new_temp_node);
 
   return 0;
+}
+
+int8_t bms_hv_start_button(BmsHv_h* const restrict self)
+{
+  union BmsHv_h_t_conv conv = {self};
+  struct BmsHv_t* const p_self = conv.clear;
+
+  if(gpio_read_state(&p_self->m_precharge_init.gpio_read_permission))
+  {
+    gpio_set_high(&p_self->m_precharge_init);
+  }
+  else
+  {
+    gpio_set_low(&p_self->m_precharge_init);
+  }
+  return 0;
+}
+
+void bms_hv_emergency_shutdown(BmsHv_h* const restrict self)
+{
+  union BmsHv_h_t_conv conv = {self};
+  struct BmsHv_t* const p_self = conv.clear;
+
+  gpio_set_high(&p_self->m_precharge_init);
 }

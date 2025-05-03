@@ -36,7 +36,6 @@ typedef struct CoreInput{
   Imu_h* imu;
   EmergencyNode_h* emergency_node;
   CarMissionReader_h* mission_reader;
-  Gpio_h* ts;
   Gpio_h* rf;
   GpioRead_h* rtd_sound;
   AsNode_h* as_node;
@@ -114,9 +113,7 @@ static void test_giei_rtd(CoreInput* const input)
   }
 
   printf("starting precharge: SYSTEM_OFF -> SYSTEM_PRECAHRGE\n");
-  gpio_set_low(input->ts);
-  while (!car_amk_inverter_precharge_status(&input->external_boards->amk_inverter));
-
+  bms_hv_start_button(&input->external_boards->bms_hv);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_PRECAHRGE, 0 ,0);
 
@@ -150,27 +147,26 @@ static void test_giei_rtd(CoreInput* const input)
 
   printf("disabling rf in manual mode from RUNNING -> SYSTEM_OFF\n");
   gpio_set_high(input->rf);
-  gpio_set_high(input->ts);
+  bms_hv_start_button(&input->external_boards->bms_hv);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0, 0);
 
   printf("restarting precharge requence enabling ts and rf in manual mode from SYSTEM_OFF -> RUNNING \n");
-  gpio_set_low(input->ts);
+  bms_hv_start_button(&input->external_boards->bms_hv);
   car_amk_inverter_force_precharge_status(&input->external_boards->amk_inverter);
-  while (car_amk_inverter_precharge_status(&input->external_boards->amk_inverter)!= 3);
+  while (!car_amk_inverter_precharge_status(&input->external_boards->amk_inverter));
   wait_milliseconds(500 MILLIS);
   gpio_set_low(input->rf);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency\n");
-  car_amk_inverter_emergency_shutdown(&input->external_boards->amk_inverter);
+  bms_hv_emergency_shutdown(&input->external_boards->bms_hv);
   wait_milliseconds(3 SECONDS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 1, 0);
 
   printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved\n");
   gpio_set_high(input->rf);
-  gpio_set_high(input->ts);
   wait_milliseconds(500 MILLIS);
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0, 0);
 }
@@ -190,7 +186,6 @@ int main(void)
   CarMissionReader_h mission_reader = {0};
 
   CoreThread core_thread={.run=1};
-  Gpio_h ts={0};
   Gpio_h rf ={0};
   GpioRead_h rtd_sound_read = {0};
 
@@ -201,7 +196,6 @@ int main(void)
     .maps = &maps,
     .driver = &driver,
     .emergency_node = &emergency_read,
-    .ts = &ts,
     .rf = &rf,
     .rtd_sound = &rtd_sound_read,
     .mission_reader = &mission_reader,
@@ -216,7 +210,6 @@ int main(void)
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
-  INIT_PH(hardware_init_gpio(&ts, GPIO_TS_BUTTON), "ts gpio");
   INIT_PH(hardware_init_gpio(&rf, GPIO_RTD_BUTTON), "rf gpio");
   INIT_PH(hardware_init_read_permission_gpio(&rtd_sound_read, GPIO_RTD_ASSI_SOUND), "rtd sound gpio");
 

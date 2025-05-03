@@ -83,7 +83,6 @@ typedef struct Inverter{
   GpioRead_h gpio_precharge_init; 
   GpioRead_h gpio_precharge_done; 
   GpioRead_h gpio_rtd_button; 
-  GpioRead_h gpio_ts_button;
   const DriverInput_h* driver_input; 
   struct CanNode* can_inverter; 
   struct CanMailbox* engine_mailbox; 
@@ -228,7 +227,7 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
   {
     case SYSTEM_OFF:
 
-      if (_amk_inverter_on(self) && gpio_read_state(&self->gpio_ts_button) &&
+      if (_amk_inverter_on(self) && gpio_read_state(&self->gpio_precharge_init) &&
           !giei_driver_input_rtd_request(self->driver_input))
       {
         self->engine_status = SYSTEM_PRECAHRGE;
@@ -564,11 +563,6 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
   if (hardware_init_read_permission_gpio(&p_self->gpio_rtd_button, GPIO_RTD_BUTTON)<0)
   {
     return -6;
-  }
-
-  if (hardware_init_read_permission_gpio(&p_self->gpio_ts_button, GPIO_TS_BUTTON)<0)
-  {
-    return -7;
   }
 
   /*

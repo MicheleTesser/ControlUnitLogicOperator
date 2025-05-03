@@ -72,15 +72,15 @@ int8_t imu_init(Imu_h* const restrict self)
 
     ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
     {
-      p_self->mailbox_imu_1 =
+      p_self->mailbox_imu_3 =
         hardware_get_mailbox_single_mex(
             can_node,
             RECV_MAILBOX,
-            CAN_ID_IMU1,
+            CAN_ID_IMU3,
             message_dlc_can2(CAN_ID_IMU1));
     }
 
-    if (!p_self->mailbox_imu_1)
+    if (!p_self->mailbox_imu_3)
     {
       hardware_free_mailbox_can(&p_self->mailbox_imu_1);
       hardware_free_mailbox_can(&p_self->mailbox_imu_2);

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[44];
+  const uint8_t private_data[52];
 }BmsHv_h;
 
 enum BMS_HV_ATTRIBUTE{
@@ -31,5 +31,11 @@ bms_hv_set_attribute(BmsHv_h* const restrict self,
 
 int8_t
 bms_hv_stop(BmsHv_h* const restrict self)__attribute__((__nonnull__(1)));
+
+int8_t
+bms_hv_start_button(BmsHv_h* const restrict self)__attribute__((__nonnull__(1)));
+
+void
+bms_hv_emergency_shutdown(BmsHv_h* const restrict)__attribute__((__nonnull__(1)));
 
 #endif // !__BMS_HV__

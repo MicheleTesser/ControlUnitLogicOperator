@@ -23,14 +23,11 @@ enum ENGINE_STATUS{
 
 enum PRECHARGE_STATUS{
   PRECHARGE_OFF=0,
-  PRECHARGE_STARTED = 1,
-  PRECHARGE_FINISHED = 3,
-
-  PRECHARGE_ERROR = 2,
+  PRECHARGE_FINISHED,
 };
 
 typedef struct __attribute__((aligned(4))){
-  const char private_date[124];
+  const char private_date[120];
 }EmulationAmkInverter_h;
 
 int8_t
@@ -59,8 +56,5 @@ car_amk_inverter_force_precharge_status(EmulationAmkInverter_h* const restrict s
 
 void
 car_amk_inverter_stop(EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
-
-void
-car_amk_inverter_emergency_shutdown(EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_AMK_INVERTER__
