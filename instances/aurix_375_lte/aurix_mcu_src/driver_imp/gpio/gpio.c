@@ -19,8 +19,8 @@ struct GpioRead_t{
   uint8_t pin_index;
 };
 
-#define GPIO_INPUT_MODE (IfxPort_Mode)(IfxPort_OutputMode_pushPull | IfxPort_OutputIdx_general)
-#define GPIO_OUTPUT_MODE (IfxPort_Mode) IfxPort_InputMode_pullDown
+#define GPIO_INPUT_MODE ((IfxPort_Mode)(IfxPort_OutputMode_pushPull | IfxPort_OutputIdx_general))
+#define GPIO_OUTPUT_MODE ((IfxPort_Mode) IfxPort_InputMode_pullDown)
 
 static struct GpioSpec{
   Ifx_P *port;
@@ -28,15 +28,15 @@ static struct GpioSpec{
   IfxPort_Mode mode;
 }BOARD_GPIOS[__NUM_OF_GPIOS__] =
 {
-  {&MODULE_P33,4, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_0_ALIVE_BLINK, default led 
-  {&MODULE_P33,5, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_1_ALIVE_BLINK, debug led 2
-  {&MODULE_P33,6, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_2_ALIVE_BLINK, debug led 3
-  {&MODULE_P23,1, GPIO_INPUT_MODE }, //TODO: GPIO_RTD_BUTTON, DRIVE_BUTTON
-  {&MODULE_P33,5, GPIO_OUTPUT_MODE }, //INFO: GPIO_RTD_ASSI_SOUND, RTDS
-  {&MODULE_P32,4, GPIO_INPUT_MODE }, //INFO: GPIO_AIR_PRECHARGE_INIT
-  {&MODULE_P23,0, GPIO_INPUT_MODE }, //INFO: GPIO_AIR_PRECHARGE_DONE
-  {&MODULE_P33,3, GPIO_OUTPUT_MODE}, //INFO: GPIO_SCS
-  {&MODULE_P33,2, GPIO_OUTPUT_MODE}, //INFO: GPIO_AS_NODE
+  {&MODULE_P00, 5, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_0_ALIVE_BLINK, default led 
+  {&MODULE_P33, 4, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_1_ALIVE_BLINK, debug led 2
+  {&MODULE_P33, 6, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_2_ALIVE_BLINK, debug led 3
+  {&MODULE_P23, 1, GPIO_INPUT_MODE }, //TODO: GPIO_RTD_BUTTON, DRIVE_BUTTON
+  {&MODULE_P33, 5, GPIO_OUTPUT_MODE }, //INFO: GPIO_RTD_ASSI_SOUND, RTDS
+  {&MODULE_P32, 4, GPIO_INPUT_MODE }, //INFO: GPIO_AIR_PRECHARGE_INIT, AIR_1
+  {&MODULE_P23, 0, GPIO_INPUT_MODE }, //INFO: GPIO_AIR_PRECHARGE_DONE, AIR_2
+  {&MODULE_P33, 3, GPIO_OUTPUT_MODE}, //INFO: GPIO_SCS, SCS_SDC_RELAY
+  {&MODULE_P33, 2, GPIO_OUTPUT_MODE}, //INFO: GPIO_AS_NODE, AS_SDC_RELAY
 };
 
 union GpioRead_h_t_conv{
@@ -126,22 +126,26 @@ struct GpioPwm_t{
 int8_t hardware_init_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)),
     const enum GPIO_PWM_PIN id __attribute__((__unused__)))
 {
-  return -1;
+  //TODO: not yet implemented
+  return 0;
 }
 
 int8_t hardware_init_gpio_pwm_read_only(GpioPwm_h* const restrict self __attribute__((__unused__)),
     const enum GPIO_PWM_PIN id __attribute__((__unused__)))
 {
-  return -1;
+  //TODO: not yet implemented
+  return 0;
 }
 
 int8_t hardware_write_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)),
     const uint16_t duty_cycle __attribute__((__unused__)))
 {
-  return -1;
+  //TODO: not yet implemented
+  return 0;
 }
 
 uint16_t hardware_read_gpio_pwm(GpioPwm_h* const restrict self __attribute__((__unused__)))
 {
+  //TODO: not yet implemented
   return 0;
 }
