@@ -4,6 +4,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
+#include "../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 #pragma GCC diagnostic pop 
 
 #include <stdatomic.h>
@@ -12,10 +13,6 @@
 
 struct AsNodeRead_t{
   GpioRead_h m_gpio_read_as_node;
-};
-
-enum ResStatus{
-  __NUM_OF_RES_STATUS__
 };
 
 enum Tanks_t{
@@ -31,11 +28,10 @@ struct AsNode_t{
   time_var_microseconds m_last_tank_ebs_message_received;
   time_var_microseconds m_last_res_message_received;
   time_var_microseconds m_last_enable_dv_sent;
-  enum ResStatus m_res_status;
   uint8_t m_ebs_check_ok:1;
   struct CanMailbox* p_mailbox_read_embedded_alive;
   struct CanMailbox* p_mailbox_read_tank_ebs;
-  struct CanMailbox* p_mailbox_read_res;
+  struct CanMailbox* p_mailbox_res_on;
   struct CanMailbox* p_mailbox_send_pcu_enable_dv;
   struct CanMailbox* p_mailox_recv_ebs_pressure;
   CarMissionReader_h* p_mission_reader;
@@ -86,9 +82,7 @@ static inline uint8_t _check_ebs(struct AsNode_t *const restrict self)
 
 static inline uint8_t _check_res(struct AsNode_t* const restrict self)
 {
-  return 
-    (timer_time_now() - self->m_last_res_message_received) < 500 MILLIS &&
-    self->m_res_status == 1; //TODO: check res status
+  return  (timer_time_now() - self->m_last_res_message_received) < 500 MILLIS;
 }
 
 static inline uint8_t _check_brakes(struct AsNode_t* const restrict self)
@@ -146,15 +140,15 @@ int8_t as_node_init(AsNode_h* const restrict self,
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
   {
-    p_self->p_mailbox_read_res=
+    p_self->p_mailbox_res_on=
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
-          0, //TODO: not yet defined
-          0);//TODO: not yet defined
+          CAN_ID_DV_RES_ON,
+          CAN_ID_DV_RES_ON);
   }
 
-  if (!p_self->p_mailbox_read_res)
+  if (!p_self->p_mailbox_res_on)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
     return -3;
@@ -174,7 +168,7 @@ int8_t as_node_init(AsNode_h* const restrict self,
   if (!p_self->p_mailbox_read_tank_ebs)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_res);
+    hardware_free_mailbox_can(&p_self->p_mailbox_res_on);
     return -4;
   }
 
@@ -193,7 +187,7 @@ int8_t as_node_init(AsNode_h* const restrict self,
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_read_tank_ebs);
     hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_res);
+    hardware_free_mailbox_can(&p_self->p_mailbox_res_on);
     return -4;
   }
 
@@ -212,7 +206,7 @@ int8_t as_node_init(AsNode_h* const restrict self,
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_read_tank_ebs);
     hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_res);
+    hardware_free_mailbox_can(&p_self->p_mailbox_res_on);
     hardware_free_mailbox_can(&p_self->p_mailbox_send_pcu_enable_dv);
     return -5;
   }
@@ -240,10 +234,9 @@ int8_t as_node_update(AsNode_h* const restrict self)
     p_self->m_last_tank_ebs_message_received = timer_time_now();
   }
 
-  if (hardware_mailbox_read(p_self->p_mailbox_read_res, &mex))
+  if (hardware_mailbox_read(p_self->p_mailbox_res_on, &mex))
   {
     p_self->m_last_res_message_received = timer_time_now();
-    //TODO: update res status
   }
 
   if (hardware_mailbox_read(p_self->p_mailox_recv_ebs_pressure, &mex))
