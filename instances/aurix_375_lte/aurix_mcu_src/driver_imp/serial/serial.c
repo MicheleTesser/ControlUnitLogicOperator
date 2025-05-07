@@ -42,8 +42,6 @@
 /*********************************************************************************************************************/
 /*------------------------------------------------------Macros-------------------------------------------------------*/
 /*********************************************************************************************************************/
-#define SERIAL_BAUDRATE         115200                                      /* Baud rate in bit/s                   */
-
 #define SERIAL_PIN_RX           IfxAsclin0_RXA_P14_1_IN                     /* RX pin of the board                  */
 #define SERIAL_PIN_TX           IfxAsclin0_TX_P14_0_OUT                     /* TX pin of the board                  */
 
@@ -65,16 +63,16 @@ uint8 g_ascTxBuffer[ASC_TX_BUFFER_SIZE + sizeof(Ifx_Fifo) + 8];             /* D
 /*********************************************************************************************************************/
 /*---------------------------------------------Function Implementations----------------------------------------------*/
 /*********************************************************************************************************************/
-//IFX_INTERRUPT(asclin0_Tx_ISR, 0, INTPRIO_ASCLIN0_TX);                         /* Adding the Interrupt Service Routine */
-//void asclin0_Tx_ISR(const uint32_t seral_baudrare __attribute__((__unused__)))
-//{
-//    IfxAsclin_Asc_isrTransmit(&g_asc);
-//}
+IFX_INTERRUPT(asclin0_Tx_ISR, 0, INTPRIO_ASCLIN0_TX);                         /* Adding the Interrupt Service Routine */
+void asclin0_Tx_ISR(void)
+{
+   IfxAsclin_Asc_isrTransmit(&g_asc);
+}
 
 static void _init_UART(const uint32_t serial_baudrare)
 {
     /* Initialize an instance of IfxAsclin_Asc_Config with default values */
-    IfxAsclin_Asc_Config ascConfig;
+    IfxAsclin_Asc_Config ascConfig = {0};
     IfxAsclin_Asc_initModuleConfig(&ascConfig, SERIAL_PIN_TX.module);
 
     /* Set the desired baud rate */
@@ -119,9 +117,12 @@ int8_t serial_read(uint8_t* restrict const o_buffer __attribute__((__unused__)),
     return -1;
 }
 
-int8_t serial_write_str(const char* const restrict buffer)
+int8_t serial_write_str(const char* const restrict buffer __attribute__((__unused__)))
 {
-    Ifx_SizeT count = strlen(buffer);                                               /* Size of the message                      */
-    IfxAsclin_Asc_write(&g_asc, buffer, &count, TIME_INFINITE);         /* Transfer of data                         */
-    return 0;
+  Ifx_SizeT count = strlen(buffer);                                               /* Size of the message                      */
+  char end_line[] = "\n";
+  Ifx_SizeT new_line_size = 1;
+  IfxAsclin_Asc_write(&g_asc, buffer, &count, TIME_INFINITE);         /* Transfer of data                         */
+  IfxAsclin_Asc_write(&g_asc, end_line, &new_line_size, TIME_INFINITE);         /* Transfer of data                         */
+  return 0;
 }

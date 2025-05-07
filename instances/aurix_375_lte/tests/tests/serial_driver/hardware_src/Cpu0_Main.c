@@ -29,7 +29,10 @@
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
+#include "Bsp.h"
 #pragma GCC diagnostic pop
+
+#include "src/lib/raceup_board/raceup_board.h"
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
@@ -46,9 +49,22 @@ void core0_main(void)
     /* Wait for CPU sync event */
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
-    
+
+    Gpio_h alive_pin = {0};
+    time_var_microseconds t=0;
+
+    serial_setup(115200);
+    while (hardware_init_gpio(&alive_pin, GPIO_CORE_0_ALIVE_BLINK)<0)
+    {
+    }
+
+    serial_write_str("init done test started");
     
     while(1)
     {
+      waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 500));
+      /* Wait 500 milliseconds            */
+      gpio_toggle(&alive_pin);
+      serial_write_str("hello");
     }
 }

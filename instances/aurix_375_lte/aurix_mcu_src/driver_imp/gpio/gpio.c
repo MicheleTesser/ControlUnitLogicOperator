@@ -19,8 +19,8 @@ struct GpioRead_t{
   uint8_t pin_index;
 };
 
-#define GPIO_INPUT_MODE ((IfxPort_Mode)(IfxPort_OutputMode_pushPull | IfxPort_OutputIdx_general))
-#define GPIO_OUTPUT_MODE ((IfxPort_Mode) IfxPort_InputMode_pullDown)
+#define GPIO_OUTPUT_MODE ((IfxPort_Mode)(IfxPort_OutputMode_pushPull | IfxPort_OutputIdx_general))
+#define GPIO_INPUT_MODE ((IfxPort_Mode) IfxPort_InputMode_pullDown)
 
 static struct GpioSpec{
   Ifx_P *port;
