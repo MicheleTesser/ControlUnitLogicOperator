@@ -188,6 +188,7 @@ static int _inverter_compute_internal_status(struct EmulationAmkInverter_t* cons
   self.AMK_STATUS.AMK_bInverterOn = mex.AMK_bInverterOn && self.AMK_STATUS.AMK_bQuitDcOn;\
   self.AMK_STATUS.AMK_bQuitInverterOn = self.AMK_STATUS.AMK_bInverterOn;\
   self.AMK_STATUS.AMK_bEnable = mex.AMK_bEnable && self.AMK_STATUS.AMK_bQuitInverterOn && rf_signal;\
+  self.AMK_ActualVelocity = mex.TargetVel;\
   if (mex.AMK_bErrorReset)\
   {\
     self.AMK_STATUS.AMK_bError = 0;\
@@ -434,4 +435,19 @@ car_amk_inverter_force_precharge_status(EmulationAmkInverter_h* const restrict s
   }
   p_self->m_force_precharge =1;
   gpio_set_low(&p_self->o_gpio_precharge_done);
+}
+
+int32_t car_amk_inverter_get_status(EmulationAmkInverter_h* const restrict self,
+    const uint8_t engine, const enum INVERTER_STATUS_INFO info)
+{
+  const union AmkInverter_h_t_conv conv = {self};
+  struct EmulationAmkInverter_t* const restrict p_self = conv.clear;
+
+  switch (info)
+  {
+    case AMK_INVERTER_TARGET_VELOCITY:
+      return p_self->o_engines[engine].amk_data_1.AMK_ActualVelocity;
+  }
+
+  return -1;
 }

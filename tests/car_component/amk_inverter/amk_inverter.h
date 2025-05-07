@@ -4,14 +4,14 @@
 #include <stdint.h>
 
 enum INVERTER_ATTRIBUTE {
-  ERROR,
+  ERROR=0,
   WARNING,
   DERATRING,
   SYSTEM_READY,
 };
 
 enum ENGINE_STATUS{
-  ACTUAL_VELOCITY,
+  ACTUAL_VELOCITY=0,
   TORQUE_CURRENT,
   MAGNETIZING_CURRENT,
   TEMP_MOTOR,
@@ -24,6 +24,10 @@ enum ENGINE_STATUS{
 enum PRECHARGE_STATUS{
   PRECHARGE_OFF=0,
   PRECHARGE_FINISHED,
+};
+
+enum INVERTER_STATUS_INFO{
+  AMK_INVERTER_TARGET_VELOCITY=0,
 };
 
 typedef struct __attribute__((aligned(4))){
@@ -56,5 +60,9 @@ car_amk_inverter_force_precharge_status(EmulationAmkInverter_h* const restrict s
 
 void
 car_amk_inverter_stop(EmulationAmkInverter_h* self)__attribute__((__nonnull__(1)));
+
+int32_t
+car_amk_inverter_get_status(EmulationAmkInverter_h* const restrict self,
+    const uint8_t engine, const enum INVERTER_STATUS_INFO info)__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_AMK_INVERTER__
