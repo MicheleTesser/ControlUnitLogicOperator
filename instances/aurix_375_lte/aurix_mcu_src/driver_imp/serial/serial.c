@@ -120,8 +120,10 @@ int8_t serial_read(uint8_t* restrict const o_buffer __attribute__((__unused__)),
 int8_t serial_write_str(const char* const restrict buffer __attribute__((__unused__)))
 {
   Ifx_SizeT count = strlen(buffer);                                               /* Size of the message                      */
+  char clear_line[] = "\r";
   char end_line[] = "\n";
   Ifx_SizeT new_line_size = 1;
+  IfxAsclin_Asc_write(&g_asc, clear_line, &new_line_size, TIME_INFINITE);         /* Transfer of data                         */
   IfxAsclin_Asc_write(&g_asc, buffer, &count, TIME_INFINITE);         /* Transfer of data                         */
   IfxAsclin_Asc_write(&g_asc, end_line, &new_line_size, TIME_INFINITE);         /* Transfer of data                         */
   return 0;
