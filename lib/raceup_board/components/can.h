@@ -29,6 +29,8 @@ enum CAN_MODULES{
   CAN_GENERAL,
   CAN_DV,
 
+  CAN_DEBUG,
+
   __NUM_OF_CAN_MODULES__
 };
 

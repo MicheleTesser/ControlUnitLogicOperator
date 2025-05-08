@@ -24,6 +24,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  *********************************************************************************************************************/
+#include <stdint.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "Ifx_Types.h"
@@ -31,27 +32,105 @@
 #include "IfxScuWdt.h"
 #pragma GCC diagnostic pop
 
+#include "src/lib/raceup_board/raceup_board.h"
+#include <stddef.h>
+
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
 void core0_main(void)
 {
-    IfxCpu_enableInterrupts();
-    
-    /* !!WATCHDOG0 AND SAFETY WATCHDOG ARE DISABLED HERE!!
-     * Enable the watchdogs and service them periodically if it is required
-     */
-    IfxScuWdt_disableCpuWatchdog(IfxScuWdt_getCpuWatchdogPassword());
-    IfxScuWdt_disableSafetyWatchdog(IfxScuWdt_getSafetyWatchdogPassword());
-    
-    /* Wait for CPU sync event */
-    IfxCpu_emitEvent(&g_cpuSyncEvent);
-    IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
+  int8_t err =0;
+  CanMessage mex = {0};
+  struct CanNode* node = NULL;
+  struct CanMailbox* recv_mailbox = NULL;
 
-    serial_setup(115200);
-    
-    serial_write_str("init done test started");
-    
-    while(1)
+  IfxCpu_enableInterrupts();
+
+  /* !!WATCHDOG0 AND SAFETY WATCHDOG ARE DISABLED HERE!!
+   * Enable the watchdogs and service them periodically if it is required
+   */
+  IfxScuWdt_disableCpuWatchdog(IfxScuWdt_getCpuWatchdogPassword());
+  IfxScuWdt_disableSafetyWatchdog(IfxScuWdt_getSafetyWatchdogPassword());
+
+  /* Wait for CPU sync event */
+  IfxCpu_emitEvent(&g_cpuSyncEvent);
+  IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
+
+  serial_setup(115200);
+
+  
+  while((err = hardware_init_can(CAN_DEBUG, _500_KBYTE_S_)) != 0)
+  {
+    serial_write_str("init can debug node failed with err: ");
+    switch (err)
     {
+      case -1:
+        serial_write_str("invalid node module");
+        break;
+      case -2:
+        serial_write_str("can init node failed");
+        break;
+      default:
+        serial_write_str("unrecognized error");
+        break;
+    
     }
+  }
+
+  node = hardware_init_can_get_ref_node(CAN_DEBUG);
+  while(!node)
+  {
+    node = hardware_init_can_get_ref_node(CAN_DEBUG);
+    serial_write_str("get ref can debug node failed");
+  }
+
+  recv_mailbox = hardware_get_mailbox_single_mex(node, RECV_MAILBOX, 0x2, 1);
+  while(!recv_mailbox)
+  {
+    hardware_get_mailbox_single_mex(node, RECV_MAILBOX, 12, 1);
+    serial_write_str("failed init recv mailbox");
+  }
+
+  serial_write_str("init done test started");
+
+  mex.id = 12;
+  mex.message_size = 2;
+  mex.full_word = 128;
+
+  serial_write_str("test sending mex raw");
+  hardware_write_can(node, &mex);
+
+  time_var_microseconds t =0;
+  char counter = 0;
+
+  while(1)
+  {
+    if (hardware_mailbox_read(recv_mailbox, &mex))
+    {
+      serial_write_raw("mex received: ");
+
+      serial_write_raw("id: ");
+      char id[] = "0";
+      id[0] = '0' + (char) mex.id;
+      serial_write_raw(id);
+
+      serial_write_raw(", size: ");
+      char size[] = "0";
+      size[0] = '0' + (char) mex.message_size;
+      serial_write_raw(size);
+
+      serial_write_raw(", data: ");
+      char data[] = "0";
+      data[0] = '0' + (char) mex.full_word;
+      serial_write_str(data);
+    }
+    ACTION_ON_FREQUENCY(t, get_tick_from_millis(500))
+    {
+      char c[] = "0";
+      serial_write_raw("alive loop: ");
+      counter = (counter +1)%10;
+      c[0] = '0' + counter;
+      serial_write_str(c);
+    }
+  }
 }

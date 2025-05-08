@@ -162,7 +162,7 @@ static int _inverter_compute_internal_status(struct EmulationAmkInverter_t* cons
       p_self->o_precharge_started_at = timer_time_now();
     }
 
-    ACTION_ON_FREQUENCY(p_self->o_precharge_started_at, 5 SECONDS)
+    ACTION_ON_FREQUENCY(p_self->o_precharge_started_at, get_tick_from_millis(5000))
     {
       p_self->o_precharge_started_at = timer_time_now();
       FOR_EACH_ENGINE(engine)
@@ -243,7 +243,7 @@ static int _car_amk_inverter_update(void* args)
   {
     _amk_inverter_update_data(p_self);
     _inverter_compute_internal_status(p_self);
-    ACTION_ON_FREQUENCY(p_self->o_last_sent_at, 50 MILLIS)
+    ACTION_ON_FREQUENCY(p_self->o_last_sent_at, get_tick_from_millis(50))
     {
       _send_data_engine(p_self, CAN_ID_INVERTERFR1);
       _send_data_engine(p_self, CAN_ID_INVERTERFL1);

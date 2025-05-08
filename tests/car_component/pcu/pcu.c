@@ -102,7 +102,7 @@ _pcu_start(void* args)
 
   while (self->run)
   {
-    ACTION_ON_FREQUENCY(t, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t, get_tick_from_millis(50))
     {
       _pcu_update(self);
     }

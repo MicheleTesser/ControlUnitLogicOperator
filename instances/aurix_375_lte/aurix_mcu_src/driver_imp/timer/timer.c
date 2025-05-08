@@ -1,5 +1,4 @@
 #include "../../src/lib/raceup_board/raceup_board.h"
-#include "../raceup_board/components/timer.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -17,3 +16,12 @@ time_var_microseconds timer_time_now(void)
   return now();
 }
 
+time_var_microseconds get_tick_from_millis(uint32_t millis)
+{
+  return IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, millis);
+}
+
+time_var_microseconds get_tick_from_micros(uint32_t micros)
+{
+  return IfxStm_getTicksFromMicroseconds(BSP_DEFAULT_TIMER, micros);
+}

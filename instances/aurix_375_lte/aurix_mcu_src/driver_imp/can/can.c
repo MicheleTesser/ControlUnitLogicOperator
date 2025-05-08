@@ -1,6 +1,4 @@
 #include "../../src/lib/raceup_board/raceup_board.h"
-#include <stdint.h>
-#include <stdatomic.h>
 
 #pragma GCC diagnostic push 
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -16,15 +14,19 @@
 
 #pragma GCC diagnostic pop
 
+#include <stdint.h>
+#include <stdatomic.h>
 #include <stddef.h>
 
 
 //private
 
 #define NUMBER_OF_FIFO_ELEMENTS 15
-#define WAIT_TIME                   1                       /* Number of milliseconds to wait after transmission */
+#define WAIT_TIME                   1                      /* Number of milliseconds to wait after transmission */
 #define DO_NOT_CARE_BUFFER_INDEX    (IfxCan_RxBufferId)0
 #define CHECK_INIT(node,ret) if(!atomic_load(&(node->init_done))){ return ret;}
+
+#define LED_STB         &MODULE_P20,6                                           /* LED: Port, Pin definition            */
 
 typedef struct __attribute__((aligned(4))){
   enum MAILBOX_TYPE type;
@@ -62,7 +64,6 @@ typedef struct CanNode{
     IfxCan_Can canModule;                                   /* CAN module handle                                    */
     IfxCan_Can_Node canNode;                                /* CAN node handle data structure                       */
     IfxCan_Can_NodeConfig canNodeConfig;                    /* CAN node configuration structure                     */
-    IfxCan_Can_Pins pins;
     atomic_bool init_done;
     atomic_bool taken;
     struct CanMailbox rx_mailbox[IfxCan_RxBufferId_63 + 1];
@@ -78,49 +79,59 @@ char __assert_align_can_mailbox_rx[_Alignof(CanMailbox)==_Alignof(CanMailboxRx)?
 char __assert_align_can_mailbox_tx[_Alignof(CanMailbox)==_Alignof(CanMailboxTx)?1:-1];
 #endif
 
+static CanNodeDriver CAN_NODES[__NUM_OF_CAN_MODULES__];
 
-
-static CanNodeDriver CAN_NODES[] = 
-{
-  { 
-    .pins = {
-      &IfxCan_TXD01_P33_9_OUT, IfxPort_OutputMode_pushPull,
-      &IfxCan_RXD01D_P33_10_IN, IfxPort_InputMode_pullUp,
-      IfxPort_PadDriver_cmosAutomotiveSpeed1
-    }, //INFO: node inverter
-  },
-  {
-    .pins = {
-      &IfxCan_TXD12_P23_2_OUT, IfxPort_OutputMode_pushPull,
-      &IfxCan_RXD12C_P23_3_IN, IfxPort_InputMode_pullUp,
-      IfxPort_PadDriver_cmosAutomotiveSpeed1
-    },//INFO: node general
-  },
-  {
-    .pins = {
-      &IfxCan_TXD03_P00_2_OUT, IfxPort_OutputMode_pushPull,
-      &IfxCan_RXD03A_P00_3_IN, IfxPort_InputMode_pullUp,
-      IfxPort_PadDriver_cmosAutomotiveSpeed1
-    },//INFO: node dv
-  },
-};
 //public
 
-int8_t hardware_init_can(const enum CAN_MODULES mod , const enum CAN_FREQUENCY baud_rate)
+int8_t hardware_init_can(const enum CAN_MODULES mod, const enum CAN_FREQUENCY baud_rate)
 {
   if (mod >= __NUM_OF_CAN_MODULES__)
   {
     return -1;
   }
+  IfxCpu_disableInterrupts();
   CanNodeDriver* node = &CAN_NODES[mod];
   Conv_mailbox_tx_rx conv_mailbox = {0};
+  IfxCan_Can_Pins pins =
+  {
+    0, IfxPort_OutputMode_pushPull,
+    0, IfxPort_InputMode_pullUp,
+    IfxPort_PadDriver_cmosAutomotiveSpeed1
+  };
 
+  switch (mod)
+  {
+    case CAN_INVERTER:
+      pins.txPin = &IfxCan_TXD01_P33_9_OUT;
+      pins.rxPin = &IfxCan_RXD01D_P33_10_IN;
+      break;
+    case CAN_GENERAL:
+      pins.txPin = &IfxCan_TXD12_P23_2_OUT;
+      pins.rxPin = &IfxCan_RXD12C_P23_3_IN;
+      break;
+    case CAN_DV:
+      pins.txPin = &IfxCan_TXD03_P00_2_OUT;
+      pins.rxPin = &IfxCan_RXD03A_P00_3_IN;
+      break;
+    case CAN_DEBUG:
+      IfxPort_setPinModeOutput(LED_STB, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
+      IfxPort_setPinLow(LED_STB);
+      pins.txPin = &IfxCan_TXD00_P20_8_OUT;
+      pins.rxPin = &IfxCan_RXD00B_P20_7_IN;
+      break;
+    case __NUM_OF_CAN_MODULES__:
+    default:
+      IfxCpu_enableInterrupts();
+      return -2;
+      break;
+  }
 
-  IfxCan_Can_initModuleConfig(&node->canConfig, node->pins.rxPin->module);
+  IfxCan_Can_initModuleConfig(&node->canConfig, pins.rxPin->module);
   IfxCan_Can_initModule(&node->canModule, &node->canConfig);
   IfxCan_Can_initNodeConfig(&node->canNodeConfig, &node->canModule);
 
-  node->canNodeConfig.nodeId = node->pins.rxPin->nodeId;
+  node->canNodeConfig.pins = &pins;
+  node->canNodeConfig.nodeId = pins.rxPin->nodeId;
   node->canNodeConfig.baudRate.baudrate = baud_rate;
 
   node->canNodeConfig.frame.type = IfxCan_FrameType_transmitAndReceive;
@@ -134,7 +145,7 @@ int8_t hardware_init_can(const enum CAN_MODULES mod , const enum CAN_FREQUENCY b
   node->canNodeConfig.rxConfig.rxFifo0Size = NUMBER_OF_FIFO_ELEMENTS;
   node->canNodeConfig.rxConfig.rxFifo1Size = NUMBER_OF_FIFO_ELEMENTS;
   node->canNodeConfig.rxConfig.rxBufferDataFieldSize= IfxCan_DataFieldSize_8;
-  for (uint8_t i=0; i<IfxCan_RxBufferId_63 + 1; i++)
+  for (uint8_t i=0; i<=IfxCan_RxBufferId_63; i++)
   {
     conv_mailbox.general_mailbox = &node->rx_mailbox[i];
     conv_mailbox.rx_mailbox->filter.number = i;
@@ -147,21 +158,26 @@ int8_t hardware_init_can(const enum CAN_MODULES mod , const enum CAN_FREQUENCY b
 
   if(!IfxCan_Can_initNode(&node->canNode, &node->canNodeConfig))
   {
-    return -2;
+    IfxCpu_enableInterrupts();
+    return -1;
   }
 
   atomic_store(&node->init_done, 1);
+  atomic_store(&node->taken, 0);
 
+  IfxCpu_enableInterrupts();
   return 0;
 }
 
 struct CanNode* hardware_init_can_get_ref_node(const enum CAN_MODULES mod)
 {
-  if (mod < __NUM_OF_CAN_MODULES__ && 
-      atomic_load(&CAN_NODES[mod].init_done) &&
-      !atomic_exchange(&CAN_NODES[mod].taken,1))
+  CanNodeDriver* node = &CAN_NODES[mod];
+  if (mod < __NUM_OF_CAN_MODULES__  &&
+      atomic_load(&node->init_done) &&
+      !atomic_load(&node->taken) )
   {
-    return &CAN_NODES[mod];
+    atomic_store(&node->taken,1);
+    return node;
   }
   return NULL;
 }
@@ -180,29 +196,39 @@ int8_t hardware_read_can(struct CanNode* const restrict self __attribute__((__un
 }
 
 int8_t hardware_write_can(struct CanNode* const restrict self ,
-    const CanMessage* restrict const mex )
+    const CanMessage* restrict const mex __attribute__((__unused__)) )
 {
   CHECK_INIT(self,-1);
 
-  IfxCan_Message tx_message = 
-  {
-    .messageId = mex->id,
-    .messageIdLength = IfxCan_MessageIdLength_standard,
-    .frameMode = IfxCan_FrameMode_standard,
-    .dataLengthCode = mex->message_size,
-  };
+  IfxCan_Message tx_message;
+  IfxCan_Can_initMessage(&tx_message);
+
+  tx_message.messageId = mex->id;
+  tx_message.messageIdLength = IfxCan_MessageIdLength_standard;
+  tx_message.frameMode = IfxCan_FrameMode_standard;
+  tx_message.dataLengthCode = mex->message_size;
+
+  Ifx_TickTime ticksFor1ms = IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, WAIT_TIME);
+  char err_mex[] = "failed sending mex with err: ";
+  int err= 0;
+  int ret=0;
+
+  uint32 data[2] = {1,2};
 
   /* Send the CAN message with the previously defined TX message configuration and content */
-  while(IfxCan_Status_notSentBusy == IfxCan_Can_sendMessage(&self->canNode, &tx_message,(uint32_t *)&mex->words))
+  while(IfxCan_Status_ok !=
+      (err = IfxCan_Can_sendMessage(&self->canNode, &tx_message, &data[0])) &&
+      ret++ < 50)
   {
+    err_mex[sizeof(err_mex)-1] = '0' + err; 
+    serial_write_str(err_mex);
   }
 
   /* Initialize a time variable for waiting 1 ms */
-  Ifx_TickTime ticksFor1ms = IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, WAIT_TIME);
 
   /* Adding additional time delay so we are sure that acceptance filtering took place by the node 1 */
-  wait(ticksFor1ms);
-  return 0;
+  waitTime(ticksFor1ms);
+  return ret == 50? -1: 0;
 }
 
 struct CanMailbox* hardware_get_mailbox(
@@ -234,13 +260,16 @@ struct CanMailbox* hardware_get_mailbox(
   for (uint8_t i=0; i<mailbox_pool_size; i++)
   {
     conv_mailbox.general_mailbox = &mailbox_pool[i];
-    if (!atomic_exchange(&conv_mailbox.general_mailbox->common.in_use,1))
+    if (!atomic_load(&conv_mailbox.general_mailbox->common.in_use))
     {
+      atomic_store(&conv_mailbox.general_mailbox->common.in_use,1);
       conv_mailbox.general_mailbox->common.type = RECV_MAILBOX;
       conv_mailbox.general_mailbox->common.can_node = self;
       mailbox_index = i;
     }
   }
+
+  conv_mailbox.general_mailbox = &mailbox_pool[mailbox_index];
 
   switch (type)
   {
@@ -288,7 +317,7 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
   switch (self->common.type)
   {
     case FIFO_BUFFER:
-      rxBufferId = self - self->common.can_node->rx_mailbox;
+      rxBufferId = self - &self->common.can_node->rx_mailbox[0];
       //WARN: hardcoding one fifo buffer, be aware there are only two for each node in aurix
       if (!IfxCan_Can_getRxFifo0FillLevel(&self->common.can_node->canNode))
       {

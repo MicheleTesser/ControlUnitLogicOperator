@@ -38,8 +38,7 @@ int8_t core_alive_blink_init(
   return 0;
 }
 
-  int8_t
-core_alive_blink_update(CoreAliveBlink_h* const restrict self )
+int8_t core_alive_blink_update(CoreAliveBlink_h* const restrict self )
 {
   union CoreAliveBlink_h_t_conv conv = {self};
   struct CoreAliveBlink_t* const restrict p_self = conv.clear;

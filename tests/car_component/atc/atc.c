@@ -36,7 +36,7 @@ _atc_start(void* arg)
 
   while (self->run)
   {
-    ACTION_ON_FREQUENCY(last_sent, 50 MILLIS)
+    ACTION_ON_FREQUENCY(last_sent, get_tick_from_millis(50))
     {
       can_obj_can2_h_t o2 = {0};
       uint64_t data=0;

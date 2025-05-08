@@ -18,7 +18,7 @@ void main_1(void)
 
   while (hardware_init_can(CAN_GENERAL, _500_KBYTE_S_) <0);
   while (log_init(&log)<0);
-  while (core_alive_blink_init(&alive_blink, GPIO_CORE_1_ALIVE_BLINK, 300 MILLIS) <0);
+  while (core_alive_blink_init(&alive_blink, GPIO_CORE_1_ALIVE_BLINK, get_tick_from_millis(300)) <0);
   while (core_1_feature_init(&feature, &log) <0);
 
   serial_write_str("core 1 wait sync cores");

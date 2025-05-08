@@ -55,7 +55,7 @@ int _start_embedded_system(void* arg)
 
   while (p_self->running)
   {
-    ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t_var, get_tick_from_millis(50))
     {
       if (gpio_read_state(&p_self->m_gpio_pcu_embedded))
       {

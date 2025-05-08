@@ -17,7 +17,7 @@ void main_2(void)
     {
       serial_write_str("init can node dv");
     }
-    while (core_alive_blink_init(&alive_blink, GPIO_CORE_2_ALIVE_BLINK, 1 SECONDS) <0)
+    while (core_alive_blink_init(&alive_blink, GPIO_CORE_2_ALIVE_BLINK, get_tick_from_millis(1000)) <0)
     {
       serial_write_str("alive blink init core 2");
     }

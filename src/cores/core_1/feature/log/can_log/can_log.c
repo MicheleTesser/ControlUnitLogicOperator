@@ -102,7 +102,7 @@ int8_t can_log_update(CanLog_h* const restrict self)
 
   CHECK_INIT(p_self);
 
-  ACTION_ON_FREQUENCY(p_self->m_last_sent, 100 MILLIS)
+  ACTION_ON_FREQUENCY(p_self->m_last_sent, get_tick_from_millis(100))
   {
     //HACK: look amk.c AMK_Actual_Values_1 to check if the position checked with the shift are right
     o2.can_0x065_CarStatus.HV= 

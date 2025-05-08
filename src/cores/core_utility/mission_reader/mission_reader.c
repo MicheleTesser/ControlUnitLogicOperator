@@ -96,7 +96,7 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
     p_self->m_embeed_last_alive = timer_time_now(); 
   }
 
-  if ((timer_time_now() - p_self->m_embeed_last_alive) > 500 MILLIS && 
+  if ((timer_time_now() - p_self->m_embeed_last_alive) > get_tick_from_millis(500) && 
       p_self->current_mission > CAR_MISSIONS_HUMAN &&
       !is_mission_locked(&p_self->o_mission_locker_read))
   {

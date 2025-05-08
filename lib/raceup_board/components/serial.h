@@ -17,4 +17,7 @@ serial_read(uint8_t* restrict const o_buffer, const uint32_t buffer_size)
 extern int8_t
 serial_write_str(const char* const restrict str)__attribute__((__nonnull__));
 
+extern int8_t
+serial_write_raw(const char* const restrict str)__attribute__((__nonnull__));
+
 #endif // !__VIRTUA__SERIAL__

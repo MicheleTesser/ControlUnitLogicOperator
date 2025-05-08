@@ -132,7 +132,7 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
   GpioPwm_h* const restrict gpio_light_blue = &self->gpio_ass_light_blue;
   GpioPwm_h* const restrict gpio_light_yellow = &self->gpio_ass_light_yellow;
 
-  ACTION_ON_FREQUENCY(self->emergency_sound_last_time_on, 8 SECONDS)
+  ACTION_ON_FREQUENCY(self->emergency_sound_last_time_on, get_tick_from_millis(8000))
   {
     rtd_assi_sound_stop(&self->o_assi_sound);
   }
@@ -394,7 +394,7 @@ int8_t dv_update(Dv_h* const restrict self)
     case CAR_MISSIONS_DV_TRACKDRIVE:
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
-      if ((timer_time_now() - p_self->m_embeed_last_alive) > 500 MILLIS)
+      if ((timer_time_now() - p_self->m_embeed_last_alive) > get_tick_from_millis(500))
       {
         p_self->o_dv_mission_status = MISSION_NOT_RUNNING;
         p_self->status = AS_OFF;

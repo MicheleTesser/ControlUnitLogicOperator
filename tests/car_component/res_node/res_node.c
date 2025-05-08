@@ -35,7 +35,7 @@ int _start_res_node(void* arg)
 
   while (p_self->running)
   {
-    ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t_var, get_tick_from_millis(50))
     {
       //TODO: send res status
     }

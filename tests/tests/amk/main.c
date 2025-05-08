@@ -41,7 +41,7 @@ static int core_update(void* args)
 
   while(input->run)
   {
-    ACTION_ON_FREQUENCY(t, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t, get_tick_from_millis(50))
     {
       car_mission_reader_update(input->mission_reader);
       giei_driver_input_update(input->driver_input);

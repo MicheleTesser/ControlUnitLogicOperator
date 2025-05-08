@@ -154,7 +154,7 @@ int8_t ebs_update(DvEbs_h* const restrict self)
     p_self->last_update = timer_time_now();
   }
 
-  if ((timer_time_now() - p_self->last_update) > 500 MILLIS)
+  if ((timer_time_now() - p_self->last_update) > get_tick_from_millis(500))
   {
     serial_write_str("ebs failed\n");
     p_self->m_asb_consistency_check = EBS_NO;

@@ -94,7 +94,7 @@ static int _start_asb(void* arg)
 
   while (p_self->m_running)
   {
-    ACTION_ON_FREQUENCY(t, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t, get_tick_from_millis(50))
     {
       if (hardware_mailbox_read(p_self->p_mailbox_recv_dv_mission_status, &mex))
       {

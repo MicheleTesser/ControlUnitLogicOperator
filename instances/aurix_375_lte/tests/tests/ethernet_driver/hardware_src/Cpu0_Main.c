@@ -31,6 +31,8 @@
 #include "IfxScuWdt.h"
 #pragma GCC diagnostic pop
 
+#include "src/lib/raceup_board/raceup_board.h"
+
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
 void core0_main(void)
@@ -46,7 +48,10 @@ void core0_main(void)
     /* Wait for CPU sync event */
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
-    
+
+    serial_setup(115200);
+
+    serial_write_str("init done test starts");
     
     while(1)
     {

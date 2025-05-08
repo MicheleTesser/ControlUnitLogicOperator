@@ -53,7 +53,7 @@ static int _core_thread_fun(void* arg)
 
   while (*core_input->core_run)
   {
-    ACTION_ON_FREQUENCY(last_update, 50 MILLIS)
+    ACTION_ON_FREQUENCY(last_update, get_tick_from_millis(50))
     {
       as_node_update(core_input->as_node);
       car_mission_reader_update(core_input->mission_reader);

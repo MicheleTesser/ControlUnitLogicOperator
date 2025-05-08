@@ -58,7 +58,7 @@ static int _core_thread_fun(void* arg)
 
   while (*core_input->core_run)
   {
-    ACTION_ON_FREQUENCY(t, 1 MILLIS)
+    ACTION_ON_FREQUENCY(t, get_tick_from_millis(1))
     {
       driving_map_update(core_input->maps);
     }

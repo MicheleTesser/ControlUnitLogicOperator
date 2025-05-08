@@ -72,17 +72,17 @@ static atomic_bool AS_NODE_OWNING =0;
 
 static inline uint8_t _check_embedded(struct AsNode_t *const restrict self)
 {
-  return (timer_time_now() - self->m_last_alive_message_received) < 500 MILLIS;
+  return (timer_time_now() - self->m_last_alive_message_received) < get_tick_from_millis(500);
 }
 
 static inline uint8_t _check_ebs(struct AsNode_t *const restrict self)
 {
-  return (timer_time_now() - self->m_last_tank_ebs_message_received) < 500 MILLIS;
+  return (timer_time_now() - self->m_last_tank_ebs_message_received) < get_tick_from_millis(500);
 }
 
 static inline uint8_t _check_res(struct AsNode_t* const restrict self)
 {
-  return  (timer_time_now() - self->m_last_res_message_received) < 500 MILLIS;
+  return  (timer_time_now() - self->m_last_res_message_received) < get_tick_from_millis(500);
 }
 
 static inline uint8_t _check_brakes(struct AsNode_t* const restrict self)
@@ -281,7 +281,7 @@ int8_t as_node_update(AsNode_h* const restrict self)
 
   o2.can_0x130_Pcu.mode =2;
 
-  ACTION_ON_FREQUENCY(p_self->m_last_enable_dv_sent, 100 MILLIS)
+  ACTION_ON_FREQUENCY(p_self->m_last_enable_dv_sent, get_tick_from_millis(100))
   {
     pack_message_can2(&o2, CAN_ID_PCU, &pcu_payload);
     hardware_mailbox_send(p_self->p_mailbox_send_pcu_enable_dv, pcu_payload);

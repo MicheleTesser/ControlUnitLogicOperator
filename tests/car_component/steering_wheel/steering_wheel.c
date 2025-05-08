@@ -49,7 +49,7 @@ int _start_SteeringWheel(void* arg)
 
   while (p_self->u8_running)
   {
-    ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t_var, get_tick_from_millis(50))
     {
       o2.can_0x047_CarMission.Mission = p_self->o_current_mission;
 

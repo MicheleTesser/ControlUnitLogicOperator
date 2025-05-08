@@ -21,7 +21,7 @@ void main_0(void)
     {
       serial_write_str("trying init can inverter");
     }
-    while (core_alive_blink_init(&alive_blink, GPIO_CORE_0_ALIVE_BLINK, 200 MILLIS) <0)
+    while (core_alive_blink_init(&alive_blink, GPIO_CORE_0_ALIVE_BLINK, get_tick_from_millis(200)) <0)
     {
       serial_write_str("trying init core alive_blink core 0");
     }

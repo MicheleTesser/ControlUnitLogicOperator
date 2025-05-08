@@ -172,7 +172,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
     GIEI_H_T_CONV(self, p_self);
     enum RUNNING_STATUS rt = SYSTEM_OFF;
 
-    ACTION_ON_FREQUENCY(p_self->rtd_sound_start, 3 SECONDS)
+    ACTION_ON_FREQUENCY(p_self->rtd_sound_start, get_tick_from_millis(3000))
     {
       rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }

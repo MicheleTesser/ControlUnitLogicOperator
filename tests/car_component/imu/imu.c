@@ -45,7 +45,7 @@ int _start_imu(void* arg)
 
   while (p_self->running)
   {
-    ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t_var, get_tick_from_millis(50))
     {
       o2.can_0x060_Imu1.acc_x = p_self->imu_params[pos_acc + IMU_AXES_X];
       o2.can_0x060_Imu1.acc_y = p_self->imu_params[pos_acc + IMU_AXES_Y];

@@ -55,7 +55,7 @@ int _start_bms_hv(void* arg)
 
   while (p_self->running)
   {
-    ACTION_ON_FREQUENCY(t_var, 50 MILLIS)
+    ACTION_ON_FREQUENCY(t_var, get_tick_from_millis(50))
     {
       o2.can_0x057_BmsHv1.soc = p_self->soc;
       o2.can_0x057_BmsHv1.avg_volt = p_self->Voltage.mean;

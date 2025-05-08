@@ -300,7 +300,7 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       break;
   }
 
-  ACTION_ON_FREQUENCY(self->u_last_send_info, 10 MILLIS)
+  ACTION_ON_FREQUENCY(self->u_last_send_info, get_tick_from_millis(10))
   {
     pack_message_can2(&o2, CAN_ID_PCU, &data);
     hardware_mailbox_send(self->mailbox_pcu_rf_signal_send, data);
