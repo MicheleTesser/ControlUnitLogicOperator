@@ -28,6 +28,7 @@
 /*********************************************************************************************************************/
 /*-----------------------------------------------------Includes------------------------------------------------------*/
 /*********************************************************************************************************************/
+#include <stdio.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "IfxAsclin_Asc.h"
@@ -125,6 +126,23 @@ int8_t serial_write_str(const char* const restrict buffer __attribute__((__unuse
   IfxAsclin_Asc_write(&g_asc, clear_line, &new_line_size, TIME_INFINITE);         /* Transfer of data                         */
   return 0;
 }
+
+#define TEMPLATE_WRITE_DIG(DIG_TYPE, FORMAT)\
+int8_t serial_write_##DIG_TYPE(const DIG_TYPE __##DIG_TYPE)\
+{\
+  char string[12] = {0};\
+  sprintf(string, FORMAT, __##DIG_TYPE);\
+  serial_write_raw(string);\
+  return 0;\
+}
+
+TEMPLATE_WRITE_DIG(uint8_t, "%u")
+TEMPLATE_WRITE_DIG(uint16_t, "%u")
+TEMPLATE_WRITE_DIG(uint32_t, "%lu")
+TEMPLATE_WRITE_DIG(int8_t, "%d")
+TEMPLATE_WRITE_DIG(int16_t, "%d")
+TEMPLATE_WRITE_DIG(int32_t, "%ld")
+TEMPLATE_WRITE_DIG(float, "%f")
 
 int8_t serial_write_raw(const char* const restrict buffer __attribute__((__unused__)))
 {
