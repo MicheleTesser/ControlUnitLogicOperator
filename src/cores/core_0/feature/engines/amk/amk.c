@@ -87,9 +87,13 @@ typedef struct Inverter{
   enum RUNNING_STATUS engine_status; 
   const DriverInput_h* driver_input; 
   struct CanNode* can_inverter; 
-  struct CanMailbox* engine_mailbox; 
-  struct CanMailbox* mailbox_pcu_rf_signal_send; 
-  struct CanMailbox* mailbox_pcu_rf_signal_read; 
+  struct{
+    struct CanMailbox* p_recv_mailbox_inverter_1; 
+    struct CanMailbox* p_recv_mailbox_inverter_2; 
+  }m_engines_mailbox[__NUM_OF_ENGINES__];
+  struct CanMailbox* mailbox_pcu_rf_signal_send;
+  struct CanMailbox* mailbox_pcu_rf_signal_read;
+
   EmergencyNode_h __attribute__((aligned(4))) amk_emergency; 
 }AMKInverter_t;
 
@@ -411,54 +415,34 @@ int8_t amk_update(AMKInverter_t* const restrict self)
   int8_t err=0;
 
   _amk_update_rtd_procedure(self);
-  if (hardware_mailbox_read(self->engine_mailbox, &mex))
+
+#define READ_MAILBOX_INV(ENGINE, MEX_1, MEX_2)\
+  if (hardware_mailbox_read(self->m_engines_mailbox[ENGINE].p_recv_mailbox_inverter_1, &mex))\
+  {\
+    unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, timer_time_now());\
+    UPDATE_INFO_1(ENGINE, o1.MEX_1);\
+  }\
+  if (hardware_mailbox_read(self->m_engines_mailbox[ENGINE].p_recv_mailbox_inverter_2, &mex))\
+  {\
+    unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, timer_time_now());\
+    UPDATE_INFO_2(ENGINE, o1.MEX_2);\
+  }
+
+  READ_MAILBOX_INV(FRONT_LEFT, can_0x283_InverterFL1, can_0x285_InverterFL2);
+  READ_MAILBOX_INV(FRONT_RIGHT, can_0x284_InverterFR1, can_0x286_InverterFR2);
+  READ_MAILBOX_INV(REAR_LEFT, can_0x287_InverterRL1, can_0x289_InverterRL2);
+  READ_MAILBOX_INV(REAR_RIGHT, can_0x288_InverterRR1, can_0x28a_InverterRR2);
+
+  const float engines_rpm[] = 
   {
-    unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    switch (mex.id)
-    {
-      case CAN_ID_INVERTERFL1:
-        UPDATE_INFO_1(FRONT_LEFT, o1.can_0x283_InverterFL1);
-        break;
-      case CAN_ID_INVERTERFL2:
-        UPDATE_INFO_2(FRONT_LEFT, o1.can_0x285_InverterFL2);
-        break;
-
-      case CAN_ID_INVERTERFR1:
-        UPDATE_INFO_1(FRONT_RIGHT, o1.can_0x284_InverterFR1);
-        break;
-      case CAN_ID_INVERTERFR2:
-        UPDATE_INFO_2(FRONT_RIGHT, o1.can_0x286_InverterFR2);
-        break;
-
-      case CAN_ID_INVERTERRL1:
-        UPDATE_INFO_1(REAR_LEFT, o1.can_0x287_InverterRL1);
-        break;
-      case CAN_ID_INVERTERRL2:
-        UPDATE_INFO_2(REAR_LEFT, o1.can_0x289_InverterRL2);
-        break;
-
-      case CAN_ID_INVERTERRR1:
-        UPDATE_INFO_1(REAR_RIGHT, o1.can_0x288_InverterRR1);
-        break;
-      case CAN_ID_INVERTERRR2:
-        UPDATE_INFO_2(REAR_RIGHT, o1.can_0x28a_InverterRR2);
-        break;
-      default:
-        err--;
-        break;
-    }
-
-    const float engines_rpm[] = 
-    {
-      self->engines[FRONT_LEFT].AMK_TargetVelocity,
-      self->engines[FRONT_RIGHT].AMK_TargetVelocity,
-      self->engines[REAR_LEFT].AMK_TargetVelocity,
-      self->engines[REAR_RIGHT].AMK_TargetVelocity,
-    };
-    if(car_speed_mut_update(&self->m_car_speed, engines_rpm)<0)
-    {
-      err--;
-    }
+    self->engines[FRONT_LEFT].AMK_TargetVelocity,
+    self->engines[FRONT_RIGHT].AMK_TargetVelocity,
+    self->engines[REAR_LEFT].AMK_TargetVelocity,
+    self->engines[REAR_RIGHT].AMK_TargetVelocity,
+  };
+  if(car_speed_mut_update(&self->m_car_speed, engines_rpm)<0)
+  {
+    err--;
   }
 
   memset(&mex, 0, sizeof(mex));
@@ -565,24 +549,27 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
     return -6;
   }
 
-  /*
-    id 0: 643,      0000001010000011
-    id 1: 644,      0000001010000100
-    id 2: 645,      0000001010000101
-    id 3: 646,      0000001010000110
-    id 4: 647,      0000001010000111
-    id 5: 648,      0000001010001000
-    id 6: 649,      0000001010001001
-    id 7: 650,      0000001010001010
-    filter id:280,  0000001010000000
-    mask: fff0,     1111111111110000
-  */
-  p_self->engine_mailbox =
-    hardware_get_mailbox(p_self->can_inverter, FIFO_BUFFER, 0x280, 0xFFF0, 8);
-  if (!p_self->engine_mailbox)
-  {
-    return -8;
-  }
+#define INVERTER_MAILBOX(engine, MAILBOX, CAN_ID)\
+  p_self->m_engines_mailbox[engine].MAILBOX =\
+    hardware_get_mailbox_single_mex(\
+        p_self->can_inverter,\
+        RECV_MAILBOX,\
+        CAN_ID,\
+        message_dlc_can1(CAN_ID));\
+
+
+  INVERTER_MAILBOX(FRONT_LEFT, p_recv_mailbox_inverter_1, CAN_ID_INVERTERFL1)
+  INVERTER_MAILBOX(FRONT_LEFT, p_recv_mailbox_inverter_2, CAN_ID_INVERTERFL2)
+
+  INVERTER_MAILBOX(FRONT_RIGHT, p_recv_mailbox_inverter_1, CAN_ID_INVERTERFR1)
+  INVERTER_MAILBOX(FRONT_RIGHT, p_recv_mailbox_inverter_2, CAN_ID_INVERTERFR2)
+
+  INVERTER_MAILBOX(REAR_LEFT, p_recv_mailbox_inverter_1, CAN_ID_INVERTERRL1)
+  INVERTER_MAILBOX(REAR_LEFT, p_recv_mailbox_inverter_2, CAN_ID_INVERTERRL2)
+
+  INVERTER_MAILBOX(REAR_RIGHT, p_recv_mailbox_inverter_1, CAN_ID_INVERTERRR1)
+  INVERTER_MAILBOX(REAR_RIGHT, p_recv_mailbox_inverter_2, CAN_ID_INVERTERRR2)
+
 
   ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
   {
