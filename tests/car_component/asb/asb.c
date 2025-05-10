@@ -77,7 +77,7 @@ static void _send_ebs_status(struct Asb_t* const restrict self)
   o2.can_0x03c_EbsStatus.ASB_check =
       self->m_system_status &&
       self->m_integrity_check_status &&
-      (timer_time_now() - self->m_start_system_check) > 2 SECONDS;
+      (timer_time_now() - self->m_start_system_check) > get_tick_from_millis(2000);
 
   pack_message_can2(&o2, CAN_ID_EBSSTATUS, &payload);
 
@@ -374,7 +374,7 @@ int8_t asb_stop(Asb_h* const restrict self)
   hardware_free_mailbox_can(&p_self->p_mailbox_recv_car_status);
   hardware_free_mailbox_can(&p_self->p_mailbox_recv_brake_request);
   hardware_free_mailbox_can(&p_self->p_mailbox_recv_asb_check_req);
-  wait_milliseconds(300 MILLIS);
+  wait_milliseconds(get_tick_from_millis(300));
   hardware_init_new_external_node_destroy(p_self->can_node_general);
   p_self->can_node_general = NULL;
 
