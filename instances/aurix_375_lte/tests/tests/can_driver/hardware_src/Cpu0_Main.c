@@ -66,10 +66,15 @@ void core0_main(void)
   int8_t err =0;
   CanMessage mex = {0};
   struct CanNode* node = NULL;
+  struct CanNode* node_1 = NULL;
   struct CanMailbox* recv_mailbox = NULL;
   struct CanMailbox* recv_mailbox_1 = NULL;
   struct CanMailbox* recv_mailbox_2 = NULL;
-  struct CanMailbox* send_mailbox= NULL;
+
+  struct CanMailbox* send_mailbox = NULL;
+  struct CanMailbox* send_mailbox_debug = NULL;
+
+  struct CanMailbox* recv_mailbox_debug = NULL;
 
   IfxCpu_enableInterrupts();
 
@@ -86,6 +91,24 @@ void core0_main(void)
   serial_setup(115200);
 
   
+  while((err = hardware_init_can(CAN_GENERAL, _500_KBYTE_S_)) != 0)
+  {
+    serial_write_str("init can dv node failed with err: ");
+    switch (err)
+    {
+      case -1:
+        serial_write_str("invalid node module");
+        break;
+      case -2:
+        serial_write_str("can init node failed");
+        break;
+      default:
+        serial_write_str("unrecognized error");
+        break;
+    
+    }
+  }
+
   while((err = hardware_init_can(CAN_DEBUG, _500_KBYTE_S_)) != 0)
   {
     serial_write_str("init can debug node failed with err: ");
@@ -104,10 +127,17 @@ void core0_main(void)
     }
   }
 
-  node = hardware_init_can_get_ref_node(CAN_DEBUG);
+  node = hardware_init_can_get_ref_node(CAN_GENERAL);
   while(!node)
   {
-    node = hardware_init_can_get_ref_node(CAN_DEBUG);
+    node = hardware_init_can_get_ref_node(CAN_GENERAL);
+    serial_write_str("get ref can debug node failed");
+  }
+
+  node_1 = hardware_init_can_get_ref_node(CAN_DEBUG);
+  while(!node_1)
+  {
+    node_1 = hardware_init_can_get_ref_node(CAN_DEBUG);
     serial_write_str("get ref can debug node failed");
   }
 
@@ -117,6 +147,7 @@ void core0_main(void)
    recv_mailbox = hardware_get_mailbox_single_mex(node, RECV_MAILBOX, 0x2, 1);
     serial_write_str("failed init recv mailbox");
   }
+
 
   recv_mailbox_1 = hardware_get_mailbox_single_mex(node, RECV_MAILBOX, 0x3, 1);
   while(!recv_mailbox_1)
@@ -139,6 +170,20 @@ void core0_main(void)
     serial_write_str("failed init send mailbox");
   }
 
+  send_mailbox_debug = hardware_get_mailbox_single_mex(node_1, SEND_MAILBOX, 0x10, 8);
+  while(!send_mailbox_debug)
+  {
+   send_mailbox_debug = hardware_get_mailbox_single_mex(node_1, SEND_MAILBOX, 0x10, 8);
+    serial_write_str("failed init send mailbox");
+  }
+
+  recv_mailbox_debug = hardware_get_mailbox_single_mex(node_1, RECV_MAILBOX, 0x5, 1);
+  while(!recv_mailbox_debug)
+  {
+    recv_mailbox_debug = hardware_get_mailbox_single_mex(node_1, RECV_MAILBOX, 0x5, 1);
+    serial_write_str("failed init recv mailbox");
+  }
+  
   serial_write_str("init done test started");
 
   mex.id = 12;
@@ -153,12 +198,14 @@ void core0_main(void)
 
   while(1)
   {
-    read_mailbox(recv_mailbox, "mailbox_0");
+
     read_mailbox(recv_mailbox_1, "mailbox_1");
     read_mailbox(recv_mailbox_2, "mailbox_2");
 
     ACTION_ON_FREQUENCY(t, get_tick_from_millis(5000))
     {
+      read_mailbox(recv_mailbox_debug, "mailbox_debug");
+      read_mailbox(recv_mailbox, "mailbox_0");
       serial_write_raw("alive loop: ");
       counter = (counter +1)%10;
       serial_write_uint8_t(counter);
@@ -167,6 +214,13 @@ void core0_main(void)
       if((err=hardware_mailbox_send(send_mailbox, 32))<0)
       {
         serial_write_raw("send mailbox failed with err: ");
+        serial_write_int8_t(err);
+        serial_write_str("");
+      }
+
+      if((err=hardware_mailbox_send(send_mailbox_debug, 32))<0)
+      {
+        serial_write_raw("send mailbox debug failed with err: ");
         serial_write_int8_t(err);
         serial_write_str("");
       }

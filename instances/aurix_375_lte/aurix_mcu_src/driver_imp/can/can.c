@@ -332,9 +332,6 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
       {
         return 0;
       }
-      serial_write_raw("fifo queue has mex: ");
-      serial_write_int8_t(f);
-      serial_write_str("");
       break;
     case RECV_MAILBOX:
       rxBufferId = self - self->common.can_node->rx_mailbox;
@@ -343,6 +340,9 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
       {
         return 0;
       }
+      serial_write_raw("recv message from mailbox: ");
+      serial_write_int8_t(rxBufferId);
+      serial_write_str("");
       break;
     case SEND_MAILBOX:
       return -1;
