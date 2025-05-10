@@ -52,7 +52,7 @@ static int _core_thread_fun(void* arg)
 void test_dv_module_update(TestInput* t_input)
 {
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_DV_TRACKDRIVE);
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(get_tick_from_millis(100));
 }
 
 int main(void)

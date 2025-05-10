@@ -55,7 +55,7 @@ static int _core_thread_fun(void* arg)
 void test_as_node_mission_none(TestInput* t_input)
 {
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_NONE);
-  wait_milliseconds(200 MILLIS);
+  wait_milliseconds(get_tick_from_millis(200));
 
   _check_status(!as_node_get_status(t_input->p_as_node) &&
       !gpio_read_state(t_input->p_gpio_as_node),
@@ -68,7 +68,7 @@ void test_as_node_mission_none(TestInput* t_input)
 void test_as_node_mission_human(TestInput* t_input)
 {
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
-  wait_milliseconds(200 MILLIS);
+  wait_milliseconds(get_tick_from_millis(200));
 
   _check_status(as_node_get_status(t_input->p_as_node) &&
       gpio_read_state(t_input->p_gpio_as_node),
@@ -81,7 +81,7 @@ void test_as_node_mission_human(TestInput* t_input)
 void test_as_node_mission_dv(TestInput* t_input)
 {
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_DV_SKIDPAD);
-  wait_milliseconds(200 MILLIS);
+  wait_milliseconds(get_tick_from_millis(200));
 
   _check_status(!as_node_get_status(t_input->p_as_node) &&
       !gpio_read_state(t_input->p_gpio_as_node),

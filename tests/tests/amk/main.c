@@ -98,17 +98,17 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   _check_status_rtd(self, SYSTEM_OFF);
 
   bms_hv_start_button(&input->external_boards->bms_hv);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
 
   printf("system ready and precharge started: ");
   _check_status_rtd(self, SYSTEM_PRECAHRGE);
 
-  wait_milliseconds(1 SECONDS);
+  wait_milliseconds(get_tick_from_millis(1000));
 
   printf("still system ready and precharge after 1 second: ");
   _check_status_rtd(self, SYSTEM_PRECAHRGE);
 
-  wait_milliseconds(10 SECONDS);
+  wait_milliseconds(get_tick_from_millis(10000));
 
   printf("still system ready and precharge completed -> TS_READY: ");
   _check_status_rtd(self, TS_READY);
@@ -116,29 +116,29 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   printf("activating rf with brake pedal at 5 percentage in manual mode from TS_READY -> TS_READY: ");
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 5);
   gpio_set_low(input->rf);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(self, TS_READY);
 
   printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 25);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(self, RUNNING);
 
   printf("disabling rf in manual mode from RUNNING -> SYSTEM_OFF: ");
   bms_hv_start_button(&input->external_boards->bms_hv);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   gpio_set_high(input->rf);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(self, SYSTEM_OFF);
 
   bms_hv_start_button(&input->external_boards->bms_hv);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
 
   printf("system ready and precharge started: ");
   _check_status_rtd(self, SYSTEM_PRECAHRGE);
 
-  wait_milliseconds(6 SECONDS);
+  wait_milliseconds(get_tick_from_millis(6000));
 
   printf("still system ready and precharge completed -> TS_READY: ");
   _check_status_rtd(self, TS_READY);
@@ -146,13 +146,13 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING: ");
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 25);
   gpio_set_low(input->rf);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(self, RUNNING);
 
 
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency ");
   bms_hv_emergency_shutdown(&input->external_boards->bms_hv);
-  wait_milliseconds(1 SECONDS);
+  wait_milliseconds(get_tick_from_millis(1000));
   _check_status_rtd(self, SYSTEM_OFF);
   if(EmergencyNode_is_emergency_state(input->emergency_node))
   {
@@ -166,7 +166,7 @@ static void test_start_precharge(EngineType* self, TestInput* input)
   printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved ");
   gpio_set_high(input->rf);
   bms_hv_start_button(&input->external_boards->bms_hv);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(self, SYSTEM_OFF);
   if(!EmergencyNode_is_emergency_state(input->emergency_node))
   {

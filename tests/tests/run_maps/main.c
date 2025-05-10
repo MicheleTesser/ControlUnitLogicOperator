@@ -93,7 +93,7 @@ static void _check_power_map(TestInput* t_input, uint8_t MAP_NUM, float KW, floa
   struct MapsData data={0};
 
   steering_wheel_select_map(&t_input->ExternalBoards_t->steering_wheel, MAPS_TYPE_POWER, MAP_NUM);
-  wait_milliseconds(75 MILLIS);
+  wait_milliseconds(get_tick_from_millis(75));
 
   _get_data(t_input->maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
@@ -110,7 +110,7 @@ static void _check_regen_map(TestInput* t_input, uint8_t MAP_NUM, float REGEN_SC
 
   steering_wheel_select_map(
       &t_input->ExternalBoards_t->steering_wheel, MAPS_TYPE_REGEN, MAP_NUM);
-  wait_milliseconds(75 MILLIS);
+  wait_milliseconds(get_tick_from_millis(75));
 
   _get_data(t_input->maps, &data);
   printf("checking test map :%d\t", MAP_NUM );
@@ -126,7 +126,7 @@ static void _check_repartition_map(TestInput* t_input, uint8_t MAP_NUM, float RE
   struct MapsData data={0};
 
   steering_wheel_select_map(&t_input->ExternalBoards_t->steering_wheel, MAPS_TYPE_TV_REPARTITION, MAP_NUM);
-  wait_milliseconds(75 MILLIS);
+  wait_milliseconds(get_tick_from_millis(75));
 
   _get_data(t_input->maps, &data);
   printf("checking test map :%d\t", MAP_NUM );

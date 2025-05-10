@@ -105,7 +105,7 @@ static void test_giei_rtd(CoreInput* const input)
   printf("switching to human driver\n");
   pcu_stop_embedded(&input->external_boards->pcu);
   steering_wheel_select_mission(&input->external_boards->steering_wheel, CAR_MISSIONS_HUMAN);
-  wait_milliseconds(200 MILLIS);
+  wait_milliseconds(get_tick_from_millis(200));
 
   FOR_EACH_ENGINE(engine)
   {
@@ -114,60 +114,60 @@ static void test_giei_rtd(CoreInput* const input)
 
   printf("starting precharge: SYSTEM_OFF -> SYSTEM_PRECAHRGE\n");
   bms_hv_start_button(&input->external_boards->bms_hv);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_PRECAHRGE, 0 ,0);
 
   printf("after 1 second still in precharge: SYSTEM_PRECAHRGE -> SYSTEM_PRECAHRGE\n");
-  wait_milliseconds(1 SECONDS);
+  wait_milliseconds(get_tick_from_millis(1000));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_PRECAHRGE, 0, 0);
 
   printf("after 5 seconds precharge completed: SYSTEM_PRECAHRGE -> TS_READY\n");
-  wait_milliseconds(5 SECONDS);
+  wait_milliseconds(get_tick_from_millis(5000));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, TS_READY, 0, 0);
 
   printf("activating rf with brake pedal at 5 percentage in manual mode from TS_READY -> TS_READY\n");
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 5);
   gpio_set_low(input->rf);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, TS_READY, 0, 0);
 
   printf("activating rf with brake pedal at 25 percentage in manual mode from TS_READY -> RUNNING\n");
   atc_pedals_steering_wheel(&input->external_boards->atc, ATC_BRAKE, 25);
   gpio_set_low(input->rf);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("waiting 2 seconds sound still on\n");
-  wait_milliseconds(2 SECONDS);
+  wait_milliseconds(get_tick_from_millis(2000));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("waiting 2 seconds sound off\n");
-  wait_milliseconds(2 SECONDS);
+  wait_milliseconds(get_tick_from_millis(2000));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 0);
 
   printf("disabling rf in manual mode from RUNNING -> SYSTEM_OFF\n");
   gpio_set_high(input->rf);
   bms_hv_start_button(&input->external_boards->bms_hv);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0, 0);
 
   printf("restarting precharge requence enabling ts and rf in manual mode from SYSTEM_OFF -> RUNNING \n");
   bms_hv_start_button(&input->external_boards->bms_hv);
   car_amk_inverter_force_precharge_status(&input->external_boards->amk_inverter);
   while (!car_amk_inverter_precharge_status(&input->external_boards->amk_inverter));
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   gpio_set_low(input->rf);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, RUNNING, 0, 1);
 
   printf("emergency shutdown hv: RUNNING -> SYSTEM_OFF and raise emergency\n");
   bms_hv_emergency_shutdown(&input->external_boards->bms_hv);
-  wait_milliseconds(3 SECONDS);
+  wait_milliseconds(get_tick_from_millis(3000));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 1, 0);
 
   printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved\n");
   gpio_set_high(input->rf);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(input->giei, input->emergency_node, input->rtd_sound, SYSTEM_OFF, 0, 0);
 }
 

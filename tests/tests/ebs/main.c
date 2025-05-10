@@ -73,7 +73,7 @@ void test_ebs_test_activation_of_ebs_human_driver(TestInput* t_input)
   while (!car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter))
   {
     car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
-    wait_milliseconds(5 SECONDS);
+    wait_milliseconds(get_tick_from_millis(5000));
   }
 
   _check_status(!ebs_on(t_input->ebs), "precharge done and ebs is currently off");
@@ -81,7 +81,7 @@ void test_ebs_test_activation_of_ebs_human_driver(TestInput* t_input)
       ebs_asb_consistency_check(t_input->ebs) == EBS_NO,
       "started consistency check of ebs");
 
-  wait_milliseconds(1 SECONDS);
+  wait_milliseconds(get_tick_from_millis(1000));
 
   enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
   _check_status(consistency == EBS_NO,"ebs consistency still not done");
@@ -102,18 +102,18 @@ void test_ebs_test_activation_of_ebs_dv_driver(TestInput* t_input)
   while (!car_amk_inverter_precharge_status(&t_input->external_boards->amk_inverter))
   {
     car_amk_inverter_force_precharge_status(&t_input->external_boards->amk_inverter);
-    wait_milliseconds(5 SECONDS);
+    wait_milliseconds(get_tick_from_millis(5000));
   }
 
   asb_set_parameter(&t_input->external_boards->asb, INTEGRITY_CHECK_STATUS, 1);
-  wait_milliseconds(500 MILLIS);
+  wait_milliseconds(get_tick_from_millis(500));
 
   _check_status(ebs_on(t_input->ebs), "precharge done and ebs is currently on");
   _check_status(
       ebs_asb_consistency_check(t_input->ebs) == EBS_NO,
       "started consistency check of ebs");
 
-  wait_milliseconds(3 SECONDS);
+  wait_milliseconds(get_tick_from_millis(3000));
 
   enum ASB_INTEGRITY_CHECK_RESULT consistency = ebs_asb_consistency_check(t_input->ebs);
   _check_status(consistency == EBS_OK,"ebs consistency done with success");

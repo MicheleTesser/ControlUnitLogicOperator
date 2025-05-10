@@ -49,9 +49,9 @@ static void _test_status_mission(TestInput* input,
     enum CAR_MISSIONS expected, enum CAR_MISSIONS given)
 {
   steering_wheel_select_mission(input->stw, given);
-  wait_milliseconds(200 MILLIS);
+  wait_milliseconds(get_tick_from_millis(200));
   steering_wheel_select_mission(input->stw, given);
-  wait_milliseconds(200 MILLIS);
+  wait_milliseconds(get_tick_from_millis(200));
   uint8_t m = car_mission_reader_get_current_mission(input->mission_reader);
   if (m==expected)
   {
@@ -76,7 +76,7 @@ void test_mission(TestInput* input)
   }
 
   steering_wheel_select_mission(input->stw, CAR_MISSIONS_NONE);
-  wait_milliseconds(100 MILLIS);
+  wait_milliseconds(get_tick_from_millis(100));
   lock_mission(input->locker);
 
   printf("testing update of mission with lock\n");
