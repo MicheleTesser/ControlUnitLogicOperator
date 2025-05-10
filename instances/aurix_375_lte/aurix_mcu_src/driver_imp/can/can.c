@@ -240,7 +240,6 @@ struct CanMailbox* hardware_get_mailbox(
 {
   CHECK_INIT(self, NULL);
   CanMailbox* mailbox_pool = NULL;
-  static uint8_t second_fifo_buffer =0; //HACK: easy access second fifo buffer, TO REMOVE
   Conv_mailbox_tx_rx conv_mailbox = {0};
   uint32_t mailbox_pool_size = 0;
   uint8_t mailbox_index =0;
@@ -248,6 +247,8 @@ struct CanMailbox* hardware_get_mailbox(
   switch (type)
   {
     case FIFO_BUFFER:
+      //INFO: not yet implemented
+      return NULL;
     case RECV_MAILBOX:
       mailbox_pool = &self->rx_mailbox[0];
       mailbox_pool_size = IfxCan_RxBufferId_63 + 1;
@@ -266,7 +267,6 @@ struct CanMailbox* hardware_get_mailbox(
     if (!atomic_load(&conv_mailbox.general_mailbox->common.in_use))
     {
       atomic_store(&conv_mailbox.general_mailbox->common.in_use,1);
-      conv_mailbox.general_mailbox->common.type = RECV_MAILBOX;
       conv_mailbox.general_mailbox->common.can_node = self;
       mailbox_index = i;
       break;
@@ -283,15 +283,15 @@ struct CanMailbox* hardware_get_mailbox(
       conv_mailbox.rx_mailbox->filter.id1= filter_id;
       conv_mailbox.rx_mailbox->filter.id2= filter_mask;
       conv_mailbox.rx_mailbox->filter.elementConfiguration=
-        IfxCan_FilterElementConfiguration_storeInRxFifo0 + second_fifo_buffer;
+        IfxCan_FilterElementConfiguration_storeInRxFifo0; //HACK: test
       conv_mailbox.rx_mailbox->filter.rxBufferOffset= DO_NOT_CARE_BUFFER_INDEX;
 
       IfxCan_Can_setStandardFilter(
           &conv_mailbox.general_mailbox->common.can_node->canNode,
           &conv_mailbox.rx_mailbox->filter);
-      second_fifo_buffer=1;
       break;
     case RECV_MAILBOX:
+      conv_mailbox.general_mailbox->common.type = RECV_MAILBOX;
       conv_mailbox.rx_mailbox->filter.type = IfxCan_FilterType_classic;
       conv_mailbox.rx_mailbox->filter.id1= filter_id;
       conv_mailbox.rx_mailbox->filter.id2= filter_mask;
@@ -319,19 +319,22 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
 {
   IfxCan_Message message;
   IfxCan_RxBufferId rxBufferId =0;
+  uint8_t f=0;
 
   IfxCan_Can_initMessage(&message);
 
   switch (self->common.type)
   {
     case FIFO_BUFFER:
-      rxBufferId = self - &self->common.can_node->rx_mailbox[0];
+      message.readFromRxFifo0 = TRUE;
       //WARN: hardcoding one fifo buffer, be aware there are only two for each node in aurix
-      if (!IfxCan_Can_getRxFifo0FillLevel(&self->common.can_node->canNode))
+      if (!(f=IfxCan_Can_getRxFifo0FillLevel(&self->common.can_node->canNode)))
       {
-        message.readFromRxFifo0 = TRUE;
         return 0;
       }
+      serial_write_raw("fifo queue has mex: ");
+      serial_write_int8_t(f);
+      serial_write_str("");
       break;
     case RECV_MAILBOX:
       rxBufferId = self - self->common.can_node->rx_mailbox;

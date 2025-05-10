@@ -37,6 +37,30 @@
 
 IFX_ALIGN(4) IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
+void read_mailbox(struct CanMailbox* recv_mailbox, char* mailbox_name)
+{
+  CanMessage mex = {0};
+  if (hardware_mailbox_read(recv_mailbox, &mex))
+  {
+    serial_write_raw("mex received ");
+    serial_write_raw(mailbox_name);
+    serial_write_raw(" :");
+
+    serial_write_raw("id: ");
+    serial_write_uint32_t(mex.id);
+
+    serial_write_raw(", size: ");
+    serial_write_uint8_t(mex.message_size);
+
+    serial_write_raw(", data word 1: ");
+    serial_write_uint32_t(((uint32_t*) &mex.full_word)[0]);
+    serial_write_raw(", data word 2: ");
+    serial_write_uint32_t(((uint32_t*) &mex.full_word)[1]);
+
+    serial_write_str("");
+  }
+}
+
 void core0_main(void)
 {
   int8_t err =0;
@@ -46,7 +70,6 @@ void core0_main(void)
   struct CanMailbox* recv_mailbox_1 = NULL;
   struct CanMailbox* recv_mailbox_2 = NULL;
   struct CanMailbox* send_mailbox= NULL;
-  struct CanMailbox* fifo_mailbox= NULL;
 
   IfxCpu_enableInterrupts();
 
@@ -109,13 +132,6 @@ void core0_main(void)
     serial_write_str("failed init recv mailbox_2");
   }
 
-  fifo_mailbox = hardware_get_mailbox(node, FIFO_BUFFER, 0x2,0x2, 8);
-  while(!fifo_mailbox)
-  {
-   fifo_mailbox = hardware_get_mailbox(node, FIFO_BUFFER, 0x2,0x2, 8);
-    serial_write_str("failed init fifo mailbox");
-  }
-
   send_mailbox = hardware_get_mailbox_single_mex(node, SEND_MAILBOX, 0x10, 8);
   while(!send_mailbox)
   {
@@ -137,73 +153,9 @@ void core0_main(void)
 
   while(1)
   {
-    if (hardware_mailbox_read(recv_mailbox, &mex))
-    {
-      serial_write_raw("mex received mailbox_0: ");
-
-      serial_write_raw("id: ");
-      serial_write_uint32_t(mex.id);
-
-      serial_write_raw(", size: ");
-      serial_write_uint8_t(mex.message_size);
-
-      serial_write_raw(", data: ");
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[0]);
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[1]);
-
-      serial_write_str("");
-    }
-
-    if (hardware_mailbox_read(recv_mailbox_1, &mex))
-    {
-      serial_write_raw("mex received mailbox_1: ");
-
-      serial_write_raw("id: ");
-      serial_write_uint32_t(mex.id);
-
-      serial_write_raw(", size: ");
-      serial_write_uint8_t(mex.message_size);
-
-      serial_write_raw(", data: ");
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[0]);
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[1]);
-
-      serial_write_str("");
-    }
-
-    if (hardware_mailbox_read(recv_mailbox_2, &mex))
-    {
-      serial_write_raw("mex received mailbox_2: ");
-
-      serial_write_raw("id: ");
-      serial_write_uint32_t(mex.id);
-
-      serial_write_raw(", size: ");
-      serial_write_uint8_t(mex.message_size);
-
-      serial_write_raw(", data: ");
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[0]);
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[1]);
-
-      serial_write_str("");
-    }
-
-    if (hardware_mailbox_read(fifo_mailbox, &mex))
-    {
-      serial_write_raw("mex received mailbox fifo: ");
-
-      serial_write_raw("id: ");
-      serial_write_uint32_t(mex.id);
-
-      serial_write_raw(", size: ");
-      serial_write_uint8_t(mex.message_size);
-
-      serial_write_raw(", data: ");
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[0]);
-      serial_write_uint32_t(((uint32_t*) &mex.full_word)[1]);
-
-      serial_write_str("");
-    }
+    read_mailbox(recv_mailbox, "mailbox_0");
+    read_mailbox(recv_mailbox_1, "mailbox_1");
+    read_mailbox(recv_mailbox_2, "mailbox_2");
 
     ACTION_ON_FREQUENCY(t, get_tick_from_millis(5000))
     {
