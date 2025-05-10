@@ -79,7 +79,7 @@ core_1_driver_input_init(
             "driver input steering wheel");
 
     ADD_ENTRY_TO_LOG(log, __float__, p_self->impl,
-            "driver input implausibility list");
+            "driver input impls list");
 
 
     ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
