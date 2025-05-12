@@ -10,7 +10,7 @@ void main_0(void)
     CoreAliveBlink_h alive_blink;
     Core0Feature_h feature;
 
-    while (hardware_init_serial()<0);
+    while (serial_setup(115200)<0);
     
     serial_write_str("start init core 0");
     while (EmergencyNode_class_init()<0)
