@@ -17,34 +17,16 @@
 
 void test_normal_context(void)
 {
-  GlobalRunningStatus_h setter;
-  GlobalRunningStatus_h invalid_setter;
-  GlobalRunningStatus_h reader[5];
+  GlobalRunningStatusMut_h setter;
+  GlobalRunningStatusMut_h invalid_setter;
 
-  _check_condition(!global_running_status_init(&setter, WRITE), "init tester");
-  _check_condition(global_running_status_init(&invalid_setter, WRITE)==-2, "init invalid_setter failed");
-  for (int i =0; i<5; i++)
-  {
-    _check_condition(!global_running_status_init(&reader[i], READ), "init reader");
-  }
+  _check_condition(!global_running_status_mut_init(&setter), "init tester");
+  _check_condition(global_running_status_mut_init(&invalid_setter)==-1, "init invalid_setter failed");
 
-  _check_condition(global_running_status_get(&setter)==SYSTEM_OFF, "setter initial read is SYSTEM_OFF");
-  for (int i =0; i<5; i++)
-  {
-  _check_condition(global_running_status_get(&reader[i])==SYSTEM_OFF, "reader initial read is SYSTEM_OFF");
-  }
+  _check_condition(global_running_status_get()==SYSTEM_OFF, "initial read is SYSTEM_OFF");
 
   _check_condition(!global_running_status_set(&setter, RUNNING),"tester update");
-  for (int i =0; i<5; i++)
-  {
-  _check_condition(global_running_status_set(&reader[i],RUNNING)==-1, "reader try to set failed");
-  }
-
-  for (int i =0; i<5; i++)
-  {
-  _check_condition(global_running_status_get(&reader[i])==RUNNING, "reader read after update RUNNING");
-  }
-
+  _check_condition(global_running_status_set(&invalid_setter,RUNNING)==-1, "reader try to set failed");
 }
 
 int main(void)

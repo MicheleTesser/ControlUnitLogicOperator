@@ -40,9 +40,10 @@ int8_t global_running_status_mut_init(
   if (!atomic_load(&RUNNING_STATUS_SHARED.owner))
   {
     atomic_store(&RUNNING_STATUS_SHARED.owner, p_self->owner_id);
+    return 0;
   }
 
-  return 0;
+  return -1;
 }
   
 
