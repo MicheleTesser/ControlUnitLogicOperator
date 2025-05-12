@@ -12,7 +12,6 @@
 
 struct CanLog_t{
   time_var_microseconds m_last_sent;
-  GlobalRunningStatus_h m_running_status;
   GpioRead_h m_start_precharge_gpio;
   GpioRead_h m_done_precharge_gpio;
   const uint16_t* p_log_var_amk_status_fl;
@@ -44,11 +43,6 @@ int8_t can_log_init(CanLog_h* const restrict self)
   struct CanNode* can_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
-
-  if(global_running_status_init(&p_self->m_running_status, READ)<0)
-  {
-    return -1;
-  }
 
   if (hardware_init_read_permission_gpio(&p_self->m_start_precharge_gpio, GPIO_AIR_PRECHARGE_INIT)<0)
   {
@@ -113,7 +107,7 @@ int8_t can_log_update(CanLog_h* const restrict self)
 
     o2.can_0x065_CarStatus.AIR1= gpio_read_state(&p_self->m_start_precharge_gpio);
     o2.can_0x065_CarStatus.AIR2= gpio_read_state(&p_self->m_done_precharge_gpio);
-    o2.can_0x065_CarStatus.RunningStatus = global_running_status_get(&p_self->m_running_status);
+    o2.can_0x065_CarStatus.RunningStatus = global_running_status_get();
     o2.can_0x065_CarStatus.speed = car_speed_get();
 
     pack_message_can2(&o2, CAN_ID_CARSTATUS, &payload);

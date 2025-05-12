@@ -18,7 +18,6 @@ struct CoolingDevice_t{
 
 struct Cooling_t{
   struct CoolingDevice_t devices[__NUM_OF_COOLING_DEVICES__];
-  GlobalRunningStatus_h m_global_running_status;
   struct CanMailbox* p_send_mailbox_pcu;
   struct CanMailbox* p_recv_mailbox_stw;
 };
@@ -44,11 +43,6 @@ int8_t cooling_init(Cooling_h* const restrict self ,
 
   memset(p_self, 0, sizeof(*p_self));
 
-
-  if(global_running_status_init(&p_self->m_global_running_status, READ)<0)
-  {
-    return -1;
-  }
 
   {
     LogEntry_h entry ={
@@ -113,7 +107,7 @@ int8_t cooling_update(Cooling_h* const restrict self)
   can_obj_can2_h_t o2;
   CanMessage mex;
 
-  if (global_running_status_get(&p_self->m_global_running_status) > SYSTEM_OFF)
+  if (global_running_status_get() > SYSTEM_OFF)
   {
     p_self->devices[FANS_RADIATOR].speed = 100;
     p_self->devices[PUMPS].speed = 100;

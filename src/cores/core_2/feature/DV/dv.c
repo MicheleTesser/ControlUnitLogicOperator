@@ -49,7 +49,6 @@ struct Dv_t{
   enum AS_STATUS status; //4
   enum DV_CAR_STATUS dv_car_status; //4
   enum MISSION_STATUS o_dv_mission_status; //4
-  GlobalRunningStatus_h o_global_running_status_reader; //8
   uint8_t sound_start; //1 (4)
   time_var_microseconds driving_last_time_on; //4
   EmergencyNode_h emergency_node; //9 (12)
@@ -183,7 +182,7 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
 static int8_t _dv_update_status(struct Dv_t* const restrict self)
 {
   const float current_speed = car_speed_get();
-  const enum RUNNING_STATUS giei_status = global_running_status_get(&self->o_global_running_status_reader);
+  const enum RUNNING_STATUS giei_status = global_running_status_get();
 
   if (EmergencyNode_is_emergency_state(&self->emergency_node))
   {
@@ -270,11 +269,6 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   if (EmergencyNode_init(&p_self->emergency_node)<0)
   {
     return -7;
-  }
-
-  if (global_running_status_init(&p_self->o_global_running_status_reader, READ)<0)
-  {
-    return -8;
   }
 
   if (as_node_init(&p_self->m_as_node,p_mission_reader)<0)

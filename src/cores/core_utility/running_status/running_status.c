@@ -1,88 +1,67 @@
 #include "running_status.h"
+#include "../../../lib/raceup_board/raceup_board.h"
+
 #include <stdatomic.h>
 #include <stdint.h>
 
-static atomic_uchar global_car_status = SYSTEM_OFF;
-static atomic_bool mut_requested=0;
 
-struct GlobalRunningStatus_t{
-  uint8_t global_car_status_copy;
-  enum RUNNING_STATUS_OBJ_PERMISSIONS permission;
+
+struct GlobalRunningStatusMut_t{
+  uint8_t owner_id;
+};
+
+static struct{
+  atomic_uchar global_car_status;
+  atomic_uchar owner;
+}RUNNING_STATUS_SHARED = 
+{
+  .global_car_status = SYSTEM_OFF,
 };
 
 #ifdef DEBUG
-char __assert_size_global_running_status[(sizeof(GlobalRunningStatus_h)==sizeof(struct GlobalRunningStatus_t))?1:-1];
-char __assert_align_global_running_status[(_Alignof(GlobalRunningStatus_h)==_Alignof(struct GlobalRunningStatus_t))?1:-1];
+char __assert_size_global_running_status[(sizeof(GlobalRunningStatusMut_h)==sizeof(struct GlobalRunningStatusMut_t))?1:-1];
+char __assert_align_global_running_status[(_Alignof(GlobalRunningStatusMut_h)==_Alignof(struct GlobalRunningStatusMut_t))?1:-1];
 #endif /* ifdef DEBUG */
 
-union GlobalRunningStatus_h_t_conv{
-  GlobalRunningStatus_h* const hidden;
-  struct GlobalRunningStatus_t* const clear;
+union GlobalRunningStatusMut_h_t_conv{
+  GlobalRunningStatusMut_h* const hidden;
+  struct GlobalRunningStatusMut_t* const clear;
 };
-
-//private
-enum RUNNING_STATUS _global_running_status_read_raw(void)
-{
-  return atomic_load(&global_car_status);
-}
 
 //public
 
-int8_t global_running_status_init(GlobalRunningStatus_h* const restrict self,
-    const enum RUNNING_STATUS_OBJ_PERMISSIONS permission)
+int8_t global_running_status_mut_init(
+    GlobalRunningStatusMut_h* const restrict self __attribute__((__unused__)))
 {
-  const union GlobalRunningStatus_h_t_conv conv = {self};
-  struct GlobalRunningStatus_t* const p_self = conv.clear;
+  const union GlobalRunningStatusMut_h_t_conv conv = {self};
+  struct GlobalRunningStatusMut_t * const p_self = conv.clear;
 
-  if (permission >= __NUM_OF_RUNNING_STATUS_OBJ_PERMISSIONS__)
+  p_self->owner_id = (uint8_t) timer_time_now();
+  if (!atomic_load(&RUNNING_STATUS_SHARED.owner))
   {
-    return -1;
+    atomic_store(&RUNNING_STATUS_SHARED.owner, p_self->owner_id);
   }
-
-  if (permission == WRITE)
-  {
-    if(!atomic_exchange(&mut_requested, 1))
-    {
-      p_self->permission = permission;
-      p_self->global_car_status_copy = _global_running_status_read_raw();
-    }
-    else
-    {
-      return -2;
-    }
-  
-  }
-
-  p_self->permission = permission;
-  p_self->global_car_status_copy = _global_running_status_read_raw();
-
 
   return 0;
 }
+  
 
-int8_t global_running_status_set(GlobalRunningStatus_h* const restrict self,
+int8_t global_running_status_set(GlobalRunningStatusMut_h* const restrict self,
     const enum RUNNING_STATUS status)
 {
-  const union GlobalRunningStatus_h_t_conv conv = {self};
-  struct GlobalRunningStatus_t* const p_self = conv.clear;
+  const union GlobalRunningStatusMut_h_t_conv conv = {self};
+  struct GlobalRunningStatusMut_t* const p_self = conv.clear;
 
-  if (p_self->permission != WRITE)
+  if (p_self->owner_id == atomic_load(&RUNNING_STATUS_SHARED.owner))
   {
-    return -1;
+    atomic_store(&RUNNING_STATUS_SHARED.global_car_status, status);
+    return 0;
   }
 
-  p_self->global_car_status_copy = status;
-  atomic_store(&global_car_status, status);
-  return 0;
+  return -1;
 }
 
-enum RUNNING_STATUS global_running_status_get(GlobalRunningStatus_h* const restrict self)
+enum RUNNING_STATUS global_running_status_get(void)
 {
-  const union GlobalRunningStatus_h_t_conv conv = {self};
-  struct GlobalRunningStatus_t* const p_self = conv.clear;
-  if (p_self->permission == WRITE)
-  {
-    return p_self->global_car_status_copy;
-  }
-  return _global_running_status_read_raw();
+  return atomic_load(&RUNNING_STATUS_SHARED.global_car_status);
 }

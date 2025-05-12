@@ -8,11 +8,11 @@
 #include <string.h>
 
 struct CarMissionReader_t{
-  enum CAR_MISSIONS current_mission;
+  enum CAR_MISSIONS m_current_mission;
   time_var_microseconds m_embeed_last_alive;
   struct CanMailbox* p_mailbox_current_mission;
   struct CanMailbox* p_mailbox_recv_embedded_alive;
-  MissionLockerRead_h o_mission_locker_read;
+  MissionLockerRead_h m_mission_locker_read;
 };
 
 union CarMissionReader_h_t_conv{
@@ -72,14 +72,14 @@ int8_t car_mission_reader_init(CarMissionReader_h* const restrict self)
     return -2;
   }
 
-  if (lock_mission_ref_get(&p_self->o_mission_locker_read)<0)
+  if (lock_mission_ref_get(&p_self->m_mission_locker_read)<0)
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
     hardware_free_mailbox_can(&p_self->p_mailbox_recv_embedded_alive);
     return -3;
   }
 
-  p_self->current_mission = CAR_MISSIONS_NONE;
+  p_self->m_current_mission = CAR_MISSIONS_NONE;
 
   return 0;
 }
@@ -97,17 +97,17 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
   }
 
   if ((timer_time_now() - p_self->m_embeed_last_alive) > get_tick_from_millis(500) && 
-      p_self->current_mission > CAR_MISSIONS_HUMAN &&
-      !is_mission_locked(&p_self->o_mission_locker_read))
+      p_self->m_current_mission > CAR_MISSIONS_HUMAN &&
+      !is_mission_locked(&p_self->m_mission_locker_read))
   {
-    p_self->current_mission = CAR_MISSIONS_NONE;
+    p_self->m_current_mission = CAR_MISSIONS_NONE;
   }
 
-  if (!is_mission_locked(&p_self->o_mission_locker_read)
+  if (!is_mission_locked(&p_self->m_mission_locker_read)
       && hardware_mailbox_read(p_self->p_mailbox_current_mission, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    p_self->current_mission = o2.can_0x047_CarMission.Mission;
+    p_self->m_current_mission = o2.can_0x047_CarMission.Mission;
   }
 
   return 0;
@@ -118,7 +118,7 @@ enum CAR_MISSIONS car_mission_reader_get_current_mission(CarMissionReader_h* con
   union CarMissionReader_h_t_conv_const conv = {self};
   const struct CarMissionReader_t* const p_self = conv.clear;
 
-  return  p_self->current_mission;
+  return  p_self->m_current_mission;
 }
 
 void car_mission_reader_destroy(CarMissionReader_h* const restrict self)

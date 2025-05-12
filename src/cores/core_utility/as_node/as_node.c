@@ -11,15 +11,15 @@
 #include <stdint.h>
 #include <string.h>
 
-struct AsNodeRead_t{
-  GpioRead_h m_gpio_read_as_node;
-};
-
 enum Tanks_t{
   TANK_LEFT=0,
   TANK_RIGHT,
 
   __NUM_OF_TANKS__
+};
+
+struct AsNodeRead_t{
+  GpioRead_h m_gpio_read_as_node;
 };
 
 struct AsNode_t{

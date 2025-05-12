@@ -10,10 +10,10 @@
 
 struct DriverInputReader_t{
   struct{
-    float f_throttle;
-    float f_brake;
-    float f_steering_angle;
-  }Input[__NUM_OF_DRIVERS__ -1];
+    float m_throttle;
+    float m_brake;
+    float m_steering_angle;
+  }m_input[__NUM_OF_DRIVERS__ -1];
   struct CanMailbox* p_human_brake_mailbox;
   struct CanMailbox* p_dv_driver_mailbox;
 };
@@ -40,8 +40,7 @@ static inline float _saturate_100(float value)
 
 //public
 
-int8_t
-driver_input_reader_init(DriverInputReader_h* const restrict self)
+int8_t driver_input_reader_init(DriverInputReader_h* const restrict self)
 {
   union DriverInput_h_t_conv conv ={self};
   struct DriverInputReader_t* const p_self = conv.clear;
@@ -71,8 +70,7 @@ driver_input_reader_init(DriverInputReader_h* const restrict self)
   return 0;
 }
 
-int8_t
-driver_input_reader_update(DriverInputReader_h* const restrict self )
+int8_t driver_input_reader_update(DriverInputReader_h* const restrict self )
 {
   union DriverInput_h_t_conv conv = {self};
   struct DriverInputReader_t* const restrict p_self = conv.clear;
@@ -84,25 +82,24 @@ driver_input_reader_update(DriverInputReader_h* const restrict self )
   {
     unpack_message_can2(&o2, CAN_ID_DRIVER, mex.full_word, mex.message_size, timer_time_now());
 
-    p_self->Input[DRIVER_HUMAN].f_throttle = _saturate_100(o2.can_0x053_Driver.throttle);
-    p_self->Input[DRIVER_HUMAN].f_brake = _saturate_100(o2.can_0x053_Driver.brake);
-    p_self->Input[DRIVER_HUMAN].f_steering_angle = _saturate_100(o2.can_0x053_Driver.steering);
+    p_self->m_input[DRIVER_HUMAN].m_throttle = _saturate_100(o2.can_0x053_Driver.throttle);
+    p_self->m_input[DRIVER_HUMAN].m_brake = _saturate_100(o2.can_0x053_Driver.brake);
+    p_self->m_input[DRIVER_HUMAN].m_steering_angle = _saturate_100(o2.can_0x053_Driver.steering);
   }
 
   if (hardware_mailbox_read(p_self->p_dv_driver_mailbox, &mex))
   {
     unpack_message_can3(&o3, CAN_ID_DV_DRIVER, mex.full_word, mex.message_size, timer_time_now());
 
-    p_self->Input[DRIVER_EMBEDDED].f_throttle = _saturate_100(o3.can_0x07d_DV_Driver.Throttle);
-    p_self->Input[DRIVER_EMBEDDED].f_brake = _saturate_100(o3.can_0x07d_DV_Driver.Brake);
-    p_self->Input[DRIVER_EMBEDDED].f_steering_angle = _saturate_100(o3.can_0x07d_DV_Driver.Steering_angle);
+    p_self->m_input[DRIVER_EMBEDDED].m_throttle = _saturate_100(o3.can_0x07d_DV_Driver.Throttle);
+    p_self->m_input[DRIVER_EMBEDDED].m_brake = _saturate_100(o3.can_0x07d_DV_Driver.Brake);
+    p_self->m_input[DRIVER_EMBEDDED].m_steering_angle = _saturate_100(o3.can_0x07d_DV_Driver.Steering_angle);
   }
 
   return 0;
 }
 
-float
-driver_input_reader_get(const DriverInputReader_h* const restrict self,
+float driver_input_reader_get(const DriverInputReader_h* const restrict self,
     const enum DRIVER driver_type,
     const enum INPUT_TYPES driver_input)
 {
@@ -117,11 +114,11 @@ driver_input_reader_get(const DriverInputReader_h* const restrict self,
   switch (driver_input)
   {
     case THROTTLE:
-      return p_self->Input[driver_type].f_throttle;
+      return p_self->m_input[driver_type].m_throttle;
     case BRAKE:
-      return p_self->Input[driver_type].f_brake;
+      return p_self->m_input[driver_type].m_brake;
     case STEERING_ANGLE:
-      return p_self->Input[driver_type].f_steering_angle;
+      return p_self->m_input[driver_type].m_steering_angle;
     case __NUM_OF_INPUT_TYPES__:
     default:
       return -1;
@@ -130,8 +127,7 @@ driver_input_reader_get(const DriverInputReader_h* const restrict self,
   return 0;
 }
 
-void
-driver_input_reader_destroy(DriverInputReader_h* restrict self)
+void driver_input_reader_destroy(DriverInputReader_h* restrict self)
 {
   union DriverInput_h_t_conv conv ={self};
   struct DriverInputReader_t* const p_self = conv.clear;
