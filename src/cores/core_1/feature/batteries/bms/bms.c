@@ -1,10 +1,10 @@
 #include "bms.h"
 #include "../../log/log.h"
+#include "../../../../../lib/raceup_board/raceup_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
-#include "../../../../../lib/raceup_board/raceup_board.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -18,9 +18,9 @@ enum VOLTS{
 };
 
 struct Bms_t{
-  struct CanMailbox* mailbox;
-  uint16_t volts[__NUM_OF_VOLTS__];
-  uint8_t soc;
+  struct CanMailbox* p_mailbox;
+  uint16_t m_volts[__NUM_OF_VOLTS__];
+  uint8_t m_soc;
 };
 
 union Hv_h_t_conv{
@@ -46,17 +46,17 @@ int8_t bms_init(Bms_h* const restrict self ,
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
   {
-    p_self->mailbox =
+    p_self->p_mailbox =
       hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, bms_id, mex_size);
   }
-  if (!p_self->mailbox) {
+  if (!p_self->p_mailbox) {
     return -1;
   }
 
   {
     LogEntry_h entry = {
       .data_mode = __u16__,
-      .data_ptr = &p_self->volts[MAX],
+      .data_ptr = &p_self->m_volts[MAX],
       .log_mode = LOG_TELEMETRY| LOG_SD,
       .name = {0},
     };
@@ -71,7 +71,7 @@ int8_t bms_init(Bms_h* const restrict self ,
   {
     LogEntry_h entry = {
       .data_mode = __u16__,
-      .data_ptr = &p_self->volts[MIN],
+      .data_ptr = &p_self->m_volts[MIN],
       .log_mode = LOG_TELEMETRY| LOG_SD,
       .name = {0},
     };
@@ -87,9 +87,9 @@ int8_t bms_init(Bms_h* const restrict self ,
   {
     LogEntry_h entry = {
       .data_mode = __u8__,
-      .data_ptr = &p_self->soc,
+      .data_ptr = &p_self->m_soc,
       .log_mode = LOG_TELEMETRY| LOG_SD,
-      .name = "Bms sv soc",
+      .name = "Bms sv m_soc",
     };
     if(log_add_entry(log, &entry)<0)
     {
@@ -108,13 +108,13 @@ bms_update(Bms_h* const restrict self )
   can_obj_can2_h_t o = {0};
   CanMessage mex = {0};
 
-  if (hardware_mailbox_read(p_self->mailbox, &mex))
+  if (hardware_mailbox_read(p_self->p_mailbox, &mex))
   {
     unpack_message_can2(&o, mex.id, mex.full_word, mex.message_size, timer_time_now());
-    p_self->volts[MAX] = o.can_0x057_BmsHv1.max_volt;
-    p_self->volts[MIN] = o.can_0x057_BmsHv1.min_volt;
-    p_self->volts[AVG] = o.can_0x057_BmsHv1.avg_volt;
-    p_self->soc = o.can_0x057_BmsHv1.soc;
+    p_self->m_volts[MAX] = o.can_0x057_BmsHv1.max_volt;
+    p_self->m_volts[MIN] = o.can_0x057_BmsHv1.min_volt;
+    p_self->m_volts[AVG] = o.can_0x057_BmsHv1.avg_volt;
+    p_self->m_soc = o.can_0x057_BmsHv1.m_soc;
   }
 
   return 0;

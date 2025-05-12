@@ -1,10 +1,10 @@
 #include "batteries.h"
+#include "bms/bms.h"
+#include "../../../../lib/raceup_board/raceup_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
-#include "../../../../lib/raceup_board/raceup_board.h"
-#include "bms/bms.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -17,8 +17,8 @@ enum BMS_S{
 };
 
 struct CarBatteries_t{
-  Bms_h bms[__NUM_OF_BMS__];
-  float lem;
+  Bms_h m_bms[__NUM_OF_BMS__];
+  float m_lem;
   struct CanMailbox* p_mailbox_read_lem;
 };
 
@@ -32,8 +32,6 @@ char __assert_size_core_1_batteries[(sizeof(CarBatteries_h) == sizeof(struct Car
 char __assert_align_core_1_batteries[(_Alignof(CarBatteries_h) == _Alignof(struct CarBatteries_t))? 1:-1];
 #endif // DEBUG
 
-//private
-
 //public
 
 int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const restrict log)
@@ -44,12 +42,12 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
 
   memset(p_self, 0, sizeof(*p_self));
 
-  if (bms_init(&p_self->bms[BMS_LV], CAN_ID_BMSLV1, message_dlc_can2(CAN_ID_BMSLV1), "BMS LV" , log))
+  if (bms_init(&p_self->m_bms[BMS_LV], CAN_ID_BMSLV1, message_dlc_can2(CAN_ID_BMSLV1), "BMS LV" , log))
   {
     return -2;
   }
 
-  if (bms_init(&p_self->bms[BMS_HV], CAN_ID_BMSHV1, message_dlc_can2(CAN_ID_BMSHV1), "BMS HV" , log))
+  if (bms_init(&p_self->m_bms[BMS_HV], CAN_ID_BMSHV1, message_dlc_can2(CAN_ID_BMSHV1), "BMS HV" , log))
   {
     return -3;
   }
@@ -72,9 +70,9 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
   LogEntry_h entry =
   {
     .data_mode = __float__,
-    .data_ptr = &p_self->lem,
+    .data_ptr = &p_self->m_lem,
     .log_mode = LOG_TELEMETRY | LOG_SD,
-    .name = "lem current",
+    .name = "m_lem current",
   };
 
   if(log_add_entry(log, &entry)<0)
@@ -96,13 +94,13 @@ int8_t car_batteries_update(CarBatteries_h* const restrict self)
   if (hardware_mailbox_read(p_self->p_mailbox_read_lem, &mex))
   {
     unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size,0); 
-    p_self->lem = o2.can_0x3c2_Lem.current;
+    p_self->m_lem = o2.can_0x3c2_Lem.current;
   }
 
   for (uint8_t i=0; i<__NUM_OF_BMS__; i++)
   {
     err--;
-    if (bms_update(&p_self->bms[i])<0)
+    if (bms_update(&p_self->m_bms[i])<0)
     {
       return err;
     }
