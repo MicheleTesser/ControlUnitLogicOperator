@@ -30,8 +30,7 @@ union GlobalRunningStatusMut_h_t_conv{
 
 //public
 
-int8_t global_running_status_mut_init(
-    GlobalRunningStatusMut_h* const restrict self __attribute__((__unused__)))
+int8_t global_running_status_mut_init(GlobalRunningStatusMut_h* const restrict self)
 {
   const union GlobalRunningStatusMut_h_t_conv conv = {self};
   struct GlobalRunningStatusMut_t * const p_self = conv.clear;
