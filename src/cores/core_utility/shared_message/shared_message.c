@@ -63,10 +63,11 @@ char __assert_align_shared_owner[_Alignof(SharedMessageOwner_h) == _Alignof(stru
 
 int8_t shared_message_owner_init(SharedMessageOwner_h* const restrict self)
 {
-  if (atomic_load (&SHARED_DATA.taken))
+  if (atomic_load(&SHARED_DATA.taken))
   {
     return -1;
   }
+  atomic_store(&SHARED_DATA.taken, 1);
 
   union SharedMessageOwner_h_t_conv conv = {self};
   struct shared_message_owner_t* p_self = conv.clear;
@@ -148,10 +149,13 @@ int8_t shared_message_owner_init(SharedMessageOwner_h* const restrict self)
         can_id[SHARED_MEX_CARMISSION],
         message_dlc_can2(can_id[SHARED_MEX_CARMISSION]));
   }
-  if (!p_self->mailbox[0])
+  for(uint8_t i = 0; i < __NUM_OF_SHARED_MESSAGE__; ++i)
+  {
+    if(!p_self->mailbox[i])
     {
       return -2;
     }
+  }
 
   return 0;
 }
@@ -174,20 +178,25 @@ uint64_t shared_message_read(const SharedMessageReader_h* const restrict self, u
   return atomic_load(&SHARED_DATA.timestamp[p_self->id]);
 }
 
-int8_t shader_message_owner_update(SharedMessageOwner_h* const restrict self)
+int8_t shared_message_owner_update(SharedMessageOwner_h* const restrict self)
 {
   const union SharedMessageOwner_h_t_conv conv = {self};
   const struct shared_message_owner_t* p_self = conv.clear;
 
   CanMessage mex = {0};
   can_obj_can2_h_t o2 = {0};
-
-  if(hardware_mailbox_read(p_self->mailbox[0], &mex))
+  
+  for(uint8_t i = 0; i < __NUM_OF_SHARED_MESSAGE__; ++i)
   {
-      unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
-      atomic_store(&SHARED_DATA.data_buffer[0], mex.full_word);
-      atomic_store(&SHARED_DATA.timestamp[0], atomic_load(&SHARED_DATA.timestamp[0]) + 1);
+    if(hardware_mailbox_read(p_self->mailbox[i], &mex))
+    {
+        unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
+        atomic_store(&SHARED_DATA.data_buffer[i], mex.full_word);
+        atomic_store(&SHARED_DATA.timestamp[i], atomic_load(&SHARED_DATA.timestamp[i]) + 1);
+    }
   }
-
   return 0;
 }
+
+
+

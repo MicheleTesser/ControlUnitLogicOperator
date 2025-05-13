@@ -34,7 +34,7 @@ int8_t
 shared_message_owner_init(SharedMessageOwner_h* const restrict self)__attribute__ ((__nonnull__ (1)));
 
 int8_t
-shader_message_owner_update(SharedMessageOwner_h* const restrict self)__attribute__ ((__nonnull__ ((1))));
+shared_message_owner_update(SharedMessageOwner_h* const restrict self)__attribute__ ((__nonnull__ ((1))));
 
 int8_t
 shared_message_reader_init(SharedMessageReader_h* const restrict self, const enum SHARED_MESSAGE id)__attribute__((__nonnull__((1))));
