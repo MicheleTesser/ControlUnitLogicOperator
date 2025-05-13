@@ -114,7 +114,7 @@ bms_update(Bms_h* const restrict self )
     p_self->m_volts[MAX] = o.can_0x057_BmsHv1.max_volt;
     p_self->m_volts[MIN] = o.can_0x057_BmsHv1.min_volt;
     p_self->m_volts[AVG] = o.can_0x057_BmsHv1.avg_volt;
-    p_self->m_soc = o.can_0x057_BmsHv1.m_soc;
+    p_self->m_soc = o.can_0x057_BmsHv1.soc;
   }
 
   return 0;
