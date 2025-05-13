@@ -32,6 +32,10 @@ driver_input_reader_get(const DriverInputReader_h* const restrict self,
     const enum DRIVER driver_type,
     const enum INPUT_TYPES driver_input)__attribute__((__nonnull__(1)));
 
+uint8_t
+driver_input_reader_get_impls_human_driver(const DriverInputReader_h* const restrict self)
+  __attribute__((__nonnull__(1)));
+
 int8_t
 driver_input_reader_update(DriverInputReader_h* const restrict self)__attribute__((__nonnull__(1)));
 
