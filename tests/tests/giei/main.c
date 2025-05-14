@@ -5,9 +5,7 @@
 #include "src/cores/core_0/feature/engines/amk/amk.h"
 #include "src/cores/core_0/feature/driver_input/driver_input.h"
 #include "src/cores/core_0/feature/maps/maps.h"
-#include "src/cores/core_utility/imu/imu.h"
-#include "src/cores/core_utility/emergency_module/emergency_module.h"
-#include "src/cores/core_utility/as_node/as_node.h"
+#include "src/cores/core_utility/core_utility.h"
 #include "car_component/car_component.h"
 
 #include <stdint.h>
@@ -39,6 +37,7 @@ typedef struct CoreInput{
   Gpio_h* rf;
   GpioRead_h* rtd_sound;
   AsNode_h* as_node;
+  SharedMessageOwner_h* shared_messages;
 
   ExternalBoards_t* external_boards;
 
@@ -55,6 +54,7 @@ static int _core_thread_fun(void* arg)
   {
     ACTION_ON_FREQUENCY(last_update, get_tick_from_millis(50))
     {
+      shared_message_owner_update(core_input->shared_messages);
       as_node_update(core_input->as_node);
       car_mission_reader_update(core_input->mission_reader);
       giei_driver_input_update(core_input->driver);
@@ -184,6 +184,7 @@ int main(void)
   Imu_h imu = {0};
   EmergencyNode_h emergency_read = {0};
   CarMissionReader_h mission_reader = {0};
+  SharedMessageOwner_h shared_messages = {0};
 
   CoreThread core_thread={.run=1};
   Gpio_h rf ={0};
@@ -200,6 +201,7 @@ int main(void)
     .rtd_sound = &rtd_sound_read,
     .mission_reader = &mission_reader,
     .as_node = &as_node,
+    .shared_messages = &shared_messages,
 
     .core_run = &core_thread.run,
     .external_boards = &external_boards,
@@ -215,6 +217,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(car_mission_reader_init(&mission_reader), "mission reader");
   INIT_PH(driver_input_init(&driver, &mission_reader), "driver input");
   INIT_PH(driving_maps_init(&maps), "driver maps");

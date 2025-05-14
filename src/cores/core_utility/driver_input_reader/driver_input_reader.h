@@ -5,7 +5,7 @@
 #include "../../../lib/raceup_board/raceup_board.h"
 
 typedef struct __attribute__((aligned(4))){
-  uint8_t private_data[32];
+  uint8_t private_data[46];
 }DriverInputReader_h;
 
 enum INPUT_TYPES{
@@ -38,8 +38,5 @@ driver_input_reader_get_impls_human_driver(const DriverInputReader_h* const rest
 
 int8_t
 driver_input_reader_update(DriverInputReader_h* const restrict self)__attribute__((__nonnull__(1)));
-
-void
-driver_input_reader_destroy(DriverInputReader_h* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__DRIVER_INPUT_READER__

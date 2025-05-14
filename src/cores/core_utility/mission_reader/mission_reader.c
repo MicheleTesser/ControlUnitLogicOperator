@@ -1,6 +1,8 @@
 #include "mission_reader.h"
 #include "mission_locker/mission_locker.h"
 #include "../../../lib/raceup_board/raceup_board.h"
+#include "../shared_message/shared_message.h"
+#include <stdint.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -10,8 +12,8 @@
 struct CarMissionReader_t{
   enum CAR_MISSIONS m_current_mission;
   time_var_microseconds m_embeed_last_alive;
-  struct CanMailbox* p_mailbox_current_mission;
-  struct CanMailbox* p_mailbox_recv_embedded_alive;
+  SharedMessageReader_h m_recv_current_mission;
+  SharedMessageReader_h m_recv_embedded_alive;
   MissionLockerRead_h m_mission_locker_read;
 };
 
@@ -37,45 +39,21 @@ int8_t car_mission_reader_init(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv conv = {self};
   struct CarMissionReader_t* const p_self = conv.clear;
-  struct CanNode* can_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_current_mission = 
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_CARMISSION,
-          message_dlc_can2(CAN_ID_CARMISSION));
-  }
-
-  if (!p_self->p_mailbox_current_mission)
+  if (shared_message_reader_init(&p_self->m_recv_current_mission, SHARED_MEX_CARMISSION))
   {
     return -1;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  if (shared_message_reader_init(&p_self->m_recv_embedded_alive, SHARED_MEX_EMBEDDEDALIVECHECK))
   {
-    p_self->p_mailbox_recv_embedded_alive =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_EMBEDDEDALIVECHECK,
-          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
-  }
-
-  if (!p_self->p_mailbox_recv_embedded_alive)
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
     return -2;
   }
 
   if (lock_mission_ref_get(&p_self->m_mission_locker_read)<0)
   {
-    hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
-    hardware_free_mailbox_can(&p_self->p_mailbox_recv_embedded_alive);
     return -3;
   }
 
@@ -88,10 +66,10 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv conv = {self};
   struct CarMissionReader_t* const p_self = conv.clear;
-  CanMessage mex = {0};
+  uint64_t mex = {0};
   can_obj_can2_h_t o2= {0};
 
-  if (hardware_mailbox_read(p_self->p_mailbox_recv_embedded_alive, &mex))
+  if (shared_message_read(&p_self->m_recv_embedded_alive, &mex))
   {
     p_self->m_embeed_last_alive = timer_time_now(); 
   }
@@ -104,9 +82,8 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
   }
 
   if (!is_mission_locked(&p_self->m_mission_locker_read)
-      && hardware_mailbox_read(p_self->p_mailbox_current_mission, &mex))
+      && shared_message_read_unpack_can2(&p_self->m_recv_current_mission, &o2))
   {
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
     p_self->m_current_mission = o2.can_0x047_CarMission.Mission;
   }
 
@@ -121,10 +98,3 @@ enum CAR_MISSIONS car_mission_reader_get_current_mission(CarMissionReader_h* con
   return  p_self->m_current_mission;
 }
 
-void car_mission_reader_destroy(CarMissionReader_h* const restrict self)
-{
-  union CarMissionReader_h_t_conv conv = {self};
-  struct CarMissionReader_t* const p_self = conv.clear;
-
-  hardware_free_mailbox_can(&p_self->p_mailbox_current_mission);
-}

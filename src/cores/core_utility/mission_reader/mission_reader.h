@@ -5,7 +5,7 @@
 #include "mission_locker/mission_locker.h"
 
 typedef struct __attribute__((aligned(4))) CarMissionReader_h{
-  const uint8_t private_data[20];
+  const uint8_t private_data[38];
   MissionLockerRead_h o_mission_locker_read;
 }CarMissionReader_h;
 
@@ -43,8 +43,5 @@ car_mission_reader_update(CarMissionReader_h* const restrict self)__attribute__(
 
 enum CAR_MISSIONS
 car_mission_reader_get_current_mission(CarMissionReader_h* const restrict self)__attribute__((__nonnull__(1)));
-
-void
-car_mission_reader_destroy(CarMissionReader_h* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_MISSION_READER__

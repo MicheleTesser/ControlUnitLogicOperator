@@ -11,6 +11,7 @@ void main_1(void)
   CoreAliveBlink_h alive_blink;
   Core1Feature_h feature;
   Log_h log;
+  SharedMessageOwner_h shared_message_owner;
 
   while (hardware_init_serial()<0);
 
@@ -20,6 +21,7 @@ void main_1(void)
   while (log_init(&log)<0);
   while (core_alive_blink_init(&alive_blink, GPIO_CORE_1_ALIVE_BLINK, get_tick_from_millis(300)) <0);
   while (core_1_feature_init(&feature, &log) <0);
+  while (shared_message_owner_init(&shared_message_owner) < 0);
 
   serial_write_str("core 1 wait sync cores");
   //cores sync

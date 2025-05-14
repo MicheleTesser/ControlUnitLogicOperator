@@ -1,7 +1,7 @@
 #include "score_lib/test_lib.h"
 #include "linux_board/linux_board.h"
 #include "car_component/car_component.h"
-#include "src/cores/core_utility/as_node/as_node.h"
+#include "src/cores/core_utility/core_utility.h"
 #include "src/cores/core_utility/mission_reader/mission_reader.h"
 
 #include <stdint.h>
@@ -28,6 +28,7 @@ typedef struct{
 typedef struct{
   AsNode_h* p_as_node;
   CarMissionReader_h* p_car_mission_reader;
+  SharedMessageOwner_h* p_shared_messages;
 
   volatile const uint8_t* const core_run;
 }CoreInput;
@@ -44,6 +45,7 @@ static int _core_thread_fun(void* arg)
   CoreInput* core_input = arg;
   while (*core_input->core_run)
   {
+    shared_message_owner_update(core_input->p_shared_messages);
     car_mission_reader_update(core_input->p_car_mission_reader);
     as_node_update(core_input->p_as_node);
   }
@@ -98,6 +100,7 @@ int main(void)
   ExternalBoards_t external_boards = {0};
   AsNode_h as_node = {0};
   AsNodeRead_h as_node_read = {0};
+  SharedMessageOwner_h shared_messages = {0};
 
   CoreThread core_thread={.run=1};
   CoreInput input =
@@ -105,6 +108,7 @@ int main(void)
     .core_run = &core_thread.run,
     .p_as_node = &as_node,
     .p_car_mission_reader = &car_mission_reader,
+    .p_shared_messages = &shared_messages,
   };
   TestInput test_input = 
   {
@@ -121,6 +125,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(hardware_init_read_permission_gpio(&gpio_as_node, GPIO_AS_NODE), "gpio read Ts button");
   INIT_PH(car_mission_reader_init(&car_mission_reader), "car mission reader");
   INIT_PH(as_node_init(&as_node, &car_mission_reader), "as node mutable");
