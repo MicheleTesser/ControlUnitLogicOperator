@@ -31,6 +31,8 @@
 #include "IfxScuWdt.h"
 #pragma GCC diagnostic pop
 
+#include "src/src.h"
+
 extern IfxCpu_syncEvent g_cpuSyncEvent;
 
 void core2_main(void)
@@ -46,7 +48,5 @@ void core2_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
-    while(1)
-    {
-    }
+    main_2();
 }

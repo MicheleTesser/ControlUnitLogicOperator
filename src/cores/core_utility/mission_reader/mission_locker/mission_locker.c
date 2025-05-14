@@ -43,8 +43,9 @@ int8_t lock_mission_ref_get_mut(MissionLocker_h* const restrict self)
 {
   union MissionLocker_h_t_conv conv = {self};
   struct MissionLocker_t* const restrict p_self = conv.clear;
-  if (!atomic_exchange(&MISSION_LOCKER.taken, 1))
+  if (!atomic_load(&MISSION_LOCKER.taken))
   {
+    atomic_store(&MISSION_LOCKER.taken,1);
     p_self->owner = 'a';
     return 0;
   }

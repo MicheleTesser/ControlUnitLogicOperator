@@ -33,8 +33,9 @@ int8_t car_speed_mut_init(CarSpeedMut_h* const restrict self)
 {
   union CarSpeedMut_h_t_conv conv = {self};
   struct CarSpeedMut_t* p_self = conv.clear;
-  if (!atomic_exchange(&SPEED.owned,1))
+  if (!atomic_load(&SPEED.owned))
   {
+    atomic_store(&SPEED.owned, 1);
     p_self->owner = 1;
     return 0;
   }
