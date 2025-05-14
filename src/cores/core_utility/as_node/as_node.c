@@ -69,7 +69,9 @@ char __assert_align_as_node_read[(_Alignof(AsNodeRead_h)==_Alignof(struct AsNode
 
 //private
 
-static atomic_bool AS_NODE_OWNING =0;
+static struct{
+  atomic_bool m_owned;
+}AS_NODE;
 
 static inline uint8_t _check_embedded(struct AsNode_t *const restrict self)
 {
@@ -109,35 +111,39 @@ int8_t as_node_init(AsNode_h* const restrict self,
   union AsNode_h_t_conv conv = {self};
   struct AsNode_t* const p_self = conv.clear;
   struct CanNode* can_node = NULL;
+  int8_t err=0;
 
-  if (!atomic_load(&AS_NODE_OWNING))
+  if (atomic_load(&AS_NODE.m_owned))
   {
-    atomic_store(&AS_NODE_OWNING, 1);
     return -1;
   }
 
+  atomic_store(&AS_NODE.m_owned, 1);
   memset(p_self, 0, sizeof(*p_self));
 
   if (hardware_init_gpio(&p_self->m_gpio_as_node, GPIO_AS_NODE)<0)
   {
-    atomic_store(&AS_NODE_OWNING, 0);
-    return -2;
+    err=-2;
+    goto err;
   }
 
   if (shared_message_reader_init(&p_self->m_recv_embedded_alive, SHARED_MEX_EMBEDDEDALIVECHECK))
   {
-    return -3;
+    err=-3;
+    goto err;
   }
 
   if (shared_message_reader_init(&p_self->m_recv_res_on, SHARED_MEX_DV_RES_ON))
   {
-    return -3;
+    err=-4;
+    goto err;
   }
 
 
   if (shared_message_reader_init(&p_self->m_recv_tank_ebs, SHARED_MEX_EBSSTATUS))
   {
-    return -4;
+    err=-5;
+    goto err;
   }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
@@ -153,18 +159,24 @@ int8_t as_node_init(AsNode_h* const restrict self,
 
   if (!p_self->p_mailbox_send_pcu_enable_dv)
   {
-    return -4;
+    err=-5;
+    goto err;
   }
 
   if (shared_message_reader_init(&p_self->m_recv_ebs_pressure, SHARED_MEX_EBSSTATUS))
   {
     hardware_free_mailbox_can(&p_self->p_mailbox_send_pcu_enable_dv);
-    return -5;
+    err=-6;
+    goto err;
   }
 
   p_self->p_mission_reader = p_car_mission_reader;
 
   return 0;
+
+err:
+  atomic_store(&AS_NODE.m_owned, 0);
+  return err;
 }
 
 int8_t as_node_update(AsNode_h* const restrict self)
