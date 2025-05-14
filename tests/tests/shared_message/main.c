@@ -85,13 +85,13 @@ void test_shared_message_implementation(
   shared_message_read(reader_0, &message_0);
   _check_condition(message_0 == 721 && message_1 == 42, "reader updates only when necessary")
 
-  uint64_t timestamp_0, timestamp_1;
-  timestamp_0 = shared_message_read(reader_0, &message_0);
+  int8_t result_0, result_1;
+  result_0 = shared_message_read(reader_0, &message_0);
   hardware_mailbox_send(p_mailbox_send, (uint64_t)721);
   wait_milliseconds(get_tick_from_micros(100));
   shared_message_owner_update(owner);
-  timestamp_1 = shared_message_read(reader_0, &message_0);
-  _check_condition(timestamp_0 < timestamp_1, "timestamps work")
+  result_1 = shared_message_read(reader_0, &message_0);
+  _check_condition(result_0 == 0 && result_1 == 1, "timestamps work")
 }
 
 

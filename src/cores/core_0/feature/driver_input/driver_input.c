@@ -1,6 +1,7 @@
 #include "driver_input.h"
 #include "../../../core_utility/mission_reader/mission_reader.h"
 #include "../../../core_utility/driver_input_reader/driver_input_reader.h"
+#include "../../../core_utility/shared_message/shared_message.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 
@@ -17,7 +18,7 @@ struct DriverInput_t{
   }Rtd_request;
   DriverInputReader_h o_driver_input_reader;
   CarMissionReader_h* p_car_mission;
-  struct CanMailbox* p_mailbox_recv_dv_mission;
+  SharedMessageReader_h m_recv_dv_mission;
 };
 
 union DriverInput_h_t_conv{
@@ -47,7 +48,6 @@ int8_t driver_input_init(DriverInput_h* const restrict self,
 {
   union DriverInputConv d_conv = {self};
   struct DriverInput_t* const p_self = d_conv.clear;
-  struct CanNode* p_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
 
@@ -61,20 +61,11 @@ int8_t driver_input_init(DriverInput_h* const restrict self,
     return -2;
   }
 
-  ACTION_ON_CAN_NODE(CAN_DV, p_node)
-  {
-    p_self->p_mailbox_recv_dv_mission = hardware_get_mailbox_single_mex(
-        p_node,
-        RECV_MAILBOX,
-        CAN_ID_DV_MISSION,
-        message_dlc_can3(CAN_ID_DV_MISSION));
-  };
-
-  if (!p_self->p_mailbox_recv_dv_mission)
+  if(shared_message_reader_init(&p_self->m_recv_dv_mission, SHARED_MEX_DV_MISSION))
   {
     return -3;
   }
-
+  
   p_self->current_driver = DRIVER_NONE;
   p_self->p_car_mission = p_car_mission;
   //TODO: define update rtd request DV
@@ -138,7 +129,7 @@ int8_t giei_driver_input_update(DriverInput_h* const restrict self )
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
       p_self->current_driver = DRIVER_EMBEDDED;
-      if (hardware_mailbox_read(p_self->p_mailbox_recv_dv_mission, &mex))
+      if (shared_message_read_unpack_can3(&p_self->m_recv_dv_mission, &o3))
       {
         unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
         if (o3.can_0x07e_DV_Mission.Mission_status == 2)
@@ -162,9 +153,6 @@ void driver_input_destroy(DriverInput_h* restrict self)
 {
   const union DriverInput_h_t_conv conv = {self};
   struct DriverInput_t* const p_self = conv.clear;
-
-  driver_input_reader_destroy(&p_self->o_driver_input_reader);
-  car_mission_reader_destroy(p_self->p_car_mission);
 
   memset(p_self, 0, sizeof(*p_self));
 }

@@ -1,5 +1,6 @@
 #include "as_node.h"
 #include "../mission_reader/mission_reader.h"
+#include "../shared_message/shared_message.h"
 #include "../../../lib/raceup_board/raceup_board.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -29,11 +30,11 @@ struct AsNode_t{
   time_var_microseconds m_last_res_message_received;
   time_var_microseconds m_last_enable_dv_sent;
   uint8_t m_ebs_check_ok:1;
-  struct CanMailbox* p_mailbox_read_embedded_alive;
-  struct CanMailbox* p_mailbox_read_tank_ebs;
-  struct CanMailbox* p_mailbox_res_on;
+  SharedMessageReader_h m_recv_embedded_alive;
+  SharedMessageReader_h m_recv_tank_ebs;
+  SharedMessageReader_h m_recv_res_on;
+  SharedMessageReader_h m_recv_ebs_pressure;
   struct CanMailbox* p_mailbox_send_pcu_enable_dv;
-  struct CanMailbox* p_mailox_recv_ebs_pressure;
   CarMissionReader_h* p_mission_reader;
 };
 
@@ -123,52 +124,19 @@ int8_t as_node_init(AsNode_h* const restrict self,
     return -2;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_read_embedded_alive =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_EMBEDDEDALIVECHECK,
-          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
-  }
-
-  if (!p_self->p_mailbox_read_embedded_alive)
+  if (shared_message_reader_init(&p_self->m_recv_embedded_alive, SHARED_MEX_EMBEDDEDALIVECHECK))
   {
     return -3;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  if (shared_message_reader_init(&p_self->m_recv_res_on, SHARED_MEX_DV_RES_ON))
   {
-    p_self->p_mailbox_res_on=
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_DV_RES_ON,
-          CAN_ID_DV_RES_ON);
-  }
-
-  if (!p_self->p_mailbox_res_on)
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
     return -3;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
-  {
 
-    p_self->p_mailbox_read_tank_ebs =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_EBSSTATUS,
-          message_dlc_can2(CAN_ID_EBSSTATUS));
-  }
-
-  if (!p_self->p_mailbox_read_tank_ebs)
+  if (shared_message_reader_init(&p_self->m_recv_tank_ebs, SHARED_MEX_EBSSTATUS))
   {
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
-    hardware_free_mailbox_can(&p_self->p_mailbox_res_on);
     return -4;
   }
 
@@ -185,28 +153,11 @@ int8_t as_node_init(AsNode_h* const restrict self,
 
   if (!p_self->p_mailbox_send_pcu_enable_dv)
   {
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_tank_ebs);
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
-    hardware_free_mailbox_can(&p_self->p_mailbox_res_on);
     return -4;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+  if (shared_message_reader_init(&p_self->m_recv_ebs_pressure, SHARED_MEX_EBSSTATUS))
   {
-
-    p_self->p_mailox_recv_ebs_pressure=
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_EBSSTATUS,
-          message_dlc_can2(CAN_ID_EBSSTATUS));
-  }
-
-  if (!p_self->p_mailox_recv_ebs_pressure)
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_tank_ebs);
-    hardware_free_mailbox_can(&p_self->p_mailbox_read_embedded_alive);
-    hardware_free_mailbox_can(&p_self->p_mailbox_res_on);
     hardware_free_mailbox_can(&p_self->p_mailbox_send_pcu_enable_dv);
     return -5;
   }
@@ -224,24 +175,23 @@ int8_t as_node_update(AsNode_h* const restrict self)
   can_obj_can2_h_t o2 = {0};
   uint64_t pcu_payload = 0;
 
-  if (hardware_mailbox_read(p_self->p_mailbox_read_embedded_alive, &mex))
+  if (shared_message_read(&p_self->m_recv_embedded_alive, &mex.full_word))
   {
     p_self->m_last_alive_message_received = timer_time_now();
   }
 
-  if (hardware_mailbox_read(p_self->p_mailbox_read_tank_ebs, &mex))
+  if (shared_message_read(&p_self->m_recv_tank_ebs, &mex.full_word))
   {
     p_self->m_last_tank_ebs_message_received = timer_time_now();
   }
 
-  if (hardware_mailbox_read(p_self->p_mailbox_res_on, &mex))
+  if (shared_message_read(&p_self->m_recv_res_on, &mex.full_word))
   {
     p_self->m_last_res_message_received = timer_time_now();
   }
 
-  if (hardware_mailbox_read(p_self->p_mailox_recv_ebs_pressure, &mex))
+  if (shared_message_read_unpack_can2(&p_self->m_recv_ebs_pressure, &o2))
   {
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
     p_self->m_ebs_check_ok = o2.can_0x03c_EbsStatus.system_check;
   }
 

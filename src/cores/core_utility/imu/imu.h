@@ -5,7 +5,7 @@
 #include "../../../lib/raceup_board/raceup_board.h"
 
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[36];
+  const uint8_t private_data[60];
 }Imu_h;
 
 
