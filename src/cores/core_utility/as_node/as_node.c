@@ -110,9 +110,9 @@ int8_t as_node_init(AsNode_h* const restrict self,
   struct AsNode_t* const p_self = conv.clear;
   struct CanNode* can_node = NULL;
 
-  atomic_bool expected_value =0;
-  if (!atomic_compare_exchange_strong(&AS_NODE_OWNING, &expected_value, 1))
+  if (!atomic_load(&AS_NODE_OWNING))
   {
+    atomic_store(&AS_NODE_OWNING, 1);
     return -1;
   }
 

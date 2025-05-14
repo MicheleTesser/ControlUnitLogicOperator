@@ -40,6 +40,11 @@ static struct GpioSpec{
 };
 
 union GpioRead_h_t_conv{
+  GpioRead_h* const restrict hidden;
+  struct GpioRead_t* const restrict clear;
+};
+
+union GpioRead_h_t_conv_const{
   const GpioRead_h* const restrict hidden;
   const struct GpioRead_t* const restrict clear;
 };
@@ -81,6 +86,19 @@ int8_t hardware_init_gpio(Gpio_h* const restrict self ,const enum GPIO_PIN id)
   return 0;
 }
 
+int8_t hardware_init_read_permission_gpio(GpioRead_h* const restrict self, const uint16_t id)
+{
+  union GpioRead_h_t_conv conv = {self};
+  struct GpioRead_t* p_self = conv.clear;
+  struct GpioSpec* p_info_gpio = NULL;
+  p_info_gpio = &BOARD_GPIOS[id];
+
+  p_self->port = p_info_gpio->port;
+  p_self->pin_index = p_info_gpio->pin_index;
+
+  return 0;
+}
+
 int8_t gpio_toggle(Gpio_h* const restrict self)
 {
   union Gpio_h_t_conv conv = {self};
@@ -92,7 +110,7 @@ int8_t gpio_toggle(Gpio_h* const restrict self)
 }
 int8_t gpio_read_state(const GpioRead_h* const restrict self)
 {
-  const union GpioRead_h_t_conv conv = {self};
+  const union GpioRead_h_t_conv_const conv = {self};
   const struct GpioRead_t* p_self = conv.clear;
   return IfxPort_getPinState(p_self->port,p_self->pin_index);
 }
