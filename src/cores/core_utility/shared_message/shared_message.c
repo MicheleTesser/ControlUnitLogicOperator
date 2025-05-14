@@ -3,10 +3,16 @@
 #include <stdatomic.h>
 #include <stdint.h>
 
+typedef struct
+{
+  atomic_bool lock;
+  uint64_t data_buffer;
+  time_var_microseconds timestamp;
+}SharedMex_t;
+
 static struct{
-  atomic_ullong data_buffer[__NUM_OF_SHARED_MESSAGE__];
-  atomic_ullong timestamp[__NUM_OF_SHARED_MESSAGE__];
-  atomic_bool taken;
+  SharedMex_t m_data[__NUM_OF_SHARED_MESSAGE__];
+  atomic_bool m_taken;
 }SHARED_DATA;
 
 
@@ -105,11 +111,11 @@ static inline int8_t _init_mailbox_ext_mex(struct shared_message_owner_t* const 
 
 int8_t shared_message_owner_init(SharedMessageOwner_h* const restrict self)
 {
-  if (atomic_load(&SHARED_DATA.taken))
+  if (atomic_load(&SHARED_DATA.m_taken))
   {
     return -1;
   }
-  atomic_store(&SHARED_DATA.taken, 1);
+  atomic_store(&SHARED_DATA.m_taken, 1);
 
   union SharedMessageOwner_h_t_conv conv = {self};
   struct shared_message_owner_t* p_self = conv.clear;
@@ -142,7 +148,7 @@ int8_t shared_message_owner_init(SharedMessageOwner_h* const restrict self)
 
 int8_t shared_message_owner_status(void)
 {
-  return atomic_load(&SHARED_DATA.taken);
+  return atomic_load(&SHARED_DATA.m_taken);
 }
 
 
@@ -163,13 +169,19 @@ int8_t shared_message_read(SharedMessageReader_h* const restrict self, uint64_t*
 {
   union SharedMessageReader_h_t_conv conv = {self};
   struct shared_message_reader_t* p_self = conv.clear;
+  SharedMex_t* shared_mex = &SHARED_DATA.m_data[p_self->m_id];
 
-  const time_var_microseconds current_timestamp = atomic_load(&SHARED_DATA.timestamp[p_self->m_id]);
+  if (atomic_load(&shared_mex->lock))
+  {
+    return -1;
+  }
+
+  const time_var_microseconds current_timestamp = shared_mex->timestamp;
 
   if (p_self->m_last_read < current_timestamp)
   {
     p_self->m_last_read = current_timestamp;
-    *message = atomic_load(&SHARED_DATA.data_buffer[p_self->m_id]);
+    *message =shared_mex->data_buffer;
     return 1;
   }
 
@@ -180,16 +192,20 @@ int8_t shared_message_owner_update(SharedMessageOwner_h* const restrict self)
 {
   const union SharedMessageOwner_h_t_conv conv = {self};
   const struct shared_message_owner_t* p_self = conv.clear;
-
+  SharedMex_t* shared_mex = NULL;
   CanMessage mex = {0};
+
 
   for(uint8_t i = 0; i < __NUM_OF_SHARED_MESSAGE__; ++i)
   {
+    shared_mex = &SHARED_DATA.m_data[i];
+    atomic_store(&shared_mex->lock, 1);
     if(hardware_mailbox_read(p_self->p_mailbox[i], &mex))
     {
-        atomic_store(&SHARED_DATA.data_buffer[i], mex.full_word);
-        atomic_store(&SHARED_DATA.timestamp[i], timer_time_now());
+      shared_mex->data_buffer = mex.full_word;
+      shared_mex->timestamp = timer_time_now();
     }
+    atomic_store(&shared_mex->lock, 0);
   }
   return 0;
 }
@@ -200,8 +216,8 @@ int8_t shared_message_read_unpack_can##can_num (SharedMessageReader_h* const res
   const union SharedMessageReader_h_t_conv conv = {self};\
   const struct shared_message_reader_t* p_self = conv.clear;\
 \
-  uint64_t mex;\
-  if(shared_message_read(self, &mex))\
+  uint64_t mex=0;\
+  if(shared_message_read(self, &mex)>0)\
   {\
     const uint8_t mex_size = (uint8_t) message_dlc_can##can_num (can_id[p_self->m_id].can_id);\
     unpack_message_can##can_num (o##can_num , can_id[p_self->m_id].can_id, mex, mex_size, (unsigned int) p_self->m_last_read);\
