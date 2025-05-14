@@ -19,18 +19,18 @@ static const struct{
   uint16_t can_id;
   enum CAN_MODULES can_mod;
 }can_id[__NUM_OF_SHARED_MESSAGE__]={
-  SPEC_MEX_CAN_3(CAN_ID_DV_MISSION),
-  SPEC_MEX_CAN_2(CAN_ID_LEM),
-  SPEC_MEX_CAN_2(CAN_ID_PCU),
-  SPEC_MEX_CAN_2(CAN_ID_EMBEDDEDALIVECHECK),
-  SPEC_MEX_CAN_3(CAN_ID_DV_RES_ON),
-  SPEC_MEX_CAN_2(CAN_ID_EBSSTATUS),
-  SPEC_MEX_CAN_2(CAN_ID_DRIVER),
-  SPEC_MEX_CAN_3(CAN_ID_DV_DRIVER),
-  SPEC_MEX_CAN_2(CAN_ID_IMU1),
-  SPEC_MEX_CAN_2(CAN_ID_IMU2),
-  SPEC_MEX_CAN_2(CAN_ID_IMU3),
-  SPEC_MEX_CAN_2(CAN_ID_CARMISSION),
+  SPEC_MEX_CAN_3(CAN_ID_DV_MISSION), // (0)
+  SPEC_MEX_CAN_2(CAN_ID_LEM),// (1)
+  SPEC_MEX_CAN_2(CAN_ID_PCU),// (2)
+  SPEC_MEX_CAN_2(CAN_ID_EMBEDDEDALIVECHECK),// (3)
+  SPEC_MEX_CAN_3(CAN_ID_DV_RES_ON),// (4)
+  SPEC_MEX_CAN_2(CAN_ID_EBSSTATUS),// (5)
+  SPEC_MEX_CAN_2(CAN_ID_DRIVER),// (6)
+  SPEC_MEX_CAN_3(CAN_ID_DV_DRIVER),// (7)
+  SPEC_MEX_CAN_2(CAN_ID_IMU1),// (8)
+  SPEC_MEX_CAN_2(CAN_ID_IMU2),// (9)
+  SPEC_MEX_CAN_2(CAN_ID_IMU3),// (10)
+  SPEC_MEX_CAN_2(CAN_ID_CARMISSION),// (11)
 };
 
 struct shared_message_owner_t{
@@ -65,35 +65,38 @@ char __assert_align_shared_owner[_Alignof(SharedMessageOwner_h) == _Alignof(stru
 #endif //! DEBUG
 
 static inline int8_t _init_mailbox_ext_mex(struct shared_message_owner_t* const restrict self,
-    struct CanNode* can_node,
     const enum SHARED_MESSAGE mex)
 {
   uint8_t size=0;
   const uint16_t m_id= can_id[mex].can_id;
+  struct CanNode* can_node = NULL;
 
-  switch (can_id[mex].can_mod)
+  ACTION_ON_CAN_NODE (can_id[mex].can_mod, can_node)
   {
-    case CAN_INVERTER:
-      size = (uint8_t) message_dlc_can1(m_id);
-      break;
-    case CAN_GENERAL:
-      size = (uint8_t) message_dlc_can2(m_id);
-      break;
-    case CAN_DV:
-      size = (uint8_t) message_dlc_can3(m_id);
-      break;
-    case CAN_DEBUG:
-    case __NUM_OF_CAN_MODULES__:
-      return -1;
-      break;
-  }
+    switch (can_id[mex].can_mod)
+    {
+      case CAN_INVERTER:
+        size = (uint8_t) message_dlc_can1(m_id);
+        break;
+      case CAN_GENERAL:
+        size = (uint8_t) message_dlc_can2(m_id);
+        break;
+      case CAN_DV:
+        size = (uint8_t) message_dlc_can3(m_id);
+        break;
+      case CAN_DEBUG:
+      case __NUM_OF_CAN_MODULES__:
+        return -1;
+        break;
+    }
 
-  self->p_mailbox[mex] =
-    hardware_get_mailbox_single_mex(
-        can_node,
-        RECV_MAILBOX,
-        m_id,
-        size);
+    self->p_mailbox[mex] =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          m_id,
+          size);
+  }
 
   return !self->p_mailbox[mex]?-1:0;
 }
@@ -110,19 +113,15 @@ int8_t shared_message_owner_init(SharedMessageOwner_h* const restrict self)
 
   union SharedMessageOwner_h_t_conv conv = {self};
   struct shared_message_owner_t* p_self = conv.clear;
-  struct CanNode *can_node = NULL;
   int8_t err=0;
 
 
-  ACTION_ON_CAN_NODE (CAN_GENERAL, can_node)
+  for (enum SHARED_MESSAGE mex=0; mex<__NUM_OF_SHARED_MESSAGE__; mex++)
   {
-    for (enum SHARED_MESSAGE mex=0; mex<__NUM_OF_SHARED_MESSAGE__; mex++)
+    if (_init_mailbox_ext_mex(p_self, mex)<0)
     {
-      if (_init_mailbox_ext_mex(p_self, can_node, mex)<0)
-      {
-        err =-1;
-        break;
-      }
+      err =-1;
+      break;
     }
   }
 
@@ -195,44 +194,22 @@ int8_t shared_message_owner_update(SharedMessageOwner_h* const restrict self)
   return 0;
 }
 
-int8_t shared_message_read_unpack_can1(SharedMessageReader_h* const restrict self, can_obj_can1_h_t* o1)
-{
-  const union SharedMessageReader_h_t_conv conv = {self};
-  const struct shared_message_reader_t* p_self = conv.clear;
-
-  uint64_t mex;
-  if(shared_message_read(self, &mex))
-  {
-    unpack_message_can1(o1, can_id[p_self->m_id].can_id, mex, message_dlc_can1(can_id[p_self->m_id].can_id), p_self->m_last_read);
-    return 1;
-  }
-  return 0;
+#define TEMPLATE_SHARED_MESSAGE_READ_UNPACK_CAN_X(can_num)\
+int8_t shared_message_read_unpack_can##can_num (SharedMessageReader_h* const restrict self, can_obj_can##can_num##_h_t* o##can_num )\
+{\
+  const union SharedMessageReader_h_t_conv conv = {self};\
+  const struct shared_message_reader_t* p_self = conv.clear;\
+\
+  uint64_t mex;\
+  if(shared_message_read(self, &mex))\
+  {\
+    const uint8_t mex_size = (uint8_t) message_dlc_can##can_num (can_id[p_self->m_id].can_id);\
+    unpack_message_can##can_num (o##can_num , can_id[p_self->m_id].can_id, mex, mex_size, (unsigned int) p_self->m_last_read);\
+    return 1;\
+  }\
+  return 0;\
 }
 
-int8_t shared_message_read_unpack_can2(SharedMessageReader_h* const restrict self, can_obj_can2_h_t* o2)
-{
-  const union SharedMessageReader_h_t_conv conv = {self};
-  const struct shared_message_reader_t* p_self = conv.clear;
-
-  uint64_t mex;
-  if(shared_message_read(self, &mex))
-  {
-    unpack_message_can2(o2, can_id[p_self->m_id].can_id, mex, message_dlc_can2(can_id[p_self->m_id].can_id), p_self->m_last_read);
-    return 1;
-  }
-  return 0;
-}
-
-int8_t shared_message_read_unpack_can3(SharedMessageReader_h* const restrict self, can_obj_can3_h_t* o3)
-{
-  const union SharedMessageReader_h_t_conv conv = {self};
-  const struct shared_message_reader_t* p_self = conv.clear;
-
-  uint64_t mex;
-  if(shared_message_read(self, &mex))
-  {
-    unpack_message_can3(o3, can_id[p_self->m_id].can_id, mex, message_dlc_can3(can_id[p_self->m_id].can_id), p_self->m_last_read);
-    return 1;
-  }
-  return 0;
-}
+TEMPLATE_SHARED_MESSAGE_READ_UNPACK_CAN_X(1)
+TEMPLATE_SHARED_MESSAGE_READ_UNPACK_CAN_X(2)
+TEMPLATE_SHARED_MESSAGE_READ_UNPACK_CAN_X(3)
