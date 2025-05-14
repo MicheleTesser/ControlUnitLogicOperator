@@ -60,9 +60,9 @@ struct Dv_t{
   GpioPwm_h m_gpio_ass_light_yellow; 
   Imu_h m_imu; 
   CarMissionReader_h* p_mission_reader; 
+  SharedMessageReader_h m_recv_mission_status; 
+  SharedMessageReader_h m_recv_embedded_alive;
   struct CanMailbox* p_send_car_m_dv_car_status_mailbox; 
-  struct CanMailbox* p_mailbox_recv_mision_status; 
-  struct CanMailbox* p_mailbox_recv_embedded_alive;
   struct CanMailbox* p_mailbox_send_mission_can_2; 
 };
 
@@ -284,18 +284,8 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   {
     return -10;
   }
-
-  ACTION_ON_CAN_NODE(CAN_DV,can_node)
-  {
-    p_self->p_mailbox_recv_mision_status=
-    hardware_get_mailbox_single_mex(
-        can_node,
-        RECV_MAILBOX,
-        CAN_ID_DV_MISSION,
-        message_dlc_can3(CAN_ID_DV_MISSION));
-  }
-
-  if (!p_self->p_mailbox_recv_mision_status)
+  
+  if (shared_message_reader_init(&p_self->m_recv_mission_status, SHARED_MEX_DV_MISSION))
   {
     hardware_free_mailbox_can(&p_self->p_send_car_m_dv_car_status_mailbox);
     return -11;
@@ -308,33 +298,20 @@ int8_t dv_class_init(Dv_h* const restrict self ,
         can_node,
         RECV_MAILBOX,
         CAN_ID_CARMISSIONSTATUS,
-        message_dlc_can3(CAN_ID_DV_MISSION));
+        message_dlc_can3(CAN_ID_CARMISSIONSTATUS));
   }
 
   if (!p_self->p_mailbox_send_mission_can_2)
   {
     hardware_free_mailbox_can(&p_self->p_send_car_m_dv_car_status_mailbox);
-    hardware_free_mailbox_can(&p_self->p_mailbox_recv_mision_status);
     return -12;
   }
 
-  ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
-  {
-    p_self->p_mailbox_recv_embedded_alive =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_EMBEDDEDALIVECHECK,
-          message_dlc_can2(CAN_ID_EMBEDDEDALIVECHECK));
-  }
-
-  if (!p_self->p_mailbox_recv_embedded_alive)
+  if (shared_message_reader_init(&p_self->m_recv_embedded_alive, SHARED_MEX_EMBEDDEDALIVECHECK))
   {
     hardware_free_mailbox_can(&p_self->p_send_car_m_dv_car_status_mailbox);
-    hardware_free_mailbox_can(&p_self->p_mailbox_recv_mision_status);
     hardware_free_mailbox_can(&p_self->p_mailbox_send_mission_can_2);
     return -13;
-  
   }
 
 
@@ -351,7 +328,7 @@ int8_t dv_update(Dv_h* const restrict self)
   struct Dv_t* const p_self = conv.clear;
   const uint8_t input_stw_alg= 1;
   uint8_t output_stw_alg = 1;
-  CanMessage mex = {0};
+  uint64_t mex = 0;
   uint64_t mission_status_payload = 0;
   can_obj_can3_h_t o3 = {0};
   can_obj_can2_h_t o2 = {0};
@@ -360,7 +337,7 @@ int8_t dv_update(Dv_h* const restrict self)
   if (ebs_update(&p_self->m_dv_ebs)<0) return -2;
   if (as_node_update(&p_self->m_as_node)) return -3;
 
-  if (hardware_mailbox_read(p_self->p_mailbox_recv_embedded_alive, &mex))
+  if (shared_message_read(&p_self->m_recv_embedded_alive, &mex))
   {
     p_self->m_embeed_last_alive = timer_time_now(); 
     EmergencyNode_solve(&p_self->m_emergency_node, EMERGENCY_DV_EMBEDDED_OFF);
@@ -390,9 +367,8 @@ int8_t dv_update(Dv_h* const restrict self)
         EmergencyNode_raise(&p_self->m_emergency_node, EMERGENCY_DV_EMBEDDED_OFF);
       }
 
-      if (hardware_mailbox_read(p_self->p_mailbox_recv_mision_status, &mex))
+      if (shared_message_read_unpack_can3(&p_self->m_recv_mission_status, &o3))
       {
-        unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
         p_self->m_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
       }
 

@@ -1,4 +1,5 @@
 #include "imu.h"
+#include "../shared_message/shared_message.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -9,9 +10,9 @@
 struct Imu_t{
     float m_acc[__NUM_OF_AXIS__];
     float m_omega[__NUM_OF_AXIS__];
-    struct CanMailbox* p_mailbox_imu_1;
-    struct CanMailbox* p_mailbox_imu_2;
-    struct CanMailbox* p_mailbox_imu_3;
+    SharedMessageReader_h m_recv_imu_1;
+    SharedMessageReader_h m_recv_imu_2;
+    SharedMessageReader_h m_recv_imu_3;
 };
 
 union Imu_h_t_conv{
@@ -35,55 +36,21 @@ int8_t imu_init(Imu_h* const restrict self)
 {
     union Imu_h_t_conv conv = {self};
     struct Imu_t* const restrict p_self = conv.clear;
-    struct CanNode* can_node = NULL;
 
     memset(p_self, 0, sizeof(*p_self));
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
-    {
-      p_self->p_mailbox_imu_1 =
-        hardware_get_mailbox_single_mex(
-            can_node,
-            RECV_MAILBOX,
-            CAN_ID_IMU1,
-            message_dlc_can2(CAN_ID_IMU1));
-    }
-
-    if (!p_self->p_mailbox_imu_1)
+    if (shared_message_reader_init(&p_self->m_recv_imu_1, SHARED_MEX_IMU1))
     {
       return -1;
     }
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+    if (shared_message_reader_init(&p_self->m_recv_imu_2, SHARED_MEX_IMU2))
     {
-      p_self->p_mailbox_imu_2 =
-        hardware_get_mailbox_single_mex(
-            can_node,
-            RECV_MAILBOX,
-            CAN_ID_IMU2,
-            message_dlc_can2(CAN_ID_IMU1));
-    }
-
-    if (!p_self->p_mailbox_imu_2)
-    {
-      hardware_free_mailbox_can(&p_self->p_mailbox_imu_1);
       return -2;
     }
 
-    ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
+    if (shared_message_reader_init(&p_self->m_recv_imu_3, SHARED_MEX_IMU3))
     {
-      p_self->p_mailbox_imu_3 =
-        hardware_get_mailbox_single_mex(
-            can_node,
-            RECV_MAILBOX,
-            CAN_ID_IMU3,
-            message_dlc_can2(CAN_ID_IMU1));
-    }
-
-    if (!p_self->p_mailbox_imu_3)
-    {
-      hardware_free_mailbox_can(&p_self->p_mailbox_imu_1);
-      hardware_free_mailbox_can(&p_self->p_mailbox_imu_2);
       return -3;
     }
 
@@ -97,21 +64,19 @@ int8_t imu_update(Imu_h* const restrict self )
     CanMessage mex = {0};
     can_obj_can2_h_t o2 = {0};
 
-    if (hardware_mailbox_read(p_self->p_mailbox_imu_1, &mex))
+    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_1, &o2))
     {
-      unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
       p_self->m_acc[AXES_X] = (float) o2.can_0x060_Imu1.acc_x;
       p_self->m_acc[AXES_Y] = (float) o2.can_0x060_Imu1.acc_y;
     }
 
-    if (hardware_mailbox_read(p_self->p_mailbox_imu_2, &mex))
+    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_2, &o2))
     {
-      unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
       p_self->m_acc[AXES_Z] = (float) o2.can_0x061_Imu2.acc_z;
       p_self->m_omega[AXES_X] = (float) o2.can_0x061_Imu2.omega_x;
     }
 
-    if (hardware_mailbox_read(p_self->p_mailbox_imu_3, &mex))
+    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_3, &o2))
     {
       unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
       p_self->m_acc[AXES_Y] = (float) o2.can_0x062_Imu3.omega_y;

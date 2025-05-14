@@ -1,5 +1,6 @@
 #include "hv.h"
 #include "../../../../../../lib/raceup_board/raceup_board.h"
+#include "../../../../../core_utility/shared_message/shared_message.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -8,7 +9,7 @@
 #include <string.h>
 
 struct GieiHv_t{
-  struct CanMailbox* lem_mailbox;
+  SharedMessageReader_h m_recv_lem;
   struct CanMailbox* send_mailbox_bms_hv;
   float hv_public_data[__NUM_OF_GIEI_HV_INFO__];
   float lem_current;
@@ -40,20 +41,14 @@ int8_t hv_init(Hv_h* const restrict self)
   struct CanNode* can_node = NULL;
 
   memset(p_self, 0, sizeof(*p_self));
+
+  if (shared_message_reader_init(&p_self->m_recv_lem, SHARED_MEX_LEM))
+  {
+    return -1;
+  }
+
   ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
   {
-    p_self->lem_mailbox =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_LEM,
-          message_dlc_can2(CAN_ID_LEM));
-
-    if (!p_self->lem_mailbox)
-    {
-      return -1;
-    }
-
     p_self->send_mailbox_bms_hv =
       hardware_get_mailbox_single_mex(
           can_node,
@@ -61,10 +56,6 @@ int8_t hv_init(Hv_h* const restrict self)
           CAN_ID_INVVOLT,
           message_dlc_can2(CAN_ID_INVVOLT));
 
-    if (!p_self->send_mailbox_bms_hv)
-    {
-      hardware_free_mailbox_can(&p_self->lem_mailbox);
-    }
   }
 
   return 0;
@@ -74,12 +65,10 @@ int8_t hv_update(Hv_h* const restrict self)
 {
   union GieiHv_conv conv = {self};
   struct GieiHv_t* p_self = conv.clear;
-  CanMessage mex; 
-  if(hardware_mailbox_read(p_self->lem_mailbox,&mex)>=0)
-  {
-    can_obj_can2_h_t o2= {0};
-    unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, timer_time_now());
+  can_obj_can2_h_t o2= {0};
 
+  if(shared_message_read_unpack_can2(&p_self->m_recv_lem,&o2))
+  {
     union {
       uint32_t u32;
       float f;
@@ -146,7 +135,7 @@ int8_t hv_computeBatteryPackTension(Hv_h* const restrict self,
   }
   else {
     p_self->pack_tension = sum/ active_motors;
-    p_self->hv_public_data[HV_BATTERY_PACK_TENSION]= p_self->pack_tension;
+  p_self->hv_public_data[HV_BATTERY_PACK_TENSION]= p_self->pack_tension;
     p_self->hv_public_data[HV_TOTAL_POWER]= p_self->pack_tension * p_self->lem_current;
   }
 

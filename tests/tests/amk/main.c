@@ -3,7 +3,7 @@
 #include "./car_component/car_component.h"
 #include "src/cores/core_0/feature/engines/engines.h"
 #include "src/cores/core_0/feature/engines/amk/amk.h"
-#include "src/cores/core_utility/emergency_module/emergency_module.h"
+#include "src/cores/core_utility/core_utility.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -22,6 +22,7 @@ struct ThInput {
   DriverInput_h* driver_input;
   EngineType* engine_input;
   CarMissionReader_h* mission_reader;
+  SharedMessageOwner_h* shared_messages;
 
   int8_t run;
 };
@@ -46,6 +47,7 @@ static int core_update(void* args)
       car_mission_reader_update(input->mission_reader);
       giei_driver_input_update(input->driver_input);
       inverter_update(input->engine_input);
+      shared_message_owner_update(input->shared_messages);
     }
   }
   return 0;
@@ -186,6 +188,7 @@ int main(void)
   DriverInput_h driver_input = {0};
   EngineType engine = {0};
   CarMissionReader_h mission_reader = {0};
+  SharedMessageOwner_h shared_messages = {0};
 
   AmkInverter_h amk={0};
   thrd_t core=0;
@@ -195,6 +198,7 @@ int main(void)
     .engine_input = &engine,
     .driver_input = &driver_input,
     .mission_reader = &mission_reader,
+    .shared_messages = &shared_messages,
 
     .run=1,
   };
@@ -216,6 +220,7 @@ int main(void)
   
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(car_mission_reader_init(&mission_reader), "car mission reader");
   INIT_PH(driver_input_init(&driver_input, &mission_reader), "driver input");
   INIT_PH(EmergencyNode_init(&read_emergecy), "emergency instance");
