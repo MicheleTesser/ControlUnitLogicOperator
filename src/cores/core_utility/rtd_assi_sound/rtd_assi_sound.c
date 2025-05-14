@@ -18,9 +18,10 @@ union RtdAssiSound_h_t_conv {
 };
 
 struct{
-  Gpio_h m_rtd_assi_sound;
-  atomic_char m_on_req;
+  atomic_bool m_lock;
   atomic_bool m_init_done;
+  Gpio_h m_rtd_assi_sound;
+  uint8_t m_on_req;
 }GPIO_RTD_ASSI;
 
 #ifdef DEBUG
@@ -53,13 +54,20 @@ int8_t rtd_assi_sound_start(RtdAssiSound_h* const restrict self)
   union RtdAssiSound_h_t_conv conv = {self};
   struct RtdAssiSound_t* const p_self = conv.clear;
 
+  if (atomic_load(&GPIO_RTD_ASSI.m_lock))
+  {
+    return -1;
+  }
+  atomic_store(&GPIO_RTD_ASSI.m_lock, 1);
+
   p_self->m_desidered_state = 1;
   if (!p_self->m_req_change)
   {
     p_self->m_req_change=1;
-    atomic_store(&GPIO_RTD_ASSI.m_on_req, atomic_load(&GPIO_RTD_ASSI.m_on_req) + 1);
+    GPIO_RTD_ASSI.m_on_req++;
     gpio_set_low(p_self->p_gpio_rtd_assi_sound);
   }
+  atomic_store(&GPIO_RTD_ASSI.m_lock, 0);
   return 0;
 }
 
@@ -67,16 +75,24 @@ int8_t rtd_assi_sound_stop(RtdAssiSound_h* const restrict self)
 {
   union RtdAssiSound_h_t_conv conv = {self};
   struct RtdAssiSound_t* const p_self = conv.clear;
-  uint8_t on_req =atomic_load(&GPIO_RTD_ASSI.m_on_req);
+
+  if (atomic_load(&GPIO_RTD_ASSI.m_lock))
+  {
+    return -1;
+  }
+  atomic_store(&GPIO_RTD_ASSI.m_lock, 1);
 
   p_self->m_desidered_state = 0;
   if(p_self->m_req_change &&
-      on_req == 1
-      &&p_self->m_desidered_state == on_req)
+      GPIO_RTD_ASSI.m_on_req == 1
+      &&p_self->m_desidered_state != GPIO_RTD_ASSI.m_on_req)
   {
     p_self->m_req_change=0;
-    atomic_store(&GPIO_RTD_ASSI.m_on_req,0);
+    GPIO_RTD_ASSI.m_on_req--;
     gpio_set_high(p_self->p_gpio_rtd_assi_sound);
   }
+
+  atomic_store(&GPIO_RTD_ASSI.m_lock, 0);
+
   return 0;
 }
