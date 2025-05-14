@@ -18,6 +18,7 @@ RM := rm -rf
 -include src/lib/DPS/src/master/subdir.mk
 -include src/lib/DPS/src/common/subdir.mk
 -include src/lib/DPS/lib/c_vector/subdir.mk
+-include src/cores/core_utility/shared_message/subdir.mk
 -include src/cores/core_utility/running_status/subdir.mk
 -include src/cores/core_utility/rtd_assi_sound/subdir.mk
 -include src/cores/core_utility/mission_reader/mission_locker/subdir.mk

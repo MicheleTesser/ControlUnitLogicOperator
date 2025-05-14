@@ -93,6 +93,7 @@ src/cores/core_utility/mission_reader/mission_locker \
 src/cores/core_utility/mission_reader \
 src/cores/core_utility/rtd_assi_sound \
 src/cores/core_utility/running_status \
+src/cores/core_utility/shared_message \
 src/lib/DPS/lib/c_vector \
 src/lib/DPS/src/common \
 src/lib/DPS/src/master \
