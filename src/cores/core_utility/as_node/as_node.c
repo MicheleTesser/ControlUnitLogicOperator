@@ -146,6 +146,12 @@ int8_t as_node_init(AsNode_h* const restrict self,
     goto err;
   }
 
+  if (shared_message_reader_init(&p_self->m_recv_ebs_pressure, SHARED_MEX_EBSSTATUS))
+  {
+    err=-6;
+    goto err;
+  }
+
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
   {
 
@@ -159,16 +165,10 @@ int8_t as_node_init(AsNode_h* const restrict self,
 
   if (!p_self->p_mailbox_send_pcu_enable_dv)
   {
-    err=-5;
+    err=-7;
     goto err;
   }
 
-  if (shared_message_reader_init(&p_self->m_recv_ebs_pressure, SHARED_MEX_EBSSTATUS))
-  {
-    hardware_free_mailbox_can(&p_self->p_mailbox_send_pcu_enable_dv);
-    err=-6;
-    goto err;
-  }
 
   p_self->p_mission_reader = p_car_mission_reader;
 
