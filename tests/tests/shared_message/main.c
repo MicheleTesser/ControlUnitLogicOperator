@@ -108,12 +108,11 @@ int main(void)
     .core_run = &core_thread.run,
   };
 
+  INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can general");
+  INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
 
-  if(shared_message_owner_init(&message_owner) < 0)
-  {
-    goto end;
-  }
+  INIT_PH(shared_message_owner_init(&message_owner), "shared message");
 
   test_double_message_owner();
 

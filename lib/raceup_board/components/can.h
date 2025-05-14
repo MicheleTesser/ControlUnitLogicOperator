@@ -67,7 +67,7 @@ hardware_get_mailbox(struct CanNode* const restrict self, const enum MAILBOX_TYP
     const uint16_t mex_size)__attribute__((__nonnull__(1)));
 
 #define hardware_get_mailbox_single_mex(self,type,filter_id,mex_size)\
-  hardware_get_mailbox(self,type,filter_id,~0,mex_size)
+  hardware_get_mailbox(self,type,filter_id,(const uint16_t)~0u,mex_size)
 
 extern int8_t
 hardware_mailbox_read(struct CanMailbox* const restrict self ,

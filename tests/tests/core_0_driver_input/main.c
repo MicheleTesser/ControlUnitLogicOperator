@@ -2,6 +2,7 @@
 #include "src/cores/core_0/feature/driver_input/driver_input.h"
 #include "linux_board/linux_board.h"
 #include "car_component/car_component.h"
+#include "src/cores/core_utility/core_utility.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -20,6 +21,7 @@
 struct ThInput {
   DriverInput_h* driver_input;
   CarMissionReader_h* mission_reader;
+  SharedMessageOwner_h* shared_memory;
 
   int8_t run;
 };
@@ -37,6 +39,7 @@ static int driver_loop(void* args)
   {
     car_mission_reader_update(input->mission_reader);
     giei_driver_input_update(input->driver_input);
+    shared_message_owner_update(input->shared_memory);
   }
   return 0;
 }
@@ -164,6 +167,7 @@ static int test_throttle_dv(TestInput* input)
     FAILED("dv throttle value set fail");
     err--;
   }
+  printf("expected: %d, gived: %f\n",throttle_value, throttle);
 
   throttle_value = 67;
 
@@ -180,6 +184,7 @@ static int test_throttle_dv(TestInput* input)
     FAILED("dv brake value update fail");
     err--;
   }
+  printf("expected: %d, gived: %f\n",throttle_value, throttle);
 
   return err;
 }
@@ -204,6 +209,7 @@ static int test_brake_dv(TestInput* input)
     FAILED("dv brake value set fail");
     err--;
   }
+  printf("expected: %d, gived: %f\n",brk_value, brake);
 
   brk_value = 30;
 
@@ -221,6 +227,7 @@ static int test_brake_dv(TestInput* input)
     FAILED("dv brake value update fail");
     err--;
   }
+  printf("expected: %d, gived: %f\n",brk_value, brake);
 
   return err;
 }
@@ -244,6 +251,7 @@ static int test_steering_wheel_dv(TestInput* input){
     FAILED("dv steering value set fail");
     err--;
   }
+  printf("expected: %d, gived: %f\n",steering_value, stw);
 
   steering_value = 88;
 
@@ -261,6 +269,7 @@ static int test_steering_wheel_dv(TestInput* input){
     FAILED("dv brake value update fail");
     err--;
   }
+  printf("expected: %d, gived: %f\n",steering_value, stw);
 
   return err;
 }
@@ -268,6 +277,7 @@ static int test_steering_wheel_dv(TestInput* input){
 int main(void)
 {
   ExternalBoards_t external_boards = {0};
+  SharedMessageOwner_h shared_memory = {0};
 
   CarMissionReader_h mission_reader = {0};
   DriverInput_h o_driver={0};
@@ -278,6 +288,7 @@ int main(void)
   struct ThInput input = {
     .driver_input = &o_driver,
     .mission_reader = &mission_reader,
+    .shared_memory = &shared_memory,
 
     .run=1,
   };
@@ -294,6 +305,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(shared_message_owner_init(&shared_memory), "shared_memory");
   INIT_PH(car_mission_reader_init(&mission_reader), "car mission reader");
   INIT_PH(driver_input_init(&o_driver, &mission_reader), "driver input");
 
