@@ -65,9 +65,9 @@ int8_t hv_update(Hv_h* const restrict self)
 {
   union GieiHv_conv conv = {self};
   struct GieiHv_t* p_self = conv.clear;
-  can_obj_can2_h_t o2= {0};
+  can_obj_can2_h_t o2 = {0};
 
-  if(shared_message_read_unpack_can2(&p_self->m_recv_lem,&o2))
+  if(shared_message_read_unpack_can2(&p_self->m_recv_lem,&o2)>0)
   {
     union {
       uint32_t u32;

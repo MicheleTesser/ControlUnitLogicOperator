@@ -24,7 +24,7 @@
 #define NUMBER_OF_FIFO_ELEMENTS 15
 #define WAIT_TIME                   1                      /* Number of milliseconds to wait after transmission */
 #define DO_NOT_CARE_BUFFER_INDEX    (IfxCan_RxBufferId)0
-#define CHECK_INIT(node,ret) if(!atomic_load(&(node->init_done))){ return ret;}
+#define CHECK_INIT(node,ret) if(!atomic_load(&(node->init_done))) return ret;
 
 #define LED_STB         &MODULE_P20,6                                           /* LED: Port, Pin definition            */
 
@@ -188,7 +188,7 @@ struct CanNode* hardware_init_can_get_ref_node(const enum CAN_MODULES mod)
 
 void hardware_init_can_destroy_ref_node(struct CanNode** restrict self __attribute__((__unused__)))
 {
-  atomic_store(&(*self)->init_done, 0);
+  atomic_store(&(*self)->taken, 0);
   self = NULL;
 }
 
@@ -221,9 +221,6 @@ int8_t hardware_write_can(struct CanNode* const restrict self ,
       (err = IfxCan_Can_sendMessage(&self->canNode, &tx_message, (uint32_t *) &mex->full_word)) &&
       ret++ < 50)
   {
-    serial_write_raw("failed sending mex with err: ");
-    serial_write_int8_t(err);
-    serial_write_str("");
   }
 
   /* Initialize a time variable for waiting 1 ms */

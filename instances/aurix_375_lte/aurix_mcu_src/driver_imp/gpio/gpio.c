@@ -28,7 +28,7 @@ static struct GpioSpec{
   IfxPort_Mode mode;
 }BOARD_GPIOS[__NUM_OF_GPIOS__] =
 {
-  {&MODULE_P00, 5, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_0_ALIVE_BLINK, default led 
+  {&MODULE_P33, 0, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_0_ALIVE_BLINK, default led 
   {&MODULE_P33, 4, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_1_ALIVE_BLINK, debug led 2
   {&MODULE_P33, 6, GPIO_OUTPUT_MODE }, //INFO: GPIO_CORE_2_ALIVE_BLINK, debug led 3
   {&MODULE_P23, 1, GPIO_INPUT_MODE }, //TODO: GPIO_RTD_BUTTON, DRIVE_BUTTON
@@ -103,6 +103,8 @@ int8_t gpio_toggle(Gpio_h* const restrict self)
 {
   union Gpio_h_t_conv conv = {self};
   struct Gpio_t* p_self = conv.clear;
+  struct GpioSpec* p_info_gpio = p_info_gpio = &BOARD_GPIOS[GPIO_CORE_0_ALIVE_BLINK];
+
   IfxPort_togglePin(
       p_self->gpio_read_permission.port,
       p_self->gpio_read_permission.pin_index);

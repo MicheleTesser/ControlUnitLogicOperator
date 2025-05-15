@@ -16,8 +16,9 @@ union CoreAliveBlink_h_t_conv{
 #ifdef DEBUG
 char __assert_size_alive_blink[(sizeof(CoreAliveBlink_h) == sizeof(struct CoreAliveBlink_t))? 1:-1];
 char __assert_align_alive_blink[(_Alignof(CoreAliveBlink_h) == _Alignof(struct CoreAliveBlink_t))? 1:-1];
-#endif // DEBUG
-       //public
+#endif //! DEBUG
+
+//public
 
 int8_t core_alive_blink_init(
     CoreAliveBlink_h* const restrict self,

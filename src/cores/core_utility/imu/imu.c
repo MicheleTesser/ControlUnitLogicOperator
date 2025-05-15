@@ -64,19 +64,19 @@ int8_t imu_update(Imu_h* const restrict self )
     CanMessage mex = {0};
     can_obj_can2_h_t o2 = {0};
 
-    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_1, &o2))
+    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_1, &o2)>0)
     {
       p_self->m_acc[AXES_X] = (float) o2.can_0x060_Imu1.acc_x;
       p_self->m_acc[AXES_Y] = (float) o2.can_0x060_Imu1.acc_y;
     }
 
-    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_2, &o2))
+    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_2, &o2)>0)
     {
       p_self->m_acc[AXES_Z] = (float) o2.can_0x061_Imu2.acc_z;
       p_self->m_omega[AXES_X] = (float) o2.can_0x061_Imu2.omega_x;
     }
 
-    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_3, &o2))
+    if (shared_message_read_unpack_can2(&p_self->m_recv_imu_3, &o2)>0)
     {
       unpack_message_can2(&o2, mex.id, mex.full_word, mex.message_size, 0);
       p_self->m_acc[AXES_Y] = (float) o2.can_0x062_Imu3.omega_y;

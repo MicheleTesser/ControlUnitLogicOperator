@@ -202,7 +202,7 @@ int8_t as_node_update(AsNode_h* const restrict self)
     p_self->m_last_res_message_received = timer_time_now();
   }
 
-  if (shared_message_read_unpack_can2(&p_self->m_recv_ebs_pressure, &o2))
+  if (shared_message_read_unpack_can2(&p_self->m_recv_ebs_pressure, &o2)>0)
   {
     p_self->m_ebs_check_ok = o2.can_0x03c_EbsStatus.system_check;
   }

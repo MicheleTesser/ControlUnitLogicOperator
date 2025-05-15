@@ -206,6 +206,7 @@ static uint8_t _amk_inverter_hv_status(AMKInverter_t* const restrict self)
   return res;
 }
 
+static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)__attribute__((__unused__));
 static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 {
   struct AMK_Setpoints setpoint = {0};
@@ -407,14 +408,15 @@ enum RUNNING_STATUS amk_rtd_procedure(const AMKInverter_t* const restrict self)
   val->AMK_TempMotor = mex.TempMotor;\
 }
 
-int8_t amk_update(AMKInverter_t* const restrict self)
+int8_t amk_update(AMKInverter_t* const restrict self __attribute__((__unused__)))
 {
+  int8_t err=0;
   CanMessage mex = {0};
   can_obj_can1_h_t o1 ={0};
   can_obj_can2_h_t o2 ={0};
-  int8_t err=0;
 
   _amk_update_rtd_procedure(self);
+
 
 #define READ_MAILBOX_INV(ENGINE, MEX_1, MEX_2)\
   if (hardware_mailbox_read(self->m_engines_mailbox[ENGINE].p_recv_mailbox_inverter_1, &mex))\
@@ -549,6 +551,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
     return -6;
   }
 
+
 #define INVERTER_MAILBOX(engine, MAILBOX, CAN_ID)\
   p_self->m_engines_mailbox[engine].MAILBOX =\
     hardware_get_mailbox_single_mex(\
@@ -557,6 +560,39 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
         CAN_ID,\
         message_dlc_can1(CAN_ID));\
 
+
+
+
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
+    p_self->mailbox_pcu_rf_signal_send =
+      hardware_get_mailbox_single_mex(can_node,
+          SEND_MAILBOX,
+          CAN_ID_PCU,
+          message_dlc_can2(CAN_ID_PCU));
+  }
+
+  if (!p_self->mailbox_pcu_rf_signal_send)
+  {
+    return -9;
+  }
+
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
+  {
+    p_self->mailbox_pcu_rf_signal_read =
+      hardware_get_mailbox_single_mex(
+          can_node,
+          RECV_MAILBOX,
+          CAN_ID_PCURFACK,
+          message_dlc_can2(CAN_ID_PCURFACK));
+  }
+
+
+  if (!p_self->mailbox_pcu_rf_signal_read)
+  {
+    hardware_free_mailbox_can(&p_self->mailbox_pcu_rf_signal_read);
+    return -9;
+  }
 
   INVERTER_MAILBOX(FRONT_LEFT, p_recv_mailbox_inverter_1, CAN_ID_INVERTERFL1)
   INVERTER_MAILBOX(FRONT_LEFT, p_recv_mailbox_inverter_2, CAN_ID_INVERTERFL2)
@@ -569,28 +605,6 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
 
   INVERTER_MAILBOX(REAR_RIGHT, p_recv_mailbox_inverter_1, CAN_ID_INVERTERRR1)
   INVERTER_MAILBOX(REAR_RIGHT, p_recv_mailbox_inverter_2, CAN_ID_INVERTERRR2)
-
-
-  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
-  {
-    p_self->mailbox_pcu_rf_signal_send =
-      hardware_get_mailbox_single_mex(can_node,
-          SEND_MAILBOX,
-          CAN_ID_PCU,
-          message_dlc_can2(CAN_ID_PCU));
-
-    p_self->mailbox_pcu_rf_signal_read =
-      hardware_get_mailbox_single_mex(
-          can_node,
-          RECV_MAILBOX,
-          CAN_ID_PCURFACK,
-          message_dlc_can2(CAN_ID_PCURFACK));
-  }
-
-  if (!p_self->mailbox_pcu_rf_signal_send)
-  {
-    return -9;
-  }
 
   int8_t err=0;
   FOR_EACH_ENGINE(engine)

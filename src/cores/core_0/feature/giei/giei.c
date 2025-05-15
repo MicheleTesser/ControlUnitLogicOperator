@@ -150,21 +150,21 @@ int8_t giei_init(Giei_h* const restrict self,
     return 0;
 }
 
-int8_t giei_update(Giei_h* const restrict self )
+int8_t giei_update(Giei_h* const restrict self)
 {
-    GIEI_H_T_CONV(self, p_self);
+  GIEI_H_T_CONV(self, p_self);
 
-    if (hv_update(&p_self->hv)<0)
-    {
-        return -1;
-    }
+  if (hv_update(&p_self->hv)<0)
+  {
+    return -1;
+  }
 
-    if(inverter_update(p_self->inverter)<0)
-    {
-        return -2;
-    }
+  if(inverter_update(p_self->inverter)<0)
+  {
+    return -2;
+  }
 
-    return 0;
+  return 0;
 }
 
 enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)

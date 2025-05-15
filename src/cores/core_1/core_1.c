@@ -13,24 +13,35 @@ void main_1(void)
   Log_h log;
   SharedMessageOwner_h shared_message_owner;
 
-  while (hardware_init_serial()<0);
+  while (shared_message_owner_init(&shared_message_owner) < 0)
+  {
+    serial_write_str("shared message owner init failed");
+  }
 
-  serial_write_str("start init core 1");
+  while (core_alive_blink_init(&alive_blink, GPIO_CORE_1_ALIVE_BLINK, get_tick_from_millis(400)) <0)
+  {
+    serial_write_str("init core alive_blink core 1 failed");
+  }
 
-  while (hardware_init_can(CAN_GENERAL, _500_KBYTE_S_) <0);
-  while (log_init(&log)<0);
-  while (core_alive_blink_init(&alive_blink, GPIO_CORE_1_ALIVE_BLINK, get_tick_from_millis(300)) <0);
-  while (core_1_feature_init(&feature, &log) <0);
-  while (shared_message_owner_init(&shared_message_owner) < 0);
+  while (log_init(&log)<0)
+  {
+    serial_write_str("init log failed");
+  }
 
-  serial_write_str("core 1 wait sync cores");
+  while (core_1_feature_init(&feature, &log) <0)
+  {
+    serial_write_str("core 1 feature init failed");
+  }
+
   //cores sync
   core_status_core_ready(CORE_1);
-  while (!core_status_ready_state());
+  while (!core_status_ready_state())
+  {
+      serial_write_str("core 1 waiting other cores");
+  }
 
   // while (external_log_variables_add_to_log(&log)<0);
 
-  serial_write_str("core 1 init done");
   //loop
   for(;;){
     core_alive_blink_update(&alive_blink);

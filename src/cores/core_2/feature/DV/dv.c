@@ -367,7 +367,7 @@ int8_t dv_update(Dv_h* const restrict self)
         EmergencyNode_raise(&p_self->m_emergency_node, EMERGENCY_DV_EMBEDDED_OFF);
       }
 
-      if (shared_message_read_unpack_can3(&p_self->m_recv_mission_status, &o3))
+      if (shared_message_read_unpack_can3(&p_self->m_recv_mission_status, &o3)>0)
       {
         p_self->m_dv_mission_status = o3.can_0x07e_DV_Mission.Mission_status;
       }

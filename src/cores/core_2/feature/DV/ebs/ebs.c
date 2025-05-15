@@ -119,7 +119,7 @@ int8_t ebs_update(DvEbs_h* const restrict self)
     p_self->m_last_update = timer_time_now();
   }
   
-  if (shared_message_read_unpack_can2(&p_self->m_recv_ebs,&o2))
+  if (shared_message_read_unpack_can2(&p_self->m_recv_ebs,&o2)>0)
   {
     p_self->m_tank_vals[TANK_LEFT] = o2.can_0x03c_EbsStatus.press_left_tank;
     p_self->m_tank_vals[TANK_RIGHT] = o2.can_0x03c_EbsStatus.press_right_tank;

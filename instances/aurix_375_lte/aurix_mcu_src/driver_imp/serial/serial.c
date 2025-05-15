@@ -28,12 +28,14 @@
 /*********************************************************************************************************************/
 /*-----------------------------------------------------Includes------------------------------------------------------*/
 /*********************************************************************************************************************/
-#include <stdio.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "IfxAsclin_Asc.h"
 #include "IfxCpu_Irq.h"
 #pragma GCC diagnostic pop
+
+#include <stdatomic.h>
+#include <stdio.h>
 
 
 #include "../../src/lib/raceup_board/raceup_board.h"
@@ -60,6 +62,8 @@ IfxAsclin_Asc g_asc;                                                        /* D
  * the address to which the buffers have been located.
  */
 uint8 g_ascTxBuffer[ASC_TX_BUFFER_SIZE + sizeof(Ifx_Fifo) + 8];             /* Declaration of the FIFOs parameters  */
+
+atomic_bool LOCK_SERIAL;
 
 /*********************************************************************************************************************/
 /*---------------------------------------------Function Implementations----------------------------------------------*/
@@ -146,7 +150,10 @@ TEMPLATE_WRITE_DIG(float, "%f")
 
 int8_t serial_write_raw(const char* const restrict buffer __attribute__((__unused__)))
 {
+  while(atomic_load(&LOCK_SERIAL));
+  atomic_store(&LOCK_SERIAL, 1);
   Ifx_SizeT count = strlen(buffer);                                               /* Size of the message                      */
   IfxAsclin_Asc_write(&g_asc, buffer, &count, TIME_INFINITE);         /* Transfer of data                         */
+  atomic_store(&LOCK_SERIAL, 0);
   return 0;
 }

@@ -18,7 +18,6 @@
 #define CAN_INTERFACE_2 "culo_can_2"
 
 
-typedef  uint8_t BoardComponentId;
 #define NUM_OF_MAILBOX 1024
 #define FIFO_BUFFER_SIZE 32
 

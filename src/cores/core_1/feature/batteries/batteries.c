@@ -80,7 +80,7 @@ int8_t car_batteries_update(CarBatteries_h* const restrict self)
   can_obj_can2_h_t o2 = {0};
   int8_t err=0;
 
-  if(shared_message_read_unpack_can2(&p_self->m_recv_lem, &o2))
+  if(shared_message_read_unpack_can2(&p_self->m_recv_lem, &o2)>0)
   {
     p_self->m_lem = o2.can_0x3c2_Lem.current;
   }

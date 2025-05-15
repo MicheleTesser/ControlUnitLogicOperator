@@ -68,14 +68,14 @@ int8_t driver_input_reader_update(DriverInputReader_h* const restrict self )
   can_obj_can2_h_t o2={0};
   can_obj_can3_h_t o3={0};
 
-  if (shared_message_read_unpack_can2(&p_self->m_recv_human_brake, &o2))
+  if (shared_message_read_unpack_can2(&p_self->m_recv_human_brake, &o2)>0)
   {
     p_self->m_input[DRIVER_HUMAN].m_throttle = _saturate_100(o2.can_0x053_Driver.throttle);
     p_self->m_input[DRIVER_HUMAN].m_brake = _saturate_100(o2.can_0x053_Driver.brake);
     p_self->m_input[DRIVER_HUMAN].m_steering_angle = _saturate_100(o2.can_0x053_Driver.steering);
   }
 
-  if (shared_message_read_unpack_can3(&p_self->m_recv_dv_driver, &o3))
+  if (shared_message_read_unpack_can3(&p_self->m_recv_dv_driver, &o3)>0)
   {
     p_self->m_input[DRIVER_EMBEDDED].m_throttle = _saturate_100(o3.can_0x07d_DV_Driver.Throttle);
     p_self->m_input[DRIVER_EMBEDDED].m_brake = _saturate_100(o3.can_0x07d_DV_Driver.Brake);

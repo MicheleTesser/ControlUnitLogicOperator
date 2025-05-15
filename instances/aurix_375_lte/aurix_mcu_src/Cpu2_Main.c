@@ -29,6 +29,7 @@
 #include "Ifx_Types.h"
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
+#include "Bsp.h"
 #pragma GCC diagnostic pop
 
 #include "src/src.h"
@@ -48,5 +49,7 @@ void core2_main(void)
     IfxCpu_emitEvent(&g_cpuSyncEvent);
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
+    waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, 200));
+
     main_2();
 }

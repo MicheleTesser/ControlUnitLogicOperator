@@ -129,7 +129,7 @@ int8_t giei_driver_input_update(DriverInput_h* const restrict self )
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
       p_self->current_driver = DRIVER_EMBEDDED;
-      if (shared_message_read_unpack_can3(&p_self->m_recv_dv_mission, &o3))
+      if (shared_message_read_unpack_can3(&p_self->m_recv_dv_mission, &o3)>0)
       {
         unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
         if (o3.can_0x07e_DV_Mission.Mission_status == 2)

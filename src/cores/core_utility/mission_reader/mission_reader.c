@@ -82,7 +82,7 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
   }
 
   if (!is_mission_locked(&p_self->m_mission_locker_read)
-      && shared_message_read_unpack_can2(&p_self->m_recv_current_mission, &o2))
+      && shared_message_read_unpack_can2(&p_self->m_recv_current_mission, &o2)>0)
   {
     p_self->m_current_mission = o2.can_0x047_CarMission.Mission;
   }
