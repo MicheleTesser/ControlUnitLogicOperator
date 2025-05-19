@@ -15,13 +15,13 @@ void main_2(void)
 
     while (core_alive_blink_init(&alive_blink, GPIO_CORE_2_ALIVE_BLINK, get_tick_from_millis(600)) <0)
     {
-      // serial_write_str("alive blink init core 2 failed");
+      serial_write_str("alive blink init core 2 failed");
     }
     // serial_write_str("alive blink init core 2 done");
 
     while (core_2_feature_init(&feature)<0)
     {
-      // serial_write_str("core 2 init feature failed");
+      serial_write_str("core 2 init feature failed");
     }
     // serial_write_str("core 2 init feature done");
 

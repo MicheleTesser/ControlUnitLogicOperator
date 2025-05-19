@@ -319,6 +319,8 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   p_self->m_dv_mission_status = MISSION_NOT_RUNNING;
   p_self->p_mission_reader = p_mission_reader;
 
+  EmergencyNode_raise(&p_self->m_emergency_node, 1); //INFO: debug per tronici remove
+
   return 0;
 }
 
@@ -333,33 +335,31 @@ int8_t dv_update(Dv_h* const restrict self)
   can_obj_can3_h_t o3 = {0};
   can_obj_can2_h_t o2 = {0};
 
-  if (imu_update(&p_self->m_imu)<0) return -1;
-  if (ebs_update(&p_self->m_dv_ebs)<0) return -2;
-  if (as_node_update(&p_self->m_as_node)) return -3;
-
-  if (shared_message_read(&p_self->m_recv_embedded_alive, &mex))
-  {
-    p_self->m_embeed_last_alive = timer_time_now(); 
-    EmergencyNode_solve(&p_self->m_emergency_node, EMERGENCY_DV_EMBEDDED_OFF);
-  }
-
-
-
-
   switch (car_mission_reader_get_current_mission(p_self->p_mission_reader))
   {
     case CAR_MISSIONS_NONE:
       p_self->m_dv_mission_status = MISSION_NOT_RUNNING;
-      p_self->m_status = AS_OFF;
+      _dv_set_status(p_self, AS_OFF);
       break;
     case CAR_MISSIONS_HUMAN:
-      p_self->m_status = AS_OFF;
+      _dv_set_status(p_self, AS_OFF);
       break;
     case CAR_MISSIONS_DV_SKIDPAD:
     case CAR_MISSIONS_DV_AUTOCROSS:
     case CAR_MISSIONS_DV_TRACKDRIVE:
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
+
+      if (imu_update(&p_self->m_imu)<0) return -1;
+      if (ebs_update(&p_self->m_dv_ebs)<0) return -2;
+      if (as_node_update(&p_self->m_as_node)) return -3;
+
+      if (shared_message_read(&p_self->m_recv_embedded_alive, &mex))
+      {
+        p_self->m_embeed_last_alive = timer_time_now(); 
+        EmergencyNode_solve(&p_self->m_emergency_node, EMERGENCY_DV_EMBEDDED_OFF);
+      }
+
       if ((timer_time_now() - p_self->m_embeed_last_alive) > get_tick_from_millis(500))
       {
         p_self->m_dv_mission_status = MISSION_NOT_RUNNING;
@@ -391,9 +391,9 @@ int8_t dv_update(Dv_h* const restrict self)
       p_self->m_dv_mission_status = MISSION_NOT_RUNNING;
       p_self->m_status = AS_OFF;
       break;
+      if(_dv_update_status(p_self)<0)return -4;
   }
 
-  if(_dv_update_status(p_self)<0)return -4;
   if(_dv_update_led(p_self)<0) return -5;
 
   return 0;
