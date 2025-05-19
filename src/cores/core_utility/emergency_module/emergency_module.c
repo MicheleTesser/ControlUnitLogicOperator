@@ -75,6 +75,7 @@ int8_t EmergencyNode_class_init(void)
   {
     return -1;   
   }
+  gpio_set_low(&EXCEPTION_COUNTER.gpio_scs);
   EXCEPTION_COUNTER.init_done=1;
 
   return 0;
