@@ -206,6 +206,20 @@ enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
 
 }
 
+int8_t GIEI_stop(Giei_h* const restrict self)
+{
+    const union Giei_conv conv = {self};
+    struct Giei_t* const restrict p_self = conv.clear;
+    int8_t err=0;
+
+    FOR_EACH_ENGINE(engine)
+    {
+      err += engine_send_torque(p_self->inverter, engine, 0, 0);
+    }
+    
+    return err;
+}
+
 int8_t GIEI_compute_power(Giei_h* const restrict self)
 {
     const union Giei_conv conv = {self};

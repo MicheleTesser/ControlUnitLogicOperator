@@ -71,22 +71,40 @@ int8_t core_0_feature_compute_power(Core0Feature_h* const restrict self )
   union Core0Feature_h_t_conv conv = {self};
   struct Core0Feature_t* const restrict p_self = conv.clear;
   enum RUNNING_STATUS status = SYSTEM_OFF;
+  int8_t err=0;
 
   status = GIEI_check_running_condition(&p_self->giei);
-  if (status)
+  if (p_self->old_running_status != status)
   {
-    if (p_self->old_running_status != status)
+    p_self->old_running_status = status;
+    if((err = global_running_status_set(&p_self->m_global_running_status_owner, status))<0)
     {
-      p_self->old_running_status = status;
-      if(global_running_status_set(&p_self->m_global_running_status_owner, status)<0)
-      {
-        return -1;
-      }
+      serial_write_raw("error setting global_running_status_set core_0_feature_compute_power: ");
+      serial_write_int8_t(err);
+      serial_write_str("");
     }
-    if(GIEI_compute_power(&p_self->giei)<0)
+  }
+
+  if (status == RUNNING)
+  {
+    if((err=GIEI_compute_power(&p_self->giei))<0)
     {
+      serial_write_raw("error GIEI_compute_power core_0_feature_compute_power: ");
+      serial_write_int8_t(err);
+      serial_write_str("");
       return -2;
     }
   }
+  else
+  {
+    if((err=GIEI_stop(&p_self->giei))<0)
+    {
+      serial_write_raw("error GIEI_top core_0_feature_compute_power: ");
+      serial_write_int8_t(err);
+      serial_write_str("");
+    }
+  }
+
+
   return 0;
 }
