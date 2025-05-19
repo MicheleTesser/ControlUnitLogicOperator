@@ -20,6 +20,7 @@ struct Giei_t{
     time_var_microseconds rtd_sound_start; //32
     RtdAssiSound_h o_rtd_sound; //40
     GpioRead_h gpio_rtd_button; //44
+    Gpio_h m_gpio_rtd_button_led;
     MissionLocker_h o_mission_locker; //48
     float engines_voltages[__NUM_OF_ENGINES__]; //64
     enum RUNNING_STATUS running_status; //68
@@ -109,6 +110,12 @@ int8_t giei_init(Giei_h* const restrict self,
         return -2;
     }
 
+    while(hardware_init_gpio(&p_self->m_gpio_rtd_button_led, GPIO_RTD_BUTTON_LED)<0)
+    {
+        SET_TRACE(CORE_0);
+        return -3;
+    }
+
     rtd_assi_sound_init(&p_self->o_rtd_sound);
 
     if (lock_mission_ref_get_mut(&p_self->o_mission_locker)<0)
@@ -195,6 +202,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
     if (rt == RUNNING && !p_self->entered_rtd)
     {
         p_self->entered_rtd =1;
+        gpio_set_low(&p_self->m_gpio_rtd_button_led);
         rtd_assi_sound_start(&p_self->o_rtd_sound);
         p_self->rtd_sound_start = timer_time_now();
     }
@@ -202,6 +210,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
     {
         p_self->entered_rtd =0;
         p_self->rtd_sound_start=0;
+        gpio_set_high(&p_self->m_gpio_rtd_button_led);
         rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }
     p_self->running_status = rt;
