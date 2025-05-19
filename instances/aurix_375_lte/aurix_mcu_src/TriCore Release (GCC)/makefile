@@ -24,6 +24,7 @@ RM := rm -rf
 -include src/cores/core_utility/mission_reader/mission_locker/subdir.mk
 -include src/cores/core_utility/mission_reader/subdir.mk
 -include src/cores/core_utility/imu/subdir.mk
+-include src/cores/core_utility/errno_trace/subdir.mk
 -include src/cores/core_utility/emergency_module/subdir.mk
 -include src/cores/core_utility/driver_input_reader/subdir.mk
 -include src/cores/core_utility/core_status/subdir.mk

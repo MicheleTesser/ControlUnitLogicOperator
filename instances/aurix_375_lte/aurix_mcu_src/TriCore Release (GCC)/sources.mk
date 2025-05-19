@@ -88,6 +88,7 @@ src/cores/core_utility/car_speed \
 src/cores/core_utility/core_status \
 src/cores/core_utility/driver_input_reader \
 src/cores/core_utility/emergency_module \
+src/cores/core_utility/errno_trace \
 src/cores/core_utility/imu \
 src/cores/core_utility/mission_reader/mission_locker \
 src/cores/core_utility/mission_reader \
