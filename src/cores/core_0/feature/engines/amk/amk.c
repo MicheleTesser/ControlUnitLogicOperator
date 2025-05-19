@@ -5,8 +5,7 @@
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
 #include "../../../../../lib/raceup_board/raceup_board.h"
-#include "../../../../core_utility/emergency_module/emergency_module.h"
-#include "../../../../core_utility/car_speed/car_speed.h"
+#include "../../../../core_utility/core_utility.h"
 #include "../../math_saturated/saturated.h"
 #include "../../../../core_1/feature/log/external_log_variables/external_log_variables.h"
 #include <stdint.h>
@@ -149,6 +148,7 @@ static int8_t _send_message_amk(const AMKInverter_t* const restrict self,
       mex.id = CAN_ID_VCUINVRR;
       break;
     default:
+      SET_TRACE(CORE_0);
       return -1;
   }
 
@@ -349,6 +349,7 @@ static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const 
       basic_id_start = AMK_STATUS_RR;
       break;
     default:
+      SET_TRACE(CORE_0);
       return -1;
   }
 
@@ -356,6 +357,7 @@ static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const 
   if(external_log_variables_store_pointer(&self->engines[engine].var,\
         basic_id_start + cursor)<0)\
   {\
+    SET_TRACE(CORE_0);\
     return -9 + cursor;\
   }\
   ++cursor;
@@ -471,6 +473,7 @@ float amk_get_info(const AMKInverter_t* const restrict self,
     case TARGET_VELOCITY:
       return self->engines[engine].AMK_TargetVelocity;
     default:
+      SET_TRACE(CORE_0);
       return -1;
   }
 }
@@ -491,18 +494,19 @@ float amk_max_neg_torque(const AMKInverter_t* const restrict self, const float l
 int8_t amk_send_torque(const AMKInverter_t* const restrict self,
     const enum ENGINES engine, const float pos_torque, const float neg_torque)
 {
+  struct AMK_Setpoints setpoint  ={
+    .AMK_Control_fields ={0},
+    .AMK_TargetVelocity = SPEED_LIMIT,
+    .AMK_TorqueLimitPositive = 0,
+    .AMK_TorqueLimitNegative = 0,
+  };
   if (amk_rtd_procedure(self) == RUNNING)
   {
-    struct AMK_Setpoints setpoint  ={
-      .AMK_Control_fields ={0},
-      .AMK_TargetVelocity = SPEED_LIMIT,
-      .AMK_TorqueLimitPositive = pos_torque,
-      .AMK_TorqueLimitNegative = neg_torque,
-    };
-    return _send_message_amk(self, engine, &setpoint);
+    setpoint.AMK_TorqueLimitPositive = pos_torque;
+    setpoint.AMK_TorqueLimitNegative = neg_torque;
   }
 
-  return -1;
+  return _send_message_amk(self, engine, &setpoint);
 }
 
 void amk_destroy(AMKInverter_t* const restrict self __attribute__((__unused__)))
@@ -523,31 +527,37 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
 
   if (EmergencyNode_init(&p_self->amk_emergency))
   {
+    SET_TRACE(CORE_0);
     return -1;
   }
   p_self->can_inverter = hardware_init_can_get_ref_node(CAN_INVERTER);
   if (!p_self->can_inverter) {
+    SET_TRACE(CORE_0);
     return -2;
   }
 
   if (car_speed_mut_init(&p_self->m_car_speed)<0)
   {
+    SET_TRACE(CORE_0);
     return -3;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->gpio_precharge_init, GPIO_AIR_PRECHARGE_INIT)<0)
  
   {
+    SET_TRACE(CORE_0);
     return -4;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->gpio_precharge_done, GPIO_AIR_PRECHARGE_DONE)<0)
   {
+    SET_TRACE(CORE_0);
     return -5;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->gpio_rtd_button, GPIO_RTD_BUTTON)<0)
   {
+    SET_TRACE(CORE_0);
     return -6;
   }
 
@@ -574,6 +584,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
 
   if (!p_self->mailbox_pcu_rf_signal_send)
   {
+    SET_TRACE(CORE_0);
     return -9;
   }
 
@@ -591,6 +602,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
   if (!p_self->mailbox_pcu_rf_signal_read)
   {
     hardware_free_mailbox_can(&p_self->mailbox_pcu_rf_signal_read);
+    SET_TRACE(CORE_0);
     return -9;
   }
 
@@ -611,6 +623,7 @@ int8_t amk_module_init(AmkInverter_h* const restrict self,
   {
     if((err =_share_var_engine(p_self, engine))<0)
     {
+      SET_TRACE(CORE_0);
       return -9 + err;
     }
   }

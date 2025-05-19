@@ -4,8 +4,7 @@
 #include "engines/engines.h"
 #include "giei/giei.h"
 #include "maps/maps.h"
-#include "../../core_utility/running_status/running_status.h"
-#include "../../core_utility/imu/imu.h"
+#include "../../core_utility/core_utility.h"
 
 #include <stdint.h>
 
@@ -38,16 +37,16 @@ int8_t core_0_feature_init(Core0Feature_h* const restrict self )
   union Core0Feature_h_t_conv conv = {self};
   struct Core0Feature_t* const restrict p_self = conv.clear;
 
-  if(car_mission_reader_init(&p_self->m_car_mission_reader)) return -1;
-  if(driver_input_init(&p_self->driver, &p_self->m_car_mission_reader) <0) return -2;
-  if(driving_maps_init(&p_self->maps) <0) return -3;
-  if(imu_init(&p_self->imu) <0) return -4;
-  if(amk_module_init(&p_self->amk, &p_self->driver, &p_self->inverter)<0) return -5;
+  if(car_mission_reader_init(&p_self->m_car_mission_reader)) SET_TRACE(CORE_0);
+  if(driver_input_init(&p_self->driver, &p_self->m_car_mission_reader) <0) SET_TRACE(CORE_0);
+  if(driving_maps_init(&p_self->maps) <0) SET_TRACE(CORE_0);
+  if(imu_init(&p_self->imu) <0) SET_TRACE(CORE_0);
+  if(amk_module_init(&p_self->amk, &p_self->driver, &p_self->inverter)<0) SET_TRACE(CORE_0);
   if(giei_init(&p_self->giei, &p_self->inverter, &p_self->driver, &p_self->maps,&p_self->imu) <0)
   {
-    return -6;
+    SET_TRACE(CORE_0);
   }
-  if (global_running_status_mut_init(&p_self->m_global_running_status_owner)<0)return -7;
+  if (global_running_status_mut_init(&p_self->m_global_running_status_owner)<0)SET_TRACE(CORE_0);
 
   return 0;
 }
@@ -57,10 +56,10 @@ int8_t core_0_feature_update(Core0Feature_h* const restrict self )
   union Core0Feature_h_t_conv conv = {self};
   struct Core0Feature_t* const restrict p_self = conv.clear;
 
-  if(giei_driver_input_update(&p_self->driver)<0) return -1;
-  if(driving_map_update(&p_self->maps) <0) return -3;
-  if(imu_update(&p_self->imu) <0) return -4;
-  if(giei_update(&p_self->giei)<0)return -5;
+  if(giei_driver_input_update(&p_self->driver)<0) SET_TRACE(CORE_0);
+  if(driving_map_update(&p_self->maps) <0) SET_TRACE(CORE_0);
+  if(imu_update(&p_self->imu) <0) SET_TRACE(CORE_0);
+  if(giei_update(&p_self->giei)<0)SET_TRACE(CORE_0);
 
   return 0;
 }
@@ -79,9 +78,7 @@ int8_t core_0_feature_compute_power(Core0Feature_h* const restrict self )
     p_self->old_running_status = status;
     if((err = global_running_status_set(&p_self->m_global_running_status_owner, status))<0)
     {
-      serial_write_raw("error setting global_running_status_set core_0_feature_compute_power: ");
-      serial_write_int8_t(err);
-      serial_write_str("");
+      SET_TRACE(CORE_0);
     }
   }
 
@@ -89,19 +86,14 @@ int8_t core_0_feature_compute_power(Core0Feature_h* const restrict self )
   {
     if((err=GIEI_compute_power(&p_self->giei))<0)
     {
-      serial_write_raw("error GIEI_compute_power core_0_feature_compute_power: ");
-      serial_write_int8_t(err);
-      serial_write_str("");
-      return -2;
+      SET_TRACE(CORE_0);
     }
   }
   else
   {
     if((err=GIEI_stop(&p_self->giei))<0)
     {
-      serial_write_raw("error GIEI_top core_0_feature_compute_power: ");
-      serial_write_int8_t(err);
-      serial_write_str("");
+      SET_TRACE(CORE_0);
     }
   }
 

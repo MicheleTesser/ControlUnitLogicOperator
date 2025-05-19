@@ -1,4 +1,5 @@
 #include "maps.h"
+#include "../../../core_utility/core_utility.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -148,6 +149,7 @@ int8_t driving_maps_init(DrivingMaps_h* const restrict self)
 
   if (!p_self->map_mailbox)
   {
+    SET_TRACE(CORE_0);
     return -1;
   }
 
@@ -206,5 +208,6 @@ float driving_map_get_parameter(const DrivingMaps_h* const restrict self,
       return tv_repartition->map_list[tv_repartition->active].repartition;
   }
 
+  SET_TRACE(CORE_0);
   return -1;
 }

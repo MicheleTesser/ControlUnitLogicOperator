@@ -6,7 +6,7 @@
 #define TRACE_DEPTH 16
 
 typedef struct {
-  int8_t m_err;
+  int32_t m_err;
   const char* p_place;
 }Trace;
 
@@ -17,7 +17,7 @@ typedef struct
 }ErrnoTraces;
 
 int8_t
-errno_trace_push_trace(const enum CORES core, const int8_t err, const char* const place);
+errno_trace_push_trace(const enum CORES core, const int32_t err, const char* const place);
 
 int8_t
 errno_trace_get(const enum CORES core, ErrnoTraces* const restrict o_trace);
@@ -27,5 +27,7 @@ errno_trace_print(const enum CORES core);
 
 int8_t
 errno_trace_clear(const enum CORES core);
+
+#define SET_TRACE(core) errno_trace_push_trace(core, (uint32_t) __LINE__, __FILE__);
 
 #endif // !__ERRNO_TRACE__

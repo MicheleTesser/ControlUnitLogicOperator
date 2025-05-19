@@ -1,6 +1,6 @@
 #include "hv.h"
 #include "../../../../../../lib/raceup_board/raceup_board.h"
-#include "../../../../../core_utility/shared_message/shared_message.h"
+#include "../../../../../core_utility/core_utility.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -44,6 +44,7 @@ int8_t hv_init(Hv_h* const restrict self)
 
   if (shared_message_reader_init(&p_self->m_recv_lem, SHARED_MEX_LEM))
   {
+    SET_TRACE(CORE_0);
     return -1;
   }
 
@@ -89,6 +90,7 @@ float hv_get_info(const Hv_h* const restrict self, const enum GIEI_HV_INFO info)
   {
     return p_self->hv_public_data[info];
   }
+  SET_TRACE(CORE_0);
   return -1;
 }
 

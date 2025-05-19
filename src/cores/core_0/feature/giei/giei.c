@@ -1,7 +1,5 @@
 #include "giei.h"
-#include "../../../core_utility/mission_reader/mission_locker/mission_locker.h"
-#include "../../../core_utility/rtd_assi_sound/rtd_assi_sound.h"
-#include "../../../core_utility/as_node/as_node.h"
+#include "../../../core_utility/core_utility.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../driver_input/driver_input.h"
 #include "../maps/maps.h"
@@ -101,11 +99,13 @@ int8_t giei_init(Giei_h* const restrict self,
     GIEI_H_T_CONV(self, p_self);
 
     if (hv_init(&p_self->hv)<0) {
+        SET_TRACE(CORE_0);
         return -1;
     }
 
     if (hardware_init_read_permission_gpio(&p_self->gpio_rtd_button, GPIO_RTD_BUTTON)<0)
     {
+        SET_TRACE(CORE_0);
         return -2;
     }
 
@@ -113,12 +113,13 @@ int8_t giei_init(Giei_h* const restrict self,
 
     if (lock_mission_ref_get_mut(&p_self->o_mission_locker)<0)
     {
+      SET_TRACE(CORE_0);
       return -4;
     }
 
     if (as_node_read_init(&p_self->m_as_node_read)<0)
     {
-    
+      SET_TRACE(CORE_0);
       return -5;
     }
 
@@ -156,11 +157,13 @@ int8_t giei_update(Giei_h* const restrict self)
 
   if (hv_update(&p_self->hv)<0)
   {
+    SET_TRACE(CORE_0);
     return -1;
   }
 
   if(inverter_update(p_self->inverter)<0)
   {
+    SET_TRACE(CORE_0);
     return -2;
   }
 

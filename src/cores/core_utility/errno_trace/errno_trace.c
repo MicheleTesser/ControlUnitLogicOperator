@@ -20,7 +20,7 @@ static struct
 
 //public
 
-int8_t errno_trace_push_trace(const enum CORES core, const int8_t err, const char* const place)
+int8_t errno_trace_push_trace(const enum CORES core, const int32_t err, const char* const place)
 {
   CoreTraces* core_trace = NULL;
   Trace* trace = NULL;
@@ -66,6 +66,11 @@ int8_t errno_trace_print(const enum CORES core)
     return -2;
   }
 
+  if (!core_trace.m_err_num)
+  {
+    return 0;
+  }
+
   serial_write_raw("error traceback core : ");
   serial_write_uint32_t(core);
   serial_write_str("");
@@ -79,7 +84,7 @@ int8_t errno_trace_print(const enum CORES core)
     }
     serial_write_raw(trace->p_place);
     serial_write_raw(" :" );
-    serial_write_int8_t(trace->m_err);
+    serial_write_int32_t(trace->m_err);
     serial_write_str("");
     tabs++;
   }

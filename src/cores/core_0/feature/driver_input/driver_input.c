@@ -1,7 +1,5 @@
 #include "driver_input.h"
-#include "../../../core_utility/mission_reader/mission_reader.h"
-#include "../../../core_utility/driver_input_reader/driver_input_reader.h"
-#include "../../../core_utility/shared_message/shared_message.h"
+#include "../../../core_utility/core_utility.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
 #include "../../../../lib/board_dbc/dbc/out_lib/can3/can3.h"
 
@@ -53,17 +51,17 @@ int8_t driver_input_init(DriverInput_h* const restrict self,
 
   if (hardware_init_read_permission_gpio(&p_self->Rtd_request.gpio_rtd_button, GPIO_RTD_BUTTON)<0)
   {
-    return -1;
+    SET_TRACE(CORE_0);
   }
 
   if (driver_input_reader_init(&p_self->o_driver_input_reader) < 0)
   {
-    return -2;
+    SET_TRACE(CORE_0);
   }
 
   if(shared_message_reader_init(&p_self->m_recv_dv_mission, SHARED_MEX_DV_MISSION))
   {
-    return -3;
+    SET_TRACE(CORE_0);
   }
   
   p_self->current_driver = DRIVER_NONE;
@@ -140,6 +138,7 @@ int8_t giei_driver_input_update(DriverInput_h* const restrict self )
       }
       break;
     case __NUM_OF_CAR_MISSIONS__:
+      SET_TRACE(CORE_0);
       return -1;
       break;
   }
