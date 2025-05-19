@@ -11,5 +11,6 @@
 #include "rtd_assi_sound/rtd_assi_sound.h"
 #include "running_status/running_status.h"
 #include "shared_message/shared_message.h"
+#include "errno_trace/errno_trace.h"
 
 #endif // !__CORE_UTILITY__
