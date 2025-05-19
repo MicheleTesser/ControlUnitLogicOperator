@@ -34,6 +34,7 @@ static struct{
   uint8_t init_done:1;
 }EXCEPTION_COUNTER;
 
+static void raise_module_exception_state(void)__attribute__((__unused__));
 static void raise_module_exception_state(void) 
 {
   while (atomic_flag_test_and_set(&EXCEPTION_COUNTER.lock));
@@ -42,6 +43,7 @@ static void raise_module_exception_state(void)
   atomic_flag_clear(&EXCEPTION_COUNTER.lock);
 }
 
+static void solved_module_exception_state(void) __attribute__((__unused__));
 static void solved_module_exception_state(void)
 {
   while (atomic_flag_test_and_set(&EXCEPTION_COUNTER.lock));
@@ -75,7 +77,7 @@ int8_t EmergencyNode_class_init(void)
   {
     return -1;   
   }
-  gpio_set_low(&EXCEPTION_COUNTER.gpio_scs);
+  gpio_set_high(&EXCEPTION_COUNTER.gpio_scs);
   EXCEPTION_COUNTER.init_done=1;
 
   return 0;
