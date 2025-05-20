@@ -166,6 +166,7 @@ static int8_t _dv_update_led(struct Dv_t* const restrict self)
       break;
     case __NUM_OF_AS_STATUS__:
     default:
+      SET_TRACE(CORE_2);
       return -1;
 
   }
@@ -334,6 +335,13 @@ int8_t dv_update(Dv_h* const restrict self)
   uint64_t mission_status_payload = 0;
   can_obj_can3_h_t o3 = {0};
   can_obj_can2_h_t o2 = {0};
+  int8_t err=0;
+
+#define ERR_TRACE()\
+  {\
+    SET_TRACE(CORE_2);\
+    err--;\
+  }
 
   switch (car_mission_reader_get_current_mission(p_self->p_mission_reader))
   {
@@ -350,9 +358,9 @@ int8_t dv_update(Dv_h* const restrict self)
     case CAR_MISSIONS_DV_EBS_TEST:
     case CAR_MISSIONS_DV_INSPECTION:
 
-      if (imu_update(&p_self->m_imu)<0) return -1;
-      if (ebs_update(&p_self->m_dv_ebs)<0) return -2;
-      if (as_node_update(&p_self->m_as_node)) return -3;
+      if (imu_update(&p_self->m_imu)<0) ERR_TRACE();
+      if (ebs_update(&p_self->m_dv_ebs)<0) ERR_TRACE();
+      if (as_node_update(&p_self->m_as_node)) ERR_TRACE();
 
       if (shared_message_read(&p_self->m_recv_embedded_alive, &mex))
       {
@@ -391,10 +399,10 @@ int8_t dv_update(Dv_h* const restrict self)
       p_self->m_dv_mission_status = MISSION_NOT_RUNNING;
       p_self->m_status = AS_OFF;
       break;
-      if(_dv_update_status(p_self)<0)return -4;
+      if(_dv_update_status(p_self)<0) ERR_TRACE();
   }
 
-  if(_dv_update_led(p_self)<0) return -5;
+  if(_dv_update_led(p_self)<0) ERR_TRACE();
 
-  return 0;
+  return err;
 }
