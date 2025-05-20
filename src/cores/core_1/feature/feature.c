@@ -49,15 +49,23 @@ int8_t core_1_feature_init(Core1Feature_h* const restrict self, Log_h* const res
     return 0;
 }
 
+#define TRACE_ERR()\
+{\
+  SET_TRACE(CORE_1);\
+  err--;\
+}
+
 int8_t core_1_feature_update(Core1Feature_h* const restrict self )
 {
     union Core1Feature_h_t_conv conv = {self};
     struct Core1Feature_t* const restrict p_self = conv.clear;
+    int8_t err=0;
 
-    if(car_batteries_update(&p_self->m_batteries)) SET_TRACE(CORE_1);
-    if(core_1_driver_input_update(&p_self->m_core_1_driver_input)) SET_TRACE(CORE_1);
-    if(core_1_imu_update(&p_self->m_core_1_imu)) SET_TRACE(CORE_1);
-    if(suspensions_update(&p_self->m_suspensions)) SET_TRACE(CORE_1);
-    if(cooling_update(&p_self->m_cooling)<0)SET_TRACE(CORE_1);
-    return 0;
+    if(car_batteries_update(&p_self->m_batteries)) TRACE_ERR();
+    if(core_1_driver_input_update(&p_self->m_core_1_driver_input)) TRACE_ERR();
+    if(core_1_imu_update(&p_self->m_core_1_imu)) TRACE_ERR();
+    if(suspensions_update(&p_self->m_suspensions)) TRACE_ERR();
+    if(cooling_update(&p_self->m_cooling)<0)TRACE_ERR();
+
+    return err;
 }

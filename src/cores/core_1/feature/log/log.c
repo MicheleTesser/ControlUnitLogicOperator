@@ -87,5 +87,10 @@ int8_t log_update_and_send(Log_h* const restrict self)
   }
   //TODO: SD
 
+  if (err)
+  {
+    SET_TRACE(CORE_1);
+  }
+
   return -err;
 }
