@@ -1,6 +1,7 @@
 #include "bms.h"
 #include "../../log/log.h"
 #include "../../../../../lib/raceup_board/raceup_board.h"
+#include "../../../../core_utility/core_utility.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -49,7 +50,9 @@ int8_t bms_init(Bms_h* const restrict self ,
     p_self->p_mailbox =
       hardware_get_mailbox_single_mex(can_node, RECV_MAILBOX, bms_id, mex_size);
   }
-  if (!p_self->p_mailbox) {
+  if (!p_self->p_mailbox)
+  {
+    SET_TRACE(CORE_1);
     return -1;
   }
 
@@ -64,6 +67,7 @@ int8_t bms_init(Bms_h* const restrict self ,
     strcat(entry.name, "Max Volt");
     if(log_add_entry(log, &entry)<0)
     {
+      SET_TRACE(CORE_1);
       return -1;
     }
   }
@@ -79,6 +83,7 @@ int8_t bms_init(Bms_h* const restrict self ,
     strcat(entry.name, "Min Volt");
     if(log_add_entry(log, &entry)<0)
     {
+      SET_TRACE(CORE_1);
       return -2;
     }
   }
@@ -93,6 +98,7 @@ int8_t bms_init(Bms_h* const restrict self ,
     };
     if(log_add_entry(log, &entry)<0)
     {
+      SET_TRACE(CORE_1);
       return -3;
     }
   }

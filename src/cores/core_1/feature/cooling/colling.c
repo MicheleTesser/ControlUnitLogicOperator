@@ -4,7 +4,7 @@
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
-#include "../../../core_utility/running_status/running_status.h"
+#include "../../../core_utility/core_utility.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -53,6 +53,7 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     };
     if (log_add_entry(log, &entry)<0)
     {
+      SET_TRACE(CORE_1);
       return -2;
     }
   }
@@ -66,6 +67,7 @@ int8_t cooling_init(Cooling_h* const restrict self ,
     };
     if (log_add_entry(log, &entry)<0)
     {
+      SET_TRACE(CORE_1);
       return -3;
     }
   }
@@ -88,12 +90,14 @@ int8_t cooling_init(Cooling_h* const restrict self ,
   }
   if (!p_self->p_send_mailbox_pcu)
   {
+    SET_TRACE(CORE_1);
     return -4;
   }
 
   if (!p_self->p_recv_mailbox_stw)
   {
     hardware_free_mailbox_can(&p_self->p_send_mailbox_pcu);
+    SET_TRACE(CORE_1);
     return -5;
   }
 

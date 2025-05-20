@@ -32,6 +32,7 @@ union Core1DriverInput_h_t_conv{
     };\
     if (log_add_entry(log, &entry)<0)\
     {\
+        SET_TRACE(CORE_1);\
         return -1;\
     }\
 }
@@ -50,6 +51,7 @@ int8_t core_1_driver_input_init(
     
     if (driver_input_reader_init(&p_self->m_driver)<0)
     {
+      SET_TRACE(CORE_1);
       return -1;
     }
 

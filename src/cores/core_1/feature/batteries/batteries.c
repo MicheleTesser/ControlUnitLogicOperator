@@ -1,7 +1,7 @@
 #include "batteries.h"
 #include "bms/bms.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
-#include "../../../core_utility/shared_message/shared_message.h"
+#include "../../../core_utility/core_utility.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
@@ -90,6 +90,7 @@ int8_t car_batteries_update(CarBatteries_h* const restrict self)
     err--;
     if (bms_update(&p_self->m_bms[i])<0)
     {
+      SET_TRACE(CORE_1);
       return err;
     }
   }

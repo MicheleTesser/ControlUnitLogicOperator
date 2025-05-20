@@ -2,6 +2,7 @@
 #include "sd/sd.h"
 #include "telemetry/telemetry.h"
 #include "can_log/can_log.h"
+#include "../../../core_utility/core_utility.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -50,16 +51,24 @@ int8_t log_add_entry(Log_h* const restrict self,
 {
   union Log_h_t_conv conv = {self};
   struct Log_t* const restrict p_self = conv.clear;
+  int8_t err=0;
 
   if (entry->log_mode & LOG_TELEMETRY) {
-    log_telemetry_add_entry(&p_self->telemetry, entry->name,
-        entry->data_ptr, entry->data_format, entry->data_mode);
+    if(log_telemetry_add_entry(
+          &p_self->telemetry,
+          entry->name,
+          entry->data_ptr,
+          entry->data_format,
+          entry->data_mode)<0)
+    {
+      err +=1;
+    }
   }
   
 
   //TODO: SD
 
-  return 0;
+  return -err;
 }
 
 int8_t log_update_and_send(Log_h* const restrict self)

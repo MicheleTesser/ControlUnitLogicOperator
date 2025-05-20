@@ -1,8 +1,7 @@
 #include "core_1_imu.h"
 #include "../log/log.h"
 #include "../../../../lib/raceup_board/raceup_board.h"
-#include "../../../core_utility/imu/imu.h"
-#include "../../../core_utility/car_speed/car_speed.h"
+#include "../../../core_utility/core_utility.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -43,7 +42,11 @@ uint8_t __assert_align_core_1_imu[(_Alignof(Core1Imu_h) == _Alignof(struct Core1
   log_entry.data_ptr = var_ptr;\
   log_entry.data_format= "%.02f";\
   memcpy(log_entry.name, var_name, strlen(var_name));\
-  if(log_add_entry(log, &log_entry)<0)return err_code;\
+  if(log_add_entry(log, &log_entry)<0)\
+  {\
+    SET_TRACE(CORE_1);\
+    return err_code;\
+  }\
 }
 
 int8_t core_1_imu_init(Core1Imu_h* const restrict self,
@@ -56,6 +59,7 @@ int8_t core_1_imu_init(Core1Imu_h* const restrict self,
 
   if (imu_init(&p_self->m_imu)<0)
   {
+    SET_TRACE(CORE_1);
     return -1;
   }
 

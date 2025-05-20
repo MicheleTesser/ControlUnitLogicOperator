@@ -2,6 +2,7 @@
 #include "../log_obj_types.h"
 #include "json_builder/json_builder.h"
 #include "../../../../../lib/raceup_board/components/ethernet.h"
+#include "../../../../core_utility/core_utility.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -210,6 +211,7 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
   
   if(hardware_ethernet_udp_init(&p_self->p_ethernet_udp_telemetry,&addr)<0)
   {
+    SET_TRACE(CORE_1);
     return -1;
   }
 
@@ -223,7 +225,9 @@ int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__
 
   if( (json_cell = _search_json_for_log_var(name)) == NULL || json_cell->p_data)
   {
-    return -1;
+    // SET_TRACE(CORE_1); HACK: until the telemetry is setted 
+    // return -1;
+    return 0;
   }
 
   json_cell->m_data_type = data_type;
@@ -301,6 +305,10 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
     p_log_page = NULL;
   }
 
+  if (err <0)
+  {
+    SET_TRACE(CORE_1);
+  }
   return err;
 }
 

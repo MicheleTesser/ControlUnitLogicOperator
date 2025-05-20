@@ -5,8 +5,8 @@
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include "../../../../../lib/board_dbc/dbc/out_lib/can2/can2.h"
 #pragma GCC diagnostic pop 
-#include "../../../../core_utility/running_status/running_status.h"
-#include "../../../../core_utility/car_speed/car_speed.h"
+#include "../../../../core_utility/core_utility.h"
+
 #include <stdint.h>
 #include <string.h>
 
@@ -29,7 +29,12 @@ union CanLog_h_t_conv{
 #ifdef DEBUG
 char __assert_size_can_log[sizeof(CanLog_h)==sizeof(struct CanLog_t)?+1:-1];
 char __assert_align_can_log[_Alignof(CanLog_h)==_Alignof(struct CanLog_t)?+1:-1];
-#define CHECK_INIT(self) if (self->p_mailbox_send_car_status){return -1;}
+#define CHECK_INIT(self)\
+if (!self->p_mailbox_send_car_status)\
+{\
+  SET_TRACE(CORE_1);\
+  return -1;\
+}
 #else
 #define CHECK_INIT(self)
 #endif /* ifdef DEBUG */
@@ -46,11 +51,13 @@ int8_t can_log_init(CanLog_h* const restrict self)
 
   if (hardware_init_read_permission_gpio(&p_self->m_start_precharge_gpio, GPIO_AIR_PRECHARGE_INIT)<0)
   {
+    SET_TRACE(CORE_1);
     return -2;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->m_done_precharge_gpio, GPIO_AIR_PRECHARGE_DONE)<0)
   {
+    SET_TRACE(CORE_1);
     return -3;
   }
 
@@ -66,6 +73,7 @@ int8_t can_log_init(CanLog_h* const restrict self)
 
   if (!p_self->p_mailbox_send_car_status)
   {
+    SET_TRACE(CORE_1);
     return -4;
   }
 
@@ -80,6 +88,7 @@ int8_t can_log_init(CanLog_h* const restrict self)
       !p_self->p_log_var_amk_status_rr ||
       !p_self->p_log_var_amk_status_rl)
   {
+    SET_TRACE(CORE_1);
     return -5;
   }
 

@@ -1,4 +1,5 @@
 #include "json_builder.h"
+#include "../../../../../core_utility/core_utility.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,6 +95,7 @@ int8_t json_push_element(Json_h* const restrict self,
   p_self->p_str_json = realloc(p_self->p_str_json, p_self->str_json_size);
   if (!p_self->p_str_json)
   {
+    SET_TRACE(CORE_1);
     return -99;
   }
 
@@ -107,8 +109,7 @@ int8_t json_push_element(Json_h* const restrict self,
   return 0;
 }
 
-const char*
-json_get(const Json_h* const restrict self)
+const char* json_get(const Json_h* const restrict self)
 {
   const union Json_h_t_conv_const conv = {self};
   const struct Json_t* const p_self = conv.clear;
@@ -116,8 +117,7 @@ json_get(const Json_h* const restrict self)
   return p_self->p_str_json;
 }
 
-uint16_t
-json_len(const Json_h* const restrict self)
+uint16_t json_len(const Json_h* const restrict self)
 {
   const union Json_h_t_conv_const conv = {self};
   const struct Json_t* const p_self = conv.clear;
