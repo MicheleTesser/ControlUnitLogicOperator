@@ -207,7 +207,7 @@ int main(void)
     .external_boards = &external_boards,
   };
 
-  INIT_PH(EmergencyNode_class_init(), "emergency module class init");
+  // INIT_PH(EmergencyNode_class_init(), "emergency module class init");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");

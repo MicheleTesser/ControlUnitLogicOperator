@@ -10,6 +10,7 @@ void main_0(void)
     //setup
     CoreAliveBlink_h alive_blink;
     Core0Feature_h feature;
+    union SystemSettingValue_t setting_value;
 
     while (serial_setup(115200)<0);
     
@@ -52,7 +53,13 @@ void main_0(void)
       core_alive_blink_update(&alive_blink);
       core_0_feature_update(&feature);
       core_0_feature_compute_power(&feature);
-      errno_trace_print(CORE_0);
-      errno_trace_clear(CORE_0);
+
+      if(!system_settings_get(CORE_0_SERIAL_TRACE, &setting_value) && setting_value.u8)
+      {
+        errno_trace_print(CORE_0);
+        errno_trace_clear(CORE_0);
+      }
+
+
     }
 }

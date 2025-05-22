@@ -12,5 +12,6 @@
 #include "running_status/running_status.h"
 #include "shared_message/shared_message.h"
 #include "errno_trace/errno_trace.h"
+#include "system_settings/system_settings.h"
 
 #endif // !__CORE_UTILITY__

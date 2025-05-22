@@ -167,9 +167,9 @@ static void test_start_precharge(EngineType* self, TestInput* input)
 
   printf("deactivating rf after emergency raised: SYSTEM_OFF -> SYSTEM_OFF and emergency resolved ");
   gpio_set_high(input->rf);
-  bms_hv_start_button(&input->external_boards->bms_hv);
   wait_milliseconds(get_tick_from_millis(500));
   _check_status_rtd(self, SYSTEM_OFF);
+  bms_hv_start_button(&input->external_boards->bms_hv);
   if(!EmergencyNode_is_emergency_state(input->emergency_node))
   {
     PASSED("emergency resolved after shutdown hv with rf deactivated");
@@ -211,7 +211,7 @@ int main(void)
     .external_boards = &external_boards,
   };
 
-  INIT_PH(EmergencyNode_class_init(), "emergency module class init");
+  // INIT_PH(EmergencyNode_class_init(), "emergency module class init");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");

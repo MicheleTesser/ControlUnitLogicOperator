@@ -1,7 +1,6 @@
 #include "core_1.h"
 #include "../core_utility/core_utility.h"
 #include "feature/feature.h"
-#include "feature/log/log.h"
 #include <stdint.h>
 
 
@@ -10,8 +9,8 @@ void main_1(void)
   //setup
   CoreAliveBlink_h alive_blink;
   Core1Feature_h feature;
-  Log_h log;
   SharedMessageOwner_h shared_message_owner;
+  union SystemSettingValue_t setting_value={0};
 
   while (shared_message_owner_init(&shared_message_owner) < 0)
   {
@@ -23,12 +22,7 @@ void main_1(void)
     serial_write_str("init core alive_blink core 1 failed");
   }
 
-  while (log_init(&log)<0)
-  {
-    serial_write_str("init log failed");
-  }
-
-  while (core_1_feature_init(&feature, &log) <0)
+  while (core_1_feature_init(&feature) <0)
   {
     serial_write_str("core 1 feature init failed");
   }
@@ -46,8 +40,12 @@ void main_1(void)
   for(;;){
     core_alive_blink_update(&alive_blink);
     core_1_feature_update(&feature);
-    log_update_and_send(&log);
-    errno_trace_print(CORE_1);
-    errno_trace_clear(CORE_1);
+
+    if(!system_settings_get(CORE_1_SERIAL_TRACE, &setting_value) && setting_value.u8)
+    {
+      errno_trace_print(CORE_1);
+      errno_trace_clear(CORE_1);
+    }
+
   }
 }

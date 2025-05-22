@@ -73,7 +73,7 @@ uint8_t __assert_align_emergency_node[(_Alignof(EmergencyNode_h)==_Alignof(struc
 
 int8_t EmergencyNode_class_init(void)
 {
-  if (hardware_init_gpio(&EXCEPTION_COUNTER.gpio_scs, GPIO_SCS)<0)
+  if (EXCEPTION_COUNTER.init_done || hardware_init_gpio(&EXCEPTION_COUNTER.gpio_scs, GPIO_SCS)<0)
   {
     return -1;   
   }

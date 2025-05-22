@@ -306,7 +306,7 @@ int8_t gpio_read_state(const GpioRead_h* const restrict self)
   if (r< 0) {
     fprintf(stderr, "gpio %d read err\n", p_self->gpio_id);
   }
-  return r;
+  return (int8_t) r;
 }
 
 int8_t gpio_set_high(Gpio_h* const restrict self)

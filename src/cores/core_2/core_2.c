@@ -10,6 +10,7 @@ void main_2(void)
     //setup
     CoreAliveBlink_h alive_blink;
     Core2Feature_h feature;
+    union SystemSettingValue_t setting_value;
 
     while (core_alive_blink_init(&alive_blink, GPIO_CORE_2_ALIVE_BLINK, get_tick_from_millis(600)) <0)
     {
@@ -30,7 +31,12 @@ void main_2(void)
     for(;;){
         core_alive_blink_update(&alive_blink);
         core_2_feature_update(&feature);
+
+      if(!system_settings_get(CORE_2_SERIAL_TRACE, &setting_value) && setting_value.u8)
+      {
         errno_trace_print(CORE_2);
         errno_trace_clear(CORE_2);
+      }
+
     }
 }
