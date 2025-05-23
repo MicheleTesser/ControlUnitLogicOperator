@@ -34,13 +34,17 @@ union SystemSettingValue_t {
   float    f32;
 };
 
-//@brief define here the list of settings you want to have.
+/**
+ * @brief define here the list of settings you want to have.
+ */
 #define SYSTEM_SETTINGS\
   X(CORE_0_SERIAL_TRACE)\
   X(CORE_1_SERIAL_TRACE)\
   X(CORE_2_SERIAL_TRACE)\
 
-//@brief (optionally) define here the list of default value (with type) of the settings the type are listed in the union SystemSettingValue_t.
+/**
+ * @brief (optionally) define here the list of default value (with type) of the settings the type are listed in the union SystemSettingValue_t.
+ */
 #define DEFAULT_VALUES\
   X(CORE_0_SERIAL_TRACE, u8,  0)\
   X(CORE_1_SERIAL_TRACE, u8,  0)\
