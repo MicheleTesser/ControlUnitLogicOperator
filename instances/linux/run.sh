@@ -5,6 +5,8 @@ if [[ ! -e ./main.c ]]; then
   exit 1
 fi
 
+root=$(pwd)
+
 create() {
   sudo ip link add dev $1 type vcan
   sudo ip link set up $1
@@ -25,11 +27,13 @@ cd ./build
 rm -rf ./*
 cmake ..
 
-make
-./main
+make build_debug
+cd debug
+./main 
 
 sudo modprobe -r gpio-mockup
 close "culo_can_0"
 close "culo_can_1"
 close "culo_can_2"
 
+cd $root

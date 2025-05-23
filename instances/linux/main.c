@@ -37,6 +37,10 @@ int main(void)
   thrd_create(&core_1, _core_1, NULL);
   thrd_create(&core_2, _core_2, NULL);
 
+  sleep(1);
+
+  hardware_can_node_debug_print_status();
+
   printf("print any key to stop\n");
   getchar();
 

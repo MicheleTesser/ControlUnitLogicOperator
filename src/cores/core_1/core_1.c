@@ -41,7 +41,7 @@ void main_1(void)
     core_alive_blink_update(&alive_blink);
     core_1_feature_update(&feature);
 
-    if(!system_settings_get(CORE_1_SERIAL_TRACE, &setting_value) && setting_value.u8)
+    if(!system_settings_get(C1ST, &setting_value) && setting_value.u8)
     {
       errno_trace_print(CORE_1);
       errno_trace_clear(CORE_1);

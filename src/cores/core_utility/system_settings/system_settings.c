@@ -39,15 +39,21 @@ static int8_t _dps_send_fun(const DpsCanMessage* const restrict mex)
   return hardware_mailbox_send(P_MAILBOX_SEND_DPS_MEX, mex->full_word);
 }
 
-static inline const char* _to_string(const SystemSettingName name)
+static inline void _to_string(const SystemSettingName name, char str_name[VAR_NAME_LENGTH])
 {
+  uint8_t size =0;
+  const uint8_t max_size = VAR_NAME_LENGTH;
   switch (name) {
-#define X(name,type, value) case name: return #name;
+#define X(name,type, value) case name:\
+    size = sizeof(#name)>max_size? max_size: sizeof(#name);\
+    memcpy(str_name, #name, size);\
+    break;
+
     SYSTEM_SETTINGS
 #undef X
     case __NUM_OF_SYSTEM_SETTINGS:
     default:
-      return NULL;
+      break;
   }
 }
 
@@ -61,7 +67,7 @@ static inline void _default_value(const SystemSettingName name, union SystemSett
     default:
       o_buffer->f32 = 0;
       break;
-  };
+  }
 }
 
 static inline uint8_t _get_data_size(const SystemSettingName name)
@@ -118,7 +124,7 @@ int8_t system_settings_init(SytemSettingOwner_h* const restrict self)
       hardware_get_mailbox_single_mex(
           can_node,
           RECV_MAILBOX,
-          0x6000, 
+          CAN_ID_DPSMASTERMEX, 
           8);
   }
 
@@ -133,7 +139,7 @@ int8_t system_settings_init(SytemSettingOwner_h* const restrict self)
       hardware_get_mailbox_single_mex(
           can_node,
           SEND_MAILBOX,
-          0x610,
+          CAN_ID_DPSSLAVEMEX,
           8);
   }
 
@@ -143,7 +149,12 @@ int8_t system_settings_init(SytemSettingOwner_h* const restrict self)
   }
 
   const char board_name[BOARD_NAME_LENGTH] = "CULO";
-  if(dps_slave_init(&p_self->m_dps_slave, _dps_send_fun, board_name, 0, 0x600, 0x610)<0)
+  if(dps_slave_init(
+        &p_self->m_dps_slave,
+        _dps_send_fun,
+        board_name, 0,
+        CAN_ID_DPSMASTERMEX,
+        CAN_ID_DPSSLAVEMEX)<0)
   {
     goto init_dps_failed;
   }
@@ -154,22 +165,28 @@ int8_t system_settings_init(SytemSettingOwner_h* const restrict self)
   {
     const enum DPS_PRIMITIVE_TYPES var_type = SYSTEM_SETTINGS_PARAMS[sett].m_setting_type;
     const uint8_t data_size = _get_data_size(sett);
-    void* restrict p_data = NULL;
+    union SystemSettingValue_t val= {0};
+    char var_name[VAR_NAME_LENGTH] = {0};
+
+    void* restrict p_data = &SETTING_DATA_BUFFER[cursor];
 
     if (cursor + data_size >= BUFFER_SIZE_CAPACITY_BYTE)
     {
       goto monitoring_failed;
     }
 
-    p_data = &SETTING_DATA_BUFFER[cursor];
-    _default_value(sett, p_data);
+    ;
+    _default_value(sett, &val);
+    memcpy(p_data, &val, data_size);
+
+    _to_string(sett, var_name);
 
     if(dps_monitor_primitive_var(
         &p_self->m_dps_slave,
         var_type,
         p_data,
         NULL,
-        _to_string(sett))<0)
+        var_name)<0)
     {
       goto monitoring_failed;
     }
@@ -186,6 +203,7 @@ monitoring_failed:
   dps_slave_destroy(&p_self->m_dps_slave);
 init_dps_failed:
   err--;
+  hardware_free_mailbox_can(&P_MAILBOX_SEND_DPS_MEX);
 init_send_mailbox_failed:
   err--;
   hardware_free_mailbox_can(&p_self->p_mailbox_recv_dps_mex);

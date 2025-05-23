@@ -38,7 +38,7 @@ int8_t core_1_feature_init(Core1Feature_h* const restrict self)
 
     memset(p_self, 0, sizeof(*p_self));
 
-    if (log_init(&p_self->m_log)<0) return -1;
+    if(log_init(&p_self->m_log)<0) return -1;
     if(cooling_init(&p_self->m_cooling, &p_self->m_log) <0) return -2;
     if(car_batteries_init(&p_self->m_batteries, &p_self->m_log) <0) return -3;
     if(core_1_driver_input_init(&p_self->m_core_1_driver_input, &p_self->m_log) <0) return -4;
@@ -66,7 +66,7 @@ int8_t core_1_feature_update(Core1Feature_h* const restrict self )
     if(core_1_imu_update(&p_self->m_core_1_imu)) TRACE_ERR();
     if(suspensions_update(&p_self->m_suspensions)) TRACE_ERR();
     if(cooling_update(&p_self->m_cooling)<0)TRACE_ERR();
-    if(log_update_and_send(&p_self->m_log)<0)TRACE_ERR();
+    // if(log_update_and_send(&p_self->m_log)<0)TRACE_ERR();
     if(system_settings_update(&p_self->m_setting_update)<0)TRACE_ERR();
 
     return err;

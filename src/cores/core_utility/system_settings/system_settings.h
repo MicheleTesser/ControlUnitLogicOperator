@@ -38,9 +38,9 @@ union SystemSettingValue_t {
  * @brief  define here the list of system settings
  */
 #define SYSTEM_SETTINGS\
-  X(CORE_0_SERIAL_TRACE, DPS_TYPES_UINT8_T,  0)\
-  X(CORE_1_SERIAL_TRACE, DPS_TYPES_UINT8_T,  0)\
-  X(CORE_2_SERIAL_TRACE, DPS_TYPES_UINT8_T,  0)\
+  X(C0ST, DPS_TYPES_UINT8_T,  0)\
+  X(C1ST, DPS_TYPES_UINT8_T,  0)\
+  X(C2ST, DPS_TYPES_UINT8_T,  0)\
 
 /**
  * @brief List of configurable system settings.
