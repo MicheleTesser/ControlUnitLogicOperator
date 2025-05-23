@@ -23,7 +23,7 @@ static struct
 }SDC_CIRCUIT;
 
 
-static int _sdc_circuit_update(void*)
+static int _sdc_circuit_update(void* arg __attribute__((__unused__)))
 {
   while (SDC_CIRCUIT.run)
   {
@@ -77,7 +77,7 @@ int8_t sdc_is_closed(void)
   return SDC_CIRCUIT.closed;
 }
 
-void sdc_is_stop(void)
+void sdc_stop(void)
 {
   SDC_CIRCUIT.run=0;
 }
