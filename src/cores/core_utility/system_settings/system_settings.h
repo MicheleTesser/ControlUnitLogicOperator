@@ -26,7 +26,6 @@ union SystemSettingValue_t
   X(CORE_1_SERIAL_TRACE)\
   X(CORE_2_SERIAL_TRACE)\
 
-
 typedef enum
 {
 #define X(name) name,
