@@ -56,7 +56,7 @@ static inline const char* _to_string(const SystemSettingName name)
   }
 }
 
-static inline int8_t _default_value(const SystemSettingName name, union SystemSettingValue_t* const o_buffer)
+static inline void _default_value(const SystemSettingName name, union SystemSettingValue_t* const o_buffer)
 {
   switch (name)
   {
@@ -66,7 +66,6 @@ static inline int8_t _default_value(const SystemSettingName name, union SystemSe
     default:
       o_buffer->u8 =0;
   }
-  return 0;
 }
 
 static inline uint8_t _get_data_size(const enum DPS_PRIMITIVE_TYPES type)
@@ -152,10 +151,7 @@ int8_t system_settings_init(SytemSettingOwner_h* const restrict self)
     }
 
     p_data = &SETTING_DATA_BUFFER[cursor];
-    if (_default_value(sett, p_data)<0)
-    {
-      goto monitoring_failed;
-    }
+    _default_value(sett, p_data);
 
     if(dps_monitor_primitive_var(
         &p_self->m_dps_slave,
