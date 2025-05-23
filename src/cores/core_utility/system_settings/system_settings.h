@@ -35,26 +35,18 @@ union SystemSettingValue_t {
 };
 
 /**
- * @brief define here the list of settings you want to have.
+ * @brief  define here the list of system settings
  */
 #define SYSTEM_SETTINGS\
-  X(CORE_0_SERIAL_TRACE)\
-  X(CORE_1_SERIAL_TRACE)\
-  X(CORE_2_SERIAL_TRACE)\
-
-/**
- * @brief (optionally) define here the list of default value (with type) of the settings the type are listed in the union SystemSettingValue_t.
- */
-#define DEFAULT_VALUES\
-  X(CORE_0_SERIAL_TRACE, u8,  0)\
-  X(CORE_1_SERIAL_TRACE, u8,  0)\
-  X(CORE_2_SERIAL_TRACE, u8,  0)\
+  X(CORE_0_SERIAL_TRACE, DPS_TYPES_UINT8_T,  0)\
+  X(CORE_1_SERIAL_TRACE, DPS_TYPES_UINT8_T,  0)\
+  X(CORE_2_SERIAL_TRACE, DPS_TYPES_UINT8_T,  0)\
 
 /**
  * @brief List of configurable system settings.
  */
 typedef enum {
-#define X(name) name,
+#define X(name, type, value) name,
   SYSTEM_SETTINGS
 #undef X
   __NUM_OF_SYSTEM_SETTINGS ///< Number of defined system settings

@@ -26,12 +26,7 @@ static uint8_t SETTING_DATA_BUFFER[BUFFER_SIZE_CAPACITY_BYTE];
 static struct SystemParams{
   enum DPS_PRIMITIVE_TYPES m_setting_type;
   void* p_data;
-}SYSTEM_SETTINGS_PARAMS[__NUM_OF_SYSTEM_SETTINGS] =
-{
-  NEW_SETTING_PARAM(DPS_TYPES_UINT8_T),  //INFO: SET_NAME CORE_0_SERIAL_TRACE
-  NEW_SETTING_PARAM(DPS_TYPES_UINT8_T),  //INFO: SET_NAME CORE_1_SERIAL_TRACE
-  NEW_SETTING_PARAM(DPS_TYPES_UINT8_T),  //INFO: SET_NAME CORE_2_SERIAL_TRACE
-};
+}SYSTEM_SETTINGS_PARAMS[__NUM_OF_SYSTEM_SETTINGS];
 
 #ifdef DEBUG
 char __assert_size_system_settings[sizeof(SytemSettingOwner_h)==sizeof(struct SytemSettingOwner_t)?+1:-1];
@@ -47,7 +42,7 @@ static int8_t _dps_send_fun(const DpsCanMessage* const restrict mex)
 static inline const char* _to_string(const SystemSettingName name)
 {
   switch (name) {
-#define X(name) case name: return #name;
+#define X(name,type, value) case name: return #name;
     SYSTEM_SETTINGS
 #undef X
     case __NUM_OF_SYSTEM_SETTINGS:
@@ -60,29 +55,45 @@ static inline void _default_value(const SystemSettingName name, union SystemSett
 {
   switch (name)
   {
-#define X(name, type, value) case name: o_buffer->type = value; break;
-    DEFAULT_VALUES
+#define X(name, type, value) case name: o_buffer->f32 = value; break;
+    SYSTEM_SETTINGS
 #undef X
     default:
-      o_buffer->u8 =0;
-  }
+      o_buffer->f32 = 0;
+      break;
+  };
 }
 
-static inline uint8_t _get_data_size(const enum DPS_PRIMITIVE_TYPES type)
+static inline uint8_t _get_data_size(const SystemSettingName name)
 {
-  switch (type)
+  enum DPS_PRIMITIVE_TYPES system_type =0;
+  switch (name)
+  {
+#define X(name, type, value) case name: system_type = type; break;
+    SYSTEM_SETTINGS
+#undef X
+    default:
+      system_type = DPS_TYPES_UINT8_T;
+      break;
+  };
+
+  switch (system_type)
   {
     case DPS_TYPES_UINT8_T:
     case DPS_TYPES_INT8_T:
       return 1;
+
     case DPS_TYPES_UINT16_T:
     case DPS_TYPES_INT16_T:
       return 2;
+
     case DPS_TYPES_UINT32_T:
     case DPS_TYPES_INT32_T:
     case DPS_TYPES_FLOAT_T:
-    default:
       return 4;
+
+    default:
+      return 1;
   }
 }
 
@@ -142,7 +153,7 @@ int8_t system_settings_init(SytemSettingOwner_h* const restrict self)
   for (SystemSettingName sett=0; sett<__NUM_OF_SYSTEM_SETTINGS; sett++)
   {
     const enum DPS_PRIMITIVE_TYPES var_type = SYSTEM_SETTINGS_PARAMS[sett].m_setting_type;
-    const uint8_t data_size = _get_data_size(var_type);
+    const uint8_t data_size = _get_data_size(sett);
     void* restrict p_data = NULL;
 
     if (cursor + data_size >= BUFFER_SIZE_CAPACITY_BYTE)
@@ -223,7 +234,7 @@ int8_t system_settings_get(const SystemSettingName setting,
     goto parameter_not_initialized;
   }
 
-  data_size = _get_data_size(p_param->m_setting_type);
+  data_size = _get_data_size(setting);
 
   memcpy(o_value, p_param->p_data, data_size);
   return 0;
