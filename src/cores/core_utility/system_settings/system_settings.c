@@ -60,13 +60,11 @@ static inline int8_t _default_value(const SystemSettingName name, union SystemSe
 {
   switch (name)
   {
-    case CORE_0_SERIAL_TRACE:
-    case CORE_1_SERIAL_TRACE:
-    case CORE_2_SERIAL_TRACE:
-      o_buffer->u8 =0;
-      break;
+#define X(name, type, value) case name: o_buffer->type = value; break;
+    DEFAULT_VALUES
+#undef X
     default:
-      return -1;
+      o_buffer->u8 =0;
   }
   return 0;
 }

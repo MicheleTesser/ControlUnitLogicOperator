@@ -21,10 +21,18 @@ union SystemSettingValue_t
   float f32;
 };
 
+//INFO: define here the list of settings you want to have
 #define SYSTEM_SETTINGS\
   X(CORE_0_SERIAL_TRACE)\
   X(CORE_1_SERIAL_TRACE)\
   X(CORE_2_SERIAL_TRACE)\
+
+//INFO: (optionally) define here the list of default value (with type) of the settings 
+//the type are listed in the union SystemSettingValue_t
+#define DEFAULT_VALUES\
+  X(CORE_0_SERIAL_TRACE, u8,  0)\
+  X(CORE_1_SERIAL_TRACE, u8,  0)\
+  X(CORE_2_SERIAL_TRACE, u8,  0)\
 
 typedef enum
 {
@@ -33,6 +41,7 @@ typedef enum
 #undef X
   __NUM_OF_SYSTEM_SETTINGS
 }SystemSettingName;
+
 
 int8_t
 system_settings_init(SytemSettingOwner_h* const restrict self)__attribute__((__nonnull__(1)));
