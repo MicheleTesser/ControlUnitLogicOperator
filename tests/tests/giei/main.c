@@ -207,11 +207,11 @@ int main(void)
     .external_boards = &external_boards,
   };
 
-  // INIT_PH(EmergencyNode_class_init(), "emergency module class init");
+  INIT_PH(create_virtual_chip(), "virtual chip gpio");
+  INIT_PH(EmergencyNode_class_init(), "emergency module class init");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
-  INIT_PH(create_virtual_chip(), "virtual chip gpio");
   INIT_PH(hardware_init_gpio(&rf, GPIO_RTD_BUTTON), "rf gpio");
   INIT_PH(hardware_init_read_permission_gpio(&rtd_sound_read, GPIO_RTD_ASSI_SOUND), "rtd sound gpio");
 
