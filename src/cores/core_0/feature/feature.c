@@ -96,14 +96,6 @@ int8_t core_0_feature_compute_power(Core0Feature_h* const restrict self )
       ERR_TRACE();
     }
   }
-  else
-  {
-    if(GIEI_stop(&p_self->giei)<0)
-    {
-      ERR_TRACE();
-    }
-  }
-
 
   return err;
 }

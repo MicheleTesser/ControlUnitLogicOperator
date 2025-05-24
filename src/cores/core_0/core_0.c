@@ -59,7 +59,5 @@ void main_0(void)
         errno_trace_print(CORE_0);
         errno_trace_clear(CORE_0);
       }
-
-
     }
 }

@@ -37,9 +37,6 @@ enum RUNNING_STATUS
 GIEI_check_running_condition(Giei_h* const restrict self )__attribute__((__nonnull__(1)));
 
 int8_t
-GIEI_stop(Giei_h* const restrict self)__attribute__((__nonnull__(1)));
-
-int8_t
 GIEI_compute_power(Giei_h* const restrict self )__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_GIEI__
