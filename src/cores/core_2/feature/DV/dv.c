@@ -320,8 +320,6 @@ int8_t dv_class_init(Dv_h* const restrict self ,
   p_self->m_dv_mission_status = MISSION_NOT_RUNNING;
   p_self->p_mission_reader = p_mission_reader;
 
-  EmergencyNode_raise(&p_self->m_emergency_node, 1); //INFO: debug per tronici remove
-
   return 0;
 }
 
