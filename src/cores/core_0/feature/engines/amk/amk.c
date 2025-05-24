@@ -241,6 +241,7 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       {
         if(giei_driver_input_rtd_request(self->driver_input))
         {
+          SET_TRACE(CORE_0);
           EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
         }
       }
@@ -250,6 +251,7 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       if (!_amk_inverter_on(self) ||
           giei_driver_input_rtd_request(self->driver_input))
       {
+        SET_TRACE(CORE_0);
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
         memset(&setpoint, 0, sizeof(setpoint));
         self->engine_status = SYSTEM_OFF;
@@ -265,6 +267,7 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 
       if (!_amk_inverter_hv_status(self) || !_precharge_ended(self) || !_amk_inverter_on(self))
       {
+        SET_TRACE(CORE_0);
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
         memset(&setpoint, 0, sizeof(setpoint));
         self->engine_status = SYSTEM_OFF;
@@ -291,6 +294,7 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
       o2.can_0x130_Pcu.rf = 1;
       if (!_amk_inverter_on(self) || !_amk_inverter_hv_status(self) || !_precharge_ended(self))
       {
+        SET_TRACE(CORE_0);
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
         memset(&setpoint, 0, sizeof(setpoint));
         self->engine_status = SYSTEM_OFF;
@@ -496,12 +500,13 @@ int8_t amk_send_torque(const AMKInverter_t* const restrict self,
 {
   struct AMK_Setpoints setpoint  ={
     .AMK_Control_fields ={0},
-    .AMK_TargetVelocity = SPEED_LIMIT,
+    .AMK_TargetVelocity = 0,
     .AMK_TorqueLimitPositive = 0,
     .AMK_TorqueLimitNegative = 0,
   };
   if (amk_rtd_procedure(self) == RUNNING)
   {
+    setpoint.AMK_TargetVelocity = SPEED_LIMIT;
     setpoint.AMK_TorqueLimitPositive = pos_torque;
     setpoint.AMK_TorqueLimitNegative = neg_torque;
   }
