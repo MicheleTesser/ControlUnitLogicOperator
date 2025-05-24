@@ -1,6 +1,6 @@
 #include "./emergency_module.h"
 #include "../../../lib/raceup_board/raceup_board.h"
-#include <stdlib.h>
+#include "../errno_trace/errno_trace.h"
 #include <stdatomic.h>
 #include <stdint.h>
 #include <string.h>
@@ -75,6 +75,7 @@ int8_t EmergencyNode_class_init(void)
 {
   if (EXCEPTION_COUNTER.init_done || hardware_init_gpio(&EXCEPTION_COUNTER.gpio_scs, GPIO_SCS)<0)
   {
+    SET_TRACE(CORE_0);
     return -1;   
   }
   gpio_set_high(&EXCEPTION_COUNTER.gpio_scs);
@@ -99,9 +100,11 @@ int8_t EmergencyNode_raise(EmergencyNode_h* const restrict self, const uint8_t e
   const uint8_t exception_bit = exeception % 8;
   union EmergencyNode_h_t_conv conv = {self};
   struct EmergencyNode_t* const restrict p_self =conv.clear;
+  SET_TRACE(CORE_0);
 
   if (exeception >= NUM_EMERGENCY_BUFFER*8)
   {
+    SET_TRACE(CORE_0);
     return -1;
   }
 
@@ -125,6 +128,7 @@ int8_t EmergencyNode_solve(EmergencyNode_h* const restrict self, const uint8_t e
 
   if (exeception >= NUM_EMERGENCY_BUFFER * 8)
   {
+    SET_TRACE(CORE_0);
     return -1;
   }
 
