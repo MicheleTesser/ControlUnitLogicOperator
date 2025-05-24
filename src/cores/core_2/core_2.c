@@ -32,7 +32,7 @@ void main_2(void)
         core_alive_blink_update(&alive_blink);
         core_2_feature_update(&feature);
 
-      if(!system_settings_get(C2ST, &setting_value) && setting_value.u8)
+      if(!system_settings_get(CXST, &setting_value) && setting_value.u8)
       {
         errno_trace_print(CORE_2);
         errno_trace_clear(CORE_2);
