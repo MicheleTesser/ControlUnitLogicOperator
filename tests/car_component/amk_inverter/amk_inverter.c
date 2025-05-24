@@ -118,16 +118,16 @@ static void _send_data_engine(struct EmulationAmkInverter_t* const restrict p_se
   switch (can_id)
   {
     case CAN_ID_INVERTERFL1:
-      POPULATE_MEX_ENGINE_1(p_self, o.can_0x283_InverterFL1, FRONT_LEFT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x288_InverterFL1, FRONT_LEFT);
       break;
     case CAN_ID_INVERTERFR1:
-      POPULATE_MEX_ENGINE_1(p_self, o.can_0x284_InverterFR1, FRONT_RIGHT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x287_InverterFR1, FRONT_RIGHT);
       break;
     case CAN_ID_INVERTERRR1:
-      POPULATE_MEX_ENGINE_1(p_self, o.can_0x288_InverterRR1, REAR_RIGHT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x283_InverterRR1, REAR_RIGHT);
       break;
     case CAN_ID_INVERTERRL1:
-      POPULATE_MEX_ENGINE_1(p_self, o.can_0x287_InverterRL1, REAR_LEFT);
+      POPULATE_MEX_ENGINE_1(p_self, o.can_0x284_InverterRL1, REAR_LEFT);
       break;
     default:
       return;
@@ -208,16 +208,16 @@ static void _amk_inverter_update_data(struct EmulationAmkInverter_t* const restr
     switch (mex.id)
     {
       case CAN_ID_VCUINVFL:
-        UPDATE_DATA(p_self->o_engines[FRONT_LEFT].amk_data_1, o1.can_0x184_VCUInvFL,rf_signal);
+        UPDATE_DATA(p_self->o_engines[FRONT_LEFT].amk_data_1, o1.can_0x189_VCUInvFL,rf_signal);
         break;
       case CAN_ID_VCUINVFR:
-        UPDATE_DATA(p_self->o_engines[FRONT_RIGHT].amk_data_1, o1.can_0x185_VCUInvFR,rf_signal);
+        UPDATE_DATA(p_self->o_engines[FRONT_RIGHT].amk_data_1, o1.can_0x188_VCUInvFR,rf_signal);
         break;
       case CAN_ID_VCUINVRL:
-        UPDATE_DATA(p_self->o_engines[REAR_LEFT].amk_data_1, o1.can_0x188_VCUInvRL,rf_signal);
+        UPDATE_DATA(p_self->o_engines[REAR_LEFT].amk_data_1, o1.can_0x185_VCUInvRL,rf_signal);
         break;
       case CAN_ID_VCUINVRR:
-        UPDATE_DATA(p_self->o_engines[REAR_RIGHT].amk_data_1, o1.can_0x189_VCUInvRR,rf_signal);
+        UPDATE_DATA(p_self->o_engines[REAR_RIGHT].amk_data_1, o1.can_0x184_VCUInvRR,rf_signal);
         break;
     }
   }

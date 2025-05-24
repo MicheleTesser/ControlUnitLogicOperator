@@ -132,19 +132,19 @@ static int8_t _send_message_amk(const AMKInverter_t* const restrict self,
   switch (engine)
   {
     case FRONT_LEFT:
-      POPULATE_MEX_ENGINE(setpoint, om.can_0x184_VCUInvFL);
+      POPULATE_MEX_ENGINE(setpoint, om.can_0x189_VCUInvFL);
       mex.id = CAN_ID_VCUINVFL;
       break;
     case FRONT_RIGHT:
-      POPULATE_MEX_ENGINE(setpoint, om.can_0x185_VCUInvFR);
+      POPULATE_MEX_ENGINE(setpoint, om.can_0x188_VCUInvFR);
       mex.id = CAN_ID_VCUINVFR;
       break;
     case REAR_LEFT:
-      POPULATE_MEX_ENGINE(setpoint, om.can_0x188_VCUInvRL);
+      POPULATE_MEX_ENGINE(setpoint, om.can_0x185_VCUInvRL);
       mex.id = CAN_ID_VCUINVRL;
       break;
     case REAR_RIGHT:
-      POPULATE_MEX_ENGINE(setpoint, om.can_0x189_VCUInvRR);
+      POPULATE_MEX_ENGINE(setpoint, om.can_0x184_VCUInvRR);
       mex.id = CAN_ID_VCUINVRR;
       break;
     default:
@@ -432,10 +432,10 @@ int8_t amk_update(AMKInverter_t* const restrict self __attribute__((__unused__))
     UPDATE_INFO_2(ENGINE, o1.MEX_2);\
   }
 
-  READ_MAILBOX_INV(FRONT_LEFT, can_0x283_InverterFL1, can_0x285_InverterFL2);
-  READ_MAILBOX_INV(FRONT_RIGHT, can_0x284_InverterFR1, can_0x286_InverterFR2);
-  READ_MAILBOX_INV(REAR_LEFT, can_0x287_InverterRL1, can_0x289_InverterRL2);
-  READ_MAILBOX_INV(REAR_RIGHT, can_0x288_InverterRR1, can_0x28a_InverterRR2);
+  READ_MAILBOX_INV(FRONT_LEFT, can_0x288_InverterFL1, can_0x28a_InverterFL2);
+  READ_MAILBOX_INV(FRONT_RIGHT, can_0x287_InverterFR1, can_0x289_InverterFR2);
+  READ_MAILBOX_INV(REAR_LEFT, can_0x284_InverterRL1, can_0x286_InverterRL2);
+  READ_MAILBOX_INV(REAR_RIGHT, can_0x283_InverterRR1, can_0x285_InverterRR2);
 
   const float engines_rpm[] = 
   {
