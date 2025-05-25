@@ -4,11 +4,11 @@
 #include <stdint.h>
 
 struct RegenAlgInput {
-    const int16_t front_left_velocity;
-    const int16_t front_right_velocity;
-    const int16_t rear_left_velocity;
-    const int16_t rear_right_velocity;
-    const uint16_t battery_pack_tension;
+    const float front_left_velocity;
+    const float front_right_velocity;
+    const float rear_left_velocity;
+    const float rear_right_velocity;
+    const float battery_pack_tension;
 };
 
 void regen_alg_init(void);

@@ -16,20 +16,20 @@
 #define M_N                                 9.8f
 
 struct Giei_t{
-    Hv_h hv; //24
-    time_var_microseconds rtd_sound_start; //32
-    RtdAssiSound_h o_rtd_sound; //40
-    GpioRead_h gpio_rtd_button; //44
+    Hv_h hv;
+    time_var_microseconds rtd_sound_start;
+    RtdAssiSound_h o_rtd_sound;
+    GpioRead_h gpio_rtd_button;
     Gpio_h m_gpio_rtd_button_led;
-    MissionLocker_h o_mission_locker; //48
-    float engines_voltages[__NUM_OF_ENGINES__]; //64
-    enum RUNNING_STATUS running_status; //68
-    AsNodeRead_h m_as_node_read; //72
-    EngineType* inverter; //76
-    const DriverInput_h* driver_input; //80
-    const DrivingMaps_h* driving_maps; //84
-    const Imu_h* imu; //88
-    uint8_t entered_rtd : 1; //92
+    MissionLocker_h o_mission_locker;
+    float engines_voltages[__NUM_OF_ENGINES__];
+    enum RUNNING_STATUS running_status;
+    AsNodeRead_h m_as_node_read;
+    EngineType* inverter;
+    const DriverInput_h* driver_input;
+    const DrivingMaps_h* driving_maps;
+    const Imu_h* imu;
+    uint8_t entered_rtd : 1;
 };
 
 union Giei_conv{
@@ -51,14 +51,14 @@ char __giei_size_check[(sizeof(Giei_h) == sizeof(struct Giei_t))? 1 : -1];
 char __giei_align_check[(_Alignof(Giei_h) == _Alignof(struct Giei_t))? 1 : -1];
 #endif /* ifdef DEBUG */
 
-static inline int NMtoTorqueSetpoint(const float torqueNM)
+static inline float NMtoTorqueSetpoint(const float torqueNM)
 {
     return (torqueNM/M_N)*1000;
 }
 
-static inline float torqueSetpointToNM(const int setpoint)
+static inline float torqueSetpointToNM(const float setpoint)
 {
-    return (setpoint/1000.0)*M_N;
+    return (setpoint/1000.0f)*M_N;
 }
 
 static void update_torque_NM_vectors_no_tv(
@@ -74,7 +74,7 @@ static void update_torque_NM_vectors_no_tv(
          * Setpoints are scaled to obtain desired torque repartition that inverts during braking
          * Negative torques are computed in regBrake() 
          */
-        uint32_t setpoint =  throttle* (actual_max_pos_torque/M_N) * 10;
+        float setpoint =  throttle* (actual_max_pos_torque/M_N) * 10;
         switch (i)
         {
             case FRONT_LEFT:
@@ -254,7 +254,7 @@ int8_t GIEI_compute_power(Giei_h* const restrict self)
     p_self->engines_voltages[REAR_RIGHT] = engine_get_info(p_self->inverter, REAR_RIGHT,ENGINE_VOLTAGE);
 
 
-    if (driving_map_get_parameter(p_self->driving_maps, TV_ON))
+    if ((uint8_t)driving_map_get_parameter(p_self->driving_maps, TV_ON))
     {
         struct TVInputArgs tv_input =
         {
