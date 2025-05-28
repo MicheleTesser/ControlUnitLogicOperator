@@ -15,7 +15,7 @@
  * Internally aligned to 4 bytes and contains implementation-specific data.
  */
 typedef struct __attribute__((aligned(4))) {
-  const uint8_t private_data[544];
+  const uint8_t private_data[284];
 } SytemSettingOwner_h;
 
 /**
