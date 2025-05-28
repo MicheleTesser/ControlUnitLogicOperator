@@ -27,14 +27,6 @@ static JsonCell JSON_1[] =
   NEW_EMPTY_CELL("timestamp")
   NEW_EMPTY_CELL("lap")
   NEW_EMPTY_CELL("type")
-  NEW_EMPTY_CELL("bms_lv0")
-  NEW_EMPTY_CELL("bms_lv1")
-  NEW_EMPTY_CELL("bms_lv2")
-  NEW_EMPTY_CELL("bms_lv3")
-  NEW_EMPTY_CELL("bms_lv4")
-  NEW_EMPTY_CELL("bms_lv5")
-  NEW_EMPTY_CELL("bms_lv6")
-  NEW_EMPTY_CELL("bms_lv7")
   NEW_EMPTY_CELL("amk_status_fl")
   NEW_EMPTY_CELL("amk_actual_velocity_fl")
   NEW_EMPTY_CELL("amk_torque_current_fl")
@@ -87,11 +79,14 @@ static JsonCell JSON_2[] =
   NEW_EMPTY_CELL("amk_torque_limit_negative_rr")
   NEW_EMPTY_CELL("amk_torque_limit_positive_rl")
   NEW_EMPTY_CELL("amk_torque_limit_negative_rl")
+
+  NEW_EMPTY_CELL("driver_impls")
   NEW_EMPTY_CELL("throttle")
   NEW_EMPTY_CELL("steering_angle")
   NEW_EMPTY_CELL("brake")
   NEW_EMPTY_CELL("brake_press_front")
   NEW_EMPTY_CELL("brake_press_rear")
+
   NEW_EMPTY_CELL("actual_velocity_kmh")
   NEW_EMPTY_CELL("car_status")
 };
@@ -102,16 +97,24 @@ static JsonCell JSON_3[] =
   NEW_EMPTY_CELL("timestamp")
   NEW_EMPTY_CELL("lap")
   NEW_EMPTY_CELL("type")
-  NEW_EMPTY_CELL("acc_pot")
-  NEW_EMPTY_CELL("brk_pot")
-  NEW_EMPTY_CELL("brk_req")
-  NEW_EMPTY_CELL("thr_req")
+
+
   NEW_EMPTY_CELL("max_hv_volt")
   NEW_EMPTY_CELL("min_hv_volt")
   NEW_EMPTY_CELL("avg_hv_volt")
   NEW_EMPTY_CELL("max_hv_temp")
   NEW_EMPTY_CELL("min_hv_temp")
   NEW_EMPTY_CELL("avg_hv_temp")
+  NEW_EMPTY_CELL("hv_soc")
+
+  NEW_EMPTY_CELL("max_lv_volt")
+  NEW_EMPTY_CELL("min_lv_volt")
+  NEW_EMPTY_CELL("avg_lv_volt")
+  NEW_EMPTY_CELL("max_lv_temp")
+  NEW_EMPTY_CELL("min_lv_temp")
+  NEW_EMPTY_CELL("avg_lv_temp")
+  NEW_EMPTY_CELL("lv_soc")
+
   NEW_EMPTY_CELL("max_temp_n_slave")
   NEW_EMPTY_CELL("bms_error_map")
   NEW_EMPTY_CELL("lem_current")
@@ -202,11 +205,15 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
 
   //addr: 204.216.214.158
   //port: 8086
-  //INFO: telemetry infos: https://docs.google.com/document/d/1T5-u_UYU2VZMfcQa-BXe2rGkpZzWMHQcCuYubQNwaYI/edit?tab=t.0
+  //INFO: telemetry infos:
+  //https://docs.google.com/document/d/1pF7Y0WH9QRMogssxoEnF_wt2toIbfev2oNefXbzwYsw/edit?tab=t.0
   IpAddrIpV4Port addr =
   {
     .addr = "204.216.214.158",
     .port = 8086,
+    // .addr = "127.0.0.1",
+    // .port = 6666,
+
   };
   
   if(hardware_ethernet_udp_init(&p_self->p_ethernet_udp_telemetry,&addr)<0)
@@ -225,10 +232,12 @@ int8_t log_telemetry_add_entry(LogTelemetry_h* const restrict self __attribute__
 
   if( (json_cell = _search_json_for_log_var(name)) == NULL || json_cell->p_data)
   {
-    // SET_TRACE(CORE_1); HACK: until the telemetry is setted 
-    // return -1;
-    return 0;
+    serial_write_raw("log var not found: ");
+    serial_write_str(name);
+    SET_TRACE(CORE_1);
+    return -1;
   }
+
 
   json_cell->m_data_type = data_type;
   json_cell->p_data = var;
@@ -244,7 +253,15 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
   JsonCell* p_log_page = NULL;
   Json_h json = {0};
   int8_t err=0;
-  float var_value =0;
+  union{
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    int8_t i8;
+    int16_t i16;
+    int32_t i32;
+    float f32;
+  }var_value={0};
   const uint8_t MAX_RETRY_INIT_JSON = 255;
 
 
@@ -257,6 +274,7 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
     }
     if (retry == MAX_RETRY_INIT_JSON)
     {
+      SET_TRACE(CORE_1);
       continue;
     }
 
@@ -264,43 +282,42 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
     for (uint8_t j=0;j<JSON_ARRAY_SIZES[i];j++)
     {
       JsonCell* cursor = &p_log_page[j];
-      var_value =0;
       if (cursor->p_data)
       {
         switch (cursor->m_data_type)
         {
           case __u8__:
-            var_value = *(uint8_t *) cursor->p_data;
+            var_value.u8 = *(uint8_t *) cursor->p_data;
             break;
           case __u16__:
-            var_value = *(uint16_t *) cursor->p_data;
+            var_value.u16 = *(uint16_t *) cursor->p_data;
             break;
           case __u32__:
-            var_value = *(uint32_t *) cursor->p_data;
+            var_value.u32 = *(uint32_t *) cursor->p_data;
             break;
           case __i8__:
-            var_value = *(int8_t *) cursor->p_data;
+            var_value.i8 = *(int8_t *) cursor->p_data;
             break;
           case __i16__:
-            var_value = *(int16_t *) cursor->p_data;
+            var_value.i16 = *(int16_t *) cursor->p_data;
             break;
           case __i32__:
-            var_value = *(int32_t *) cursor->p_data;
+            var_value.i32 = *(int32_t *) cursor->p_data;
             break;
           case __float__:
-            var_value = *(float*) cursor->p_data;
+            var_value.f32 = *(float*) cursor->p_data;
             break;
           default:
             break;
         }
       }
-      json_push_element(&json, cursor->m_name, cursor->data_format, var_value);
+      json_push_element(&json, cursor->m_name, cursor->data_format, var_value.f32);
     }
     UdpIpv4Mex mex = {
       .data_length = json_len(&json),
       .raw_data = json_get(&json),
     };
-    hardware_ethernet_udp_send(&p_self->p_ethernet_udp_telemetry, &mex);
+    err = hardware_ethernet_udp_send(&p_self->p_ethernet_udp_telemetry, &mex);
     json_destroy(&json);
     p_log_page = NULL;
   }

@@ -26,7 +26,7 @@ union Core1DriverInput_h_t_conv{
 {\
     LogEntry_h entry= {\
         .data_mode = MODE,\
-        .data_ptr = &DATA,\
+        .data_ptr = DATA,\
         .log_mode = LOG_SD | LOG_TELEMETRY,\
         .name = NAME,\
     };\
@@ -57,17 +57,17 @@ int8_t core_1_driver_input_init(
 
     memset(p_self, 0, sizeof(*p_self));
 
-    ADD_ENTRY_TO_LOG(log, __float__, p_self->m_driver_input[THROTTLE],
-            "driver input throttle");
+    ADD_ENTRY_TO_LOG(log, __float__, &p_self->m_driver_input[THROTTLE],
+            "throttle");
 
-    ADD_ENTRY_TO_LOG(log, __float__, p_self->m_driver_input[BRAKE],
-            "driver input brake/regen");
+    ADD_ENTRY_TO_LOG(log, __float__, &p_self->m_driver_input[BRAKE],
+            "brake");
 
-    ADD_ENTRY_TO_LOG(log, __float__, p_self->m_driver_input[STEERING_ANGLE],
-            "driver input steering wheel");
+    ADD_ENTRY_TO_LOG(log, __float__, &p_self->m_driver_input[STEERING_ANGLE],
+            "steering_angle");
 
-    ADD_ENTRY_TO_LOG(log, __float__, p_self->m_impl,
-            "driver input impls list");
+    ADD_ENTRY_TO_LOG(log, __float__, &p_self->m_impl,
+            "driver_impls");
 
 
     return 0;
@@ -81,6 +81,8 @@ int8_t core_1_driver_input_update(Core1DriverInput_h* const restrict self)
   p_self->m_driver_input[THROTTLE] = driver_input_reader_get(&p_self->m_driver, DRIVER_HUMAN, THROTTLE);
   p_self->m_driver_input[BRAKE] = driver_input_reader_get(&p_self->m_driver, DRIVER_HUMAN, BRAKE);
   p_self->m_driver_input[STEERING_ANGLE] = driver_input_reader_get(&p_self->m_driver, DRIVER_HUMAN, STEERING_ANGLE);
+
+  p_self->m_driver_input[THROTTLE] = 12;
 
   return 0;
 }

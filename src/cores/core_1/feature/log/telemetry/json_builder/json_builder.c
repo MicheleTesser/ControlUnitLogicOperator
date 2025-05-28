@@ -55,7 +55,7 @@ int8_t json_push_element(Json_h* const restrict self,
   struct Json_t* const p_self = conv.clear;
   char new_json_field[128] = {'\0'};
   uint8_t new_json_cursor = 0;
-  uint16_t num_byte_value_var __attribute__((__unused__))=0;
+  int32_t num_byte_value_var=0;
   uint32_t var_name_length = strlen(var_name);
 
   if (p_self->json_cursor_offset > 1)
@@ -79,11 +79,17 @@ int8_t json_push_element(Json_h* const restrict self,
 
   if (!data_format || !strcmp(data_format, ""))
   {
-    num_byte_value_var = sprintf(&new_json_field[new_json_cursor], "%0.2f", value);
+    num_byte_value_var = snprintf(&new_json_field[new_json_cursor],5 ,"%0.2f", value);
   }
   else
   {
-    num_byte_value_var = sprintf(&new_json_field[new_json_cursor], data_format, value);
+    num_byte_value_var = snprintf(&new_json_field[new_json_cursor],5 ,data_format, value);
+  }
+
+  num_byte_value_var=4;
+  if (num_byte_value_var<0)
+  {
+    SET_TRACE(CORE_1);
   }
 
   new_json_cursor+=num_byte_value_var;
@@ -134,4 +140,13 @@ int8_t json_destroy(Json_h* self)
   memset(p_self, 0, sizeof(*p_self));
 
   return 0;
+}
+
+void
+json_print(Json_h* self)
+{
+  union Json_h_t_conv conv = {self};
+  struct Json_t* const p_self = conv.clear;
+
+  printf("%s\n", p_self->p_str_json);
 }

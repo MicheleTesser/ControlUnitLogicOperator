@@ -42,12 +42,12 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
 
   memset(p_self, 0, sizeof(*p_self));
 
-  if (bms_init(&p_self->m_bms[BMS_LV], CAN_ID_BMSLV1, message_dlc_can2(CAN_ID_BMSLV1), "BMS LV" , log))
+  if (bms_init(&p_self->m_bms[BMS_LV], CAN_ID_BMSLV1, message_dlc_can2(CAN_ID_BMSLV1), "lv" , log))
   {
     return -2;
   }
 
-  if (bms_init(&p_self->m_bms[BMS_HV], CAN_ID_BMSHV1, message_dlc_can2(CAN_ID_BMSHV1), "BMS HV" , log))
+  if (bms_init(&p_self->m_bms[BMS_HV], CAN_ID_BMSHV1, message_dlc_can2(CAN_ID_BMSHV1), "hv" , log))
   {
     return -3;
   }
@@ -62,7 +62,7 @@ int8_t car_batteries_init(CarBatteries_h* const restrict self, Log_h* const rest
     .data_mode = __float__,
     .data_ptr = &p_self->m_lem,
     .log_mode = LOG_TELEMETRY | LOG_SD,
-    .name = "m_lem current",
+    .name = "lem_current",
   };
 
   if(log_add_entry(log, &entry)<0)

@@ -63,8 +63,9 @@ int8_t bms_init(Bms_h* const restrict self ,
       .log_mode = LOG_TELEMETRY| LOG_SD,
       .name = {0},
     };
-    memcpy(entry.name, bms_name, strlen(bms_name));
-    strcat(entry.name, "Max Volt");
+    strncat(entry.name, "max_", 5);
+    strncat(entry.name, bms_name, strlen(bms_name));
+    strncat(entry.name, "_volt", 6);
     if(log_add_entry(log, &entry)<0)
     {
       SET_TRACE(CORE_1);
@@ -79,8 +80,9 @@ int8_t bms_init(Bms_h* const restrict self ,
       .log_mode = LOG_TELEMETRY| LOG_SD,
       .name = {0},
     };
-    memcpy(entry.name, bms_name, strlen(bms_name));
-    strcat(entry.name, "Min Volt");
+    strncat(entry.name, "min_", 5);
+    strncat(entry.name, bms_name, strlen(bms_name));
+    strncat(entry.name, "_volt", 6);
     if(log_add_entry(log, &entry)<0)
     {
       SET_TRACE(CORE_1);
@@ -94,14 +96,18 @@ int8_t bms_init(Bms_h* const restrict self ,
       .data_mode = __u8__,
       .data_ptr = &p_self->m_soc,
       .log_mode = LOG_TELEMETRY| LOG_SD,
-      .name = "Bms sv m_soc",
+      .name = {0},
     };
+    strncat(entry.name, bms_name, strlen(bms_name));
+    strncat(entry.name, "_soc", 6);
     if(log_add_entry(log, &entry)<0)
     {
       SET_TRACE(CORE_1);
       return -3;
     }
   }
+
+  p_self->m_volts[MAX] = 12; //HACK: for testing
 
   return 0;
 }

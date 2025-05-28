@@ -49,26 +49,12 @@ int8_t cooling_init(Cooling_h* const restrict self ,
       .data_mode = __u8__,
       .data_ptr = &p_self->devices[FANS_RADIATOR],
       .log_mode = LOG_SD | LOG_TELEMETRY,
-      .name = "temp fan speed/enable",
+      .name = "fan_speed",
     };
     if (log_add_entry(log, &entry)<0)
     {
       SET_TRACE(CORE_1);
       return -2;
-    }
-  }
-
-  {
-    LogEntry_h entry ={
-      .data_mode = __u8__,
-      .data_ptr = &p_self->devices[PUMPS],
-      .log_mode = LOG_SD | LOG_TELEMETRY,
-      .name = "temp pump speed/enable",
-    };
-    if (log_add_entry(log, &entry)<0)
-    {
-      SET_TRACE(CORE_1);
-      return -3;
     }
   }
 

@@ -57,8 +57,8 @@ int8_t log_add_entry(Log_h* const restrict self,
     if(log_telemetry_add_entry(
           &p_self->telemetry,
           entry->name,
-          entry->data_ptr,
           entry->data_format,
+          entry->data_ptr,
           entry->data_mode)<0)
     {
       err +=1;

@@ -28,4 +28,7 @@ json_len(const Json_h* const restrict self)__attribute__((__nonnull__(1)));
 int8_t
 json_destroy(Json_h* self)__attribute__((__nonnull__(1)));
 
+void
+json_print(Json_h* self)__attribute__((__nonnull__(1)));
+
 #endif // !__JSON_BUILDER__

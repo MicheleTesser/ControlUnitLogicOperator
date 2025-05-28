@@ -1,14 +1,15 @@
 #include "ethernet.h"
 
-#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <strings.h> 
 #include <sys/types.h> 
 #include <arpa/inet.h> 
 #include <sys/socket.h> 
 #include <netinet/in.h>
-#include<unistd.h> 
-#include<stdlib.h>
+#include <unistd.h> 
+#include <netinet/in.h>
+#include <netinet/udp.h>
 
 //private
 
@@ -30,20 +31,17 @@ union EthernetNodeIpv4_h_t_conv_const{
 
 //public
 
-int8_t
-hardware_ethernet_udp_init(
-    EthernetNodeIpv4_h* const restrict self,
+int8_t hardware_ethernet_udp_init(EthernetNodeIpv4_h* const restrict self,
     const IpAddrIpV4Port* const addr)
 {
   union EthernetNodeIpv4_h_t_conv conv = {self};
   struct EthernetNodeIpv4_t* const p_self = conv.clear;
 
   // Create a UDP Socket 
-  p_self->socket = socket(AF_INET, SOCK_DGRAM, 0);
+  p_self->socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
   if (p_self->socket < 0)
   {
-    free(p_self);
     return -1;
   }
 
@@ -54,22 +52,20 @@ hardware_ethernet_udp_init(
   return 0;
 }
 
-extern int8_t
-hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
+int8_t hardware_ethernet_udp_send(const EthernetNodeIpv4_h* const restrict self,
     const UdpIpv4Mex* const restrict data)
 {
   const union EthernetNodeIpv4_h_t_conv_const conv = {self};
   const struct EthernetNodeIpv4_t* const p_self = conv.clear;
 
-  return sendto(p_self->socket, data->raw_data, data->data_length, 0,
+  return (int8_t) sendto(p_self->socket, data->raw_data, data->data_length, 0,
       (struct sockaddr*) &p_self->servaddr, sizeof(p_self->servaddr));
 }
 
-extern void 
-hardware_ethernet_udp_free(EthernetNodeIpv4_h* self)
+void hardware_ethernet_udp_free(EthernetNodeIpv4_h* self)
 {
-   union EthernetNodeIpv4_h_t_conv conv = {self};
-   struct EthernetNodeIpv4_t*  p_self = conv.clear;
+  union EthernetNodeIpv4_h_t_conv conv = {self};
+  struct EthernetNodeIpv4_t*  p_self = conv.clear;
   close(p_self->socket);
   memset(self, 0, sizeof(*self));
 }

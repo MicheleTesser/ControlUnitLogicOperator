@@ -63,14 +63,14 @@ int8_t core_1_imu_init(Core1Imu_h* const restrict self,
     return -1;
   }
 
-  IMU_LOG_VAR(&p_self->imu_data[ACC_X], "imu acc x",-1);
-  IMU_LOG_VAR(&p_self->imu_data[ACC_Y], "imu acc y",-2);
-  IMU_LOG_VAR(&p_self->imu_data[ACC_Z], "imu acc z",-3);
-  IMU_LOG_VAR(&p_self->imu_data[OMEGA_X], "imu omega x",-4);
-  IMU_LOG_VAR(&p_self->imu_data[OMEGA_Y], "imu omega y",-5);
-  IMU_LOG_VAR(&p_self->imu_data[OMEGA_Z], "imu omega z",-6);
+  IMU_LOG_VAR(&p_self->imu_data[ACC_X], "acceleration_x",-1);
+  IMU_LOG_VAR(&p_self->imu_data[ACC_Y], "acceleration_y",-2);
+  IMU_LOG_VAR(&p_self->imu_data[ACC_Z], "acceleration_z",-3);
+  IMU_LOG_VAR(&p_self->imu_data[OMEGA_X], "omega_x",-4);
+  IMU_LOG_VAR(&p_self->imu_data[OMEGA_Y], "omega_y",-5);
+  IMU_LOG_VAR(&p_self->imu_data[OMEGA_Z], "omega_z",-6);
 
-  IMU_LOG_VAR(&p_self->speed, "car speed",-4);
+  // IMU_LOG_VAR(&p_self->speed, "car speed",-4);
 
   return 0;
 }

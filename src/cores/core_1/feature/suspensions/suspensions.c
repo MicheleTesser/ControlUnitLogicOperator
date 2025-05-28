@@ -30,6 +30,7 @@ union Suspensions_h_t_conv {
         .data_ptr = &DATA,\
         .log_mode = LOG_SD | LOG_TELEMETRY,\
         .data_mode = __float__,\
+        .name = NAME,\
     };\
     if (log_add_entry(log, &entry)<0)\
     {\
@@ -52,10 +53,10 @@ int8_t suspensions_init(
 
     memset(p_self, 0, sizeof(*p_self));
 
-    UPDATE_LOG(log, p_self->m_susps_value[SUSP_FRONT_LEFT] , "susps front left");
-    UPDATE_LOG(log, p_self->m_susps_value[SUSP_FRONT_RIGHT] , "susps front right");
-    UPDATE_LOG(log, p_self->m_susps_value[SUSP_REAR_LEFT] , "susps rear left");
-    UPDATE_LOG(log, p_self->m_susps_value[SUSP_REAR_RIGHT] , "susps rear right");
+    UPDATE_LOG(log, p_self->m_susps_value[SUSP_FRONT_LEFT] , "suspensions_fl");
+    UPDATE_LOG(log, p_self->m_susps_value[SUSP_FRONT_RIGHT] , "suspensions_fr");
+    UPDATE_LOG(log, p_self->m_susps_value[SUSP_REAR_LEFT] , "suspensions_rl");
+    UPDATE_LOG(log, p_self->m_susps_value[SUSP_REAR_RIGHT] , "suspensions_rr");
 
     ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
     {
