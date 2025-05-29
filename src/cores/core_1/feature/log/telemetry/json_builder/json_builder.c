@@ -79,14 +79,13 @@ int8_t json_push_element(Json_h* const restrict self,
 
   if (!data_format || !strcmp(data_format, ""))
   {
-    num_byte_value_var = snprintf(&new_json_field[new_json_cursor],5 ,"%0.2f", value);
+    num_byte_value_var = snprintf(&new_json_field[new_json_cursor],6 ,"%.2f", value);
   }
   else
   {
-    num_byte_value_var = snprintf(&new_json_field[new_json_cursor],5 ,data_format, value);
+    num_byte_value_var = snprintf(&new_json_field[new_json_cursor],6 ,data_format, value);
   }
 
-  num_byte_value_var=4;
   if (num_byte_value_var<0)
   {
     SET_TRACE(CORE_1);
