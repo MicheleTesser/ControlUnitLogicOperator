@@ -64,7 +64,7 @@ int8_t bms_init(Bms_h* const restrict self ,
       .name = {0},
     };
     strncat(entry.name, "max_", 5);
-    strncat(entry.name, bms_name, strlen(bms_name));
+    strncat(entry.name, bms_name, 5);
     strncat(entry.name, "_volt", 6);
     if(log_add_entry(log, &entry)<0)
     {
@@ -81,7 +81,7 @@ int8_t bms_init(Bms_h* const restrict self ,
       .name = {0},
     };
     strncat(entry.name, "min_", 5);
-    strncat(entry.name, bms_name, strlen(bms_name));
+    strncat(entry.name, bms_name, 5);
     strncat(entry.name, "_volt", 6);
     if(log_add_entry(log, &entry)<0)
     {
@@ -98,7 +98,7 @@ int8_t bms_init(Bms_h* const restrict self ,
       .log_mode = LOG_TELEMETRY| LOG_SD,
       .name = {0},
     };
-    strncat(entry.name, bms_name, strlen(bms_name));
+    strncat(entry.name, bms_name, 5);
     strncat(entry.name, "_soc", 6);
     if(log_add_entry(log, &entry)<0)
     {
