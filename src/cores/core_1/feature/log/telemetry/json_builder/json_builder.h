@@ -22,7 +22,7 @@ json_push_element(Json_h* const restrict self,
 const char*
 json_get(const Json_h* const restrict self)__attribute__((__nonnull__(1)));
 
-uint16_t
+uint32_t
 json_len(const Json_h* const restrict self)__attribute__((__nonnull__(1)));
 
 int8_t

@@ -45,9 +45,9 @@ int8_t hardware_ethernet_udp_init(EthernetNodeIpv4_h* const restrict self,
     return -1;
   }
 
-  p_self->servaddr.sin_addr.s_addr = inet_addr(addr->addr);
-  p_self->servaddr.sin_port = htons(addr->port);
   p_self->servaddr.sin_family = AF_INET;
+  p_self->servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  p_self->servaddr.sin_port = htons(addr->port);
 
   return 0;
 }
