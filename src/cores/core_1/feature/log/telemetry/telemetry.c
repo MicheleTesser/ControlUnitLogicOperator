@@ -212,7 +212,7 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
     .addr = "204.216.214.158",
     .port = 8086,
     // .addr = "127.0.0.1",
-    // .port = 6666,
+    // .port = 8094,
 
   };
   
@@ -314,7 +314,7 @@ int8_t log_telemetry_send(LogTelemetry_h* const restrict self)
       json_push_element(&json, cursor->m_name, cursor->data_format, var_value.f32);
     }
     UdpIpv4Mex mex = {
-      .data_length = json_len(&json),
+      .data_length = (uint16_t) json_len(&json),
       .raw_data = json_get(&json),
     };
     err = hardware_ethernet_udp_send(&p_self->p_ethernet_udp_telemetry, &mex);
