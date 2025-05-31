@@ -82,7 +82,5 @@ int8_t core_1_driver_input_update(Core1DriverInput_h* const restrict self)
   p_self->m_driver_input[BRAKE] = driver_input_reader_get(&p_self->m_driver, DRIVER_HUMAN, BRAKE);
   p_self->m_driver_input[STEERING_ANGLE] = driver_input_reader_get(&p_self->m_driver, DRIVER_HUMAN, STEERING_ANGLE);
 
-  p_self->m_driver_input[THROTTLE] = 12;
-
   return 0;
 }

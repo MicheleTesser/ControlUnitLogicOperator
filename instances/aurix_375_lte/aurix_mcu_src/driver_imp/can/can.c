@@ -337,9 +337,6 @@ int8_t hardware_mailbox_read(struct CanMailbox* const restrict self,
       {
         return 0;
       }
-      serial_write_raw("recv message from mailbox: ");
-      serial_write_int8_t(rxBufferId);
-      serial_write_str("");
       break;
     case SEND_MAILBOX:
       return -1;
