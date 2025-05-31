@@ -127,7 +127,7 @@ uint16_t json_len(const Json_h* const restrict self)
   const union Json_h_t_conv_const conv = {self};
   const struct Json_t* const p_self = conv.clear;
 
-  return p_self->str_json_size;
+  return (uint16_t) strlen(p_self->p_str_json);
 }
 
 int8_t json_destroy(Json_h* self)
