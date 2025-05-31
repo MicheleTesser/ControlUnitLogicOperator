@@ -38,13 +38,13 @@ int8_t core_1_feature_init(Core1Feature_h* const restrict self)
 
     memset(p_self, 0, sizeof(*p_self));
 
+    while(system_settings_init(&p_self->m_setting_update)<0);
     while(log_init(&p_self->m_log)<0);
     while(cooling_init(&p_self->m_cooling, &p_self->m_log) <0);
     while(car_batteries_init(&p_self->m_batteries, &p_self->m_log) <0);
     while(core_1_driver_input_init(&p_self->m_core_1_driver_input, &p_self->m_log) <0);
     while(core_1_imu_init(&p_self->m_core_1_imu, &p_self->m_log)<0);
     while(suspensions_init(&p_self->m_suspensions, &p_self->m_log)<0);
-    while(system_settings_init(&p_self->m_setting_update)<0);
 
     return 0;
 }

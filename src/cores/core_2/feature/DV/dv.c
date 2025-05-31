@@ -62,7 +62,7 @@ struct Dv_t{
   CarMissionReader_h* p_mission_reader; 
   SharedMessageReader_h m_recv_mission_status; 
   SharedMessageReader_h m_recv_embedded_alive;
-  struct CanMailbox* p_send_car_m_dv_car_status_mailbox; 
+  struct CanMailbox* p_send_car_m_car_status_mailbox; 
   struct CanMailbox* p_mailbox_send_mission_can_2; 
 };
 
@@ -272,23 +272,23 @@ int8_t dv_class_init(Dv_h* const restrict self ,
     return -9;
   }
 
-  ACTION_ON_CAN_NODE(CAN_DV,can_node)
+  ACTION_ON_CAN_NODE(CAN_GENERAL,can_node)
   {
-    p_self->p_send_car_m_dv_car_status_mailbox =
+    p_self->p_send_car_m_car_status_mailbox =
     hardware_get_mailbox_single_mex(
         can_node,
         SEND_MAILBOX,
-        CAN_ID_DV_CARSTATUS,
-        message_dlc_can3(CAN_ID_DV_CARSTATUS));
+        CAN_ID_CARMISSIONSTATUS,
+        message_dlc_can2(CAN_ID_CARMISSIONSTATUS));
   }
-  if (!p_self->p_send_car_m_dv_car_status_mailbox)
+  if (!p_self->p_send_car_m_car_status_mailbox)
   {
     return -10;
   }
   
   if (shared_message_reader_init(&p_self->m_recv_mission_status, SHARED_MEX_DV_MISSION))
   {
-    hardware_free_mailbox_can(&p_self->p_send_car_m_dv_car_status_mailbox);
+    hardware_free_mailbox_can(&p_self->p_send_car_m_car_status_mailbox);
     return -11;
   }
 
@@ -304,13 +304,13 @@ int8_t dv_class_init(Dv_h* const restrict self ,
 
   if (!p_self->p_mailbox_send_mission_can_2)
   {
-    hardware_free_mailbox_can(&p_self->p_send_car_m_dv_car_status_mailbox);
+    hardware_free_mailbox_can(&p_self->p_send_car_m_car_status_mailbox);
     return -12;
   }
 
   if (shared_message_reader_init(&p_self->m_recv_embedded_alive, SHARED_MEX_EMBEDDEDALIVECHECK))
   {
-    hardware_free_mailbox_can(&p_self->p_send_car_m_dv_car_status_mailbox);
+    hardware_free_mailbox_can(&p_self->p_send_car_m_car_status_mailbox);
     hardware_free_mailbox_can(&p_self->p_mailbox_send_mission_can_2);
     return -13;
   }
@@ -385,22 +385,23 @@ int8_t dv_update(Dv_h* const restrict self)
         dv_stw_alg_compute(&input_stw_alg, &output_stw_alg); //TODO: not yet implemented
       }
 
+      if(_dv_update_status(p_self)<0) ERR_TRACE();
 
-      o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
-      o2.can_0x071_CarMissionStatus.MissionStatus = p_self->m_dv_mission_status;
-      o2.can_0x071_CarMissionStatus.AsStatus = p_self->m_status;
-
-      pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
-      hardware_mailbox_send(p_self->p_send_car_m_dv_car_status_mailbox, mission_status_payload);
       break;
     case __NUM_OF_CAR_MISSIONS__:
       p_self->m_dv_mission_status = MISSION_NOT_RUNNING;
       p_self->m_status = AS_OFF;
       break;
-      if(_dv_update_status(p_self)<0) ERR_TRACE();
   }
 
   if(_dv_update_led(p_self)<0) ERR_TRACE();
+
+  o2.can_0x071_CarMissionStatus.Mission = car_mission_reader_get_current_mission(p_self->p_mission_reader);
+  o2.can_0x071_CarMissionStatus.MissionStatus = p_self->m_dv_mission_status;
+  o2.can_0x071_CarMissionStatus.AsStatus = p_self->m_status;
+
+  pack_message_can2(&o2, CAN_ID_CARMISSIONSTATUS, &mission_status_payload);
+  hardware_mailbox_send(p_self->p_send_car_m_car_status_mailbox, mission_status_payload);
 
   return err;
 }

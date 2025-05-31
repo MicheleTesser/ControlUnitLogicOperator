@@ -2,7 +2,6 @@
 #include "mission_locker/mission_locker.h"
 #include "../../../lib/raceup_board/raceup_board.h"
 #include "../shared_message/shared_message.h"
-#include "../system_settings/system_settings.h"
 #include <stdint.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -40,7 +39,6 @@ int8_t car_mission_reader_init(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv conv = {self};
   struct CarMissionReader_t* const p_self = conv.clear;
-  union SystemSettingValue_t val ={0};
 
   memset(p_self, 0, sizeof(*p_self));
 
@@ -59,8 +57,7 @@ int8_t car_mission_reader_init(CarMissionReader_h* const restrict self)
     return -3;
   }
 
-  system_settings_get(MDEF, &val);
-  p_self->m_current_mission = val.u16;
+  p_self->m_current_mission = CAR_MISSIONS_NONE;
 
   return 0;
 }
@@ -81,7 +78,7 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
       p_self->m_current_mission > CAR_MISSIONS_HUMAN &&
       !is_mission_locked(&p_self->m_mission_locker_read))
   {
-    p_self->m_current_mission = CAR_MISSIONS_NONE;
+    // p_self->m_current_mission = CAR_MISSIONS_NONE;
   }
 
   if (!is_mission_locked(&p_self->m_mission_locker_read)
