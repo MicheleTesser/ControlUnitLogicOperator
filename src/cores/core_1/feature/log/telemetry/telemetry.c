@@ -209,11 +209,10 @@ int8_t log_telemetry_init(LogTelemetry_h* const restrict self )
   //https://docs.google.com/document/d/1pF7Y0WH9QRMogssxoEnF_wt2toIbfev2oNefXbzwYsw/edit?tab=t.0
   IpAddrIpV4Port addr =
   {
-    // .addr = "204.216.214.158",
-    // .port = 8086,
-    .addr = "127.0.0.1",
-    .port = 8094,
-
+    .addr = "204.216.214.158",
+    .port = 8086,
+    // .addr = "127.0.0.1",
+    // .port = 8094,
   };
   
   if(hardware_ethernet_udp_init(&p_self->p_ethernet_udp_telemetry,&addr)<0)
