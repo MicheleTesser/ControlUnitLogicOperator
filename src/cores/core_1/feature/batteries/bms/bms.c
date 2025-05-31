@@ -107,8 +107,6 @@ int8_t bms_init(Bms_h* const restrict self ,
     }
   }
 
-  p_self->m_volts[MAX] = 12; //HACK: for testing
-
   return 0;
 }
 
