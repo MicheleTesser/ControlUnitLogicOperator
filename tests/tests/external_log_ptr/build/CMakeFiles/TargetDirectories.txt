@@ -1,0 +1,6 @@
+/home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/build/CMakeFiles/main.dir
+/home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/build/CMakeFiles/lib_sources.dir
+/home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/build/CMakeFiles/build_debug.dir
+/home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/build/CMakeFiles/build_release.dir
+/home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/build/CMakeFiles/edit_cache.dir
+/home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/build/CMakeFiles/rebuild_cache.dir
