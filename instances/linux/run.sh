@@ -13,6 +13,7 @@ create() {
 }
 
 close() {
+    echo "closing virtual can $1"
     sudo ip link delete $1
 }
 
@@ -31,9 +32,17 @@ make build_debug
 cd debug
 ./main 
 
+echo -n "Do you want to remove the virtual can bus[y/N]:"
+read -t 1 -n 10000 discard 
+read input
+
+echo "closing virtual chip"
 sudo modprobe -r gpio-mockup
-# close "culo_can_0"
-# close "culo_can_1"
-# close "culo_can_2"
+if [[ ($input = "y") ]]; then
+  close "culo_can_0"
+  close "culo_can_1"
+  close "culo_can_2"
+fi
+
 
 cd $root
