@@ -31,9 +31,6 @@ int8_t
 external_log_variables_store_pointer(const void* p_data, const SharedDataId data_id)
   __attribute__((__nonnull__(1)));
 
-int8_t
-external_log_variables_add_to_log(Log_h* const restrict p_log)__attribute__((__nonnull__(1)));
-
 const void* 
 external_log_extract_data_ptr_r_only(const SharedDataId data_id);
 
