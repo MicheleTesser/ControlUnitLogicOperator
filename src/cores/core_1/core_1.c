@@ -34,8 +34,6 @@ void main_1(void)
       serial_write_str("core 1 waiting other cores");
   }
 
-  // while (external_log_variables_add_to_log(&log)<0);
-
   //loop
   for(;;){
     core_alive_blink_update(&alive_blink);
