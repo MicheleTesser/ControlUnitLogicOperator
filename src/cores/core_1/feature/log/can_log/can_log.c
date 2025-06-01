@@ -49,6 +49,21 @@ int8_t can_log_init(CanLog_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
+  p_self->p_log_var_amk_status_fl = external_log_extract_data_ptr_r_only(AMK_STATUS_FL);
+  p_self->p_log_var_amk_status_rl = external_log_extract_data_ptr_r_only(AMK_STATUS_RL);
+
+  p_self->p_log_var_amk_status_fr = external_log_extract_data_ptr_r_only(AMK_STATUS_FR);
+  p_self->p_log_var_amk_status_rr = external_log_extract_data_ptr_r_only(AMK_STATUS_RR);
+
+  if (!p_self->p_log_var_amk_status_fl ||
+      !p_self->p_log_var_amk_status_fr ||
+      !p_self->p_log_var_amk_status_rr ||
+      !p_self->p_log_var_amk_status_rl)
+  {
+    SET_TRACE(CORE_1);
+    return -1;
+  }
+
   if (hardware_init_read_permission_gpio(&p_self->m_start_precharge_gpio, GPIO_AIR_PRECHARGE_INIT)<0)
   {
     SET_TRACE(CORE_1);
@@ -77,22 +92,6 @@ int8_t can_log_init(CanLog_h* const restrict self)
     return -4;
   }
 
-  p_self->p_log_var_amk_status_fl = external_log_extract_data_ptr_r_only(AMK_STATUS_FL);
-  p_self->p_log_var_amk_status_rl = external_log_extract_data_ptr_r_only(AMK_STATUS_RL);
-
-  p_self->p_log_var_amk_status_fr = external_log_extract_data_ptr_r_only(AMK_STATUS_FR);
-  p_self->p_log_var_amk_status_rr = external_log_extract_data_ptr_r_only(AMK_STATUS_RR);
-
-  if (!p_self->p_log_var_amk_status_fl ||
-      !p_self->p_log_var_amk_status_fr ||
-      !p_self->p_log_var_amk_status_rr ||
-      !p_self->p_log_var_amk_status_rl)
-  {
-    SET_TRACE(CORE_1);
-    return -5;
-  }
-
-
   return 0;
 }
 
@@ -105,14 +104,17 @@ int8_t can_log_update(CanLog_h* const restrict self)
 
   CHECK_INIT(p_self);
 
+  // uint16_t f = 0b00001000;
+
   ACTION_ON_FREQUENCY(p_self->m_last_sent, get_tick_from_millis(100))
   {
     //HACK: look amk.c AMK_Actual_Values_1 to check if the position checked with the shift are right
     o2.can_0x065_CarStatus.HV= 
-      (*p_self->p_log_var_amk_status_fr & (1<<12))||
-      (*p_self->p_log_var_amk_status_fl & (1<<12))||
-      (*p_self->p_log_var_amk_status_rr & (1<<12))||
-      (*p_self->p_log_var_amk_status_rl & (1<<12));
+      !!((*p_self->p_log_var_amk_status_fl >> 8) & (1<<3)) ||
+      !!((*p_self->p_log_var_amk_status_fr >> 8) & (1<<3)) ||
+      !!((*p_self->p_log_var_amk_status_rl >> 8) & (1<<3)) ||
+      !!((*p_self->p_log_var_amk_status_rr >> 8) & (1<<3));
+
 
     o2.can_0x065_CarStatus.AIR1= gpio_read_state(&p_self->m_start_precharge_gpio);
     o2.can_0x065_CarStatus.AIR2= gpio_read_state(&p_self->m_done_precharge_gpio);
