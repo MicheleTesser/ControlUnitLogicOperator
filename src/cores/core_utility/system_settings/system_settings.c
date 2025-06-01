@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <sys/types.h>
+#include <stdatomic.h>
 
 struct SytemSettingOwner_t{
   DpsSlave_h m_dps_slave;
@@ -27,6 +27,7 @@ static struct SystemParams{
   enum DPS_PRIMITIVE_TYPES m_setting_type;
   void* p_data;
 }SYSTEM_SETTINGS_PARAMS[__NUM_OF_SYSTEM_SETTINGS];
+static uint8_t INIT_DONE;
 
 #ifdef DEBUG
 char __assert_size_system_settings[sizeof(SytemSettingOwner_h)==sizeof(struct SytemSettingOwner_t)?+1:-1];
@@ -196,6 +197,8 @@ int8_t system_settings_init(SytemSettingOwner_h* const restrict self)
     cursor+=data_size;
   }
 
+  INIT_DONE = 1;
+
   return 0;
 
 monitoring_failed:
@@ -240,6 +243,8 @@ int8_t system_settings_get(const SystemSettingName setting,
 {
   int8_t err=0;
   uint8_t data_size =0;
+
+  while (!INIT_DONE);
 
   if (setting >= __NUM_OF_SYSTEM_SETTINGS)
   {

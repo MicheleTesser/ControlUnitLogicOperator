@@ -39,6 +39,7 @@ union SystemSettingValue_t {
  */
 #define SYSTEM_SETTINGS\
   X(CXST, DPS_TYPES_UINT8_T,  0)\
+  X(MDEF, DPS_TYPES_UINT8_T,  0) /*INFO: 0: Mission_None, 1: Mission_Human*/ \
 
 /**
  * @brief List of configurable system settings.
