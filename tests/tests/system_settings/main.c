@@ -114,7 +114,7 @@ void test_discovery(DpsMaster_h* const restrict dps_master)
   }
 
   VarListInfo* vars = dps_master_list_vars(dps_master, 0);
-  if (vars->var_num != 1)
+  if (vars->var_num != 2)
   {
     FAILED("invalid num of system_settings: ");
   }

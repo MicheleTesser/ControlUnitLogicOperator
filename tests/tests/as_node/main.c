@@ -29,6 +29,7 @@ typedef struct{
   AsNode_h* p_as_node;
   CarMissionReader_h* p_car_mission_reader;
   SharedMessageOwner_h* p_shared_messages;
+  SytemSettingOwner_h* system_settings;
 
   volatile const uint8_t* const core_run;
 }CoreInput;
@@ -48,6 +49,7 @@ static int _core_thread_fun(void* arg)
     shared_message_owner_update(core_input->p_shared_messages);
     car_mission_reader_update(core_input->p_car_mission_reader);
     as_node_update(core_input->p_as_node);
+    system_settings_update(core_input->system_settings);
   }
   return 0;
 }
@@ -101,6 +103,7 @@ int main(void)
   AsNode_h as_node = {0};
   AsNodeRead_h as_node_read = {0};
   SharedMessageOwner_h shared_messages = {0};
+  SytemSettingOwner_h system_settings = {0};
 
   CoreThread core_thread={.run=1};
   CoreInput input =
@@ -109,6 +112,7 @@ int main(void)
     .p_as_node = &as_node,
     .p_car_mission_reader = &car_mission_reader,
     .p_shared_messages = &shared_messages,
+    .system_settings = &system_settings,
   };
   TestInput test_input = 
   {
@@ -125,6 +129,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(system_settings_init(&system_settings), "system_settings");
   INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(hardware_init_read_permission_gpio(&gpio_as_node, GPIO_AS_NODE), "gpio read Ts button");
   INIT_PH(car_mission_reader_init(&car_mission_reader), "car mission reader");

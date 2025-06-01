@@ -24,7 +24,7 @@ int main(void)
   }
 
   //JSON 1
-  if(log_telemetry_add_entry(&o_telemetry, "bms_lv0","", &log_var_a, __u8__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "lap","", &log_var_a, __u8__)<0)
   {
     FAILED("failed to store the log entry for log_var_a");
     goto destroy_log;
@@ -40,20 +40,20 @@ int main(void)
   PASSED("inserted log_var_b");
 
   //JSON 3
-  if(log_telemetry_add_entry(&o_telemetry, "acc_pot", "", &log_var_c, __u32__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "lv_soc", "", &log_var_c, __u32__)<0)
   {
     FAILED("failed to store the log entry for log_var_c");
     goto destroy_log;
   }
   PASSED("inserted log_var_c");
 
-  if(log_telemetry_add_entry(&o_telemetry, "acc_pot", "", &log_var_d, __u8__)<0)
+  if(log_telemetry_add_entry(&o_telemetry, "lv_soc", "", &log_var_d, __u8__)<0)
   {
-    PASSED("prevent to store the log entry for log_var_d with already used var: acc_pot");
+    PASSED("prevent to store the log entry for log_var_d with already used var: lv_soc");
   }
   else
   {
-    FAILED("did not prevent to store the log entry for log_var_d with already used var: acc_pot");
+    FAILED("did not prevent to store the log entry for log_var_d with already used var: lv_soc");
   }
 
   //JSON 1

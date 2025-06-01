@@ -2,7 +2,7 @@
 #include "linux_board/linux_board.h"
 #include "car_component/car_component.h"
 #include "src/cores/core_2/feature/DV/dv.h"
-#include "src/cores/core_utility/mission_reader/mission_reader.h"
+#include "src/cores/core_utility/core_utility.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -60,6 +60,7 @@ int main(void)
   ExternalBoards_t external_boards = {0};
   CarMissionReader_h mission_reader = {0};
   Dv_h dv={0};
+  SytemSettingOwner_h system_settings ={0};
 
   GpioRead_h gpio_dv_yellow_light = {0};
   GpioRead_h gpio_dv_blue_light = {0};
@@ -87,6 +88,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(system_settings_init(&system_settings), "system_settings");
   INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_blue_light, PWM_GPIO_ASSI_LIGHT_BLU), "dv light blue");
   INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_yellow_light, PWM_GPIO_ASSI_LIGHT_YELLOW), "dv light yellow");
   INIT_PH(hardware_init_read_permission_gpio(&gpio_dv_emergency_sound, GPIO_RTD_ASSI_SOUND), "dv emergency sound");

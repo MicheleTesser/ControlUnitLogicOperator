@@ -27,7 +27,7 @@ static struct SystemParams{
   enum DPS_PRIMITIVE_TYPES m_setting_type;
   void* p_data;
 }SYSTEM_SETTINGS_PARAMS[__NUM_OF_SYSTEM_SETTINGS];
-static uint8_t INIT_DONE;
+static volatile uint8_t INIT_DONE=0;
 
 #ifdef DEBUG
 char __assert_size_system_settings[sizeof(SytemSettingOwner_h)==sizeof(struct SytemSettingOwner_t)?+1:-1];

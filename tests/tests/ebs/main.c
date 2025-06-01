@@ -25,6 +25,7 @@ typedef struct{
 typedef struct {
   DvEbs_h* ebs;
   SharedMessageOwner_h* shared_messages;
+  SytemSettingOwner_h* system_settings;
 
   volatile const uint8_t* const core_run;
 }CoreInput;
@@ -43,6 +44,7 @@ static int _core_thread_fun(void* arg)
   {
     ebs_update(core_input->ebs);
     shared_message_owner_update(core_input->shared_messages);
+    system_settings_init(core_input->system_settings);
   }
   return 0;
 }
@@ -134,12 +136,14 @@ int main(void)
   ExternalBoards_t external_boards = {0};
   DvEbs_h ebs = {0};
   SharedMessageOwner_h shared_messages = {0};
+  SytemSettingOwner_h system_settings = {0};
 
   CoreThread core_thread={.run=1};
   CoreInput input =
   {
     .ebs = &ebs,
     .shared_messages = &shared_messages,
+    .system_settings = &system_settings,
 
     .core_run = &core_thread.run,
   };
@@ -158,6 +162,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(system_settings_init(&system_settings), "system_settings");
   INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(ebs_class_init(&ebs), "ebs");
 

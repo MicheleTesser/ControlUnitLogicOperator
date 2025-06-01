@@ -32,6 +32,7 @@ typedef struct TestInput{
 typedef struct CoreInput{
   CarMissionReader_h* mission_reader;
   SharedMessageOwner_h* shared_messages;
+  SytemSettingOwner_h* system_setting;
 
   volatile const uint8_t* const core_run;
 }CoreInput;
@@ -44,6 +45,7 @@ static int _core_thread_fun(void* arg)
   {
     car_mission_reader_update(core_input->mission_reader);
     shared_message_owner_update(core_input->shared_messages);
+    system_settings_update(core_input->system_setting);
   }
   return 0;
 }
@@ -104,6 +106,7 @@ int main(void)
   CarMissionReader_h mission_reader = {0};
   MissionLocker_h mission_locker = {0};
   SharedMessageOwner_h shared_messages = {0};
+  SytemSettingOwner_h system_settings ={0};
 
   CoreThread core_thread={.run=1};
   CoreInput input =
@@ -111,6 +114,7 @@ int main(void)
     .core_run = &core_thread.run,
     .mission_reader = &mission_reader,
     .shared_messages = &shared_messages,
+    .system_setting = &system_settings,
   };
 
   TestInput t_input = {
@@ -127,6 +131,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(system_settings_init(&system_settings), "system_settings");
   INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(car_mission_reader_init(&mission_reader), "mission_reader");
   INIT_PH(lock_mission_ref_get_mut(&mission_locker), "mission locker");

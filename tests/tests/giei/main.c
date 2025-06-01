@@ -38,6 +38,7 @@ typedef struct CoreInput{
   GpioRead_h* rtd_sound;
   AsNode_h* as_node;
   SharedMessageOwner_h* shared_messages;
+  SytemSettingOwner_h* system_settings;
 
   ExternalBoards_t* external_boards;
 
@@ -185,6 +186,7 @@ int main(void)
   EmergencyNode_h emergency_read = {0};
   CarMissionReader_h mission_reader = {0};
   SharedMessageOwner_h shared_messages = {0};
+  SytemSettingOwner_h system_settings ={0};
 
   CoreThread core_thread={.run=1};
   Gpio_h rf ={0};
@@ -202,13 +204,13 @@ int main(void)
     .mission_reader = &mission_reader,
     .as_node = &as_node,
     .shared_messages = &shared_messages,
+    .system_settings = &system_settings,
 
     .core_run = &core_thread.run,
     .external_boards = &external_boards,
   };
 
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
-  INIT_PH(EmergencyNode_class_init(), "emergency module class init");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
@@ -217,6 +219,8 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(EmergencyNode_class_init(), "emergency module class init");
+  INIT_PH(system_settings_init(&system_settings), "system_settings");
   INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(car_mission_reader_init(&mission_reader), "mission reader");
   INIT_PH(driver_input_init(&driver, &mission_reader), "driver input");

@@ -24,7 +24,7 @@ void main_1(void)
 
   while (core_1_feature_init(&feature) <0)
   {
-    // serial_write_str("core 1 feature init failed");
+    serial_write_str("core 1 feature init failed");
   }
 
   //cores sync

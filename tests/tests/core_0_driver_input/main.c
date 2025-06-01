@@ -22,6 +22,7 @@ struct ThInput {
   DriverInput_h* driver_input;
   CarMissionReader_h* mission_reader;
   SharedMessageOwner_h* shared_memory;
+  SytemSettingOwner_h* system_settings;
 
   int8_t run;
 };
@@ -40,6 +41,7 @@ static int driver_loop(void* args)
     car_mission_reader_update(input->mission_reader);
     giei_driver_input_update(input->driver_input);
     shared_message_owner_update(input->shared_memory);
+    system_settings_update(input->system_settings);
   }
   return 0;
 }
@@ -279,6 +281,7 @@ int main(void)
   ExternalBoards_t external_boards = {0};
   SharedMessageOwner_h shared_memory = {0};
 
+  SytemSettingOwner_h system_settings ={0};
   CarMissionReader_h mission_reader = {0};
   DriverInput_h o_driver={0};
 
@@ -289,6 +292,7 @@ int main(void)
     .driver_input = &o_driver,
     .mission_reader = &mission_reader,
     .shared_memory = &shared_memory,
+    .system_settings = &system_settings,
 
     .run=1,
   };
@@ -305,6 +309,7 @@ int main(void)
 
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(system_settings_init(&system_settings), "system_settings");
   INIT_PH(shared_message_owner_init(&shared_memory), "shared_memory");
   INIT_PH(car_mission_reader_init(&mission_reader), "car mission reader");
   INIT_PH(driver_input_init(&o_driver, &mission_reader), "driver input");

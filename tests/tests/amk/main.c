@@ -23,6 +23,7 @@ struct ThInput {
   EngineType* engine_input;
   CarMissionReader_h* mission_reader;
   SharedMessageOwner_h* shared_messages;
+  SytemSettingOwner_h* system_settings;
 
   int8_t run;
 };
@@ -48,6 +49,7 @@ static int core_update(void* args)
       giei_driver_input_update(input->driver_input);
       inverter_update(input->engine_input);
       shared_message_owner_update(input->shared_messages);
+      system_settings_update(input->system_settings);
     }
   }
   return 0;
@@ -184,6 +186,7 @@ static void test_start_precharge(EngineType* self, TestInput* input)
 int main(void)
 {
   ExternalBoards_t external_boards = {0};
+  SytemSettingOwner_h system_settings ={0};
 
   DriverInput_h driver_input = {0};
   EngineType engine = {0};
@@ -199,6 +202,7 @@ int main(void)
     .driver_input = &driver_input,
     .mission_reader = &mission_reader,
     .shared_messages = &shared_messages,
+    .system_settings = &system_settings,
 
     .run=1,
   };
@@ -212,7 +216,6 @@ int main(void)
   };
 
   INIT_PH(create_virtual_chip(), "virtual chip gpio");
-  INIT_PH(EmergencyNode_class_init(), "emergency module class init");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
@@ -220,6 +223,8 @@ int main(void)
   
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
+  INIT_PH(EmergencyNode_class_init(), "emergency module class init");
+  INIT_PH(system_settings_init(&system_settings), "system_settings");
   INIT_PH(shared_message_owner_init(&shared_messages), "shared_messages");
   INIT_PH(car_mission_reader_init(&mission_reader), "car mission reader");
   INIT_PH(driver_input_init(&driver_input, &mission_reader), "driver input");
