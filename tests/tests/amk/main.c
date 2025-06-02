@@ -114,7 +114,7 @@ static void test_start_precharge(EngineType* self, TestInput* input)
 
   wait_milliseconds(get_tick_from_millis(10000));
 
-  printf("still system ready and precharge completed -> TS_READY: ");
+  printf("SYSTEM_PRECAHRGE -> TS_READY: ");
   _check_status_rtd(self, TS_READY);
 
   printf("activating rf with brake pedal at 5 percentage in manual mode from TS_READY -> TS_READY: ");

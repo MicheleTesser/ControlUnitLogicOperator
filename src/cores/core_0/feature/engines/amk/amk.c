@@ -152,7 +152,7 @@ static int8_t _send_message_amk(const AMKInverter_t* const restrict self,
       return -1;
   }
 
-  mex.message_size = pack_message_can1(&om, mex.id, &mex.full_word);
+  mex.message_size = (uint8_t) pack_message_can1(&om, mex.id, &mex.full_word);
   return hardware_write_can(self->can_inverter, &mex);
 }
 
@@ -179,7 +179,7 @@ static uint8_t _precharge_ended(const AMKInverter_t* const restrict self)
     res |= self->engines[engine].amk_values_1.AMK_status.AMK_bQuitDcOn;
   }
   return res &&
-    gpio_read_state(&self->gpio_precharge_init) && gpio_read_state(&self->gpio_precharge_done);
+    !gpio_read_state(&self->gpio_precharge_init) && !gpio_read_state(&self->gpio_precharge_done);
 }
 
 static uint8_t _amk_inverter_hv_status(AMKInverter_t* const restrict self)
@@ -232,7 +232,7 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
   {
     case SYSTEM_OFF:
 
-      if (_amk_inverter_on(self) && gpio_read_state(&self->gpio_precharge_init) &&
+      if (_amk_inverter_on(self) && !gpio_read_state(&self->gpio_precharge_init) &&
           !giei_driver_input_rtd_request(self->driver_input))
       {
         self->engine_status = SYSTEM_PRECAHRGE;
@@ -330,7 +330,7 @@ static float _max_torque(const AMKInverter_t* const restrict self)
       self->engines[engine].amk_values_1.AMK_ActualVelocity;
     torque_max_sum += MAX_MOTOR_TORQUE - 0.000857f*(actual_velocity - 13000.0f);
   }
-  return  torque_max_sum/__NUM_OF_ENGINES__;
+  return  torque_max_sum/(float)__NUM_OF_ENGINES__;
 }
 
 static int8_t _share_var_engine(const AMKInverter_t* const restrict self, const enum ENGINES engine)

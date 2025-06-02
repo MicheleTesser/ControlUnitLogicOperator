@@ -113,6 +113,8 @@ int8_t bms_hv_start(BmsHv_h* const restrict self)
         CAN_ID_BMSHV2,
         message_dlc_can2(CAN_ID_BMSHV2));
 
+  gpio_set_low(&p_self->m_precharge_init);
+
   thrd_create(&p_self->thread, _start_bms_hv, p_self);
   return 0;
 }
@@ -192,5 +194,5 @@ void bms_hv_emergency_shutdown(BmsHv_h* const restrict self)
   union BmsHv_h_t_conv conv = {self};
   struct BmsHv_t* const p_self = conv.clear;
 
-  gpio_set_high(&p_self->m_precharge_init);
+  gpio_set_low(&p_self->m_precharge_init);
 }

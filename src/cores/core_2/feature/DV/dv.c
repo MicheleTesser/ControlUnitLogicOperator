@@ -87,8 +87,8 @@ char __assert_align_dv[(_Alignof(Dv_h) == _Alignof(struct Dv_t))? 1:-1];
 
 static inline uint8_t _sdc_closed(const struct Dv_t* const restrict self)
 {
-  return  gpio_read_state(&self->m_gpio_air_precharge_init) &&
-    gpio_read_state(&self->m_gpio_air_precharge_done) &&
+  return  !gpio_read_state(&self->m_gpio_air_precharge_init) &&
+    !gpio_read_state(&self->m_gpio_air_precharge_done) &&
     as_node_get_status(&self->m_as_node);
 }
 

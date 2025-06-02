@@ -318,12 +318,6 @@ int8_t gpio_set_high(Gpio_h* const restrict self)
     fprintf(stderr, "gpio %d, set high error\n",id); 
     return -1;
   }
-  if (id == GPIO_SCS) {
-    struct Gpio_t air1 = {.read.gpio_id = GPIO_AIR_PRECHARGE_INIT};
-    gpio_set_high((Gpio_h*) &air1);
-    struct Gpio_t air2 = {.read.gpio_id = GPIO_AIR_PRECHARGE_DONE};
-    gpio_set_high((Gpio_h*) &air2);
-  }
   return 0;
 }
 
@@ -332,11 +326,7 @@ extern int8_t gpio_set_low(Gpio_h* const restrict self)
   struct Gpio_t* p_self = (struct Gpio_t*) self;
   const enum GPIO_PIN id = p_self->read.gpio_id;
   lines.init_values[id] =GPIOD_LINE_VALUE_ACTIVE;
-  struct Gpio_t scs = {.read.gpio_id = GPIO_SCS};
-  if (gpio_read_state((GpioRead_h*)&scs.read) &&
-      (id == GPIO_AIR_PRECHARGE_INIT || id == GPIO_AIR_PRECHARGE_DONE)){
-    return -2;
-  }
+
   if(gpiod_line_request_set_values(lines.line_request,lines.init_values) <0){
     fprintf(stderr, "gpio %d, set low error\n",id); 
     return -1;
