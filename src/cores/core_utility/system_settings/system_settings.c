@@ -244,7 +244,10 @@ int8_t system_settings_get(const SystemSettingName setting,
   int8_t err=0;
   uint8_t data_size =0;
 
-  while (!INIT_DONE);
+  if(!INIT_DONE)
+  {
+    goto init_not_done;
+  }
 
   if (setting >= __NUM_OF_SYSTEM_SETTINGS)
   {
@@ -265,6 +268,8 @@ int8_t system_settings_get(const SystemSettingName setting,
 parameter_not_initialized:
   err--;
 invalid_system_settings:
+  err--;
+init_not_done:
   err--;
 
   return err;
