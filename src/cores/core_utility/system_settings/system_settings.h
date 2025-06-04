@@ -18,6 +18,10 @@ typedef struct __attribute__((aligned(4))) {
   const uint8_t private_data[284];
 } SytemSettingOwner_h;
 
+typedef struct __attribute__((aligned(4))) {
+  const uint8_t private_data[4];
+} SytemSettingReader_h;
+
 /**
  * @brief Represents the value of a system setting.
  *
@@ -62,6 +66,7 @@ typedef enum {
  */
 int8_t system_settings_init(SytemSettingOwner_h* const restrict self) __attribute__((__nonnull__(1)));
 
+int8_t system_settings_reader_init(SytemSettingReader_h* const restrict self, const SystemSettingName setting)__attribute__((__nonnull__(1)));
 /**
  * @brief Processes received CAN messages to update system settings.
  *
@@ -79,7 +84,7 @@ int8_t system_settings_update(SytemSettingOwner_h* const restrict self) __attrib
  * @param o_value Output pointer to receive the current setting value
  * @return 0 on success, negative value on error (e.g., invalid ID or uninitialized)
  */
-int8_t system_settings_get(const SystemSettingName setting,
+int8_t system_settings_get(const SytemSettingReader_h* const restrict self,
                            union SystemSettingValue_t* const restrict o_value) __attribute__((__nonnull__(2)));
 
 #endif // !__SYSTEM_SETTINGS__

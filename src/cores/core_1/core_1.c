@@ -10,6 +10,7 @@ void main_1(void)
   CoreAliveBlink_h alive_blink;
   Core1Feature_h feature;
   SharedMessageOwner_h shared_message_owner;
+  SytemSettingReader_h reader = {0};
   union SystemSettingValue_t setting_value={0};
 
   while (shared_message_owner_init(&shared_message_owner) < 0)
@@ -27,6 +28,10 @@ void main_1(void)
     serial_write_str("core 1 feature init failed");
   }
 
+  while(system_settings_reader_init(&reader, CXST)<0)
+  {
+  }
+
   //cores sync
   core_status_core_ready(CORE_1);
   while (!core_status_ready_state())
@@ -39,7 +44,7 @@ void main_1(void)
     core_alive_blink_update(&alive_blink);
     core_1_feature_update(&feature);
 
-    if(!system_settings_get(CXST, &setting_value) && setting_value.u8 == 1)
+    if(!system_settings_get(&reader, &setting_value) && setting_value.u8 == 1)
     {
       errno_trace_print(CORE_1);
       errno_trace_clear(CORE_1);

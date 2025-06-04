@@ -11,6 +11,7 @@ void main_0(void)
     CoreAliveBlink_h alive_blink;
     Core0Feature_h feature;
     union SystemSettingValue_t setting_value;
+    SytemSettingReader_h reader = {0};
 
     while (serial_setup(115200)<0);
     
@@ -43,6 +44,9 @@ void main_0(void)
     {
       serial_write_str("init core 0 feature failed");
     }
+    while(system_settings_reader_init(&reader, CXST)<0)
+    {
+    }
 
     //cores sync
     core_status_core_ready(CORE_0);
@@ -54,7 +58,7 @@ void main_0(void)
       core_0_feature_update(&feature);
       core_0_feature_compute_power(&feature);
 
-      if(!system_settings_get(CXST, &setting_value) && setting_value.u8 == 0)
+      if(!system_settings_get(&reader, &setting_value) && setting_value.u8 == 0)
       {
         errno_trace_print(CORE_0);
         errno_trace_clear(CORE_0);

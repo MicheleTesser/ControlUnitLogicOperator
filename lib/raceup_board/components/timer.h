@@ -7,6 +7,8 @@ typedef int64_t time_var_microseconds; //microseconds
 
 extern void timer_init(void);
 extern time_var_microseconds timer_time_now(void);
+extern void timer_wait(const time_var_microseconds ticks);
+
 extern time_var_microseconds get_tick_from_millis(uint32_t millis);
 extern time_var_microseconds get_tick_from_micros(uint32_t micros);
 

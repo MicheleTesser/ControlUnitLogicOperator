@@ -10,6 +10,7 @@ void main_2(void)
     //setup
     CoreAliveBlink_h alive_blink;
     Core2Feature_h feature;
+    SytemSettingReader_h reader = {0};
     union SystemSettingValue_t setting_value;
 
     while (core_alive_blink_init(&alive_blink, GPIO_CORE_2_ALIVE_BLINK, get_tick_from_millis(600)) <0)
@@ -20,6 +21,9 @@ void main_2(void)
     while (core_2_feature_init(&feature)<0)
     {
       serial_write_str("core 2 init feature failed");
+    }
+    while(system_settings_reader_init(&reader, CXST)<0)
+    {
     }
 
     //cores sync
@@ -32,7 +36,7 @@ void main_2(void)
         core_alive_blink_update(&alive_blink);
         core_2_feature_update(&feature);
 
-      if(!system_settings_get(CXST, &setting_value) && setting_value.u8)
+      if(!system_settings_get(&reader, &setting_value) && setting_value.u8)
       {
         errno_trace_print(CORE_2);
         errno_trace_clear(CORE_2);

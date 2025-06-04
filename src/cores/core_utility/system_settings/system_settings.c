@@ -11,9 +11,23 @@ struct SytemSettingOwner_t{
   struct CanMailbox* p_mailbox_recv_dps_mex;
 };
 
+struct SytemSettingReader_t{
+  SystemSettingName m_setting;
+};
+
 union SytemSettingOwner_h_t_conv{
   SytemSettingOwner_h* const restrict hidden;
   struct SytemSettingOwner_t* const restrict clear;
+};
+
+union SytemSettingReader_h_t_conv{
+  SytemSettingReader_h* const restrict hidden;
+  struct SytemSettingReader_t* const restrict clear;
+};
+
+union SytemSettingReader_h_t_conv_const{
+  const SytemSettingReader_h* const restrict hidden;
+  const struct SytemSettingReader_t* const restrict clear;
 };
 
 #define NEW_SETTING_PARAM(SET_TYPE)\
@@ -27,11 +41,15 @@ static struct SystemParams{
   enum DPS_PRIMITIVE_TYPES m_setting_type;
   void* p_data;
 }SYSTEM_SETTINGS_PARAMS[__NUM_OF_SYSTEM_SETTINGS];
-static volatile uint8_t INIT_DONE=0;
+static uint8_t INIT_DONE = 0;
 
 #ifdef DEBUG
 char __assert_size_system_settings[sizeof(SytemSettingOwner_h)==sizeof(struct SytemSettingOwner_t)?+1:-1];
 char __assert_align_system_settings[_Alignof(SytemSettingOwner_h)==_Alignof(struct SytemSettingOwner_t)?+1:-1];
+
+char __assert_size_system_settings[sizeof(SytemSettingReader_h)==sizeof(struct SytemSettingReader_t)?+1:-1];
+char __assert_align_system_settings[_Alignof(SytemSettingReader_h)==_Alignof(struct SytemSettingReader_t)?+1:-1];
+
 char __assert_minimum_size_setting_data_buffer[(__NUM_OF_SYSTEM_SETTINGS < BUFFER_SIZE_CAPACITY_BYTE)?+1:-1];
 #endif /* ifdef DEBUG */
 
@@ -218,6 +236,21 @@ init_already_done:
   return err;
 }
 
+int8_t system_settings_reader_init(SytemSettingReader_h* const restrict self, const SystemSettingName setting)
+{
+  union SytemSettingReader_h_t_conv conv = {self};
+  struct SytemSettingReader_t* p_self = conv.clear;
+
+  if (!INIT_DONE)
+  {
+    return -1;
+  }
+
+  p_self->m_setting = setting;
+
+  return 0;
+}
+
 int8_t system_settings_update(SytemSettingOwner_h* const restrict self)
 {
   union SytemSettingOwner_h_t_conv conv = {self};
@@ -238,38 +271,27 @@ int8_t system_settings_update(SytemSettingOwner_h* const restrict self)
   return 0;
 }
 
-int8_t system_settings_get(const SystemSettingName setting,
+int8_t system_settings_get(const SytemSettingReader_h* const restrict self,
     union SystemSettingValue_t* const restrict o_value)
 {
+  const union SytemSettingReader_h_t_conv_const conv = {self};
+  const struct SytemSettingReader_t* p_self = conv.clear;
   int8_t err=0;
   uint8_t data_size =0;
 
-  if(!INIT_DONE)
-  {
-    goto init_not_done;
-  }
-
-  if (setting >= __NUM_OF_SYSTEM_SETTINGS)
-  {
-    goto invalid_system_settings;
-  }
-  struct SystemParams* p_param = &SYSTEM_SETTINGS_PARAMS[setting];
+  struct SystemParams* p_param = &SYSTEM_SETTINGS_PARAMS[p_self->m_setting];
 
   if (!p_param->p_data)
   {
     goto parameter_not_initialized;
   }
 
-  data_size = _get_data_size(setting);
+  data_size = _get_data_size(p_self->m_setting);
 
   memcpy(o_value, p_param->p_data, data_size);
   return 0;
 
 parameter_not_initialized:
-  err--;
-invalid_system_settings:
-  err--;
-init_not_done:
   err--;
 
   return err;

@@ -2,7 +2,6 @@
 #include "mission_locker/mission_locker.h"
 #include "../../../lib/raceup_board/raceup_board.h"
 #include "../shared_message/shared_message.h"
-#include "../system_settings/system_settings.h"
 #include <stdint.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -39,16 +38,11 @@ char __assert_alignment_car_mission_reader[(_Alignof(CarMissionReader_h)==_Align
 int8_t car_mission_reader_init(CarMissionReader_h* const restrict self)
 {
   union CarMissionReader_h_t_conv conv = {self};
-  // union SystemSettingValue_t val ={0};
   struct CarMissionReader_t* const p_self = conv.clear;
   int8_t err=0;
 
   memset(p_self, 0, sizeof(*p_self));
 
-  // if (system_settings_get(MDEF, &val)<0)
-  // {
-  //   goto system_settings_failed;
-  // }
 
   if (shared_message_reader_init(&p_self->m_recv_current_mission, SHARED_MEX_CARMISSION))
   {
@@ -75,8 +69,6 @@ shared_message_reader_embedded_alive_check_failed:
   err--;
 shared_message_reader_car_mission_failed:
   err--;
-// system_settings_failed:
-//   err--;
 
   return err;
 }
