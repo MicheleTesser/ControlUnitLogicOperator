@@ -202,7 +202,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
     if (rt == RUNNING && !p_self->entered_rtd)
     {
         p_self->entered_rtd =1;
-        gpio_set_low(&p_self->m_gpio_rtd_button_led);
+        gpio_set_high(&p_self->m_gpio_rtd_button_led);
         rtd_assi_sound_start(&p_self->o_rtd_sound);
         p_self->rtd_sound_start = timer_time_now();
     }
@@ -210,7 +210,7 @@ enum RUNNING_STATUS GIEI_check_running_condition(Giei_h* const restrict self)
     {
         p_self->entered_rtd =0;
         p_self->rtd_sound_start=0;
-        gpio_set_high(&p_self->m_gpio_rtd_button_led);
+        gpio_set_low(&p_self->m_gpio_rtd_button_led);
         rtd_assi_sound_stop(&p_self->o_rtd_sound);
     }
     p_self->running_status = rt;

@@ -86,6 +86,10 @@ int8_t hardware_init_gpio(Gpio_h* const restrict self ,const enum GPIO_PIN id)
   p_self->gpio_read_permission.pin_gpio = id;
 
   IfxPort_setPinMode(p_info_gpio->port,p_info_gpio->pin_index,p_info_gpio->mode);
+  if (p_info_gpio->mode == GPIO_OUTPUT_MODE)
+  {
+    gpio_set_high(self);
+  }
 
   return 0;
 }
