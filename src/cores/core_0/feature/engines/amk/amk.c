@@ -182,6 +182,22 @@ static uint8_t _precharge_ended(const AMKInverter_t* const restrict self)
     !gpio_read_state(&self->gpio_precharge_init) && !gpio_read_state(&self->gpio_precharge_done);
 }
 
+static uint8_t _hv_on_no_ack(const AMKInverter_t* const restrict self)
+{
+  uint8_t res =0;
+  FOR_EACH_ENGINE(engine)
+  {
+    //HACK: in emulation environment checking that all the engine have done the precharge phase 
+    //caused a weird behaviour where at some point, after the precharge is completed, for one engine 
+    //the the hv was cut off and so also the precharge. This only happen in release mode 
+    //and it's most certainly caused by an optimization problem in the emulation of the inverter
+    //or in the module of the amk. To make things work for now i'm checking if at least one engine
+    //has completed its precharge phase.
+    res |= self->engines[engine].amk_values_1.AMK_status.AMK_bDcOn;
+  }
+  return res;
+}
+
 static uint8_t _amk_inverter_hv_status(AMKInverter_t* const restrict self)
 {
   const uint8_t HV_TRAP = 50;
@@ -198,6 +214,30 @@ static uint8_t _amk_inverter_hv_status(AMKInverter_t* const restrict self)
     else if (AMK_bQuitDcOn || (self->hvCounter[engine] >= HV_TRAP))
     {
       res |= AMK_bQuitDcOn;
+      self->hvCounter[engine] = 0;
+    }
+  }
+
+
+  return res;
+}
+
+static uint8_t _amk_inverter_ready_to_go(AMKInverter_t* const restrict self)
+{
+  const uint8_t HV_TRAP = 50;
+  uint8_t res = 0;
+
+  FOR_EACH_ENGINE(engine)
+  {
+    const uint8_t AMK_bQuitInverterOn = 
+      self->engines[engine].amk_values_1.AMK_status.AMK_bQuitInverterOn;
+    if (!(AMK_bQuitInverterOn) && (self->hvCounter[engine] < HV_TRAP))
+    {
+      self->hvCounter[engine]++;
+    }
+    else if (AMK_bQuitInverterOn || (self->hvCounter[engine] >= HV_TRAP))
+    {
+      res |= AMK_bQuitInverterOn;
       self->hvCounter[engine] = 0;
     }
   }
@@ -231,8 +271,14 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
   switch (self->engine_status)
   {
     case SYSTEM_OFF:
+      if (_amk_inverter_on(self))
+      {
+        setpoint.AMK_Control_fields.AMK_bDcOn = 1;
+      }
 
-      if (_amk_inverter_on(self) && !gpio_read_state(&self->gpio_precharge_init) &&
+      if (_amk_inverter_on(self) &&
+          _hv_on_no_ack(self) &&
+          !gpio_read_state(&self->gpio_precharge_init) &&
           !giei_driver_input_rtd_request(self->driver_input))
       {
         self->engine_status = SYSTEM_PRECAHRGE;
@@ -276,36 +322,47 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
           giei_driver_input_get(self->driver_input, BRAKE) > 20)
       {
         o2.can_0x130_Pcu.mode = 1;
-        o2.can_0x130_Pcu.rf = 1;
+        o2.can_0x130_Pcu.rf = giei_driver_input_rtd_request(self->driver_input) & 1;
+
         //INFO: RF message to PCU and wait until rf is active before going
         //into RUNNING status
         if (self->rf_status)
         {
-          self->engine_status = RUNNING;
+          setpoint.AMK_Control_fields.AMK_bDcOn = 1;
+          setpoint.AMK_Control_fields.AMK_bInverterOn = 1;
+          setpoint.AMK_Control_fields.AMK_bEnable = 1;
+          if (_amk_inverter_ready_to_go(self))
+          {
+            self->engine_status = RUNNING;
+          }
         }
       }
       break;
     case RUNNING:
-      setpoint.AMK_Control_fields.AMK_bDcOn = 1;
-      setpoint.AMK_Control_fields.AMK_bInverterOn = 1;
-      setpoint.AMK_Control_fields.AMK_bEnable = 1;
-
-      o2.can_0x130_Pcu.mode = 1;
-      o2.can_0x130_Pcu.rf = 1;
-      if (!_amk_inverter_on(self) || !_amk_inverter_hv_status(self) || !_precharge_ended(self))
+      if (!_amk_inverter_ready_to_go(self) ||
+          !_amk_inverter_hv_status(self) ||
+          !_precharge_ended(self)||
+          !_amk_inverter_on(self))
       {
         SET_TRACE(CORE_0);
         EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
         memset(&setpoint, 0, sizeof(setpoint));
         self->engine_status = SYSTEM_OFF;
       }
-      else if (!giei_driver_input_rtd_request(self->driver_input))
+      else if (giei_driver_input_rtd_request(self->driver_input)<=0)
       {
         setpoint.AMK_Control_fields.AMK_bDcOn = 0;
         setpoint.AMK_Control_fields.AMK_bInverterOn = 0;
         setpoint.AMK_Control_fields.AMK_bEnable = 0;
+        o2.can_0x130_Pcu.mode = 1;
+        o2.can_0x130_Pcu.rf = 0;
         self->engine_status= SYSTEM_OFF;
       }
+      else
+      {
+        return;
+      }
+
       break;
   }
 
@@ -507,8 +564,11 @@ int8_t amk_send_torque(const AMKInverter_t* const restrict self,
   if (amk_rtd_procedure(self) == RUNNING)
   {
     setpoint.AMK_TargetVelocity = SPEED_LIMIT;
-    setpoint.AMK_TorqueLimitPositive = pos_torque;
-    setpoint.AMK_TorqueLimitNegative = neg_torque;
+    setpoint.AMK_Control_fields.AMK_bDcOn=1;
+    setpoint.AMK_Control_fields.AMK_bEnable=1;
+    setpoint.AMK_Control_fields.AMK_bInverterOn =1;
+    setpoint.AMK_TorqueLimitPositive = (int16_t) pos_torque;
+    setpoint.AMK_TorqueLimitNegative = (int16_t) neg_torque;
   }
 
   return _send_message_amk(self, engine, &setpoint);

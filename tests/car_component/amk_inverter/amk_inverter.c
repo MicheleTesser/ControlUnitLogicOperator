@@ -172,6 +172,20 @@ static int _inverter_compute_internal_status(struct EmulationAmkInverter_t* cons
       }
       gpio_set_high(&p_self->m_gpio_precharge_done);
     }
+
+    uint8_t inverter_ready=
+      p_self->o_engines[FRONT_LEFT].amk_data_1.AMK_STATUS.AMK_bInverterOn &&
+      p_self->o_engines[FRONT_RIGHT].amk_data_1.AMK_STATUS.AMK_bInverterOn &&
+      p_self->o_engines[REAR_LEFT].amk_data_1.AMK_STATUS.AMK_bInverterOn &&
+      p_self->o_engines[REAR_RIGHT].amk_data_1.AMK_STATUS.AMK_bInverterOn;
+    if (inverter_ready)
+    {
+      FOR_EACH_ENGINE(engine)
+      {
+        p_self->o_engines[REAR_RIGHT].amk_data_1.AMK_STATUS.AMK_bQuitInverterOn=1;
+      }
+    }
+
   }
   else
   {

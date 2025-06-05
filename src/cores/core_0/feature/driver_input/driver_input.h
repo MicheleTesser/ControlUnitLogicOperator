@@ -13,7 +13,7 @@ int8_t
 driver_input_init(DriverInput_h* const restrict self,
     CarMissionReader_h* const restrict p_car_mission)__attribute__((__nonnull__(1,2)));
 
-int8_t
+float
 giei_driver_input_get(const DriverInput_h* const restrict self,
     const enum INPUT_TYPES input_type)__attribute__((__nonnull__(1)));
 

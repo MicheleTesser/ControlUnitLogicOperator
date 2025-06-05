@@ -71,7 +71,7 @@ int8_t driver_input_init(DriverInput_h* const restrict self,
   return 0;
 }
 
-int8_t giei_driver_input_get(const DriverInput_h* const restrict self,
+float giei_driver_input_get(const DriverInput_h* const restrict self,
     const enum INPUT_TYPES input_type)
 {
   const union DriverInput_h_t_conv_const conv = {self};
@@ -100,6 +100,7 @@ int8_t giei_driver_input_rtd_request(const DriverInput_h* const restrict self)
     case DRIVER_NONE:
       return 0;
     default:
+      SET_TRACE(CORE_0);
       return -1;
   }
 }
@@ -129,7 +130,7 @@ int8_t giei_driver_input_update(DriverInput_h* const restrict self )
       p_self->current_driver = DRIVER_EMBEDDED;
       if (shared_message_read_unpack_can3(&p_self->m_recv_dv_mission, &o3)>0)
       {
-        unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, timer_time_now());
+        unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, (dbcc_time_stamp_t) timer_time_now());
         if (o3.can_0x07e_DV_Mission.Mission_status == 2)
         {
           p_self->Rtd_request.dv_rtd_input_request = 0;
