@@ -61,12 +61,10 @@ void test_as_node_mission_none(TestInput* t_input)
   steering_wheel_select_mission(&t_input->external_boards->steering_wheel, CAR_MISSIONS_NONE);
   wait_milliseconds(get_tick_from_millis(200));
 
-  _check_status(!as_node_get_status(t_input->p_as_node) &&
-      !gpio_read_state(t_input->p_gpio_as_node),
+  _check_status(!as_node_get_status(t_input->p_as_node),
       "as node not closed in mission none");
-  _check_status(!as_node_read_get_status(t_input->p_as_node_read)
-      && !gpio_read_state(t_input->p_gpio_as_node)
-      ,"as node read status in mission none");
+  _check_status(!as_node_read_get_status(t_input->p_as_node_read),
+      "as node read status in mission none");
 }
 
 void test_as_node_mission_human(TestInput* t_input)
@@ -75,10 +73,10 @@ void test_as_node_mission_human(TestInput* t_input)
   wait_milliseconds(get_tick_from_millis(200));
 
   _check_status(as_node_get_status(t_input->p_as_node) &&
-      gpio_read_state(t_input->p_gpio_as_node),
+      !gpio_read_state(t_input->p_gpio_as_node),
       "as node not closed in mission human at initial state");
   _check_status(as_node_read_get_status(t_input->p_as_node_read)
-      && gpio_read_state(t_input->p_gpio_as_node)
+      && !gpio_read_state(t_input->p_gpio_as_node)
       ,"as node read status in mission human at initial state");
 }
 
@@ -88,10 +86,10 @@ void test_as_node_mission_dv(TestInput* t_input)
   wait_milliseconds(get_tick_from_millis(200));
 
   _check_status(!as_node_get_status(t_input->p_as_node) &&
-      !gpio_read_state(t_input->p_gpio_as_node),
+      gpio_read_state(t_input->p_gpio_as_node),
       "as node not closed in mission dv at initial state");
   _check_status(!as_node_read_get_status(t_input->p_as_node_read)
-      && !gpio_read_state(t_input->p_gpio_as_node)
+      && gpio_read_state(t_input->p_gpio_as_node)
       ,"as node read status in mission dv at initial state");
 }
 

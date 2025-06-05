@@ -95,12 +95,12 @@ static inline uint8_t _check_brakes(struct AsNode_t* const restrict self)
 
 static inline void _as_node_enable(struct AsNode_t* const restrict self)
 {
-  gpio_set_low(&self->m_gpio_as_node);
+  gpio_set_high(&self->m_gpio_as_node);
 }
 
 static inline void _as_node_disable(struct AsNode_t* const restrict self)
 {
-  gpio_set_high(&self->m_gpio_as_node);
+  gpio_set_low(&self->m_gpio_as_node);
 }
 
 //public
@@ -273,7 +273,7 @@ uint8_t as_node_get_status(const AsNode_h* const restrict self)
   const union AsNode_h_t_conv_const conv = {self};
   const struct AsNode_t* const p_self = conv.clear;
 
-  return gpio_read_state(&p_self->m_gpio_as_node.gpio_read_permission);
+  return !gpio_read_state(&p_self->m_gpio_as_node.gpio_read_permission);
 }
 
 uint8_t as_node_read_get_status(const AsNodeRead_h* const restrict self)
@@ -281,5 +281,5 @@ uint8_t as_node_read_get_status(const AsNodeRead_h* const restrict self)
   const union AsNodeRead_h_t_conv_const conv = {self};
   const struct AsNodeRead_t* const p_self = conv.clear;
 
-  return gpio_read_state(&p_self->m_gpio_read_as_node);
+  return !gpio_read_state(&p_self->m_gpio_read_as_node);
 }

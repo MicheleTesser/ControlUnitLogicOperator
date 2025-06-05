@@ -154,12 +154,12 @@ int main(void)
     .ebs = &ebs,
   };
 
-  INIT_PH(hardware_init_gpio(&rtd_button, GPIO_RTD_BUTTON),"rf button");
+  INIT_PH(create_virtual_chip(), "virtual chip gpio");
   INIT_PH(hardware_init_can(CAN_INVERTER, _1_MBYTE_S_), "can inverter");
   INIT_PH(hardware_init_can(CAN_GENERAL, _500_KBYTE_S_), "can general");
   INIT_PH(hardware_init_can(CAN_DV, _500_KBYTE_S_), "can dv");
-  INIT_PH(create_virtual_chip(), "virtual chip gpio");
 
+  INIT_PH(hardware_init_gpio(&rtd_button, GPIO_RTD_BUTTON),"rf button");
   INIT_PH(start_external_boards(&external_boards), "external_boards");
 
   INIT_PH(system_settings_init(&system_settings), "system_settings");

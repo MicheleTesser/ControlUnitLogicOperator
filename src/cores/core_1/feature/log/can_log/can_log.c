@@ -14,6 +14,7 @@ struct CanLog_t{
   time_var_microseconds m_last_sent;
   GpioRead_h m_start_precharge_gpio;
   GpioRead_h m_done_precharge_gpio;
+  AsNodeRead_h m_as_node_read;
   const uint16_t* p_log_var_amk_status_fl;
   const uint16_t* p_log_var_amk_status_fr;
   const uint16_t* p_log_var_amk_status_rl;
@@ -49,6 +50,11 @@ int8_t can_log_init(CanLog_h* const restrict self)
 
   memset(p_self, 0, sizeof(*p_self));
 
+  if (as_node_read_init(&p_self->m_as_node_read)<0)
+  {
+    return -1;
+  }
+
   p_self->p_log_var_amk_status_fl = external_log_extract_data_ptr_r_only(AMK_STATUS_FL);
   p_self->p_log_var_amk_status_rl = external_log_extract_data_ptr_r_only(AMK_STATUS_RL);
 
@@ -61,19 +67,19 @@ int8_t can_log_init(CanLog_h* const restrict self)
       !p_self->p_log_var_amk_status_rl)
   {
     SET_TRACE(CORE_1);
-    return -1;
+    return -2;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->m_start_precharge_gpio, GPIO_AIR_PRECHARGE_INIT)<0)
   {
     SET_TRACE(CORE_1);
-    return -2;
+    return -3;
   }
 
   if (hardware_init_read_permission_gpio(&p_self->m_done_precharge_gpio, GPIO_AIR_PRECHARGE_DONE)<0)
   {
     SET_TRACE(CORE_1);
-    return -3;
+    return -4;
   }
 
   ACTION_ON_CAN_NODE(CAN_GENERAL, can_node)
@@ -89,7 +95,7 @@ int8_t can_log_init(CanLog_h* const restrict self)
   if (!p_self->p_mailbox_send_car_status)
   {
     SET_TRACE(CORE_1);
-    return -4;
+    return -5;
   }
 
   return 0;
@@ -118,6 +124,7 @@ int8_t can_log_update(CanLog_h* const restrict self)
 
     o2.can_0x065_CarStatus.AIR1= !!gpio_read_state(&p_self->m_start_precharge_gpio);
     o2.can_0x065_CarStatus.AIR2= !!gpio_read_state(&p_self->m_done_precharge_gpio);
+    o2.can_0x065_CarStatus.AS_NODE= as_node_read_get_status(&p_self->m_as_node_read);
     o2.can_0x065_CarStatus.RunningStatus = (uint8_t) global_running_status_get();
     o2.can_0x065_CarStatus.speed = (uint8_t) car_speed_get();
 

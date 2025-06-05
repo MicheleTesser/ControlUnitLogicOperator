@@ -37,7 +37,6 @@ CMakeFiles/main.dir/src/cores/core_utility/mission_reader/mission_reader.c.o: \
  /home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/src/cores/core_utility/mission_reader/../shared_message/../../../lib/board_dbc/dbc/out_lib/can2/can2.h \
  /home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/src/cores/core_utility/mission_reader/../shared_message/../../../lib/board_dbc/dbc/out_lib/can3/can3.h \
  /home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/src/cores/core_utility/mission_reader/../shared_message/../../../../lib/raceup_board/raceup_board.h \
- /home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/src/cores/core_utility/mission_reader/../system_settings/system_settings.h \
  /home/mr_monopoly/Alberto/programmazione/Cproject/raceup/ControlUnitLogicOperator/tests/tests/external_log_ptr/src/cores/core_utility/mission_reader/../../../lib/board_dbc/dbc/out_lib/can2/can2.h \
  /usr/include/string.h /usr/include/bits/types/locale_t.h \
  /usr/include/bits/types/__locale_t.h /usr/include/strings.h

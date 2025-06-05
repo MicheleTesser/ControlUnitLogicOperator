@@ -284,7 +284,13 @@ int8_t hardware_init_gpio(Gpio_h* const restrict self, const enum GPIO_PIN id)
 {
   union Gpio_h_t_conv conv = {self};
   struct Gpio_t* const p_self = conv.clear;
-  return _assign_line(&p_self->read.gpio_id, id);
+  int8_t err=0;
+  if((err=_assign_line(&p_self->read.gpio_id, id))<0)
+  {
+    return err;
+  }
+  gpio_set_high(self);
+  return err;
 }
 
 int8_t gpio_toggle(Gpio_h* const restrict self)

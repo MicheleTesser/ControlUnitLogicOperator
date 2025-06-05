@@ -80,14 +80,15 @@ int8_t core_0_feature_compute_power(Core0Feature_h* const restrict self )
   int8_t err=0;
 
   status = GIEI_check_running_condition(&p_self->giei);
-  if (p_self->old_running_status != status)
-  {
-    p_self->old_running_status = status;
-    if(global_running_status_set(&p_self->m_global_running_status_owner, status)<0)
-    {
-      ERR_TRACE();
-    }
-  }
+  global_running_status_set(&p_self->m_global_running_status_owner, status);
+  // if (p_self->old_running_status != status)
+  // {
+  //   p_self->old_running_status = status;
+  //   if(<0)
+  //   {
+  //     ERR_TRACE();
+  //   }
+  // }
 
   if (status == RUNNING)
   {
