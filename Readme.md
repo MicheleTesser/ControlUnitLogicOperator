@@ -13,6 +13,8 @@ the dbc can bus with the following command:
     cd ./ControlUnitLogicOperator/lib/board_dbc/dbc
     ./refresh_dbc.sh
     cd -
+    cd ControlUnitLogicOperator
+    cp ./pre-commit ./.git/hooks
 ```
 
 ## I/O connections

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Name of the protected branch
+PROTECTED_BRANCH="master"
+
+# Get current branch name
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$CURRENT_BRANCH" = "$PROTECTED_BRANCH" ]; then
+    echo "❌ You are not allowed to commit directly on branch '$PROTECTED_BRANCH'."
+    exit 1
+fi
