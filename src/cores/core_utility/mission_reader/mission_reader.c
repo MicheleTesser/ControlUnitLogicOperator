@@ -89,7 +89,7 @@ int8_t car_mission_reader_update(CarMissionReader_h* const restrict self)
       p_self->m_current_mission > CAR_MISSIONS_HUMAN &&
       !is_mission_locked(&p_self->m_mission_locker_read))
   {
-    // p_self->m_current_mission = CAR_MISSIONS_NONE;
+    p_self->m_current_mission = CAR_MISSIONS_NONE;
   }
 
   if (!is_mission_locked(&p_self->m_mission_locker_read)
