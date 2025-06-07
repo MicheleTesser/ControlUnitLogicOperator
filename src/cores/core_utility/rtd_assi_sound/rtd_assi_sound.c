@@ -41,6 +41,7 @@ int8_t rtd_assi_sound_init(RtdAssiSound_h* const restrict self)
   {
     atomic_store(&GPIO_RTD_ASSI.m_init_done, 1);
     hardware_init_gpio(&GPIO_RTD_ASSI.m_rtd_assi_sound, GPIO_RTD_ASSI_SOUND);
+    gpio_set_low(&GPIO_RTD_ASSI.m_rtd_assi_sound);
   }
 
   memset(p_self, 0, sizeof(*p_self));
@@ -65,7 +66,7 @@ int8_t rtd_assi_sound_start(RtdAssiSound_h* const restrict self)
   {
     p_self->m_req_change=1;
     GPIO_RTD_ASSI.m_on_req++;
-    gpio_set_low(p_self->p_gpio_rtd_assi_sound);
+    gpio_set_high(p_self->p_gpio_rtd_assi_sound);
   }
   atomic_store(&GPIO_RTD_ASSI.m_lock, 0);
   return 0;
@@ -89,7 +90,7 @@ int8_t rtd_assi_sound_stop(RtdAssiSound_h* const restrict self)
   {
     p_self->m_req_change=0;
     GPIO_RTD_ASSI.m_on_req--;
-    gpio_set_high(p_self->p_gpio_rtd_assi_sound);
+    gpio_set_low(p_self->p_gpio_rtd_assi_sound);
   }
 
   atomic_store(&GPIO_RTD_ASSI.m_lock, 0);
