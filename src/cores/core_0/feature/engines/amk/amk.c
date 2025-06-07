@@ -71,6 +71,7 @@ struct AMK_Setpoints{
 typedef struct Inverter{
   CarSpeedMut_h m_car_speed;
   uint8_t rf_status:1;
+  uint8_t started_precharge:1;
   uint8_t hvCounter[__NUM_OF_ENGINES__];
   struct{
     struct AMK_Actual_Values_1 amk_values_1;
@@ -158,9 +159,9 @@ static int8_t _send_message_amk(const AMKInverter_t* const restrict self,
 
 static uint8_t _amk_inverter_on(const AMKInverter_t* const restrict self)
 {
-  uint8_t res = 0xFF;
+  uint8_t res = 0;
   FOR_EACH_ENGINE(engine){
-    res &= self->engines[engine].amk_values_1.AMK_status.AMK_bSystemReady;
+    res |= self->engines[engine].amk_values_1.AMK_status.AMK_bSystemReady;
   }
   return res;
 }
@@ -178,10 +179,31 @@ static uint8_t _precharge_ended(const AMKInverter_t* const restrict self)
     //has completed its precharge phase.
     res |= self->engines[engine].amk_values_1.AMK_status.AMK_bQuitDcOn;
   }
+  return 
+    res &&
+    self->started_precharge &&
+    !gpio_read_state(&self->gpio_precharge_init) &&
+    gpio_read_state(&self->gpio_precharge_done);
+}
+
+static uint8_t _precharge_started(const AMKInverter_t* const restrict self)
+{
+  uint8_t res =0;
+  FOR_EACH_ENGINE(engine)
+  {
+    //HACK: in emulation environment checking that all the engine have done the precharge phase 
+    //caused a weird behaviour where at some point, after the precharge is completed, for one engine 
+    //the the hv was cut off and so also the precharge. This only happen in release mode 
+    //and it's most certainly caused by an optimization problem in the emulation of the inverter
+    //or in the module of the amk. To make things work for now i'm checking if at least one engine
+    //has completed its precharge phase.
+    res |= self->engines[engine].amk_values_1.AMK_status.AMK_bQuitDcOn;
+  }
   return res &&
     !gpio_read_state(&self->gpio_precharge_init) && !gpio_read_state(&self->gpio_precharge_done);
 }
 
+static uint8_t _hv_on_no_ack(const AMKInverter_t* const restrict self)__attribute__((__unused__));
 static uint8_t _hv_on_no_ack(const AMKInverter_t* const restrict self)
 {
   uint8_t res =0;
@@ -246,7 +268,6 @@ static uint8_t _amk_inverter_ready_to_go(AMKInverter_t* const restrict self)
   return res;
 }
 
-static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)__attribute__((__unused__));
 static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
 {
   struct AMK_Setpoints setpoint = {0};
@@ -258,41 +279,37 @@ static void _amk_update_rtd_procedure(AMKInverter_t* const restrict self)
     EmergencyNode_solve(&self->amk_emergency, FAILED_RTD_AMK);
   }
 
-  if (EmergencyNode_is_emergency_state(&self->amk_emergency))
-  {
-    FOR_EACH_ENGINE(engine)
-    {
-      _send_message_amk(self, engine, &setpoint);
-    }
-    self->engine_status = SYSTEM_OFF;
-    return;
-  }
-
   switch (self->engine_status)
   {
     case SYSTEM_OFF:
+      self->started_precharge = 0;
       if (_amk_inverter_on(self))
       {
         setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       }
 
-      if (_amk_inverter_on(self) &&
+      if (!EmergencyNode_is_emergency_state(&self->amk_emergency) &&
+          _amk_inverter_on(self) &&
           _hv_on_no_ack(self) &&
-          !gpio_read_state(&self->gpio_precharge_init) &&
+          _precharge_started(self) &&
           !giei_driver_input_rtd_request(self->driver_input))
       {
         self->engine_status = SYSTEM_PRECAHRGE;
       }
       else
       {
-        if(giei_driver_input_rtd_request(self->driver_input))
+        if(giei_driver_input_rtd_request(self->driver_input)||
+            EmergencyNode_is_emergency_state(&self->amk_emergency))
         {
           SET_TRACE(CORE_0);
           EmergencyNode_raise(&self->amk_emergency, FAILED_RTD_AMK);
+          memset(&setpoint, 0, sizeof(setpoint));
+          self->engine_status = SYSTEM_OFF;
         }
       }
       break;
     case SYSTEM_PRECAHRGE:
+      self->started_precharge = 1;
       setpoint.AMK_Control_fields.AMK_bDcOn = 1;
       if (!_amk_inverter_on(self) ||
           giei_driver_input_rtd_request(self->driver_input))
@@ -471,7 +488,7 @@ enum RUNNING_STATUS amk_rtd_procedure(const AMKInverter_t* const restrict self)
   val->AMK_TempMotor = mex.TempMotor;\
 }
 
-int8_t amk_update(AMKInverter_t* const restrict self __attribute__((__unused__)))
+int8_t amk_update(AMKInverter_t* const restrict self)
 {
   int8_t err=0;
   CanMessage mex = {0};
@@ -484,12 +501,20 @@ int8_t amk_update(AMKInverter_t* const restrict self __attribute__((__unused__))
 #define READ_MAILBOX_INV(ENGINE, MEX_1, MEX_2)\
   if (hardware_mailbox_read(self->m_engines_mailbox[ENGINE].p_recv_mailbox_inverter_1, &mex))\
   {\
-    unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, timer_time_now());\
+    if(unpack_message_can1(&o1, mex.id, mex.full_word, 8, timer_time_now())<0)\
+    {\
+      SET_TRACE(CORE_0);\
+      EmergencyNode_raise(&self->amk_emergency, 1);\
+    }\
     UPDATE_INFO_1(ENGINE, o1.MEX_1);\
   }\
   if (hardware_mailbox_read(self->m_engines_mailbox[ENGINE].p_recv_mailbox_inverter_2, &mex))\
   {\
-    unpack_message_can1(&o1, mex.id, mex.full_word, mex.message_size, timer_time_now());\
+    if(unpack_message_can1(&o1, mex.id, mex.full_word, 8, timer_time_now())<0)\
+    {\
+      SET_TRACE(CORE_0);\
+      EmergencyNode_raise(&self->amk_emergency, 1);\
+    }\
     UPDATE_INFO_2(ENGINE, o1.MEX_2);\
   }
 
@@ -561,13 +586,14 @@ int8_t amk_send_torque(const AMKInverter_t* const restrict self,
     .AMK_TorqueLimitPositive = 0,
     .AMK_TorqueLimitNegative = 0,
   };
+  (void)pos_torque;
   if (amk_rtd_procedure(self) == RUNNING)
   {
     setpoint.AMK_TargetVelocity = SPEED_LIMIT;
     setpoint.AMK_Control_fields.AMK_bDcOn=1;
     setpoint.AMK_Control_fields.AMK_bEnable=1;
     setpoint.AMK_Control_fields.AMK_bInverterOn =1;
-    setpoint.AMK_TorqueLimitPositive = (int16_t) pos_torque;
+    setpoint.AMK_TorqueLimitPositive = 21 * 100;
     setpoint.AMK_TorqueLimitNegative = (int16_t) neg_torque;
   }
 
