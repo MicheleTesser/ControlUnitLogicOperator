@@ -20,7 +20,7 @@ enum Tanks_t{
 };
 
 struct AsNodeRead_t{
-  GpioRead_h m_gpio_read_as_node;
+  GpioRead_h m_gpio_read_as_node; //INFO: 0: closed, 1: open
 };
 
 struct AsNode_t{

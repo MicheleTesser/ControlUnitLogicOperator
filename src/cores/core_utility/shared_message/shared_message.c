@@ -5,21 +5,19 @@
 
 typedef struct
 {
-  atomic_bool lock;
+  atomic_flag lock;
   uint64_t data_buffer;
   time_var_microseconds timestamp;
 }SharedMex_t;
 
 static struct{
   SharedMex_t m_data[__NUM_OF_SHARED_MESSAGE__];
-  atomic_bool m_taken;
+  atomic_flag m_taken;
 }SHARED_DATA;
 
 
-#define SPEC_MEX_CAN_2(mex_id)\
-  {mex_id ,CAN_GENERAL}
-#define SPEC_MEX_CAN_3(mex_id)\
-  {mex_id ,CAN_DV}
+#define SPEC_MEX_CAN_2(mex_id) {mex_id, CAN_GENERAL}
+#define SPEC_MEX_CAN_3(mex_id) {mex_id, CAN_DV}
 
 static const struct{
   uint16_t can_id;
@@ -111,11 +109,11 @@ static inline int8_t _init_mailbox_ext_mex(struct shared_message_owner_t* const 
 
 int8_t shared_message_owner_init(SharedMessageOwner_h* const restrict self)
 {
-  if (atomic_load(&SHARED_DATA.m_taken))
+  if (atomic_flag_test_and_set(&SHARED_DATA.m_taken))
   {
     return -1;
   }
-  atomic_store(&SHARED_DATA.m_taken, 1);
+  atomic_flag_test_and_set(&SHARED_DATA.m_taken);
 
   union SharedMessageOwner_h_t_conv conv = {self};
   struct shared_message_owner_t* p_self = conv.clear;
@@ -148,7 +146,7 @@ int8_t shared_message_owner_init(SharedMessageOwner_h* const restrict self)
 
 int8_t shared_message_owner_status(void)
 {
-  return atomic_load(&SHARED_DATA.m_taken);
+  return atomic_flag_test_and_set(&SHARED_DATA.m_taken);
 }
 
 
@@ -171,7 +169,7 @@ int8_t shared_message_read(SharedMessageReader_h* const restrict self, uint64_t*
   struct shared_message_reader_t* p_self = conv.clear;
   SharedMex_t* shared_mex = &SHARED_DATA.m_data[p_self->m_id];
 
-  if (atomic_load(&shared_mex->lock))
+  if (atomic_flag_test_and_set(&shared_mex->lock))
   {
     return -1;
   }
@@ -199,13 +197,13 @@ int8_t shared_message_owner_update(SharedMessageOwner_h* const restrict self)
   for(uint8_t i = 0; i < __NUM_OF_SHARED_MESSAGE__; ++i)
   {
     shared_mex = &SHARED_DATA.m_data[i];
-    atomic_store(&shared_mex->lock, 1);
+    while(atomic_flag_test_and_set(&shared_mex->lock));
     if(hardware_mailbox_read(p_self->p_mailbox[i], &mex))
     {
       shared_mex->data_buffer = mex.full_word;
       shared_mex->timestamp = timer_time_now();
     }
-    atomic_store(&shared_mex->lock, 0);
+    atomic_flag_clear(&shared_mex->lock);
   }
   return 0;
 }

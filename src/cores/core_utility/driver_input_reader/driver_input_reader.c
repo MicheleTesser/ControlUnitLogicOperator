@@ -12,9 +12,9 @@
 struct DriverInputReader_t{
   struct{
     float m_throttle;
-    float m_brake;
-    float m_steering_angle;
   }m_input[__NUM_OF_DRIVERS__ -1];
+  float m_brake;
+  float m_steering_angle;
   SharedMessageReader_h m_recv_human_brake;
   SharedMessageReader_h m_recv_dv_driver;
 };
@@ -71,15 +71,13 @@ int8_t driver_input_reader_update(DriverInputReader_h* const restrict self )
   if (shared_message_read_unpack_can2(&p_self->m_recv_human_brake, &o2)>0)
   {
     p_self->m_input[DRIVER_HUMAN].m_throttle = _saturate_100(o2.can_0x053_Driver.throttle);
-    p_self->m_input[DRIVER_HUMAN].m_brake = _saturate_100(o2.can_0x053_Driver.brake);
-    p_self->m_input[DRIVER_HUMAN].m_steering_angle = _saturate_100(o2.can_0x053_Driver.steering);
+    p_self->m_brake = _saturate_100(o2.can_0x053_Driver.brake);
+    p_self->m_steering_angle = _saturate_100(o2.can_0x053_Driver.steering);
   }
 
   if (shared_message_read_unpack_can3(&p_self->m_recv_dv_driver, &o3)>0)
   {
     p_self->m_input[DRIVER_EMBEDDED].m_throttle = _saturate_100(o3.can_0x07d_DV_Driver.Throttle);
-    p_self->m_input[DRIVER_EMBEDDED].m_brake = _saturate_100(o3.can_0x07d_DV_Driver.Brake);
-    p_self->m_input[DRIVER_EMBEDDED].m_steering_angle = _saturate_100(o3.can_0x07d_DV_Driver.Steering_angle);
   }
 
   return 0;
@@ -102,9 +100,9 @@ float driver_input_reader_get(const DriverInputReader_h* const restrict self,
     case THROTTLE:
       return p_self->m_input[driver_type].m_throttle;
     case BRAKE:
-      return p_self->m_input[driver_type].m_brake;
+      return p_self->m_brake;
     case STEERING_ANGLE:
-      return p_self->m_input[driver_type].m_steering_angle;
+      return p_self->m_steering_angle;
     case __NUM_OF_INPUT_TYPES__:
     default:
       return -1;

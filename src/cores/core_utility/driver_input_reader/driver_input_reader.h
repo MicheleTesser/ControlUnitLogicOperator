@@ -5,7 +5,7 @@
 #include "../../../lib/raceup_board/raceup_board.h"
 
 typedef struct __attribute__((aligned(4))){
-  uint8_t private_data[46];
+  uint8_t private_data[40];
 }DriverInputReader_h;
 
 enum INPUT_TYPES{
