@@ -12,6 +12,6 @@ float saturate_float(const float signal, const float upperBound, const float low
 
     return 
         (!underbound * !overbound * signal) +
-        (!underbound * overbound * lowerBound) +
-        (underbound * !overbound * upperBound);   
+        (underbound * !overbound * lowerBound) +
+        (!underbound * overbound * upperBound);
 }

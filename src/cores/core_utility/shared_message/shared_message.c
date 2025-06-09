@@ -25,7 +25,7 @@ static const struct{
   uint16_t can_id;
   enum CAN_MODULES can_mod;
 }can_id[__NUM_OF_SHARED_MESSAGE__]={
-  SPEC_MEX_CAN_3(CAN_ID_DV_MISSION), // (0)
+  SPEC_MEX_CAN_3(CAN_ID_DV_EMBEDDED_STATUS), // (0)
   SPEC_MEX_CAN_2(CAN_ID_LEM),// (1)
   SPEC_MEX_CAN_2(CAN_ID_PCU),// (2)
   SPEC_MEX_CAN_2(CAN_ID_EMBEDDEDALIVECHECK),// (3)

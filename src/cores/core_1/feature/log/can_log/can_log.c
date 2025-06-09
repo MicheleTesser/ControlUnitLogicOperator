@@ -123,7 +123,7 @@ int8_t can_log_update(CanLog_h* const restrict self)
 
 
     o2.can_0x065_CarStatus.AIR1= !!gpio_read_state(&p_self->m_start_precharge_gpio);
-    o2.can_0x065_CarStatus.AIR2= !!gpio_read_state(&p_self->m_done_precharge_gpio);
+    o2.can_0x065_CarStatus.precharge = !!gpio_read_state(&p_self->m_done_precharge_gpio);
     o2.can_0x065_CarStatus.AS_NODE= as_node_read_get_status(&p_self->m_as_node_read);
     o2.can_0x065_CarStatus.RunningStatus = (uint8_t) global_running_status_get();
     o2.can_0x065_CarStatus.speed = (uint8_t) car_speed_get();

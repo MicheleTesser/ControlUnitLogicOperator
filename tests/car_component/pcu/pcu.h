@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef struct __attribute__((aligned(4))){
-  const uint8_t private_data[44];
+  const uint8_t private_data[52];
 }Pcu_h;
 
 int8_t
@@ -18,5 +18,11 @@ pcu_start_embedded(Pcu_h* const restrict self)__attribute__((__nonnull__(1)));
 
 int8_t
 pcu_stop_embedded(Pcu_h* const restrict self)__attribute__((__nonnull__(1)));
+
+int8_t
+pcu_start_res(Pcu_h* const restrict self)__attribute__((__nonnull__(1)));
+
+int8_t
+pcu_stop_res(Pcu_h* const restrict self)__attribute__((__nonnull__(1)));
 
 #endif // !__CAR_PCU__

@@ -1,5 +1,6 @@
 #include "sdc_circuit.h"
 #include "../src/lib/raceup_board/raceup_board.h"
+#include "../external_gpio.h"
 
 #include <stdint.h>
 #include <threads.h>
@@ -10,6 +11,7 @@ typedef enum
   SDC_AIR_2,
   SDC_SCS,
   SDC_AS_NODE,
+  SDC_RES, //NOTE: u must define DV in order to use this node!!!
 
   __NUM_OF_SDC_CIRCUITS_NODES__
 }SdcCircuitsNode;
@@ -54,12 +56,14 @@ int8_t sdc_init(void)
   INIT_GPIO(SDC_AIR_2, GPIO_AIR_PRECHARGE_DONE, init_air_2_failed);
   INIT_GPIO(SDC_SCS, GPIO_SCS, init_scs_failed);
   INIT_GPIO(SDC_AS_NODE, GPIO_AS_NODE, init_as_node_failed);
+  INIT_GPIO(SDC_RES, GPIO_RES_SDC, init_res_sdc_failed);
 
   thrd_create(&SDC_CIRCUIT.thrd, _sdc_circuit_update, NULL);
 
   return err;
 
-
+init_res_sdc_failed:
+  err--;
 init_as_node_failed:
   err--;
 init_scs_failed:

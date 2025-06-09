@@ -13,14 +13,10 @@
 #include <stdio.h>
 
 struct EmbeddedSystem_t{
-  enum MISSION_STATUS mission_status;
+  enum EMBEDDED_STATUS embedded_status;
   uint8_t running;
   thrd_t thread;
-  struct{
-    uint8_t throttle;
-    uint8_t brake;
-    uint8_t steering_wheel;
-  }Input;
+  int8_t throttle;
   GpioRead_h m_gpio_pcu_embedded;
   struct CanNode* can_node_general;
   struct CanNode* can_node_dv;
@@ -59,14 +55,12 @@ int _start_embedded_system(void* arg)
     {
       if (gpio_read_state(&p_self->m_gpio_pcu_embedded))
       {
-        o3.can_0x07d_DV_Driver.Brake = p_self->Input.brake;
-        o3.can_0x07d_DV_Driver.Throttle = p_self->Input.throttle;
-        o3.can_0x07d_DV_Driver.Steering_angle = p_self->Input.steering_wheel;
+        o3.can_0x07d_DV_Driver.Throttle = p_self->throttle;
 
-        o3.can_0x07e_DV_Mission.Mission_status = p_self->mission_status;
+        o3.can_0x07e_DV_EMBEDDED_Status.Embedded_status = p_self->embedded_status;
 
         pack_message_can3(&o3, CAN_ID_DV_DRIVER, &payload_dv_driver);
-        pack_message_can3(&o3, CAN_ID_DV_MISSION, &payload_dv_mission);
+        pack_message_can3(&o3, CAN_ID_DV_EMBEDDED_STATUS, &payload_dv_mission);
 
         hardware_mailbox_send(p_self->p_mailbox_input_vcu, payload_dv_driver);
         hardware_mailbox_send(p_self->p_mailbox_send_mission_status_vcu, payload_dv_mission);
@@ -127,8 +121,8 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
     hardware_get_mailbox_single_mex(
         p_self->can_node_dv,
         SEND_MAILBOX,
-        CAN_ID_DV_MISSION,
-        message_dlc_can3(CAN_ID_DV_MISSION));
+        CAN_ID_DV_EMBEDDED_STATUS,
+        message_dlc_can3(CAN_ID_DV_EMBEDDED_STATUS));
 
   if (!p_self->p_mailbox_send_mission_status_vcu)
   {
@@ -154,44 +148,29 @@ int8_t embedded_system_start(EmbeddedSystem_h* const restrict self)
     return -3;
   }
 
-  p_self->mission_status = MISSION_NOT_RUNNING;
+  p_self->embedded_status = EMBEDDED_STATUS_OFF;
   p_self->running=1;
   thrd_create(&p_self->thread, _start_embedded_system, p_self);
   return 0;
 }
 
-int8_t embedded_system_set_dv_input(EmbeddedSystem_h* const restrict self,
-    const enum EMBEDDED_DV_INPUT dv_input_type, const uint8_t value)
+int8_t embedded_system_set_dv_input(EmbeddedSystem_h* const restrict self, const int8_t value)
 {
   union EmbeddedSystem_h_t_conv conv = {self};
   struct EmbeddedSystem_t* const p_self = conv.clear;
 
-  switch (dv_input_type)
-  {
-    case DV_INPUT_THROTTLE:
-      p_self->Input.throttle = value;
-      break;
-    case DV_INPUT_BRAKE:
-      p_self->Input.brake = value;
-      break;
-    case DV_INPUT_STEERING_ANGLE:
-      p_self->Input.steering_wheel = value;
-      break;
-    case __NUM_OF_EMBEDDED_IMPUT__:
-    default:
-      return -1;
-  }
+  p_self->throttle = value;
 
   return 0;
 }
 
 int8_t embedded_system_set_mission_status(EmbeddedSystem_h* const restrict self,
-    const enum MISSION_STATUS mission_status)
+    const enum EMBEDDED_STATUS embedded_status)
 {
   union EmbeddedSystem_h_t_conv conv = {self};
   struct EmbeddedSystem_t* const p_self = conv.clear;
 
-  p_self->mission_status = mission_status;
+  p_self->embedded_status = embedded_status;
 
   return 0;
 }

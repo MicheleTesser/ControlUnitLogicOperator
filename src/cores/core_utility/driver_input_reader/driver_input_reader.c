@@ -36,7 +36,7 @@ char __assert_align_dv_driver_input_reader[(_Alignof(DriverInputReader_h) == _Al
 
 static inline float _saturate_100(float value)
 {
-  return value > 100.0f? 100.0f: value;
+  return value > 100.0f? 100.0f: value < -100.0f ? -100.0f : value;
 }
 
 //public
@@ -77,9 +77,9 @@ int8_t driver_input_reader_update(DriverInputReader_h* const restrict self )
 
   if (shared_message_read_unpack_can3(&p_self->m_recv_dv_driver, &o3)>0)
   {
-    p_self->m_input[DRIVER_EMBEDDED].m_throttle = _saturate_100(o3.can_0x07d_DV_Driver.Throttle);
-    p_self->m_input[DRIVER_EMBEDDED].m_brake = _saturate_100(o3.can_0x07d_DV_Driver.Brake);
-    p_self->m_input[DRIVER_EMBEDDED].m_steering_angle = _saturate_100(o3.can_0x07d_DV_Driver.Steering_angle);
+    p_self->m_input[DRIVER_EMBEDDED].m_throttle = _saturate_100(o3.can_0x07d_DV_Driver.Throttle) * (o3.can_0x07d_DV_Driver.Throttle > 0);
+    p_self->m_input[DRIVER_EMBEDDED].m_brake = _saturate_100(o3.can_0x07d_DV_Driver.Throttle) * (o3.can_0x07d_DV_Driver.Throttle < 0);
+    p_self->m_input[DRIVER_EMBEDDED].m_steering_angle = 0; //FIXME: removed from the dbc
   }
 
   return 0;

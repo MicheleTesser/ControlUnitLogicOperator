@@ -1,4 +1,5 @@
 #include "car_component.h"
+#include "res_node/res_node.h"
 #include "sdc_circuit/sdc_circuit.h"
 #include <stdint.h>
 
@@ -13,6 +14,7 @@ int8_t start_external_boards(ExternalBoards_t* const restrict self)
   if (embedded_system_start(&self->embedded_system)<0) return  -7;;
   if (asb_start(&self->asb)<0) return  -7;
   if (imu_start(&self->imu)<0) return -8;
+  if (res_node_start(&self->res)<0) return -9;
 
   return 0;
 }
@@ -27,6 +29,7 @@ int8_t stop_external_boards(ExternalBoards_t* const restrict self)
   embedded_system_stop(&self->embedded_system);
   asb_stop(&self->asb);
   imu_stop(&self->imu);
+  res_node_stop(&self->res);
   sdc_stop();
 
   return 0;

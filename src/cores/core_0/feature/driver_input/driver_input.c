@@ -131,7 +131,7 @@ int8_t giei_driver_input_update(DriverInput_h* const restrict self )
       if (shared_message_read_unpack_can3(&p_self->m_recv_dv_mission, &o3)>0)
       {
         unpack_message_can3(&o3, mex.id, mex.full_word, mex.message_size, (dbcc_time_stamp_t) timer_time_now());
-        if (o3.can_0x07e_DV_Mission.Mission_status == 2)
+        if (o3.can_0x07e_DV_EMBEDDED_Status.Embedded_status == CAN_0X07E_DV_EMBEDDED_STATUS_EMBEDDED_STATUS_FINISHED)
         {
           p_self->Rtd_request.dv_rtd_input_request = 0;
         }

@@ -37,9 +37,9 @@ struct Pcu_t{
     uint8_t enable:1;
   }cooling_device[__NUM_OF_COOLING_DEVICES__];
   Gpio_h m_gpio_embedded_system;
+  Gpio_h m_gpio_dv;
   uint8_t run:1;
   uint8_t rf:1;
-  uint8_t dv_gpio:1;
 };
 
 union Pcu_h_t_conv{
@@ -85,7 +85,14 @@ _pcu_update(struct Pcu_t* const restrict self)
         {
           gpio_set_high(&self->m_gpio_embedded_system);
         }
-        self->dv_gpio = o2.can_0x130_Pcu.enable_dv;
+        if (o2.can_0x130_Pcu.enable_dv)
+        {
+          gpio_set_low(&self->m_gpio_dv);
+        }
+        else
+        {
+          gpio_set_high(&self->m_gpio_dv);
+        }
         break;
       default:
         break;
@@ -153,6 +160,11 @@ int8_t pcu_init(Pcu_h* const restrict self)
     return -4;
   }
 
+  if (hardware_init_gpio(&p_self->m_gpio_dv, (enum GPIO_PIN) GPIO_PCU_DV)<0)
+  {
+    return -5;
+  }
+
   p_self->run=1;
   thrd_create(&p_self->thread, _pcu_start,p_self);
 
@@ -189,4 +201,20 @@ int8_t pcu_stop_embedded(Pcu_h* const restrict self)
   struct Pcu_t* const restrict p_self = conv.clear;
 
   return gpio_set_high(&p_self->m_gpio_embedded_system);
+}
+
+int8_t pcu_start_res(Pcu_h* const restrict self)
+{
+  union Pcu_h_t_conv conv = {self};
+  struct Pcu_t* const restrict p_self = conv.clear;
+
+  return gpio_set_low(&p_self->m_gpio_dv);
+}
+
+int8_t pcu_stop_res(Pcu_h* const restrict self)
+{
+  union Pcu_h_t_conv conv = {self};
+  struct Pcu_t* const restrict p_self = conv.clear;
+
+  return gpio_set_high(&p_self->m_gpio_dv);
 }
